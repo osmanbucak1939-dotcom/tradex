@@ -6195,7 +6195,20 @@ updateAccount();
   window._symConfig = symConfig;
   loadSpreadGroups();
   window._mainInitDone = true;
-  setTimeout(function(){if(_mob()&&typeof mGo==='function')mGo('chart',document.getElementById('mnChart'));},400);
+  setTimeout(function(){
+    var nav = document.getElementById('mNavBar');
+    if(_mob()) {
+      if(nav) nav.style.display = 'flex';
+      if(typeof mGo==='function') mGo('chart', document.getElementById('mnChart'));
+    } else {
+      if(nav) nav.style.display = 'none';
+    }
+    window.addEventListener('resize', function(){
+      if(!nav) return;
+      nav.style.display = _mob() ? 'flex' : 'none';
+      if(!_mob()) document.querySelectorAll('.m-panel').forEach(function(p){ p.classList.remove('open'); });
+    });
+  }, 400);
 
 
 accounts = JSON.parse(localStorage.getItem('tx_accounts') || '[]');
@@ -7618,7 +7631,7 @@ function mTick() {
   </div>
 </div>
 
-<nav class="m-nav">
+<nav class="m-nav" id="mNavBar" style="display:none">
   <button class="m-nav-btn act" id="mnChart"    onclick="mGo('chart',this)"><span class="mn-ic">📈</span>Grafik</button>
   <button class="m-nav-btn"     id="mnMarket"   onclick="mGo('market',this)"><span class="mn-ic">🌐</span>Piyasalar</button>
   <button class="m-nav-btn"     id="mnTrade"    onclick="mGo('trade',this)"><span class="mn-ic">💹</span>İşlem</button>
