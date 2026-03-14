@@ -945,14 +945,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 
 /* ═══ MOBİL (≤768px) — Desktop etkilenmez ═══ */
-.m-nav { display: none !important; }
-.m-panel { display: none !important; }
+@media (min-width: 769px) {
+  .m-nav   { display: none !important; }
+  .m-panel { display: none !important; }
+}
 
 @media (max-width: 768px) {
-  /* html/body overflow reset — position:fixed çalışsın */
-  html, body { overflow: visible !important; height: auto !important; }
-  #appWrap { overflow: visible !important; height: auto !important; min-height: 100vh; }
-
   /* Desktop elementleri gizle */
   .tb-sym-list  { display: none !important; }
   .ticker-strip { display: none !important; }
