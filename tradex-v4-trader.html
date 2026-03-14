@@ -918,107 +918,89 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
    MOBİL RESPONSIVE
 ══════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Hide desktop top symbol tabs */
+  /* ── Toolbar ── */
   .tb-sym-list { display:none; }
-  .tb-mgr-btn { font-size:10px; padding:0 10px; }
+  .tb-mgr-btn  { font-size:10px; padding:0 10px; }
   .tb-conn span { display:none; }
-
-  /* Ticker smaller */
   .ticker-inner { gap:20px; font-size:10px; }
 
-  /* Workspace stack vertically */
-  .workspace { display:flex; flex:1; overflow:hidden; min-height:0; }
-
-  /* Left panel (order ticket) full width on mobile, hidden by default */
-  .right-panel {
-    width:100% !important;
-    border-right:none !important;
-    border-bottom:1px solid var(--border);
-    order:2;
-    display:none;
+  /* ── Ana layout ── */
+  .main { padding-bottom:56px; }
+  .workspace {
+    display:flex; flex:1; overflow:hidden; min-height:0;
+    flex-direction:column;
   }
-  .right-panel.mob-visible { display:flex; }
 
-  /* Chart area full width */
+  /* ── Mobil panel sistemi ── */
+  .mob-panel { display:none !important; }
+  .mob-panel.active { display:flex !important; flex-direction:column; }
+
+  /* ── Grafik paneli ── */
   .chart-area {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:0;
-  overflow:hidden;
-}
-  #chartWrap {
-  flex:1;
-  min-height:0;
-  position:relative;
-  overflow:hidden;
-}
+    flex:1; display:flex; flex-direction:column;
+    min-width:0; min-height:0; overflow:hidden;
+    width:100%;
+  }
+  #chartWrap { flex:1; min-height:0; position:relative; overflow:hidden; }
 
-  /* Bottom panel smaller */
+  /* ── Sağ panel (piyasalar/emir) ── */
+  .right-panel {
+    width:100% !important; height:100%;
+    border-right:none !important;
+    display:flex; flex-direction:column;
+    overflow-y:auto;
+  }
+
+  /* ── Pozisyon paneli ── */
   .bottom-panel {
-  height:220px; min-height:60px; flex-shrink:0;
-  display:flex; flex-direction:column;
-  background:var(--panel); border-top:1px solid var(--border);
-  overflow:hidden;
-}
+    height:calc(100vh - 100px); min-height:0; flex-shrink:0;
+    display:flex; flex-direction:column;
+    background:var(--panel); border-top:1px solid var(--border);
+    overflow:hidden;
+  }
 
-  /* Order ticket compact */
+  /* ── Bakiye barı mobilde scroll ── */
+  #\9 /* bakiye satırı zaten overflow-x:auto */
+
+  /* ── Order ticket ── */
   .order-ticket { padding:10px; }
-  .ot-bid, .ot-ask { font-size:22px; }
+  .ot-bid, .ot-ask { font-size:26px; }
 
-  /* Account box compact */
-  .account-box { padding:8px 10px; }
-  .acc-row { padding:4px 0; }
-
-  /* Alarm box compact */
-  .alarm-box { padding:8px 10px; min-height:120px; }
-
-  /* Mobile bottom nav bar */
+  /* ── Alt nav barı ── */
   .mob-nav {
     display:flex !important;
     position:fixed; bottom:0; left:0; right:0;
     background:var(--panel); border-top:1px solid var(--border);
-    z-index:200; height:52px;
+    z-index:500; height:56px; safe-area-inset-bottom:env(safe-area-inset-bottom);
   }
   .mob-nav-item {
     flex:1; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; gap:3px; cursor:pointer;
+    justify-content:center; gap:2px; cursor:pointer;
     color:var(--muted); font-family:var(--mono); font-size:9px;
     font-weight:600; letter-spacing:.5px; transition:color .15s;
-    border:none; background:none;
+    border:none; background:none; position:relative;
+    -webkit-tap-highlight-color:transparent;
   }
-  .mob-nav-item .icon { font-size:18px; line-height:1; }
+  .mob-nav-item .icon { font-size:20px; line-height:1; }
   .mob-nav-item.active { color:var(--accent); }
   .mob-nav-item.active .mob-indicator {
-    position:absolute; top:0; left:25%; right:25%;
+    position:absolute; top:0; left:20%; right:20%;
     height:2px; background:var(--accent); border-radius:2px;
   }
 
-  /* Add padding to main so content doesn't hide behind bottom nav */
-  .main { padding-bottom:52px; }
-  .workspace { display:flex; flex:1; overflow:hidden; min-height:0; }
-
-  /* Mobile view panels */
-  .mob-panel { display:none; }
-  .mob-panel.active { display:flex !important; flex-direction:column; }
-
-  .chart-area {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:0;
-  overflow:hidden;
-}
-  .chart-area.mob-panel.active { display:flex !important; flex-direction:column; }
-
-  /* Manager overlay full screen on mobile */
+  /* ── Modals full screen ── */
   .mgr-panel { width:100vw; max-width:100vw; height:100vh; max-height:100vh; border-radius:0; }
-  .mgr-nav { width:120px; }
-  .mgr-nav-item { padding:8px 10px; font-size:10px; }
+  .mgr-nav { width:110px; }
+  .mgr-nav-item { padding:8px 8px; font-size:10px; }
   .mgr-row.cols4 { grid-template-columns:1fr 1fr; }
   .mgr-row.cols3 { grid-template-columns:1fr 1fr; }
+
+  /* ── Market watch mobil ── */
+  .mw-item { padding:6px 10px; }
+
+  /* ── Hızlı al/sat butonu ── */
+  #qtToggle { display:none; }
+  .quick-trade { display:none !important; }
 }
 
 /* Mobile nav hidden on desktop */
@@ -1590,9 +1572,9 @@ function initAuth(){
 </div>
 
 <!-- WORKSPACE -->
-<div class="workspace">
+<div class="workspace" id="mobWorkspace">
   <!-- RIGHT PANEL -->
-  <div class="right-panel" id="rightPanel">
+  <div class="right-panel mob-panel" id="mobMarket">
 
     <!-- PANEL TABS -->
     <div class="lp-tabs">
@@ -1686,7 +1668,7 @@ function initAuth(){
   </div>
   <div class="resize-handle-x" id="rhX" title="Genişliği ayarla"></div>
   <!-- CHART + BOTTOM -->
-  <div class="chart-area">
+  <div class="chart-area mob-panel active" id="mobChart">
     <div class="chart-toolbar">
       <div class="ct-label" id="ctSym">BTCUSDT</div>
       <div class="ct-intervals">
@@ -1793,7 +1775,7 @@ function initAuth(){
   </div>
 
   <div class="resize-handle-y" id="rhY" title="Yüksekliği ayarla"></div>
-  <div class="bottom-panel" style="overflow:hidden;display:flex;flex-direction:column;">
+  <div class="bottom-panel" id="mobPositions" style="overflow:hidden;display:flex;flex-direction:column;">
       <div class="bp-tabs" style="flex-shrink:0;display:flex;height:28px;">
         <div class="bp-tab active" onclick="bpSwitch('pos',this)">Pozisyonlar</div>
         <div class="bp-tab" onclick="bpSwitch('hist',this)">İşlem Geçmişi</div>
@@ -6168,6 +6150,8 @@ updateAccount();
   window._symConfig = symConfig;
   loadSpreadGroups();
   window._mainInitDone = true;
+  // Mobil başlangıç
+  setTimeout(function(){ if(typeof mobInit==='function') mobInit(); }, 300);
 
 accounts = JSON.parse(localStorage.getItem('tx_accounts') || '[]');
 settings = JSON.parse(localStorage.getItem('tx_settings') || '{"startBalance":10000,"leverage":20,"title":"TradeX Terminal","currency":"USD","ticker":true,"anim":true}');
@@ -7315,6 +7299,104 @@ function adChangePassword() {
     }
     tryLoad();
   })();
-  </script>
+  
+// ── MOBİL NAVİGASYON ──────────────────────────────────────────
+function mobSwitch(tab, btn) {
+  if(window.innerWidth > 768) return;
+
+  // Tüm mob-panel'leri gizle
+  document.querySelectorAll('.mob-panel').forEach(function(el){
+    el.classList.remove('active');
+    if(el.id==='mobChart') el.style.display='none';
+    else el.style.display='none';
+  });
+
+  // Tüm nav butonlarını pasif yap
+  document.querySelectorAll('.mob-nav-item').forEach(function(b){
+    b.classList.remove('active');
+  });
+  if(btn) btn.classList.add('active');
+
+  var chartEl    = document.getElementById('mobChart');
+  var marketEl   = document.getElementById('mobMarket');
+  var posEl      = document.getElementById('mobPositions');
+  var rightPanel = document.getElementById('rightPanel') || marketEl;
+
+  if(tab === 'chart') {
+    if(chartEl){ chartEl.style.display='flex'; chartEl.classList.add('active'); }
+    // Grafik yeniden boyutlandır
+    setTimeout(function(){ if(typeof resizeCanvas==='function') resizeCanvas(); if(_lw) _lw.resize(document.getElementById('lwChart').offsetWidth, document.getElementById('lwChart').offsetHeight); }, 100);
+
+  } else if(tab === 'market') {
+    if(marketEl){ marketEl.style.display='flex'; marketEl.classList.add('active'); marketEl.classList.add('mob-visible'); }
+    if(rightPanel){ rightPanel.style.display='flex'; rightPanel.classList.add('mob-visible'); }
+    // Market sekmesini aç
+    if(typeof lpSwitch==='function') lpSwitch('market', document.querySelector('.lp-tab'));
+
+  } else if(tab === 'trade') {
+    if(marketEl){ marketEl.style.display='flex'; marketEl.classList.add('active'); marketEl.classList.add('mob-visible'); }
+    if(rightPanel){ rightPanel.style.display='flex'; rightPanel.classList.add('mob-visible'); }
+    // Emir sekmesini aç
+    var orderTab = document.querySelector('.lp-tab[onclick*="order"]');
+    if(typeof lpSwitch==='function' && orderTab) lpSwitch('order', orderTab);
+
+  } else if(tab === 'positions') {
+    if(chartEl){ chartEl.style.display='flex'; chartEl.classList.add('active'); }
+    if(posEl){ posEl.style.display='flex'; posEl.classList.add('active'); }
+
+  } else if(tab === 'account') {
+    if(marketEl){ marketEl.style.display='flex'; marketEl.classList.add('active'); marketEl.classList.add('mob-visible'); }
+    if(rightPanel){ rightPanel.style.display='flex'; rightPanel.classList.add('mob-visible'); }
+    // Hesap sekmesini aç
+    var accTab = document.querySelector('.lp-tab[onclick*="account"]');
+    if(typeof lpSwitch==='function' && accTab) lpSwitch('account', accTab);
+  }
+}
+
+// Mobil başlangıç durumu
+function mobInit() {
+  if(window.innerWidth > 768) return;
+  mobSwitch('chart', document.getElementById('mobn-chart'));
+}
+
+window.addEventListener('resize', function(){
+  if(window.innerWidth <= 768) mobInit();
+  else {
+    // Desktop: tüm panelleri göster
+    document.querySelectorAll('.mob-panel').forEach(function(el){ el.style.display=''; });
+  }
+});
+
+</script>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mob-nav" id="mobNav">
+  <button class="mob-nav-item active" id="mobn-chart" onclick="mobSwitch('chart',this)">
+    <div class="mob-indicator"></div>
+    <span class="icon">📈</span>
+    <span>Grafik</span>
+  </button>
+  <button class="mob-nav-item" id="mobn-market" onclick="mobSwitch('market',this)">
+    <div class="mob-indicator"></div>
+    <span class="icon">🌐</span>
+    <span>Piyasalar</span>
+  </button>
+  <button class="mob-nav-item" id="mobn-trade" onclick="mobSwitch('trade',this)">
+    <div class="mob-indicator"></div>
+    <span class="icon">💹</span>
+    <span>İşlem</span>
+  </button>
+  <button class="mob-nav-item" id="mobn-positions" onclick="mobSwitch('positions',this)">
+    <div class="mob-indicator"></div>
+    <span class="icon">📋</span>
+    <span>Pozisyon</span>
+  </button>
+  <button class="mob-nav-item" id="mobn-account" onclick="mobSwitch('account',this)">
+    <div class="mob-indicator"></div>
+    <span class="icon">👤</span>
+    <span>Hesap</span>
+  </button>
+</div>
+
 </body>
 </html>
