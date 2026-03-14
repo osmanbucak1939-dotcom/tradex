@@ -945,10 +945,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 
 /* ═══ MOBİL (≤768px) — Desktop etkilenmez ═══ */
-@media (min-width: 769px) {
-  .m-nav   { display: none !important; }
-  .m-panel { display: none !important; }
-}
 
 @media (max-width: 768px) {
   /* Desktop elementleri gizle */
@@ -968,7 +964,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
   /* Alt nav */
   .m-nav {
-    display: flex !important;
     position: fixed; bottom: 0; left: 0; right: 0;
     height: 58px; background: #141414;
     border-top: 1px solid #222;
