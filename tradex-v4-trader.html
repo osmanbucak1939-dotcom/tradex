@@ -949,6 +949,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .m-panel { display: none !important; }
 
 @media (max-width: 768px) {
+  /* html/body overflow reset — position:fixed çalışsın */
+  html, body { overflow: visible !important; height: auto !important; }
+  #appWrap { overflow: visible !important; height: auto !important; min-height: 100vh; }
+
   /* Desktop elementleri gizle */
   .tb-sym-list  { display: none !important; }
   .ticker-strip { display: none !important; }
