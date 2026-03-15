@@ -7585,7 +7585,6 @@ function adChangePassword() {
 
   // Navigasyon
   window.mGo=function(tab,btn){
-    if(!mob()) return;
     _ct=tab;
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
