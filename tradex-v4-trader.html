@@ -7570,22 +7570,14 @@ function adChangePassword() {
   function mob(){ return window.innerWidth<=900; }
 
   // Nav + panelleri sadece mobilde göster
-  function mShow(){
-    var nav=document.getElementById('mNav');
-    if(!nav) return;
-    if(mob()){ nav.style.display='flex'; }
-    else { nav.style.display='none'; mHideAll(); }
-  }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.classList.remove('on');
     });
   }
-  window.addEventListener('resize', mShow);
 
   // Navigasyon
   window.mGo=function(tab,btn){
-    if(!mob()) return;
     _ct=tab;
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
@@ -7735,7 +7727,6 @@ function adChangePassword() {
 
   // Canlı tick
   window.mTick=function(){
-    if(!mob()) return;
     if(_ct==='trade') mFT();
     if(_ct==='pos'){
       var pos=typeof positions!=='undefined'?positions:[];
@@ -7759,8 +7750,8 @@ function adChangePassword() {
 
   // Init — login sonrası çağrılır
   window.mInit=function(){
-    mShow();
-    if(mob()) mGo('chart',document.getElementById('mnC'));
+    // Grafik sekmesi başlangıçta aktif
+    mHideAll();
   };
 })();
 </script>
