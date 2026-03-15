@@ -6070,6 +6070,7 @@ updateAccount();
   window._symConfig = symConfig;
   loadSpreadGroups();
   window._mainInitDone = true;
+  if(typeof mInit==='function') setTimeout(mInit, 300);
 
 
 
@@ -6281,6 +6282,7 @@ function txApplyPrice(sym, rawMid) {
   if(typeof txTickPositions === 'function' && positions && positions.length) txTickPositions();
   else if(typeof updatePositions === 'function') updatePositions();
   if(typeof buildTicker === 'function') buildTicker();
+  if(typeof mTick==='function') mTick();
 }
 
 // ── Firebase prices dinle ─────────────────────────────────────
@@ -7222,6 +7224,545 @@ function adChangePassword() {
 
 
 
+</script>
+
+<!-- ════════════════════════════════════════════
+     MOBİL SİSTEM — Sadece bu blok, tamamen izole
+     Desktop'a hiçbir etkisi yok
+════════════════════════════════════════════ -->
+<style id="mobileStyle">
+/* Nav ve paneller varsayılan olarak gizli — JS açar */
+#mNav       { display: none; }
+#mPanMarket { display: none; }
+#mPanTrade  { display: none; }
+#mPanPos    { display: none; }
+#mPanAcc    { display: none; }
+
+@media (max-width: 768px) {
+  /* Desktop elementleri gizle */
+  .ticker-strip    { display: none !important; }
+  .resize-handle-x { display: none !important; }
+  .resize-handle-y { display: none !important; }
+  #rightPanel      { display: none !important; }
+  .ind-toolbar     { display: none !important; }
+  #quickTrade      { display: none !important; }
+  .bp-tabs         { display: none !important; }
+  .bp-content      { display: none !important; }
+  .tb-sym-list     { display: none !important; }
+  .bottom-panel    { height: 36px !important; min-height: 36px !important; }
+  .workspace       { flex-direction: column !important; }
+  .chart-area      { width: 100% !important; }
+  body             { padding-bottom: 62px; }
+
+  /* ── Alt nav ── */
+  #mNav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 62px;
+    background: #111;
+    border-top: 1px solid #1e1e1e;
+    z-index: 8000;
+    align-items: stretch;
+  }
+  .mn-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: #3a3a3a;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s;
+  }
+  .mn-btn .ic { font-size: 22px; line-height: 1; }
+  .mn-btn.on  { color: #26a69a; }
+  .mn-btn.on::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 2px;
+    background: #26a69a;
+    border-radius: 2px;
+  }
+
+  /* ── Ortak panel stili ── */
+  .m-pan {
+    position: fixed;
+    top: 44px; left: 0; right: 0; bottom: 62px;
+    background: #0a0a0a;
+    z-index: 7000;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .m-pan.on { display: flex; }
+  .m-phead {
+    display: flex;
+    align-items: center;
+    height: 42px;
+    padding: 0 16px;
+    border-bottom: 1px solid #1a1a1a;
+    flex-shrink: 0;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #26a69a;
+    letter-spacing: 1.5px;
+  }
+
+  /* ── Piyasalar ── */
+  #mPanMarket .m-mwb {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #mPanMarket .mw-item  { padding: 11px 14px; min-height: 48px; }
+  #mPanMarket .mw-sym   { font-size: 13px; }
+  #mPanMarket .mw-price { font-size: 13px; }
+
+  /* ── İşlem ── */
+  #mPanTrade { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .m-prices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #1a1a1a;
+    flex-shrink: 0;
+  }
+  .m-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 8px;
+    background: #0a0a0a;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    gap: 3px;
+  }
+  .m-side:active { background: #111; }
+  .m-slbl { font-family: monospace; font-size: 9px; color: #333; letter-spacing: 1px; }
+  .m-sprc { font-family: monospace; font-size: 28px; font-weight: 700; }
+  .m-side.sell .m-sprc { color: #ef5350; }
+  .m-side.buy  .m-sprc { color: #26a69a; }
+  .m-tbody { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .m-lot {
+    display: flex;
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .m-lb {
+    width: 52px; height: 52px;
+    background: #181818;
+    border: none; color: #aaa;
+    font-size: 26px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .m-lb:active { background: #222; }
+  .m-li {
+    flex: 1; text-align: center;
+    background: transparent; border: none;
+    color: #fff; font-family: monospace;
+    font-size: 20px; font-weight: 700; height: 52px;
+  }
+  .m-li:focus { outline: none; }
+  .m-prs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .m-pr {
+    padding: 5px 13px; border-radius: 20px;
+    border: 1px solid #1e1e1e; background: #111;
+    color: #444; font-family: monospace; font-size: 11px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .m-pr.on { border-color: #26a69a; color: #26a69a; background: #0a1a16; }
+  .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .m-ig { display: flex; flex-direction: column; gap: 4px; }
+  .m-il { font-family: monospace; font-size: 9px; color: #333; letter-spacing: .5px; }
+  .m-in {
+    background: #111; border: 1px solid #1e1e1e;
+    border-radius: 6px; color: #ddd;
+    font-family: monospace; font-size: 14px;
+    padding: 10px 12px; width: 100%; box-sizing: border-box;
+  }
+  .m-in:focus { outline: none; border-color: #26a69a44; }
+  .m-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .m-bs {
+    padding: 16px; border-radius: 10px;
+    border: 2px solid #ef5350; background: #140505;
+    color: #ef5350; font-family: monospace;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-bs:active { background: #1f0707; }
+  .m-bb {
+    padding: 16px; border-radius: 10px;
+    border: 2px solid #26a69a; background: #051410;
+    color: #26a69a; font-family: monospace;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-bb:active { background: #081f18; }
+
+  /* ── Pozisyonlar ── */
+  .m-tabs {
+    display: flex; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+  }
+  .m-tab {
+    flex: 1; padding: 10px; text-align: center;
+    font-family: monospace; font-size: 11px; font-weight: 700;
+    color: #333; background: none; border: none;
+    border-bottom: 2px solid transparent; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-tab.on { color: #26a69a; border-bottom-color: #26a69a; }
+  .m-plist { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .m-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 100px; color: #2a2a2a;
+    font-family: monospace; font-size: 12px;
+  }
+  .m-card {
+    padding: 12px 14px; border-bottom: 1px solid #141414;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .m-card:active { background: #111; }
+  .m-cl { flex: 1; }
+  .m-csym {
+    font-family: monospace; font-size: 13px; font-weight: 700;
+    color: #ccc; display: flex; align-items: center; gap: 6px;
+  }
+  .m-bdg {
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+  }
+  .m-bdg.b { background: #081a14; color: #26a69a; }
+  .m-bdg.s { background: #1a0808; color: #ef5350; }
+  .m-cmeta { font-family: monospace; font-size: 10px; color: #2a2a2a; margin-top: 2px; }
+  .m-cr { text-align: right; }
+  .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
+  .m-cpnl.u { color: #26a69a; }
+  .m-cpnl.d { color: #ef5350; }
+  .m-ccur { font-family: monospace; font-size: 10px; color: #2a2a2a; margin-top: 2px; }
+  .m-cx {
+    width: 32px; height: 32px; flex-shrink: 0;
+    background: #111; border: 1px solid #1e1e1e;
+    border-radius: 6px; color: #333; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-cx:active { background: #1a0808; border-color: #ef5350; color: #ef5350; }
+
+  /* ── Hesap ── */
+  #mPanAcc { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .m-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: #1a1a1a;
+    margin: 12px; border-radius: 10px; overflow: hidden;
+  }
+  .m-stat { background: #0f0f0f; padding: 14px 16px; }
+  .m-stl { font-family: monospace; font-size: 9px; color: #2a2a2a; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: #bbb; }
+  .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .m-abt {
+    padding: 14px 16px; border-radius: 8px;
+    border: 1px solid #1a1a1a; background: #0f0f0f;
+    color: #aaa; font-family: monospace; font-size: 13px; font-weight: 600;
+    text-align: left; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-abt:active { background: #141414; }
+  .m-aic { font-size: 18px; }
+}
+</style>
+
+<!-- Paneller + Nav HTML -->
+<div id="mPanMarket" class="m-pan">
+  <div class="m-phead">PİYASALAR</div>
+  <div style="padding:10px 12px;flex-shrink:0">
+    <input id="mSrch" style="width:100%;padding:10px 14px;font-size:14px;border-radius:8px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)">
+  </div>
+  <div class="m-mwb" id="mMwBody" onclick="var t=event.target;while(t&&t.id!=='mMwBody'){if(t.dataset&&t.dataset.sym){mMwPick(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
+</div>
+
+<div id="mPanTrade" class="m-pan">
+  <div class="m-phead" style="justify-content:space-between">
+    <span id="mTSym">—</span>
+    <span style="color:#1e1e1e;font-size:10px" id="mTSpr">—</span>
+  </div>
+  <div class="m-prices">
+    <div class="m-side sell" onclick="mOrd('sell')">
+      <div class="m-slbl">SAT / BID</div>
+      <div class="m-sprc" id="mBid">—</div>
+    </div>
+    <div class="m-side buy" onclick="mOrd('buy')">
+      <div class="m-slbl">AL / ASK</div>
+      <div class="m-sprc" id="mAsk">—</div>
+    </div>
+  </div>
+  <div class="m-tbody">
+    <div>
+      <div style="font-family:monospace;font-size:9px;color:#2a2a2a;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div class="m-lot">
+        <button class="m-lb" onclick="mLA(-1)">−</button>
+        <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
+        <button class="m-lb" onclick="mLA(1)">+</button>
+      </div>
+      <div class="m-prs" style="margin-top:8px" id="mPrs"></div>
+    </div>
+    <div class="m-sltp">
+      <div class="m-ig"><div class="m-il">STOP LOSS</div><input class="m-in" id="mSL" type="number" placeholder="—" step="any"></div>
+      <div class="m-ig"><div class="m-il">TAKE PROFIT</div><input class="m-in" id="mTP" type="number" placeholder="—" step="any"></div>
+    </div>
+    <div class="m-btns">
+      <button class="m-bs" onclick="mOrd('sell')">▼ SAT</button>
+      <button class="m-bb" onclick="mOrd('buy')">▲ AL</button>
+    </div>
+  </div>
+</div>
+
+<div id="mPanPos" class="m-pan">
+  <div class="m-tabs">
+    <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
+    <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
+  </div>
+  <div class="m-plist" id="mPL"></div>
+</div>
+
+<div id="mPanAcc" class="m-pan">
+  <div class="m-phead">HESABIM <span style="margin-left:auto;color:#1e1e1e;font-size:10px" id="mALg">—</span></div>
+  <div class="m-stats">
+    <div class="m-stat"><div class="m-stl">Bakiye</div><div class="m-stv" id="mSBal">—</div></div>
+    <div class="m-stat"><div class="m-stl">Varlık</div><div class="m-stv" id="mSEq">—</div></div>
+    <div class="m-stat"><div class="m-stl">Açık K/Z</div><div class="m-stv" id="mSPnl" style="color:#26a69a">—</div></div>
+    <div class="m-stat"><div class="m-stl">Serbest Teminat</div><div class="m-stv" id="mSFr">—</div></div>
+    <div class="m-stat" style="grid-column:1/-1"><div class="m-stl">Teminat Seviyesi</div><div class="m-stv" id="mSML" style="color:#26a69a">—</div></div>
+  </div>
+  <div class="m-acts">
+    <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')"><span class="m-aic">💰</span>Para Yatır</button>
+    <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')"><span class="m-aic">💸</span>Para Çek</button>
+    <button class="m-abt" onclick="if(typeof toggleManager==='function')toggleManager()"><span class="m-aic">⚙️</span>Ayarlar</button>
+    <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()"><span class="m-aic">🚪</span>Çıkış Yap</button>
+  </div>
+</div>
+
+<div id="mNav">
+  <button class="mn-btn on"  id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
+  <button class="mn-btn"     id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
+  <button class="mn-btn"     id="mnT" onclick="mGo('trade',this)"><span class="ic">💹</span><span>İşlem</span></button>
+  <button class="mn-btn"     id="mnP" onclick="mGo('pos',this)"><span class="ic">📋</span><span>Pozisyon</span></button>
+  <button class="mn-btn"     id="mnA" onclick="mGo('acc',this)"><span class="ic">👤</span><span>Hesap</span></button>
+</div>
+
+<script>
+(function(){
+  var _ct='chart', _lot=0.01, _ptab='open';
+  function mob(){ return window.innerWidth<=768; }
+
+  // Nav + panelleri sadece mobilde göster
+  function mShow(){
+    var nav=document.getElementById('mNav');
+    if(!nav) return;
+    if(mob()){ nav.style.display='flex'; }
+    else { nav.style.display='none'; mHideAll(); }
+  }
+  function mHideAll(){
+    ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.classList.remove('on');
+    });
+  }
+  window.addEventListener('resize', mShow);
+
+  // Navigasyon
+  window.mGo=function(tab,btn){
+    if(!mob()) return;
+    _ct=tab;
+    document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
+    if(btn) btn.classList.add('on');
+    mHideAll();
+    var map={market:'mPanMarket',trade:'mPanTrade',pos:'mPanPos',acc:'mPanAcc'};
+    if(map[tab]){ document.getElementById(map[tab]).classList.add('on'); }
+    if(tab==='chart'){
+      setTimeout(function(){
+        if(typeof resizeCanvas==='function') resizeCanvas();
+        if(window._lw){ var w=document.getElementById('lwChart'); if(w&&w.offsetWidth>0) window._lw.resize(w.offsetWidth,w.offsetHeight); }
+      },80);
+    }
+    if(tab==='market') mFM();
+    if(tab==='trade')  mFT();
+    if(tab==='pos')    mFP();
+    if(tab==='acc')    mFA();
+  };
+
+  // Piyasalar
+  function mFM(){
+    var src=document.getElementById('mwBody'), dst=document.getElementById('mMwBody');
+    if(src&&dst) dst.innerHTML=src.innerHTML;
+  }
+  window.mMwPick=function(sym,gid){
+    if(typeof switchSym==='function') switchSym(sym);
+    else if(typeof mwSelect==='function') mwSelect(sym,gid);
+    mGo('chart',document.getElementById('mnC'));
+  };
+
+  // İşlem paneli
+  function mFT(){
+    var sym=typeof curSym!=='undefined'?curSym:'';
+    var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
+    var dec=sc?parseInt(sc.decimals)||2:2;
+    var sp=sc?parseFloat(sc.spread)||0:0;
+    var p=(typeof prices!=='undefined'&&prices[sym])?prices[sym]:null;
+    var mid=p?p.price:0;
+    var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    set('mTSym',sym||'—');
+    set('mTSpr',sp?'Spread: '+sp:'');
+    set('mBid',mid?(mid-sp/2).toFixed(dec):'—');
+    set('mAsk',mid?(mid+sp/2).toFixed(dec):'—');
+    var minL=sc?parseFloat(sc.minLot)||0.01:0.01;
+    _lot=Math.max(_lot,minL);
+    var li=document.getElementById('mLI'); if(li){li.min=minL;li.step=minL;li.value=_lot;}
+    var pr=document.getElementById('mPrs');
+    if(pr){ var a=[minL,+(minL*10).toPrecision(2),+(minL*100).toPrecision(2)];
+      pr.innerHTML=a.map(function(v){ var on=Math.abs(v-_lot)<1e-9?' on':''; return'<button class="m-pr'+on+'" onclick="mLS('+v+',this)">'+v+'</button>';}).join(''); }
+  }
+  window.mLA=function(d){
+    var sym=typeof curSym!=='undefined'?curSym:'';
+    var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
+    var st=sc?parseFloat(sc.minLot)||0.01:0.01;
+    _lot=Math.max(st,parseFloat((_lot+d*st).toFixed(8)));
+    var li=document.getElementById('mLI'); if(li) li.value=_lot;
+    document.querySelectorAll('.m-pr').forEach(function(b){b.classList.toggle('on',Math.abs(parseFloat(b.textContent)-_lot)<1e-9);});
+  };
+  window.mLS=function(v,btn){
+    _lot=v; var li=document.getElementById('mLI'); if(li) li.value=v;
+    document.querySelectorAll('.m-pr').forEach(function(b){b.classList.remove('on');}); if(btn)btn.classList.add('on');
+  };
+  window.mOrd=function(side){
+    var lot=parseFloat((document.getElementById('mLI')||{}).value)||_lot;
+    var sl=parseFloat((document.getElementById('mSL')||{}).value)||null;
+    var tp=parseFloat((document.getElementById('mTP')||{}).value)||null;
+    var qe=document.getElementById('ordQty'); if(qe) qe.value=lot;
+    var se=document.getElementById('ordSL');  if(se) se.value=sl||'';
+    var te=document.getElementById('ordTP');  if(te) te.value=tp||'';
+    if(typeof placeOrder==='function') placeOrder(side);
+    var sle=document.getElementById('mSL'); if(sle) sle.value='';
+    var tpe=document.getElementById('mTP'); if(tpe) tpe.value='';
+    setTimeout(function(){ mGo('pos',document.getElementById('mnP')); },300);
+  };
+
+  // Pozisyonlar
+  window.mPT=function(tab,btn){
+    _ptab=tab;
+    document.querySelectorAll('.m-tab').forEach(function(b){b.classList.remove('on');}); if(btn)btn.classList.add('on');
+    mFP();
+  };
+  function mFP(){
+    var el=document.getElementById('mPL'); if(!el) return;
+    var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
+    if(_ptab==='open'){
+      var pos=typeof positions!=='undefined'?positions:[];
+      if(!pos.length){el.innerHTML='<div class="m-empty">Açık pozisyon yok</div>';return;}
+      el.innerHTML=pos.map(function(p){
+        var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
+        var dec=sc?parseInt(sc.decimals)||2:2;
+        var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
+        var cs=parseFloat(p.contractSize)||1;
+        var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
+        var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
+        return '<div class="m-card">'
+          +'<div class="m-cl">'
+            +'<div class="m-csym">'+(p.label||p.sym)+'<span class="m-bdg '+(p.side==='buy'?'b':'s')+'">'+(p.side==='buy'?'AL':'SAT')+'</span></div>'
+            +'<div class="m-cmeta">'+p.qty+' lot · '+fp(p.openPrice,dec)+'</div>'
+          +'</div>'
+          +'<div class="m-cr">'
+            +'<div class="m-cpnl '+cls+'" data-mp="'+p.id+'">'+sgn+'$'+fp(Math.abs(pnl))+'</div>'
+            +'<div class="m-ccur" data-mc="'+p.id+'">'+fp(cur,dec)+'</div>'
+          +'</div>'
+          +'<button class="m-cx" onclick="mCP('+p.id+');event.stopPropagation()">✕</button>'
+        +'</div>';
+      }).join('');
+    } else {
+      var hist=typeof tradeHistory!=='undefined'?tradeHistory.slice(0,50):[];
+      if(!hist.length){el.innerHTML='<div class="m-empty">Geçmiş yok</div>';return;}
+      el.innerHTML=hist.map(function(h){
+        var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===h.sym;}):null;
+        var dec=sc?parseInt(sc.decimals)||2:2;
+        var pnl=parseFloat(h.pnl)||0; var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
+        var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+        return '<div class="m-card">'
+          +'<div class="m-cl">'
+            +'<div class="m-csym">'+(h.label||h.sym)+'<span class="m-bdg '+(h.side==='buy'?'b':'s')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></div>'
+            +'<div class="m-cmeta">'+h.qty+' lot · '+dt+'</div>'
+          +'</div>'
+          +'<div class="m-cr">'
+            +'<div class="m-cpnl '+cls+'">'+sgn+'$'+fp(Math.abs(pnl))+'</div>'
+            +'<div class="m-ccur">'+fp(h.openPrice,dec)+' → '+fp(h.closePrice,dec)+'</div>'
+          +'</div>'
+        +'</div>';
+      }).join('');
+    }
+  }
+  window.mCP=function(id){ if(typeof closePosition==='function') closePosition(id); setTimeout(mFP,200); };
+
+  // Hesap
+  function mFA(){
+    var cu=typeof _cu!=='undefined'?_cu:null;
+    var bal=typeof balance!=='undefined'?balance:0;
+    var bon=cu?parseFloat(cu.bonus)||0:0;
+    var el=document.getElementById('mALg'); if(el&&cu) el.textContent='#'+(cu.login||cu.id||'');
+    var st=(typeof txCalcStats!=='undefined'&&typeof positions!=='undefined')?txCalcStats({balance:bal,bonus:bon,leverage:(cu&&cu.leverage)||100},positions):null;
+    var fp2=function(n){return '$'+parseFloat(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    var setc=function(id,col){var e=document.getElementById(id);if(e)e.style.color=col;};
+    if(st){
+      set('mSBal',fp2(st.balance)); set('mSEq',fp2(st.equity));
+      var pnl=st.openPnl; set('mSPnl',(pnl>=0?'+':'')+fp2(pnl)); setc('mSPnl',pnl>=0?'#26a69a':'#ef5350');
+      set('mSFr',fp2(st.freeMargin));
+      set('mSML',st.marginLvl?'%'+st.marginLvl.toFixed(1):'—');
+      setc('mSML',!st.marginLvl?'#333':st.marginLvl>200?'#26a69a':st.marginLvl>100?'#f5c518':'#ef5350');
+    } else { set('mSBal',fp2(bal)); set('mSEq',fp2(bal+bon)); }
+  }
+
+  // Canlı tick
+  window.mTick=function(){
+    if(!mob()) return;
+    if(_ct==='trade') mFT();
+    if(_ct==='pos'){
+      var pos=typeof positions!=='undefined'?positions:[];
+      var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
+      pos.forEach(function(p){
+        var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
+        var dec=sc?parseInt(sc.decimals)||2:2;
+        var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
+        var cs=parseFloat(p.contractSize)||1;
+        var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
+        var pe=document.querySelector('[data-mp="'+p.id+'"]');
+        var ce=document.querySelector('[data-mc="'+p.id+'"]');
+        if(pe){pe.textContent=(pnl>=0?'+':'-')+'$'+fp(Math.abs(pnl));pe.className='m-cpnl '+(pnl>=0?'u':'d');}
+        if(ce) ce.textContent=fp(cur,dec);
+      });
+      mFA();
+    }
+    if(_ct==='acc') mFA();
+    if(_ct==='market') mFM();
+  };
+
+  // Init — login sonrası çağrılır
+  window.mInit=function(){
+    mShow();
+    if(mob()) mGo('chart',document.getElementById('mnC'));
+  };
+})();
 </script>
 
 </body>
