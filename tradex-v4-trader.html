@@ -7232,7 +7232,7 @@ function adChangePassword() {
 ════════════════════════════════════════════ -->
 <style id="mobileStyle">
 /* Nav ve paneller varsayılan olarak gizli — JS açar */
-#mNav       { display: none !important; }
+#mNav       { display: none; }
 /* Paneller JS ile .on class'ıyla açılır */
 
 @media (max-width: 768px) {
@@ -7253,7 +7253,6 @@ function adChangePassword() {
 
   /* ── Alt nav ── */
   #mNav {
-    display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 62px;
