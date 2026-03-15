@@ -7232,11 +7232,8 @@ function adChangePassword() {
 ════════════════════════════════════════════ -->
 <style id="mobileStyle">
 /* Nav ve paneller varsayılan olarak gizli — JS açar */
-#mNav       { display: none; }
-#mPanMarket { display: none; }
-#mPanTrade  { display: none; }
-#mPanPos    { display: none; }
-#mPanAcc    { display: none; }
+#mNav       { display: none !important; }
+/* Paneller JS ile .on class'ıyla açılır */
 
 @media (max-width: 768px) {
   /* Desktop elementleri gizle */
@@ -7256,7 +7253,7 @@ function adChangePassword() {
 
   /* ── Alt nav ── */
   #mNav {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 62px;
@@ -7297,6 +7294,7 @@ function adChangePassword() {
 
   /* ── Ortak panel stili ── */
   .m-pan {
+    display: none;
     position: fixed;
     top: 44px; left: 0; right: 0; bottom: 62px;
     background: #0a0a0a;
@@ -7304,7 +7302,7 @@ function adChangePassword() {
     flex-direction: column;
     overflow: hidden;
   }
-  .m-pan.on { display: flex; }
+  .m-pan.on { display: flex !important; }
   .m-phead {
     display: flex;
     align-items: center;
@@ -7570,14 +7568,22 @@ function adChangePassword() {
   function mob(){ return window.innerWidth<=900; }
 
   // Nav + panelleri sadece mobilde göster
+  function mShow(){
+    var nav=document.getElementById('mNav');
+    if(!nav) return;
+    if(mob()){ nav.style.display='flex'; }
+    else { nav.style.display='none'; mHideAll(); }
+  }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.classList.remove('on');
     });
   }
+  window.addEventListener('resize', mShow);
 
   // Navigasyon
   window.mGo=function(tab,btn){
+    if(!mob()) return;
     _ct=tab;
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
@@ -7727,6 +7733,7 @@ function adChangePassword() {
 
   // Canlı tick
   window.mTick=function(){
+    if(!mob()) return;
     if(_ct==='trade') mFT();
     if(_ct==='pos'){
       var pos=typeof positions!=='undefined'?positions:[];
@@ -7750,8 +7757,8 @@ function adChangePassword() {
 
   // Init — login sonrası çağrılır
   window.mInit=function(){
-    // Grafik sekmesi başlangıçta aktif
-    mHideAll();
+    mShow();
+    if(mob()) mGo('chart',document.getElementById('mnC'));
   };
 })();
 </script>
