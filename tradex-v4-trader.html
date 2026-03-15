@@ -7554,7 +7554,7 @@ function adChangePassword() {
   </div>
 </div>
 
-<div id="mNav">
+<div id="mNav" style="display:none">
   <button class="mn-btn"     id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
   <button class="mn-btn on"  id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
   <button class="mn-btn"     id="mnT" onclick="mGo('trade',this)"><span class="ic">💹</span><span>İşlem</span></button>
@@ -7565,25 +7565,26 @@ function adChangePassword() {
 <script>
 (function(){
   var _ct='chart', _lot=0.01, _ptab='open';
+
   function mob(){ return window.innerWidth<=900; }
 
-  // Nav + panelleri sadece mobilde göster
-  function mShow(){
-    var nav=document.getElementById('mNav');
-    if(!nav) return;
-    if(mob()){ nav.style.display='flex'; }
-    else { nav.style.display='none'; mHideAll(); }
-  }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.classList.remove('on');
     });
   }
-  window.addEventListener('resize', mShow);
+
+  function mNavShow(){
+    var nav=document.getElementById('mNav');
+    if(!nav) return;
+    // Sadece dar ekranda göster — inline style CSS'i ezer
+    nav.style.display = window.innerWidth<=900 ? 'flex' : 'none';
+    if(window.innerWidth>900) mHideAll();
+  }
+  window.addEventListener('resize', mNavShow);
 
   // Navigasyon
   window.mGo=function(tab,btn){
-    if(!mob()) return;
     _ct=tab;
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
@@ -7757,8 +7758,7 @@ function adChangePassword() {
 
   // Init — login sonrası çağrılır
   window.mInit=function(){
-    mShow();
-    if(mob()) mGo('chart',document.getElementById('mnC'));
+    mNavShow();
   };
 })();
 </script>
