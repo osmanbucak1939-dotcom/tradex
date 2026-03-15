@@ -7557,8 +7557,8 @@ function adChangePassword() {
 </div>
 
 <div id="mNav">
-  <button class="mn-btn on"  id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
   <button class="mn-btn"     id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
+  <button class="mn-btn on"  id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
   <button class="mn-btn"     id="mnT" onclick="mGo('trade',this)"><span class="ic">💹</span><span>İşlem</span></button>
   <button class="mn-btn"     id="mnP" onclick="mGo('pos',this)"><span class="ic">📋</span><span>Pozisyon</span></button>
   <button class="mn-btn"     id="mnA" onclick="mGo('acc',this)"><span class="ic">👤</span><span>Hesap</span></button>
@@ -7567,7 +7567,7 @@ function adChangePassword() {
 <script>
 (function(){
   var _ct='chart', _lot=0.01, _ptab='open';
-  function mob(){ return window.innerWidth<=768; }
+  function mob(){ return window.innerWidth<=900; }
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
