@@ -7256,6 +7256,7 @@ function adChangePassword() {
   .bottom-panel    { display: none !important; }
   .workspace       { flex-direction: column !important; }
   .chart-area      { width: 100% !important; }
+  .chart-toolbar   { display: none !important; }
   body             { padding-bottom: 62px; }
 
   /* ── Alt nav ── */
@@ -7555,7 +7556,7 @@ function adChangePassword() {
   <div class="m-acts">
     <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')"><span class="m-aic">💰</span>Para Yatır</button>
     <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')"><span class="m-aic">💸</span>Para Çek</button>
-    <button class="m-abt" onclick="if(typeof toggleManager==='function')toggleManager()"><span class="m-aic">⚙️</span>Ayarlar</button>
+
     <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()"><span class="m-aic">🚪</span>Çıkış Yap</button>
   </div>
 </div>
@@ -7583,6 +7584,11 @@ function adChangePassword() {
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.classList.remove('on');
     });
+    // Açık kalmış overlay'leri de kapat
+    var mgr=document.getElementById('mgrOverlay');
+    if(mgr) mgr.classList.remove('open');
+    var wal=document.getElementById('walletOverlay');
+    if(wal) wal.classList.remove('open');
   }
   window.addEventListener('resize', mShow);
 
