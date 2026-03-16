@@ -474,7 +474,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ── PARA YATIR / ÇEK PANELİ ── */
 .wallet-overlay {
   position:fixed; inset:0; background:rgba(0,0,0,.75);
-  z-index:400; display:none; align-items:center; justify-content:center;
+  z-index:9000; display:none; align-items:center; justify-content:center;
 }
 .wallet-overlay.open { display:flex; }
 .wallet-panel {
@@ -1881,9 +1881,9 @@ function initAuth(){
   </div>
 
   <div class="wallet-tabs">
-    <div class="wallet-tab active" onclick="walletTab('deposit',this)">⬇ Para Yatır</div>
-    <div class="wallet-tab" onclick="walletTab('withdraw',this)">⬆ Para Çek</div>
-    <div class="wallet-tab" onclick="walletTab('history',this)">📋 Geçmiş</div>
+    <div class="wallet-tab active" data-tab="deposit" onclick="walletTab('deposit',this)">⬇ Para Yatır</div>
+    <div class="wallet-tab" data-tab="withdraw" onclick="walletTab('withdraw',this)">⬆ Para Çek</div>
+    <div class="wallet-tab" data-tab="history" onclick="walletTab('history',this)">📋 Geçmiş</div>
   </div>
 
   <div class="wallet-body">
@@ -5309,12 +5309,14 @@ function fbLoadRequests(callback) {
     .catch(function(e){ console.warn('fbLoadRequests:', e); callback && callback(); });
 }
 
-function openWallet() {
+function openWallet(tab) {
   if(window._readOnly){ showToast('İzleyici Modu','Bu modda para işlemi yapamazsınız.'); return; }
+  tab = tab || 'deposit';
   // Firebase'den taze bakiye + finlog + talepler çek, sonra aç
   var doOpen = function() {
     document.getElementById('walletOverlay').classList.add('open');
-    walletTab('deposit', document.querySelector('.wallet-tab'));
+    var tabEl = document.querySelector('.wallet-tab[data-tab="'+tab+'"]') || document.querySelector('.wallet-tab');
+    walletTab(tab, tabEl);
   };
   if(_cu && _cu.id && typeof db !== 'undefined' && db) {
     fbLoadUserData(_cu.id, function(data) {
@@ -7541,6 +7543,12 @@ function adChangePassword() {
     <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
     <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
   </div>
+  <div class="m-stats" id="mPosStats" style="margin:8px 12px;border-radius:6px;overflow:hidden;flex-shrink:0">
+    <div class="m-stat"><div class="m-stl">Bakiye</div><div class="m-stv" id="mPSBal">—</div></div>
+    <div class="m-stat"><div class="m-stl">Varlık</div><div class="m-stv" id="mPSEq">—</div></div>
+    <div class="m-stat"><div class="m-stl">Açık K/Z</div><div class="m-stv" id="mPSPnl" style="color:#26a69a">—</div></div>
+    <div class="m-stat"><div class="m-stl">Serbest Teminat</div><div class="m-stv" id="mPSFr">—</div></div>
+  </div>
   <div class="m-plist" id="mPL"></div>
 </div>
 
@@ -7692,6 +7700,7 @@ function adChangePassword() {
   };
   function mFP(){
     var el=document.getElementById('mPL'); if(!el) return;
+    mFA(); // hesap özetini güncelle
     var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
     if(_ptab==='open'){
       var pos=typeof positions!=='undefined'?positions:[];
@@ -7754,7 +7763,14 @@ function adChangePassword() {
       set('mSFr',fp2(st.freeMargin));
       set('mSML',st.marginLvl?'%'+st.marginLvl.toFixed(1):'—');
       setc('mSML',!st.marginLvl?'#333':st.marginLvl>200?'#26a69a':st.marginLvl>100?'#f5c518':'#ef5350');
-    } else { set('mSBal',fp2(bal)); set('mSEq',fp2(bal+bon)); }
+      // Pozisyon paneli özeti de güncelle
+      set('mPSBal',fp2(st.balance)); set('mPSEq',fp2(st.equity));
+      var pnl2=st.openPnl; set('mPSPnl',(pnl2>=0?'+':'')+fp2(pnl2)); setc('mPSPnl',pnl2>=0?'#26a69a':'#ef5350');
+      set('mPSFr',fp2(st.freeMargin));
+    } else {
+      set('mSBal',fp2(bal)); set('mSEq',fp2(bal+bon));
+      set('mPSBal',fp2(bal)); set('mPSEq',fp2(bal+bon));
+    }
   }
 
   // Canlı tick
