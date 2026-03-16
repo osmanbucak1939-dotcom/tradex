@@ -3107,21 +3107,22 @@ function lwDrawPositionLines() {
     if(pos.sym !== curSym) return;
     var lines = {};
     // Giriş fiyatı
+    var _entryColor = pos.side==='buy' ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)';
     lines.entry = _lwSeries.createPriceLine({
-      price: pos.openPrice, color:'#aaa', lineWidth:1, lineStyle:2,
+      price: pos.openPrice, color:_entryColor, lineWidth:1, lineStyle:2,
       axisLabelVisible:true, title: (pos.side==='buy'?'▲':'▼')+' #'+pos.id
     });
     // Stop Loss
     if(pos.sl && pos.sl > 0) {
       lines.sl = _lwSeries.createPriceLine({
-        price:pos.sl, color:'#ef5350', lineWidth:1, lineStyle:1,
+        price:pos.sl, color:'rgba(239,83,80,0.5)', lineWidth:1, lineStyle:1,
         axisLabelVisible:true, title:'SL #'+pos.id
       });
     }
     // Take Profit
     if(pos.tp && pos.tp > 0) {
       lines.tp = _lwSeries.createPriceLine({
-        price:pos.tp, color:'#26a69a', lineWidth:1, lineStyle:1,
+        price:pos.tp, color:'rgba(38,166,154,0.5)', lineWidth:1, lineStyle:1,
         axisLabelVisible:true, title:'TP #'+pos.id
       });
     }
