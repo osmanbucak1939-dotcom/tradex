@@ -6158,7 +6158,7 @@ updateAccount();
   window._symConfig = symConfig;
   loadSpreadGroups();
   window._mainInitDone = true;
-  if(typeof mInit==='function') setTimeout(mInit, 300);
+  if(typeof mInit==='function') setTimeout(mInit, 0);
 
 
 
@@ -8071,14 +8071,8 @@ function adChangePassword() {
     mShow();
     if(!mob()) return;
     // MARKET_GROUPS hazır mı kontrol et, değilse bekle
-    var _tryMarket = function(attempt) {
-      if(typeof MARKET_GROUPS !== 'undefined' && MARKET_GROUPS && MARKET_GROUPS.length) {
-        mGo('market', document.getElementById('mnM'));
-      } else if(attempt < 20) {
-        setTimeout(function(){ _tryMarket(attempt+1); }, 200);
-      }
-    };
-    _tryMarket(0);
+    // Direkt aç - bu noktada MARKET_GROUPS hazır
+    mGo('market', document.getElementById('mnM'));
   };
   // Sayfa yüklenince hemen çalış (login öncesi de mobil nav görünsün)
   if(document.readyState==='loading'){
