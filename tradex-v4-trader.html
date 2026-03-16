@@ -8197,19 +8197,59 @@ function adChangePassword() {
 </div>
 
 <div id="mPanAcc" class="m-pan">
-  <div class="m-phead">HESABIM <span style="margin-left:auto;color:#1e1e1e;font-size:10px" id="mALg">—</span></div>
-  <div class="m-stats">
-    <div class="m-stat"><div class="m-stl">Bakiye</div><div class="m-stv" id="mSBal">—</div></div>
-    <div class="m-stat"><div class="m-stl">Varlık</div><div class="m-stv" id="mSEq">—</div></div>
-    <div class="m-stat"><div class="m-stl">Açık K/Z</div><div class="m-stv" id="mSPnl" style="color:#26a69a">—</div></div>
-    <div class="m-stat"><div class="m-stl">Serbest Teminat</div><div class="m-stv" id="mSFr">—</div></div>
-    <div class="m-stat" style="grid-column:1/-1"><div class="m-stl">Teminat Seviyesi</div><div class="m-stv" id="mSML" style="color:#26a69a">—</div></div>
+  <!-- Üst: Hesap başlığı + login -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
+    <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a;letter-spacing:1px">HESABIM</div>
+    <div style="font-family:monospace;font-size:10px;color:#333" id="mALg">—</div>
   </div>
-  <div class="m-acts">
-    <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')"><span class="m-aic">💰</span>Para Yatır</button>
-    <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')"><span class="m-aic">💸</span>Para Çek</button>
 
-    <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()"><span class="m-aic">🚪</span>Çıkış Yap</button>
+  <!-- Açık K/Z - büyük göster -->
+  <div style="padding:18px 16px 12px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
+    <div style="font-family:monospace;font-size:10px;color:#333;letter-spacing:1px;margin-bottom:6px">AÇIK KAR / ZARAR</div>
+    <div id="mSPnl" style="font-family:monospace;font-size:28px;font-weight:700;color:#26a69a">—</div>
+  </div>
+
+  <!-- Liste: hesap detayları -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="padding:0 0 8px">
+      <!-- Bakiye -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
+        <div style="font-family:monospace;font-size:12px;color:#555">Bakiye</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSBal">—</div>
+      </div>
+      <!-- Varlık -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
+        <div style="font-family:monospace;font-size:12px;color:#555">Varlık</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSEq">—</div>
+      </div>
+      <!-- Bonus -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111" id="mAccBonusRow">
+        <div style="font-family:monospace;font-size:12px;color:#555">Bonus</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#f5c518" id="mSBon">—</div>
+      </div>
+      <!-- Teminat -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
+        <div style="font-family:monospace;font-size:12px;color:#555">Teminat</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSMar">—</div>
+      </div>
+      <!-- Serbest Teminat -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
+        <div style="font-family:monospace;font-size:12px;color:#555">Serbest Teminat</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSFr">—</div>
+      </div>
+      <!-- Teminat Seviyesi -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
+        <div style="font-family:monospace;font-size:12px;color:#555">Teminat Seviyesi</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#26a69a" id="mSML">—</div>
+      </div>
+    </div>
+
+    <!-- Butonlar -->
+    <div class="m-acts" style="padding:12px">
+      <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')"><span class="m-aic">💰</span>Para Yatır</button>
+      <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')"><span class="m-aic">💸</span>Para Çek</button>
+      <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()"><span class="m-aic">🚪</span>Çıkış Yap</button>
+    </div>
   </div>
 </div>
 
@@ -8483,12 +8523,20 @@ function adChangePassword() {
     var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
     var setc=function(id,col){var e=document.getElementById(id);if(e)e.style.color=col;};
     if(st){
-      set('mSBal',fp2(st.balance)); set('mSEq',fp2(st.equity));
-      var pnl=st.openPnl; set('mSPnl',(pnl>=0?'+':'')+fp2(pnl)); setc('mSPnl',pnl>=0?'#26a69a':'#ef5350');
+      set('mSBal',fp2(st.balance));
+      set('mSEq',fp2(st.equity));
+      set('mSBon',fp2(bon));
+      set('mSMar',fp2(st.margin||0));
       set('mSFr',fp2(st.freeMargin));
       set('mSML',st.marginLvl?'%'+st.marginLvl.toFixed(1):'—');
       setc('mSML',!st.marginLvl?'#333':st.marginLvl>200?'#26a69a':st.marginLvl>100?'#f5c518':'#ef5350');
-      // Pozisyon paneli özeti de güncelle
+      var pnl=st.openPnl;
+      set('mSPnl',(pnl>=0?'+':'')+fp2(pnl));
+      setc('mSPnl',pnl>=0?'#26a69a':'#ef5350');
+      // Bonus satırını gizle/göster
+      var bonRow=document.getElementById('mAccBonusRow');
+      if(bonRow) bonRow.style.display=bon>0?'flex':'none';
+      // Pozisyon paneli özeti güncelle
       set('mPSBal',fp2(st.balance)); set('mPSEq',fp2(st.equity));
       var pnl2=st.openPnl; set('mPSPnl',(pnl2>=0?'+':'')+fp2(pnl2)); setc('mPSPnl',pnl2>=0?'#26a69a':'#ef5350');
       set('mPSFr',fp2(st.freeMargin));
@@ -8496,6 +8544,7 @@ function adChangePassword() {
       setc('mPSML',!st.marginLvl?'#333':st.marginLvl>200?'#26a69a':st.marginLvl>100?'#f5c518':'#ef5350');
     } else {
       set('mSBal',fp2(bal)); set('mSEq',fp2(bal+bon));
+      set('mSBon',fp2(bon)); set('mSMar','$0.00'); set('mSFr',fp2(bal));
       set('mPSBal',fp2(bal)); set('mPSEq',fp2(bal+bon));
     }
   }
