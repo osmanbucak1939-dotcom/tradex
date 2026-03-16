@@ -8243,7 +8243,7 @@ function adChangePassword() {
       var active=(typeof curSym!=='undefined'&&s.sym===curSym)?'active':'';
       var ico=(s.icon&&s.icon.trim()&&s.icon.trim().length<=2)?s.icon.trim():'';
       var dot=ico?ico:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(s.color||'#f0b90b')+';flex-shrink:0"></span>';
-      html+='<div class="msl-item '+active+'" onclick="mSymPick(''+s.sym+'')">'
+      html+='<div class="msl-item '+active+'" data-sym="'+s.sym+'" onclick="mSymPick(this.dataset.sym)">'
         +dot
         +'<div><div>'+s.sym+'</div><div class="msl-full">'+(s.label||s.full||'')+'</div></div>'
         +'</div>';
