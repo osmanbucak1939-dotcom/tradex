@@ -3537,6 +3537,18 @@ function otSymFilter(val, mode) {
 function otSymPick(sym, mode) {
   // Sembolü değiştir
   if(typeof switchSym === 'function') switchSym(sym);
+  // Desktop - emir sekmesine geç
+  if(mode !== 'mob') {
+    var orderTabEl = null;
+    document.querySelectorAll('.lp-tab').forEach(function(t){
+      if(t.getAttribute('onclick') && t.getAttribute('onclick').indexOf("'order'") !== -1) orderTabEl = t;
+    });
+    if(typeof lpSwitch === 'function') lpSwitch('order', orderTabEl);
+  }
+  // Mobil - mFT güncelle
+  if(mode === 'mob' && typeof mFT === 'function') {
+    setTimeout(function(){ if(typeof mFT==='function') mFT(); }, 100);
+  }
   // Input ve listeyi temizle
   var searchId = mode==='mob' ? 'mOtSymSearch' : 'otSymSearch';
   var listId   = mode==='mob' ? 'mOtSymList'   : 'otSymList';
