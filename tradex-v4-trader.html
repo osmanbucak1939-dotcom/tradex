@@ -1526,13 +1526,15 @@ function initAuth(){
           </div>
         </div>
         <div class="ot-spread" id="otSpread">Spread: —</div>
-        <div class="ot-type-row">
-          <div class="ot-type-btn active" onclick="setOrdType('market',this)">Market</div>
-          <div class="ot-type-btn" onclick="setOrdType('limit',this)">Limit</div>
-          <div class="ot-type-btn" onclick="setOrdType('stop',this)">Stop</div>
+        <div class="ot-type-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
+          <div class="ot-type-btn active" onclick="setOrdType('market',this)" title="Anında piyasa fiyatından işlem">Market</div>
+          <div class="ot-type-btn" onclick="setOrdType('buy_limit',this)" title="Piyasa fiyatının altından alış emri">Buy Limit</div>
+          <div class="ot-type-btn" onclick="setOrdType('sell_limit',this)" title="Piyasa fiyatının üstünden satış emri">Sell Limit</div>
+          <div class="ot-type-btn" onclick="setOrdType('buy_stop',this)" title="Piyasa fiyatının üstünden alış emri">Buy Stop</div>
+          <div class="ot-type-btn" onclick="setOrdType('sell_stop',this)" title="Piyasa fiyatının altından satış emri">Sell Stop</div>
         </div>
         <div class="ot-row" id="limitPriceRow" style="display:none">
-          <div class="ot-label">Limit Fiyat ($)</div>
+          <div class="ot-label" id="limitPriceLabel">Limit Fiyat ($)</div>
           <input class="ot-input" id="limitPrice" type="number" placeholder="0.00" step="any">
         </div>
         <div class="ot-row">
@@ -1715,7 +1717,7 @@ function initAuth(){
       <div class="bp-tabs" style="flex-shrink:0;display:flex;height:28px;">
         <div class="bp-tab active" onclick="bpSwitch('pos',this)">Pozisyonlar</div>
         <div class="bp-tab" onclick="bpSwitch('hist',this)">İşlem Geçmişi</div>
-        
+        <div class="bp-tab" onclick="bpSwitch('pending',this)">⏳ Bekleyen</div>
         <div class="bp-tab" onclick="bpSwitch('finans',this)">💰 Finans</div>
       </div>
 
@@ -1793,6 +1795,16 @@ function initAuth(){
           </table>
         </div>
         
+        <!-- BEKLEYEN EMİRLER -->
+        <div class="bp-section" id="bp-pending" style="padding:0;">
+          <table class="orders-table" style="width:100%">
+            <thead><tr>
+              <th>Tür</th><th>Sembol</th><th>Miktar</th><th>Fiyat</th><th>SL</th><th>TP</th><th>İşlem</th>
+            </tr></thead>
+            <tbody id="pendingOrdersBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:12px">Bekleyen emir yok</td></tr></tbody>
+          </table>
+        </div>
+
         <!-- FİNANS GEÇMİŞİ -->
         <div class="bp-section" id="bp-finans" style="padding:0;">
           <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#555;padding:16px;">Yükleniyor...</div>
@@ -2613,6 +2625,9 @@ var curSym = 'BTCUSDT';
 var curInt = '4h';
 var ordType = 'market';
 var balance = 10000;
+var pendingOrders = [];
+try { pendingOrders = JSON.parse(localStorage.getItem('tx_pending') || '[]'); } catch(e) { pendingOrders = []; }
+if(!Array.isArray(pendingOrders)) pendingOrders = [];
 var finlog = [];
 var positions, tradeHistory, portfolio, alarms;
 try { positions = JSON.parse(localStorage.getItem('tx_pos') || '[]'); } catch(e) { positions = []; }
@@ -3134,6 +3149,82 @@ function lwDrawPositionLines() {
   });
 }
 
+/* ── Bekleyen emir kontrolü ─────────────────────── */
+function checkPendingOrders(sym, price) {
+  if(!pendingOrders || !pendingOrders.length) return;
+  var triggered = [];
+  for(var i=0; i<pendingOrders.length; i++) {
+    var po = pendingOrders[i];
+    if(po.sym !== sym) continue;
+    var fire = false;
+    if(po.type==='buy_limit'  && price <= po.price) fire=true;
+    if(po.type==='sell_limit' && price >= po.price) fire=true;
+    if(po.type==='buy_stop'   && price >= po.price) fire=true;
+    if(po.type==='sell_stop'  && price <= po.price) fire=true;
+    if(fire) triggered.push(i);
+  }
+  // Tetiklenenler - sondan sile (index kaymaması için)
+  for(var j=triggered.length-1; j>=0; j--) {
+    var po2 = pendingOrders[triggered[j]];
+    pendingOrders.splice(triggered[j], 1);
+    // Market emri gibi aç
+    var _origOrdType = ordType;
+    ordType = 'market';
+    // ordQty ve SL/TP'yi geçici set et
+    var qEl=document.getElementById('ordQty'); var _oq=qEl?qEl.value:'';
+    var slEl=document.getElementById('ordSL'); var _os=slEl?slEl.value:'';
+    var tpEl=document.getElementById('ordTP'); var _ot=tpEl?tpEl.value:'';
+    if(qEl) qEl.value=po2.qty;
+    if(slEl) slEl.value=po2.sl||'';
+    if(tpEl) tpEl.value=po2.tp||'';
+    var _prevSym=curSym;
+    if(po2.sym!==curSym && typeof switchSym==='function') switchSym(po2.sym);
+    placeOrder(po2.side);
+    if(_prevSym!==po2.sym && typeof switchSym==='function') switchSym(_prevSym);
+    if(qEl) qEl.value=_oq;
+    if(slEl) slEl.value=_os;
+    if(tpEl) tpEl.value=_ot;
+    ordType = _origOrdType;
+    showToast('Emir Tetiklendi ✓', po2.type.replace('_',' ').toUpperCase()+' '+po2.sym+' @ '+po2.price);
+  }
+  if(triggered.length) {
+    localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
+    if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
+    renderPendingOrders();
+  }
+}
+
+/* ── Bekleyen emir tablosu ────────────────────────── */
+function renderPendingOrders() {
+  var el = document.getElementById('pendingOrdersBody');
+  if(!el) return;
+  if(!pendingOrders || !pendingOrders.length) {
+    el.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:12px">Bekleyen emir yok</td></tr>';
+    return;
+  }
+  el.innerHTML = pendingOrders.map(function(po, i) {
+    var typeLabel = {buy_limit:'Buy Limit',sell_limit:'Sell Limit',buy_stop:'Buy Stop',sell_stop:'Sell Stop'}[po.type]||po.type;
+    var sideColor = po.side==='buy'?'var(--buy)':'var(--sell)';
+    return '<tr>'+
+      '<td style="color:'+sideColor+'">'+typeLabel+'</td>'+
+      '<td>'+(po.label||po.sym)+'</td>'+
+      '<td>'+po.qty+' lot</td>'+
+      '<td>'+po.price+'</td>'+
+      '<td>'+(po.sl||'—')+'</td>'+
+      '<td>'+(po.tp||'—')+'</td>'+
+      '<td><button class="close-ord" onclick="cancelPending('+i+')" style="background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:var(--mono);font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px">✕ İptal</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function cancelPending(i) {
+  pendingOrders.splice(i, 1);
+  localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
+  if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
+  renderPendingOrders();
+  showToast('İptal Edildi', 'Bekleyen emir iptal edildi');
+}
+
 /* ── Canlı tick güncelleme (her saniye) ────────── */
 function lwTickUpdate() {
   if(!_lwSeries || !_klineData.length) return;
@@ -3418,8 +3509,27 @@ function updateOrderTicket(price) {
 function setOrdType(type, btn) {
   ordType = type;
   document.querySelectorAll('.ot-type-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  var _st_limitPriceRow=document.getElementById('limitPriceRow'); if(_st_limitPriceRow) _st_limitPriceRow.style.display = (type==='limit'||type==='stop') ? 'flex' : 'none';
+  if(btn) btn.classList.add('active');
+  var row = document.getElementById('limitPriceRow');
+  var lbl = document.getElementById('limitPriceLabel');
+  var isPending = (type !== 'market');
+  if(row) row.style.display = isPending ? 'flex' : 'none';
+  if(lbl) {
+    var labels = {
+      'buy_limit':  'Buy Limit Fiyatı (piyasa altı)',
+      'sell_limit': 'Sell Limit Fiyatı (piyasa üstü)',
+      'buy_stop':   'Buy Stop Fiyatı (piyasa üstü)',
+      'sell_stop':  'Sell Stop Fiyatı (piyasa altı)'
+    };
+    lbl.textContent = labels[type] || 'Emir Fiyatı';
+  }
+  // Mobil işlem panelini de güncelle
+  var mOrdTypeRow = document.getElementById('mOrdTypeRow');
+  if(mOrdTypeRow) {
+    mOrdTypeRow.querySelectorAll('.m-pr').forEach(function(b){ b.classList.toggle('on', b.dataset.type===type); });
+  }
+  var mLimitRow = document.getElementById('mLimitRow');
+  if(mLimitRow) mLimitRow.style.display = isPending ? 'flex' : 'none';
 }
 
 function _applyReadOnlyUI(ro) {
@@ -3462,10 +3572,39 @@ function placeOrder(side) {
   var _bid = _mid - _spread / 2;
   let execPrice = (side === 'buy') ? _ask : _bid;
 
-  if (ordType === 'limit' || ordType === 'stop') {
+  // Bekleyen emirler (buy_limit, sell_limit, buy_stop, sell_stop)
+  if (ordType !== 'market') {
     const lp = parseFloat(document.getElementById('limitPrice').value);
-    if (!lp || lp <= 0) { showToast('Hata', 'Limit fiyat girin!'); return; }
-    execPrice = lp;
+    if (!lp || lp <= 0) { showToast('Hata', 'Emir fiyatı girin!'); return; }
+    // Fiyat validasyonu
+    var _curMid = p.price;
+    var _typeErr = '';
+    if(ordType==='buy_limit'  && lp >= _curMid) _typeErr = 'Buy Limit fiyatı piyasa fiyatının ALTINDA olmalı';
+    if(ordType==='sell_limit' && lp <= _curMid) _typeErr = 'Sell Limit fiyatı piyasa fiyatının ÜSTÜNDE olmalı';
+    if(ordType==='buy_stop'   && lp <= _curMid) _typeErr = 'Buy Stop fiyatı piyasa fiyatının ÜSTÜNDE olmalı';
+    if(ordType==='sell_stop'  && lp >= _curMid) _typeErr = 'Sell Stop fiyatı piyasa fiyatının ALTINDA olmalı';
+    if(_typeErr) { showToast('Hata', _typeErr); return; }
+    // Bekleyen emir oluştur
+    var _pendSide = (ordType==='buy_limit'||ordType==='buy_stop') ? 'buy' : 'sell';
+    var _pord = {
+      id: Date.now(),
+      sym: curSym,
+      type: ordType,
+      side: _pendSide,
+      price: lp,
+      qty: qty,
+      sl: sl,
+      tp: tp,
+      openTime: Date.now(),
+      label: (typeof MW_MAP!=='undefined'&&MW_MAP&&MW_MAP[curSym]) ? MW_MAP[curSym].name : curSym
+    };
+    pendingOrders.push(_pord);
+    localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
+    if(typeof fbSaveUserData==='function') fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
+    renderPendingOrders();
+    showToast('Emir Verildi ✓', ordType.replace('_',' ').toUpperCase()+' @ '+lp+' ('+qty+' lot)');
+    var _lpEl=document.getElementById('limitPrice'); if(_lpEl) _lpEl.value='';
+    return; // Market işlemi açma, bekleyen emir oluşturuldu
   }
 
   const sl = parseFloat(document.getElementById('ordSL').value) || null;
@@ -5377,6 +5516,7 @@ function openWallet(tab) {
       if(data) {
         if(data.balance !== undefined) { balance = parseFloat(data.balance)||0; updateAccount(); }
         if(Array.isArray(data.finlog)) finlog = data.finlog;
+        if(Array.isArray(data.pendingOrders)) { pendingOrders = data.pendingOrders; localStorage.setItem('tx_pending', JSON.stringify(pendingOrders)); renderPendingOrders(); }
       }
       fbLoadRequests(doOpen);
     });
@@ -5737,6 +5877,7 @@ function updateUI(sym, price, chg) {
     updateMwRow(sym, price, mwPrices[sym].prev);
   }
   updateTopSym(sym, price, chg);
+  checkPendingOrders(sym, price);
 }
 
 function updateMwRow(sym, price, prev) {
@@ -6189,6 +6330,7 @@ updateAccount();
   loadSpreadGroups();
   window._mainInitDone = true;
   if(typeof mInit==='function') setTimeout(mInit, 0);
+  if(typeof renderPendingOrders==='function') renderPendingOrders();
 
 
 
@@ -7882,6 +8024,24 @@ function adChangePassword() {
     </div>
   </div>
   <div class="m-tbody">
+    <!-- Emir tipi seçimi -->
+    <div id="mOrdTypeRow">
+      <div style="font-family:monospace;font-size:9px;color:#2a2a2a;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
+        <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
+        <button class="m-pr" data-type="sell_limit" onclick="setOrdType('sell_limit',null);mOrdTypeBtn(this)">Sell Limit</button>
+        <button class="m-pr" data-type="buy_stop" onclick="setOrdType('buy_stop',null);mOrdTypeBtn(this)">Buy Stop</button>
+        <button class="m-pr" data-type="sell_stop" onclick="setOrdType('sell_stop',null);mOrdTypeBtn(this)">Sell Stop</button>
+      </div>
+    </div>
+    <!-- Limit fiyat - sadece market dışında göster -->
+    <div id="mLimitRow" style="display:none">
+      <div class="m-ig">
+        <div class="m-il" id="mLimitLabel">Emir Fiyatı</div>
+        <input class="m-in" id="mLimitPrice" type="number" placeholder="0.00" step="any">
+      </div>
+    </div>
     <div>
       <div style="font-family:monospace;font-size:9px;color:#2a2a2a;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
       <div class="m-lot">
@@ -7895,9 +8055,12 @@ function adChangePassword() {
       <div class="m-ig"><div class="m-il">STOP LOSS</div><input class="m-in" id="mSL" type="number" placeholder="—" step="any"></div>
       <div class="m-ig"><div class="m-il">TAKE PROFIT</div><input class="m-in" id="mTP" type="number" placeholder="—" step="any"></div>
     </div>
-    <div class="m-btns">
+    <div class="m-btns" id="mMarketBtns">
       <button class="m-bs" onclick="mOrd('sell')">▼ SAT</button>
       <button class="m-bb" onclick="mOrd('buy')">▲ AL</button>
+    </div>
+    <div id="mPendingBtn" style="display:none">
+      <button style="width:100%;padding:16px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:15px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="mPlacePending()">⏳ EMİR VER</button>
     </div>
   </div>
 </div>
@@ -8204,6 +8367,44 @@ function adChangePassword() {
   window.mCP=function(id){ if(typeof closePosition==='function') closePosition(id); setTimeout(mFP,200); };
 
   // Hesap
+  // Mobil emir tipi buton
+  window.mOrdTypeBtn = function(btn) {
+    var row = document.getElementById('mOrdTypeRow');
+    if(row) row.querySelectorAll('.m-pr').forEach(function(b){ b.classList.remove('on'); });
+    btn.classList.add('on');
+    var type = btn.dataset.type;
+    var isMarket = type === 'market';
+    var limitRow = document.getElementById('mLimitRow');
+    var marketBtns = document.getElementById('mMarketBtns');
+    var pendingBtn = document.getElementById('mPendingBtn');
+    var lbl = document.getElementById('mLimitLabel');
+    if(limitRow) limitRow.style.display = isMarket ? 'none' : 'flex';
+    if(marketBtns) marketBtns.style.display = isMarket ? 'grid' : 'none';
+    if(pendingBtn) pendingBtn.style.display = isMarket ? 'none' : 'block';
+    var labels = {
+      buy_limit:'Buy Limit Fiyatı (piyasa altı)',
+      sell_limit:'Sell Limit Fiyatı (piyasa üstü)',
+      buy_stop:'Buy Stop Fiyatı (piyasa üstü)',
+      sell_stop:'Sell Stop Fiyatı (piyasa altı)'
+    };
+    if(lbl) lbl.textContent = labels[type] || 'Emir Fiyatı';
+  };
+
+  // Mobil bekleyen emir ver
+  window.mPlacePending = function() {
+    var lpEl = document.getElementById('mLimitPrice');
+    var lpDt = document.getElementById('limitPrice');
+    if(lpEl && lpDt) lpDt.value = lpEl.value;
+    var lot = parseFloat((document.getElementById('mLI')||{}).value)||0.01;
+    var sl = parseFloat((document.getElementById('mSL')||{}).value)||null;
+    var tp = parseFloat((document.getElementById('mTP')||{}).value)||null;
+    var qe=document.getElementById('ordQty'); if(qe) qe.value=lot;
+    var se=document.getElementById('ordSL'); if(se) se.value=sl||'';
+    var te=document.getElementById('ordTP'); if(te) te.value=tp||'';
+    if(typeof placeOrder==='function') placeOrder(ordType==='buy_limit'||ordType==='buy_stop'?'buy':'sell');
+    if(lpEl) lpEl.value='';
+  };
+
   function mFA(){
     var cu=typeof _cu!=='undefined'?_cu:null;
     var bal=typeof balance!=='undefined'?balance:0;
