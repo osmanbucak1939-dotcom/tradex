@@ -7370,9 +7370,82 @@ function adChangePassword() {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  #mPanMarket .mw-item  { padding: 11px 14px; min-height: 48px; }
-  #mPanMarket .mw-sym   { font-size: 13px; }
-  #mPanMarket .mw-price { font-size: 13px; }
+
+  /* Mobil mw-row - yeni tasarım */
+  #mPanMarket .mw-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    min-height: 58px !important;
+    border-bottom: 1px solid #1a1a1a !important;
+    background: #0a0a0a !important;
+  }
+  #mPanMarket .mw-row:active { background: #111 !important; }
+  #mPanMarket .mw-row.active-sym { background: rgba(240,185,11,.06) !important; border-left: 3px solid #f0b90b !important; }
+
+  /* İkon */
+  #mPanMarket .mw-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    font-size: 20px !important;
+    display: flex; align-items: center; justify-content: center;
+    background: #141414; border-radius: 50%;
+  }
+
+  /* Sembol blok */
+  #mPanMarket .mw-sym-block { flex: 1; min-width: 0; }
+  #mPanMarket .mw-sym-name {
+    font-size: 13px !important; font-weight: 700 !important;
+    color: #e0e0e0 !important; letter-spacing: .3px;
+  }
+  #mPanMarket .mw-sym-full {
+    font-size: 10px !important; color: #444 !important;
+    margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  /* Fiyat butonları */
+  #mPanMarket .mw-bid, #mPanMarket .mw-ask {
+    width: 72px !important; flex-shrink: 0;
+    padding: 6px 0 !important;
+    text-align: center !important;
+    border-radius: 6px !important;
+    font-size: 12px !important; font-weight: 700 !important;
+  }
+  #mPanMarket .mw-bid {
+    background: rgba(239,83,80,.15) !important;
+    color: #ef5350 !important;
+    border: 1px solid rgba(239,83,80,.2) !important;
+  }
+  #mPanMarket .mw-ask {
+    background: rgba(38,166,154,.15) !important;
+    color: #26a69a !important;
+    border: 1px solid rgba(38,166,154,.2) !important;
+  }
+
+  /* Spread gizle mobilde */
+  #mPanMarket .mw-spread-col { display: none !important; }
+
+  /* Grup başlığı */
+  #mPanMarket .mw-group-header {
+    padding: 8px 14px !important;
+    background: #0f0f0f !important;
+    border-bottom: 1px solid #1a1a1a !important;
+    position: sticky; top: 0; z-index: 1;
+  }
+  #mPanMarket .mw-group-title {
+    font-size: 10px !important; letter-spacing: 1.5px !important;
+    color: #555 !important;
+  }
+
+  /* Arama kutusu */
+  #mSrch {
+    background: #111 !important;
+    border: 1px solid #1e1e1e !important;
+    border-radius: 10px !important;
+    color: #ccc !important;
+    font-size: 13px !important;
+  }
 
   /* ── İşlem ── */
   #mPanTrade { overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -7533,9 +7606,13 @@ function adChangePassword() {
 
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
-  <div class="m-phead">PİYASALAR</div>
   <div style="padding:10px 12px;flex-shrink:0">
-    <input id="mSrch" style="width:100%;padding:10px 14px;font-size:14px;border-radius:8px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)">
+    <input id="mSrch" style="width:100%;padding:11px 16px;font-size:14px;border-radius:10px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)">
+  </div>
+  <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid #1a1a1a;">
+    <div style="flex:1;font-family:monospace;font-size:9px;color:#333;letter-spacing:1px;text-transform:uppercase">Sembol</div>
+    <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#ef5350;letter-spacing:.5px">SAT</div>
+    <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#26a69a;letter-spacing:.5px;margin-left:6px">AL</div>
   </div>
   <div class="m-mwb" id="mMwBody" onclick="var t=event.target;while(t&&t.id!=='mMwBody'){if(t.dataset&&t.dataset.sym){mMwPick(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
 </div>
