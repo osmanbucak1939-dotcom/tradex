@@ -5728,18 +5728,17 @@ function updateMwRow(sym, price, prev) {
   // Chg badge güncelle
   var chg = (typeof mwPrices!=='undefined' && mwPrices[sym]) ? mwPrices[sym].chg||0 : 0;
   _mwUpdateChg(sym, chg);
-  // Mobil mMwBody'deki kopyayı da güncelle
-  var mRow = document.querySelector('#mMwBody #mwr-'+sym);
+  // Mobil mMwBody'deki satırı güncelle
+  var mb = document.getElementById('mmwb-'+sym);
+  var ma = document.getElementById('mmwa-'+sym);
+  var mRow = document.getElementById('mmwr-'+sym);
+  if(mb) mb.textContent = bid.toFixed(it.decimals);
+  if(ma) ma.textContent = ask.toFixed(it.decimals);
   if(mRow) {
-    var mb = mRow.querySelector('.mw-bid');
-    var ma = mRow.querySelector('.mw-ask');
-    if(mb) mb.textContent = bid.toFixed(it.decimals);
-    if(ma) ma.textContent = ask.toFixed(it.decimals);
-    mRow.dataset.dir = row.dataset.dir;
     _mwApplyDirColor(mRow, up, neutral);
-    var mChg = mRow.querySelector('.mw-chg');
-    var sChg = row.querySelector('.mw-chg');
-    if(mChg && sChg) { mChg.textContent = sChg.textContent; mChg.className = sChg.className; }
+    var mChg = document.getElementById('mmwc-'+sym);
+    var chgVal2 = (typeof mwPrices!=='undefined'&&mwPrices[sym])?mwPrices[sym].chg||0:0;
+    if(mChg) { mChg.textContent=(chgVal2>=0?'▲':'▼')+' '+Math.abs(chgVal2).toFixed(2)+'%'; mChg.className='mw-chg '+(chgVal2>=0?'mw-chg-u':'mw-chg-d'); }
   }
 }
 
@@ -5828,12 +5827,9 @@ function renderMarketWatch(filter) {
         var chgHtml = '<span class="mw-chg ' + (chgUp?'mw-chg-u':'mw-chg-d') + '" id="mwc-' + it2.sym + '">'
           + (chgUp ? '▲' : '▼') + ' ' + chgAbs + '%</span>';
         html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + ' ' + chgHtml + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
-        html += '<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
-          + '<div class="mw-bid">' + bid + '</div>'
-          + '<div class="mw-spd-badge">' + spd + '</div>'
-          + '<div class="mw-ask">' + ask + '</div>'
-          + '</div>';
-        html += '<div class="mw-spread-col" style="display:none">' + spd + '</div></div>';
+        html += '<div class="mw-bid">' + bid + '</div>';
+        html += '<div class="mw-ask">' + ask + '</div>';
+        html += '<div class="mw-spread-col">' + spd + '</div></div>';
       }
     }
   }
@@ -7850,27 +7846,59 @@ function adChangePassword() {
 
   // Piyasalar
   function mFM(){
-    var src=document.getElementById('mwBody'), dst=document.getElementById('mMwBody');
-    if(!src||!dst) return;
-    if(!dst.children.length){
-      dst.innerHTML=src.innerHTML;
-      return;
+    var dst=document.getElementById('mMwBody');
+    if(!dst) return;
+    if(typeof MARKET_GROUPS==='undefined'||!MARKET_GROUPS){ return; }
+    var filter=(document.getElementById('mSrch')||{}).value||'';
+    filter=filter.toLowerCase();
+    var scrollTop=dst.scrollTop;
+    var html='';
+    for(var gi=0;gi<MARKET_GROUPS.length;gi++){
+      var g=MARKET_GROUPS[gi];
+      var items=[];
+      for(var ii=0;ii<g.items.length;ii++){
+        var it=g.items[ii];
+        var match=!filter||it.name.toLowerCase().indexOf(filter)>=0||it.full.toLowerCase().indexOf(filter)>=0;
+        if(match) items.push(it);
+      }
+      if(!items.length) continue;
+      var isOpen=(typeof mwGroupState!=='undefined'&&mwGroupState[g.id]!==false);
+      html+='<div class="mw-group-header" data-gid="'+g.id+'" onclick="toggleMwGroup(this.dataset.gid)">'
+        +'<span class="mw-group-title">'+g.label+' <span style="opacity:.5">('+items.length+')</span></span>'
+        +'<span class="mw-group-arrow'+(isOpen?' open':'')+'">▶</span></div>';
+      if(isOpen){
+        for(var ri=0;ri<items.length;ri++){
+          var it2=items[ri];
+          var mwp=(typeof mwPrices!=='undefined'&&mwPrices)?mwPrices[it2.sym]:null;
+          var pr=mwp?mwp.price:(it2.mockPrice||0);
+          var bid=pr?(pr-it2.spread/2).toFixed(it2.decimals):'—';
+          var ask=pr?(pr+it2.spread/2).toFixed(it2.decimals):'—';
+          var pipSize=Math.pow(10,-(it2.decimals-1));
+          var spd=(it2.spread/pipSize).toFixed(1);
+          if(spd.endsWith('.0')) spd=spd.slice(0,-2);
+          var chgVal=mwp&&mwp.chg!==undefined?mwp.chg:0;
+          var chgAbs=Math.abs(chgVal).toFixed(2);
+          var chgUp=chgVal>=0;
+          var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
+          var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
+          var ico=(it2.icon&&it2.icon.trim()&&it2.icon.trim().length<=2)?it2.icon.trim():'';
+          var dotColor=it2.color||'#f0b90b';
+          var icoHtml=ico?'<div class="mw-icon">'+ico+'</div>'
+            :'<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span></div>';
+          html+='<div id="mmwr-'+it2.sym+'" class="'+rowCls+'" data-sym="'+it2.sym+'" data-gid="'+g.id+'">'
+            +icoHtml
+            +'<div class="mw-sym-block"><div class="mw-sym-name">'+it2.name+' '+chgHtml+'</div><div class="mw-sym-full">'+it2.full+'</div></div>'
+            +'<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
+              +'<div class="mw-bid" id="mmwb-'+it2.sym+'">'+bid+'</div>'
+              +'<div class="mw-spd-badge">'+spd+'</div>'
+              +'<div class="mw-ask" id="mmwa-'+it2.sym+'">'+ask+'</div>'
+            +'</div>'
+          +'</div>';
+        }
+      }
     }
-    var srcRows=src.querySelectorAll('.mw-row[data-sym]');
-    for(var i=0;i<srcRows.length;i++){
-      var sym=srcRows[i].dataset.sym;
-      var dstRow=dst.querySelector('.mw-row[data-sym="'+sym+'"]');
-      if(!dstRow) continue;
-      var sBid=srcRows[i].querySelector('.mw-bid');
-      var sAsk=srcRows[i].querySelector('.mw-ask');
-      var sSpd=srcRows[i].querySelector('.mw-spd-badge');
-      var dBid=dstRow.querySelector('.mw-bid');
-      var dAsk=dstRow.querySelector('.mw-ask');
-      var dSpd=dstRow.querySelector('.mw-spd-badge');
-      if(sBid&&dBid&&sBid.textContent!==dBid.textContent) dBid.textContent=sBid.textContent;
-      if(sAsk&&dAsk&&sAsk.textContent!==dAsk.textContent) dAsk.textContent=sAsk.textContent;
-      if(sSpd&&dSpd&&sSpd.textContent!==dSpd.textContent) dSpd.textContent=sSpd.textContent;
-    }
+    dst.innerHTML=html;
+    dst.scrollTop=scrollTop;
   }
   window.mMwPick=function(sym,gid){
     if(typeof switchSym==='function') switchSym(sym);
