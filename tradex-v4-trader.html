@@ -5770,8 +5770,9 @@ function renderMarketWatch(filter) {
           : '<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
         html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
         html += '<div class="mw-bid">' + bid + '</div>';
+        html += '<div class="mw-spd-badge">' + spd + '</div>';
         html += '<div class="mw-ask">' + ask + '</div>';
-        html += '<div class="mw-spread-col">' + spd + '</div></div>';
+        html += '<div class="mw-spread-col" style="display:none">' + spd + '</div></div>';
       }
     }
   }
@@ -7426,6 +7427,21 @@ function adChangePassword() {
   /* Spread gizle mobilde */
   #mPanMarket .mw-spread-col { display: none !important; }
 
+  /* Spread badge - bid/ask arası */
+  #mPanMarket .mw-spd-badge {
+    font-family: monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #555;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 2px 5px;
+    text-align: center;
+    flex-shrink: 0;
+    letter-spacing: .3px;
+  }
+
   /* Grup başlığı */
   #mPanMarket .mw-group-header {
     padding: 8px 14px !important;
@@ -7751,10 +7767,13 @@ function adChangePassword() {
       if(!dstRow) continue;
       var sBid=srcRows[i].querySelector('.mw-bid');
       var sAsk=srcRows[i].querySelector('.mw-ask');
+      var sSpd=srcRows[i].querySelector('.mw-spd-badge');
       var dBid=dstRow.querySelector('.mw-bid');
       var dAsk=dstRow.querySelector('.mw-ask');
+      var dSpd=dstRow.querySelector('.mw-spd-badge');
       if(sBid&&dBid&&sBid.textContent!==dBid.textContent) dBid.textContent=sBid.textContent;
       if(sAsk&&dAsk&&sAsk.textContent!==dAsk.textContent) dAsk.textContent=sAsk.textContent;
+      if(sSpd&&dSpd&&sSpd.textContent!==dSpd.textContent) dSpd.textContent=sSpd.textContent;
     }
   }
   window.mMwPick=function(sym,gid){
