@@ -5769,9 +5769,11 @@ function renderMarketWatch(filter) {
           ? '<div class="mw-icon">' + _ico + '</div>'
           : '<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
         html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
-        html += '<div class="mw-bid">' + bid + '</div>';
-        html += '<div class="mw-spd-badge">' + spd + '</div>';
-        html += '<div class="mw-ask">' + ask + '</div>';
+        html += '<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
+          + '<div class="mw-bid">' + bid + '</div>'
+          + '<div class="mw-spd-badge">' + spd + '</div>'
+          + '<div class="mw-ask">' + ask + '</div>'
+          + '</div>';
         html += '<div class="mw-spread-col" style="display:none">' + spd + '</div></div>';
       }
     }
@@ -7376,11 +7378,12 @@ function adChangePassword() {
   #mPanMarket .mw-row {
     display: flex !important;
     align-items: center !important;
-    padding: 10px 14px !important;
+    padding: 10px 14px 16px 14px !important;
     gap: 10px !important;
-    min-height: 58px !important;
+    min-height: 62px !important;
     border-bottom: 1px solid #1a1a1a !important;
     background: #0a0a0a !important;
+    overflow: visible !important;
   }
   #mPanMarket .mw-row:active { background: #111 !important; }
   #mPanMarket .mw-row.active-sym { background: rgba(240,185,11,.06) !important; border-left: 3px solid #f0b90b !important; }
@@ -7405,41 +7408,56 @@ function adChangePassword() {
     max-width: 140px;
   }
 
-  /* Fiyat butonları */
+  /* Fiyat grubu - bid/ask/spread sarmalayıcı */
+  #mPanMarket .mw-price-group {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+    gap: 0;
+  }
   #mPanMarket .mw-bid, #mPanMarket .mw-ask {
-    width: 72px !important; flex-shrink: 0;
-    padding: 6px 0 !important;
+    width: 76px !important;
+    padding: 8px 0 !important;
     text-align: center !important;
-    border-radius: 6px !important;
-    font-size: 12px !important; font-weight: 700 !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    font-family: monospace !important;
   }
   #mPanMarket .mw-bid {
-    background: rgba(239,83,80,.15) !important;
+    background: rgba(239,83,80,.18) !important;
     color: #ef5350 !important;
-    border: 1px solid rgba(239,83,80,.2) !important;
+    border: 1px solid rgba(239,83,80,.25) !important;
+    border-radius: 8px 0 0 8px !important;
   }
   #mPanMarket .mw-ask {
-    background: rgba(38,166,154,.15) !important;
+    background: rgba(38,166,154,.18) !important;
     color: #26a69a !important;
-    border: 1px solid rgba(38,166,154,.2) !important;
+    border: 1px solid rgba(38,166,154,.25) !important;
+    border-radius: 0 8px 8px 0 !important;
   }
 
   /* Spread gizle mobilde */
   #mPanMarket .mw-spread-col { display: none !important; }
 
-  /* Spread badge - bid/ask arası */
+  /* Spread badge - tam ortada, üste çıkan pill */
   #mPanMarket .mw-spd-badge {
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
     font-family: monospace;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
-    color: #555;
-    background: #141414;
-    border: 1px solid #222;
-    border-radius: 10px;
-    padding: 2px 5px;
-    text-align: center;
-    flex-shrink: 0;
-    letter-spacing: .3px;
+    color: #888;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 1px 6px;
+    white-space: nowrap;
+    z-index: 2;
+    pointer-events: none;
   }
 
   /* Grup başlığı */
