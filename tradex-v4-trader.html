@@ -277,7 +277,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .btn-alarm-add:hover { background:var(--accent); color:#000; }
 
 /* TOAST */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--mono); font-size:12px; color:var(--text); z-index:999; opacity:0; transition:all .25s; white-space:nowrap; }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--mono); font-size:12px; color:var(--text); z-index:9999; opacity:0; transition:all .25s; white-space:nowrap; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .toast .tt { font-weight:700; margin-bottom:2px; }
 
@@ -7386,6 +7386,9 @@ function adChangePassword() {
   .bottom-panel    { display: none !important; }
   .workspace       { flex-direction: column !important; }
   .chart-area      { width: 100% !important; }
+  /* Toast mobilde nav üstünde */
+  .toast { bottom: 72px !important; }
+
   /* Mobil sembol dropdown */
   #mSymDrop {
     position: relative;
@@ -8263,6 +8266,18 @@ function adChangePassword() {
     if(lotEl) _mqlot=Math.max(0.01,parseFloat(lotEl.value)||_mqlot);
     var qe=document.getElementById('ordQty'); if(qe) qe.value=_mqlot;
     if(typeof placeOrder==='function') placeOrder(side);
+    // Buton flash efekti
+    var btns=document.querySelectorAll('#mQuickBar button');
+    btns.forEach(function(b){
+      var isSell=b.textContent.indexOf('SAT')!==-1;
+      var isThis=(side==='sell'&&isSell)||(side==='buy'&&!isSell);
+      if(isThis){
+        var origBg=b.style.background;
+        b.style.background=side==='buy'?'rgba(38,166,154,.6)':'rgba(239,83,80,.6)';
+        b.style.transition='background .1s';
+        setTimeout(function(){ b.style.background=origBg; },300);
+      }
+    });
     setTimeout(function(){ mQUpdate(); },200);
   };
 
@@ -8336,4 +8351,3 @@ function adChangePassword() {
 
 </body>
 </html>
-
