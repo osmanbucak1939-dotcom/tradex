@@ -7811,14 +7811,13 @@ function adChangePassword() {
   // Nav + panelleri sadece mobilde göster
   function mShow(){
     if(window.innerWidth > 768){
-      // Masaüstü - workspace görünür, panelleri temizle
-      var ws=document.getElementById('appWrap');
-      if(ws) ws.style.visibility='visible';
       mHideAll();
+      var ca=document.querySelector('.chart-area');
+      if(ca) ca.style.visibility='visible';
     } else {
-      // Mobil - workspace'i başlangıçta gizle (mGo açacak)
-      var ws=document.getElementById('appWrap');
-      if(ws && ws.style.visibility !== 'visible') ws.style.visibility='hidden';
+      // Mobil - grafik alanını gizle
+      var ca=document.querySelector('.chart-area');
+      if(ca) ca.style.visibility='hidden';
     }
   }
   function mHideAll(){
@@ -7840,10 +7839,10 @@ function adChangePassword() {
     if(btn) btn.classList.add('on');
     mHideAll();
     // Grafik alanını sadece chart sekmesinde göster
-    var ws=document.getElementById('appWrap');
-    if(ws){
-      if(tab==='chart'){ ws.style.visibility='visible'; }
-      else { ws.style.visibility='hidden'; }
+    var ca=document.querySelector('.chart-area');
+    if(ca){
+      if(tab==='chart'){ ca.style.visibility='visible'; }
+      else { ca.style.visibility='hidden'; }
     }
     var map={market:'mPanMarket',trade:'mPanTrade',pos:'mPanPos',acc:'mPanAcc'};
     if(map[tab]){ document.getElementById(map[tab]).classList.add('on'); }
