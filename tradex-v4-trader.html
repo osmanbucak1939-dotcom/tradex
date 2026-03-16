@@ -7328,6 +7328,7 @@ function adChangePassword() {
 @media (max-width: 768px) {
   /* Mobilde workspace - grafik sekmesinde tam ekran */
   body.chart-active .workspace { display: flex !important; }
+  body.chart-active .chart-area { padding-bottom: 52px !important; }
 
   /* Wallet paneli mobilde tam genişlik bottom sheet */
   .wallet-overlay {
@@ -7361,7 +7362,25 @@ function adChangePassword() {
   .bottom-panel    { display: none !important; }
   .workspace       { flex-direction: column !important; }
   .chart-area      { width: 100% !important; }
-  .chart-toolbar   { display: none !important; }
+  /* chart-toolbar mobilde kompakt */
+  .chart-toolbar {
+    height: auto !important;
+    flex-wrap: wrap !important;
+    padding: 4px 6px !important;
+    gap: 3px !important;
+    min-height: 34px !important;
+  }
+  .chart-toolbar .ct-label { display: none !important; }
+  .chart-toolbar .ct-price-info { display: none !important; }
+  .chart-toolbar .ct-intervals { gap: 2px !important; }
+  .chart-toolbar .ct-btn {
+    padding: 3px 7px !important;
+    font-size: 10px !important;
+    height: 26px !important;
+    touch-action: manipulation;
+  }
+  .chart-toolbar .ct-type-btn { font-size: 12px !important; padding: 3px 6px !important; height: 26px !important; touch-action: manipulation; }
+  .chart-toolbar .draw-tool-btn { font-size: 12px !important; padding: 3px 6px !important; height: 26px !important; touch-action: manipulation; }
   body             { padding-bottom: 62px; }
 
   /* ── Alt nav ── */
@@ -7767,6 +7786,53 @@ function adChangePassword() {
   </div>
 </div>
 
+<!-- MOBİL HIZLI AL-SAT - sadece grafik sekmesinde görünür -->
+<div id="mQuickBar" style="
+  display:none;
+  position:fixed;
+  bottom:62px; left:0; right:0;
+  height:52px;
+  background:#111;
+  border-top:1px solid #1a1a1a;
+  z-index:7500;
+  display:none;
+  align-items:stretch;
+  gap:1px;
+">
+  <button onclick="mQOrd('sell')" style="
+    flex:1; background:rgba(239,83,80,.15); border:none;
+    color:#ef5350; font-family:monospace; font-size:13px; font-weight:700;
+    border-right:1px solid #1a1a1a; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1px; -webkit-tap-highlight-color:transparent;
+  ">
+    <span style="font-size:9px;color:#666;letter-spacing:.5px">SAT</span>
+    <span id="mqBid">—</span>
+  </button>
+  <div style="
+    width:70px; flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; background:#0a0a0a;
+  ">
+    <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">LOT</div>
+    <div style="display:flex;align-items:center;gap:3px">
+      <button onclick="mQLA(-1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">−</button>
+      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:30px;text-align:center">0.01</span>
+      <button onclick="mQLA(1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">+</button>
+    </div>
+  </div>
+  <button onclick="mQOrd('buy')" style="
+    flex:1; background:rgba(38,166,154,.15); border:none;
+    color:#26a69a; font-family:monospace; font-size:13px; font-weight:700;
+    border-left:1px solid #1a1a1a; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1px; -webkit-tap-highlight-color:transparent;
+  ">
+    <span style="font-size:9px;color:#666;letter-spacing:.5px">AL</span>
+    <span id="mqAsk">—</span>
+  </button>
+</div>
+
 <div id="mPanPos" class="m-pan">
   <div class="m-tabs">
     <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
@@ -7839,14 +7905,18 @@ function adChangePassword() {
 
     var map={market:'mPanMarket',trade:'mPanTrade',pos:'mPanPos',acc:'mPanAcc'};
     if(map[tab]){ document.getElementById(map[tab]).classList.add('on'); }
+    var mqb=document.getElementById('mQuickBar');
     if(tab==='chart'){
       document.body.classList.add('chart-active');
+      if(mqb) mqb.style.display='flex';
+      mQUpdate();
       setTimeout(function(){
         if(typeof resizeCanvas==='function') resizeCanvas();
         if(window._lw){ var w=document.getElementById('lwChart'); if(w&&w.offsetWidth>0) window._lw.resize(w.offsetWidth,w.offsetHeight); }
       },80);
     } else {
       document.body.classList.remove('chart-active');
+      if(mqb) mqb.style.display='none';
     }
     if(tab==='market') mFM();
     if(tab==='trade')  mFT();
@@ -8066,6 +8136,37 @@ function adChangePassword() {
     }
     if(_ct==='acc') mFA();
     if(_ct==='market') mFM();
+    if(_ct==='chart') mQUpdate();
+  };
+
+  // Hızlı al-sat fonksiyonları
+  var _mqlot = 0.01;
+  function mQUpdate(){
+    var sym=typeof curSym!=='undefined'?curSym:'';
+    var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
+    var dec=sc?parseInt(sc.decimals)||2:2;
+    var sp=sc?parseFloat(sc.spread)||0:0;
+    var p=(typeof prices!=='undefined'&&prices[sym])?prices[sym]:null;
+    var mid=p?p.price:0;
+    var bid=document.getElementById('mqBid');
+    var ask=document.getElementById('mqAsk');
+    var lot=document.getElementById('mqLot');
+    if(bid) bid.textContent=mid?(mid-sp/2).toFixed(dec):'—';
+    if(ask) ask.textContent=mid?(mid+sp/2).toFixed(dec):'—';
+    if(lot) lot.textContent=_mqlot;
+  }
+  window.mQLA=function(d){
+    var sym=typeof curSym!=='undefined'?curSym:'';
+    var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
+    var st=sc?parseFloat(sc.minLot)||0.01:0.01;
+    _mqlot=Math.max(st,parseFloat((_mqlot+d*st).toFixed(8)));
+    var lot=document.getElementById('mqLot');
+    if(lot) lot.textContent=_mqlot;
+  };
+  window.mQOrd=function(side){
+    var qe=document.getElementById('ordQty'); if(qe) qe.value=_mqlot;
+    if(typeof placeOrder==='function') placeOrder(side);
+    setTimeout(function(){ mQUpdate(); },200);
   };
 
   // Init — login sonrası çağrılır
