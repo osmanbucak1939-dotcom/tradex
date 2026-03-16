@@ -7234,6 +7234,7 @@ function adChangePassword() {
 /* Nav ve paneller varsayılan olarak gizli — JS açar */
 #mNav                { display: none; }
 .m-pan               { display: none; }
+.m-pan.on            { display: flex !important; }
 
 @media (max-width: 768px) {
   /* Desktop elementleri gizle */
@@ -7259,7 +7260,7 @@ function adChangePassword() {
 
   /* ── Alt nav ── */
   #mNav {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 62px;
@@ -7574,10 +7575,9 @@ function adChangePassword() {
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
-    var nav=document.getElementById('mNav');
-    if(!nav) return;
-    if(mob()){ nav.style.display='flex'; }
-    else { nav.style.display='none'; mHideAll(); }
+    // mNav artık CSS media query ile kontrol ediliyor
+    // Masaüstünde panelleri temizle
+    if(window.innerWidth > 768){ mHideAll(); }
   }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
