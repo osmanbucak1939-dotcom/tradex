@@ -5314,7 +5314,27 @@ function openWallet(tab) {
   tab = tab || 'deposit';
   // Firebase'den taze bakiye + finlog + talepler çek, sonra aç
   var doOpen = function() {
-    document.getElementById('walletOverlay').classList.add('open');
+    var ov = document.getElementById('walletOverlay');
+    var panel = ov.querySelector('.wallet-panel');
+    // Mobilde JS ile style uygula
+    if(window.innerWidth <= 768) {
+      ov.style.alignItems = 'flex-end';
+      ov.style.padding = '0';
+      panel.style.width = '100vw';
+      panel.style.maxWidth = '100vw';
+      panel.style.borderRadius = '14px 14px 0 0';
+      panel.style.marginBottom = '62px';
+      panel.style.maxHeight = 'calc(88vh - 62px)';
+    } else {
+      ov.style.alignItems = '';
+      ov.style.padding = '';
+      panel.style.width = '';
+      panel.style.maxWidth = '';
+      panel.style.borderRadius = '';
+      panel.style.marginBottom = '';
+      panel.style.maxHeight = '';
+    }
+    ov.classList.add('open');
     var tabEl = document.querySelector('.wallet-tab[data-tab="'+tab+'"]') || document.querySelector('.wallet-tab');
     walletTab(tab, tabEl);
   };
