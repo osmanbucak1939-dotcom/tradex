@@ -5725,6 +5725,9 @@ function updateMwRow(sym, price, prev) {
   // Yön class'ı sakla - mobil renk için
   row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
   _mwApplyDirColor(row, up, neutral);
+  // Chg badge güncelle
+  var chg = (typeof mwPrices!=='undefined' && mwPrices[sym]) ? mwPrices[sym].chg||0 : 0;
+  _mwUpdateChg(sym, chg);
   // Mobil mMwBody'deki kopyayı da güncelle
   var mRow = document.querySelector('#mMwBody #mwr-'+sym);
   if(mRow) {
@@ -5734,7 +5737,20 @@ function updateMwRow(sym, price, prev) {
     if(ma) ma.textContent = ask.toFixed(it.decimals);
     mRow.dataset.dir = row.dataset.dir;
     _mwApplyDirColor(mRow, up, neutral);
+    var mChg = mRow.querySelector('.mw-chg');
+    var sChg = row.querySelector('.mw-chg');
+    if(mChg && sChg) { mChg.textContent = sChg.textContent; mChg.className = sChg.className; }
   }
+}
+
+function _mwUpdateChg(sym, chg) {
+  var abs = Math.abs(chg).toFixed(2);
+  var up = chg >= 0;
+  var txt = (up ? '▲' : '▼') + ' ' + abs + '%';
+  var cls = 'mw-chg ' + (up ? 'mw-chg-u' : 'mw-chg-d');
+  // Desktop
+  var el = document.getElementById('mwc-'+sym);
+  if(el) { el.textContent = txt; el.className = cls; }
 }
 
 function _mwApplyDirColor(row, up, neutral) {
@@ -5806,7 +5822,12 @@ function renderMarketWatch(filter) {
         html += _ico
           ? '<div class="mw-icon">' + _ico + '</div>'
           : '<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
-        html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
+        var chgVal = (mwPrices[it2.sym] && mwPrices[it2.sym].chg !== undefined) ? mwPrices[it2.sym].chg : 0;
+        var chgAbs = Math.abs(chgVal).toFixed(2);
+        var chgUp = chgVal >= 0;
+        var chgHtml = '<span class="mw-chg ' + (chgUp?'mw-chg-u':'mw-chg-d') + '" id="mwc-' + it2.sym + '">'
+          + (chgUp ? '▲' : '▼') + ' ' + chgAbs + '%</span>';
+        html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + ' ' + chgHtml + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
         html += '<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
           + '<div class="mw-bid">' + bid + '</div>'
           + '<div class="mw-spd-badge">' + spd + '</div>'
@@ -5829,6 +5850,10 @@ function mwFilter(val) {
     for(var _fi=0; _fi<MARKET_GROUPS.length; _fi++) mwGroupState[MARKET_GROUPS[_fi].id] = true;
   }
   renderMarketWatch(val);
+  // Mobil piyasalar panelini de güncelle
+  var src = document.getElementById('mwBody');
+  var dst = document.getElementById('mMwBody');
+  if(src && dst) dst.innerHTML = src.innerHTML;
 }
 
 function mwSelect(sym, groupId) {
@@ -7512,6 +7537,19 @@ function adChangePassword() {
     color: #555 !important;
   }
 
+  /* Değişim yüzdesi badge */
+  .mw-chg {
+    font-family: monospace;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+  .mw-chg-u { color: #26a69a; background: rgba(38,166,154,.12); }
+  .mw-chg-d { color: #ef5350; background: rgba(239,83,80,.12); }
+
   /* Arama kutusu */
   #mSrch {
     background: #111 !important;
@@ -7760,8 +7798,8 @@ function adChangePassword() {
 </div>
 
 <div id="mNav">
-  <button class="mn-btn"     id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
-  <button class="mn-btn on"  id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
+  <button class="mn-btn on"  id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
+  <button class="mn-btn"     id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
   <button class="mn-btn"     id="mnT" onclick="mGo('trade',this)"><span class="ic">💹</span><span>İşlem</span></button>
   <button class="mn-btn"     id="mnP" onclick="mGo('pos',this)"><span class="ic">📋</span><span>Pozisyon</span></button>
   <button class="mn-btn"     id="mnA" onclick="mGo('acc',this)"><span class="ic">👤</span><span>Hesap</span></button>
@@ -7769,7 +7807,7 @@ function adChangePassword() {
 
 <script>
 (function(){
-  var _ct='chart', _lot=0.01, _ptab='open';
+  var _ct='market', _lot=0.01, _ptab='open';
   function mob(){ return window.innerWidth<=768; }
 
   // Nav + panelleri sadece mobilde göster
@@ -7995,7 +8033,7 @@ function adChangePassword() {
   // Init — login sonrası çağrılır
   window.mInit=function(){
     mShow();
-    if(mob()) mGo('chart',document.getElementById('mnC'));
+    if(mob()) mGo('market',document.getElementById('mnM'));
   };
   // Sayfa yüklenince hemen çalış (login öncesi de mobil nav görünsün)
   if(document.readyState==='loading'){
