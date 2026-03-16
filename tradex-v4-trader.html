@@ -7239,6 +7239,15 @@ function adChangePassword() {
 .m-pan.on            { display: flex !important; }
 
 @media (max-width: 768px) {
+  /* Wallet paneli mobilde tam ekran */
+  .wallet-overlay { align-items: flex-end !important; }
+  .wallet-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 85vh !important;
+    border-radius: 12px 12px 0 0 !important;
+    margin: 0 !important;
+  }
   /* Desktop elementleri gizle */
   .ticker-strip    { display: none !important; }
   .resize-handle-x { display: none !important; }
