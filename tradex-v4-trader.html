@@ -612,6 +612,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
 .mw-spread-col { font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; }
 
+/* Sembol dropdown - sadece mobilde */
+#mSymDrop { display: none; }
+
 /* column headers */
 .mw-col-headers {
   display:grid;
@@ -7428,8 +7431,8 @@ function adChangePassword() {
     min-height: 34px !important;
   }
   .chart-toolbar .ct-label { display: none !important; } /* desktop label gizli, mobil kendi labelı var */
-  #mSymDrop { display: block; }
-#mSymDrop { display: none !important; } /* desktop'ta gizli */
+  #mSymDrop { display: block !important; }
+
   .chart-toolbar .ct-price-info { display: none !important; }
   .chart-toolbar .ct-intervals { gap: 2px !important; }
   .chart-toolbar .ct-btn {
