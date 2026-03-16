@@ -4935,7 +4935,13 @@ function clearPortfolio() {
   portfolio = []; save(); renderPortMgr(); renderPortfolio();
 }
 
-function savePayMethods() { localStorage.setItem('tx_paymethods', JSON.stringify(payMethods)); }
+function savePayMethods() {
+  localStorage.setItem('tx_paymethods', JSON.stringify(payMethods));
+  if(typeof db!=='undefined'&&db){
+    db.collection('broker').doc('payMethods').set({ data: JSON.stringify(payMethods) })
+      .catch(function(e){ console.warn('payMethods Firebase yazma hatası:', e); });
+  }
+}
 
 function saveRequests() {
   localStorage.setItem('tx_wreqs', JSON.stringify(withdrawRequests));
@@ -5196,7 +5202,9 @@ function addPayMethod() {
     window._editPayMethodIdx = undefined;
   } else {
     payMethods.push(m);
-  }yMethodList();
+  }
+  savePayMethods();
+  renderPayMethodList();
   showToast('Eklendi ✓', name+' ödeme yöntemi eklendi');
   ['pm_name','pm_icon','pm_bank_name','pm_holder','pm_iban','pm_ref','pm_network','pm_wallet','pm_note','pm_min','pm_crypto_min'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
