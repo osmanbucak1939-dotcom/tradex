@@ -29,7 +29,6 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
 html { height:100%; overflow:hidden; }
 body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; }
 body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-@media (max-width:768px) { body:not(.m-ready) { opacity:0; } }
 
 /* ── USER DROPDOWN ── */
 .tb-user-badge { position:relative; }
@@ -1445,6 +1444,22 @@ function initAuth(){
 
 </head>
 <body>
+
+<!-- MOBİL LOADING OVERLAY - mGo çalışana kadar her şeyi örter -->
+<div id="mLoadOverlay" style="
+  display:none;
+  position:fixed;inset:0;
+  background:#0a0a0a;
+  z-index:99999;
+"></div>
+
+<script>
+// Sayfa yüklenince mobilde overlay göster
+if(window.innerWidth <= 768){
+  document.getElementById('mLoadOverlay').style.display='block';
+}
+</script>
+
 <div id="appWrap">
 <!-- TOP BAR -->
 <div class="topbar">
@@ -7833,6 +7848,9 @@ function adChangePassword() {
   window.mGo=function(tab,btn){
     _ct=tab;
     document.body.classList.add('m-ready');
+    // Loading overlay kaldır
+    var ov=document.getElementById('mLoadOverlay');
+    if(ov) ov.style.display='none';
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
     mHideAll();
