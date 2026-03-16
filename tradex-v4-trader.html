@@ -7325,9 +7325,9 @@ function adChangePassword() {
 .m-pan.on            { display: flex !important; }
 
 @media (max-width: 768px) {
-  /* Mobilde grafik alanı varsayılan gizli — JS chart-active class ekleyince açılır */
-  .chart-area { visibility: hidden; }
-  body.chart-active .chart-area { visibility: visible; }
+  /* Mobilde workspace varsayılan gizli — sadece grafik sekmesinde açılır */
+  .workspace { display: none !important; }
+  body.chart-active .workspace { display: flex !important; }
 
   /* Wallet paneli mobilde tam genişlik bottom sheet */
   .wallet-overlay {
