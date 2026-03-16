@@ -7548,6 +7548,7 @@ function adChangePassword() {
     <div class="m-stat"><div class="m-stl">Varlık</div><div class="m-stv" id="mPSEq">—</div></div>
     <div class="m-stat"><div class="m-stl">Açık K/Z</div><div class="m-stv" id="mPSPnl" style="color:#26a69a">—</div></div>
     <div class="m-stat"><div class="m-stl">Serbest Teminat</div><div class="m-stv" id="mPSFr">—</div></div>
+    <div class="m-stat" style="grid-column:1/-1"><div class="m-stl">Teminat Seviyesi</div><div class="m-stv" id="mPSML" style="color:#26a69a">—</div></div>
   </div>
   <div class="m-plist" id="mPL"></div>
 </div>
@@ -7767,6 +7768,8 @@ function adChangePassword() {
       set('mPSBal',fp2(st.balance)); set('mPSEq',fp2(st.equity));
       var pnl2=st.openPnl; set('mPSPnl',(pnl2>=0?'+':'')+fp2(pnl2)); setc('mPSPnl',pnl2>=0?'#26a69a':'#ef5350');
       set('mPSFr',fp2(st.freeMargin));
+      set('mPSML',st.marginLvl?'%'+st.marginLvl.toFixed(1):'—');
+      setc('mPSML',!st.marginLvl?'#333':st.marginLvl>200?'#26a69a':st.marginLvl>100?'#f5c518':'#ef5350');
     } else {
       set('mSBal',fp2(bal)); set('mSEq',fp2(bal+bon));
       set('mPSBal',fp2(bal)); set('mPSEq',fp2(bal+bon));
