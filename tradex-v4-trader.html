@@ -8262,15 +8262,26 @@ function adChangePassword() {
     var st=sc?parseFloat(sc.minLot)||0.01:0.01;
     _mqlot=Math.max(st,isNaN(v)?st:v);
   };
-  // Klavye açılınca quick bar yukarı taşı
+  // Klavye açılınca quick bar yukarı taşı, kapanınca geri getir
   if(window.visualViewport) {
     window.visualViewport.addEventListener('resize', function(){
       var bar = document.getElementById('mQuickBar');
       if(!bar || bar.style.display==='none') return;
-      var offset = window.innerHeight - window.visualViewport.height;
+      var offset = Math.max(0, window.innerHeight - window.visualViewport.height - 62);
       bar.style.bottom = (62 + offset) + 'px';
+      // Klavye kapandıysa sıfırla
+      if(offset <= 0) bar.style.bottom = '62px';
     });
   }
+  // Input blur olunca bottom sıfırla
+  document.addEventListener('focusout', function(e){
+    if(e.target && e.target.id === 'mqLot'){
+      setTimeout(function(){
+        var bar = document.getElementById('mQuickBar');
+        if(bar) bar.style.bottom = '62px';
+      }, 300);
+    }
+  });
 
   window.mQOrd=function(side){
     var lotEl=document.getElementById('mqLot');
