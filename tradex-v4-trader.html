@@ -7832,6 +7832,12 @@ function adChangePassword() {
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
     mHideAll();
+    // Grafik alanını sadece chart sekmesinde göster
+    var ws=document.getElementById('appWrap');
+    if(ws){
+      if(tab==='chart'){ ws.style.visibility='visible'; }
+      else { ws.style.visibility='hidden'; }
+    }
     var map={market:'mPanMarket',trade:'mPanTrade',pos:'mPanPos',acc:'mPanAcc'};
     if(map[tab]){ document.getElementById(map[tab]).classList.add('on'); }
     if(tab==='chart'){
@@ -8063,7 +8069,16 @@ function adChangePassword() {
   // Init — login sonrası çağrılır
   window.mInit=function(){
     mShow();
-    if(mob()) mGo('market',document.getElementById('mnM'));
+    if(!mob()) return;
+    // MARKET_GROUPS hazır mı kontrol et, değilse bekle
+    var _tryMarket = function(attempt) {
+      if(typeof MARKET_GROUPS !== 'undefined' && MARKET_GROUPS && MARKET_GROUPS.length) {
+        mGo('market', document.getElementById('mnM'));
+      } else if(attempt < 20) {
+        setTimeout(function(){ _tryMarket(attempt+1); }, 200);
+      }
+    };
+    _tryMarket(0);
   };
   // Sayfa yüklenince hemen çalış (login öncesi de mobil nav görünsün)
   if(document.readyState==='loading'){
