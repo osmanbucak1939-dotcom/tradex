@@ -29,6 +29,7 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
 html { height:100%; overflow:hidden; }
 body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; }
 body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+@media (max-width:768px) { body:not(.m-ready) { opacity:0; } }
 
 /* ── USER DROPDOWN ── */
 .tb-user-badge { position:relative; }
@@ -7831,6 +7832,7 @@ function adChangePassword() {
   // Navigasyon
   window.mGo=function(tab,btn){
     _ct=tab;
+    document.body.classList.add('m-ready');
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
     mHideAll();
