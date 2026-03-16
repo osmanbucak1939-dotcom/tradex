@@ -8182,40 +8182,39 @@ function adChangePassword() {
 </div>
 
 <div id="mPanPos" class="m-pan">
-  <!-- Açık K/Z - büyük göster -->
-  <div style="padding:14px 16px 10px;border-bottom:1px solid #1a1a1a;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <div style="font-family:monospace;font-size:9px;color:#333;letter-spacing:1px;margin-bottom:4px">AÇIK KAR / ZARAR</div>
-      <div id="mPSPnl" style="font-family:monospace;font-size:22px;font-weight:700;color:#26a69a">—</div>
-    </div>
-    <!-- Mini hesap bilgileri sağda -->
-    <div style="text-align:right">
-      <div style="font-family:monospace;font-size:9px;color:#333;letter-spacing:.5px;margin-bottom:2px">BAKİYE</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#888" id="mPSBal">—</div>
-      <div style="font-family:monospace;font-size:9px;color:#333;letter-spacing:.5px;margin-top:6px;margin-bottom:2px">SERBEST TEMİNAT</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#888" id="mPSFr">—</div>
-    </div>
+  <!-- Açık K/Z büyük -->
+  <div style="padding:18px 16px 12px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
+    <div style="font-family:monospace;font-size:10px;color:#333;letter-spacing:1px;margin-bottom:6px">AÇIK KAR / ZARAR</div>
+    <div id="mPSPnl" style="font-family:monospace;font-size:28px;font-weight:700;color:#26a69a">—</div>
   </div>
 
-  <!-- Mini istatistik satırı -->
-  <div style="display:flex;border-bottom:1px solid #1a1a1a;flex-shrink:0">
-    <div style="flex:1;padding:8px 12px;border-right:1px solid #111;text-align:center">
-      <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">VARLIK</div>
-      <div style="font-family:monospace;font-size:11px;font-weight:700;color:#888;margin-top:2px" id="mPSEq">—</div>
+  <!-- Hesap listesi -->
+  <div style="border-bottom:1px solid #1a1a1a;flex-shrink:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
+      <div style="font-family:monospace;font-size:12px;color:#555">Bakiye</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSBal">—</div>
     </div>
-    <div style="flex:1;padding:8px 12px;border-right:1px solid #111;text-align:center">
-      <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">TEMİNAT SEV.</div>
-      <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a;margin-top:2px" id="mPSML">—</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
+      <div style="font-family:monospace;font-size:12px;color:#555">Varlık</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSEq">—</div>
     </div>
-    <div style="flex:1;padding:8px 12px;text-align:center">
-      <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">TEMİNAT</div>
-      <div style="font-family:monospace;font-size:11px;font-weight:700;color:#888;margin-top:2px" id="mPSMar">—</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
+      <div style="font-family:monospace;font-size:12px;color:#555">Teminat</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSMar">—</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
+      <div style="font-family:monospace;font-size:12px;color:#555">Serbest Teminat</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSFr">—</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px">
+      <div style="font-family:monospace;font-size:12px;color:#555">Teminat Seviyesi</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:700;color:#26a69a" id="mPSML">—</div>
     </div>
   </div>
 
   <!-- Sekme: Açık / Geçmiş -->
   <div class="m-tabs" style="flex-shrink:0">
-    <button class="m-tab on" onclick="mPT('open',this)">AÇIK POZİSYONLAR</button>
+    <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
     <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
   </div>
   <div class="m-plist" id="mPL"></div>
