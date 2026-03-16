@@ -7325,6 +7325,10 @@ function adChangePassword() {
 .m-pan.on            { display: flex !important; }
 
 @media (max-width: 768px) {
+  /* Mobilde grafik alanı varsayılan gizli — JS chart-active class ekleyince açılır */
+  .chart-area { visibility: hidden; }
+  body.chart-active .chart-area { visibility: visible; }
+
   /* Wallet paneli mobilde tam genişlik bottom sheet */
   .wallet-overlay {
     align-items: flex-end !important;
@@ -7810,15 +7814,7 @@ function adChangePassword() {
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
-    if(window.innerWidth > 768){
-      mHideAll();
-      var ca=document.querySelector('.chart-area');
-      if(ca) ca.style.visibility='visible';
-    } else {
-      // Mobil - grafik alanını gizle
-      var ca=document.querySelector('.chart-area');
-      if(ca) ca.style.visibility='hidden';
-    }
+    if(window.innerWidth > 768){ mHideAll(); }
   }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
@@ -7838,19 +7834,17 @@ function adChangePassword() {
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
     mHideAll();
-    // Grafik alanını sadece chart sekmesinde göster
-    var ca=document.querySelector('.chart-area');
-    if(ca){
-      if(tab==='chart'){ ca.style.visibility='visible'; }
-      else { ca.style.visibility='hidden'; }
-    }
+
     var map={market:'mPanMarket',trade:'mPanTrade',pos:'mPanPos',acc:'mPanAcc'};
     if(map[tab]){ document.getElementById(map[tab]).classList.add('on'); }
     if(tab==='chart'){
+      document.body.classList.add('chart-active');
       setTimeout(function(){
         if(typeof resizeCanvas==='function') resizeCanvas();
         if(window._lw){ var w=document.getElementById('lwChart'); if(w&&w.offsetWidth>0) window._lw.resize(w.offsetWidth,w.offsetHeight); }
       },80);
+    } else {
+      document.body.classList.remove('chart-active');
     }
     if(tab==='market') mFM();
     if(tab==='trade')  mFT();
