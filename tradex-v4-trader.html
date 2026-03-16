@@ -7573,7 +7573,7 @@ function adChangePassword() {
 <script>
 (function(){
   var _ct='chart', _lot=0.01, _ptab='open';
-  function mob(){ return window.innerWidth<=900; }
+  function mob(){ return window.innerWidth<=768; }
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
@@ -7591,7 +7591,6 @@ function adChangePassword() {
 
   // Navigasyon
   window.mGo=function(tab,btn){
-    if(!mob()) return;
     _ct=tab;
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
