@@ -5715,12 +5715,50 @@ function updateMwRow(sym, price, prev) {
   if(!row) return;
   const bid = +(price - (it.spread||0)/2).toFixed(it.decimals);
   const ask = +(price + (it.spread||0)/2).toFixed(it.decimals);
-  const up = price >= prev;
+  const up = price > prev;
+  const neutral = price === prev;
   row.querySelector('.mw-bid').textContent = bid.toFixed(it.decimals);
   row.querySelector('.mw-ask').textContent = ask.toFixed(it.decimals);
   row.classList.remove('mw-flash-g','mw-flash-r');
-  void row.offsetWidth; // reflow
+  void row.offsetWidth;
   row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
+  // Yön class'ı sakla - mobil renk için
+  row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
+  _mwApplyDirColor(row, up, neutral);
+  // Mobil mMwBody'deki kopyayı da güncelle
+  var mRow = document.querySelector('#mMwBody #mwr-'+sym);
+  if(mRow) {
+    var mb = mRow.querySelector('.mw-bid');
+    var ma = mRow.querySelector('.mw-ask');
+    if(mb) mb.textContent = bid.toFixed(it.decimals);
+    if(ma) ma.textContent = ask.toFixed(it.decimals);
+    mRow.dataset.dir = row.dataset.dir;
+    _mwApplyDirColor(mRow, up, neutral);
+  }
+}
+
+function _mwApplyDirColor(row, up, neutral) {
+  var bidEl = row.querySelector('.mw-bid');
+  var askEl = row.querySelector('.mw-ask');
+  if(!bidEl || !askEl) return;
+  if(neutral) {
+    bidEl.style.background = 'rgba(239,83,80,.18)';
+    bidEl.style.borderColor = 'rgba(239,83,80,.25)';
+    askEl.style.background = 'rgba(38,166,154,.18)';
+    askEl.style.borderColor = 'rgba(38,166,154,.25)';
+  } else if(up) {
+    // Fiyat yükseldi - AL (ask) parlasın yeşil
+    bidEl.style.background = 'rgba(239,83,80,.10)';
+    bidEl.style.borderColor = 'rgba(239,83,80,.15)';
+    askEl.style.background = 'rgba(38,166,154,.35)';
+    askEl.style.borderColor = 'rgba(38,166,154,.5)';
+  } else {
+    // Fiyat düştü - SAT (bid) parlasın kırmızı
+    bidEl.style.background = 'rgba(239,83,80,.35)';
+    bidEl.style.borderColor = 'rgba(239,83,80,.5)';
+    askEl.style.background = 'rgba(38,166,154,.10)';
+    askEl.style.borderColor = 'rgba(38,166,154,.15)';
+  }
 }
 
 function renderMarketWatch(filter) {
@@ -7414,7 +7452,7 @@ function adChangePassword() {
     align-items: center;
     position: relative;
     flex-shrink: 0;
-    gap: 0;
+    gap: 3px;
   }
   #mPanMarket .mw-bid, #mPanMarket .mw-ask {
     width: 76px !important;
@@ -7426,16 +7464,18 @@ function adChangePassword() {
     font-family: monospace !important;
   }
   #mPanMarket .mw-bid {
-    background: rgba(239,83,80,.18) !important;
+    background: rgba(239,83,80,.18);
     color: #ef5350 !important;
-    border: 1px solid rgba(239,83,80,.25) !important;
-    border-radius: 8px 0 0 8px !important;
+    border: 1px solid rgba(239,83,80,.25);
+    border-radius: 8px !important;
+    transition: background .4s, border-color .4s;
   }
   #mPanMarket .mw-ask {
-    background: rgba(38,166,154,.18) !important;
+    background: rgba(38,166,154,.18);
     color: #26a69a !important;
-    border: 1px solid rgba(38,166,154,.25) !important;
-    border-radius: 0 8px 8px 0 !important;
+    border: 1px solid rgba(38,166,154,.25);
+    border-radius: 8px !important;
+    transition: background .4s, border-color .4s;
   }
 
   /* Spread gizle mobilde */
@@ -7444,7 +7484,7 @@ function adChangePassword() {
   /* Spread badge - tam ortada, üste çıkan pill */
   #mPanMarket .mw-spd-badge {
     position: absolute;
-    bottom: -7px;
+    bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
     font-family: monospace;
