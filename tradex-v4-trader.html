@@ -1445,21 +1445,6 @@ function initAuth(){
 </head>
 <body>
 
-<!-- MOBİL LOADING OVERLAY - mGo çalışana kadar her şeyi örter -->
-<div id="mLoadOverlay" style="
-  display:none;
-  position:fixed;inset:0;
-  background:#0a0a0a;
-  z-index:99999;
-"></div>
-
-<script>
-// Sayfa yüklenince mobilde overlay göster
-if(window.innerWidth <= 768){
-  document.getElementById('mLoadOverlay').style.display='block';
-}
-</script>
-
 <div id="appWrap">
 <!-- TOP BAR -->
 <div class="topbar">
@@ -7341,8 +7326,7 @@ function adChangePassword() {
 .m-pan.on            { display: flex !important; }
 
 @media (max-width: 768px) {
-  /* Mobilde workspace varsayılan gizli — sadece grafik sekmesinde açılır */
-  .workspace { display: none !important; }
+  /* Mobilde workspace - grafik sekmesinde tam ekran */
   body.chart-active .workspace { display: flex !important; }
 
   /* Wallet paneli mobilde tam genişlik bottom sheet */
@@ -7848,9 +7832,7 @@ function adChangePassword() {
   window.mGo=function(tab,btn){
     _ct=tab;
     document.body.classList.add('m-ready');
-    // Loading overlay kaldır
-    var ov=document.getElementById('mLoadOverlay');
-    if(ov) ov.style.display='none';
+
     document.querySelectorAll('.mn-btn').forEach(function(b){b.classList.remove('on');});
     if(btn) btn.classList.add('on');
     mHideAll();
@@ -8089,16 +8071,26 @@ function adChangePassword() {
   // Init — login sonrası çağrılır
   window.mInit=function(){
     mShow();
-    if(!mob()) return;
-    // MARKET_GROUPS hazır mı kontrol et, değilse bekle
-    // Direkt aç - bu noktada MARKET_GROUPS hazır
-    mGo('market', document.getElementById('mnM'));
+    if(mob()) mFA();
   };
-  // Sayfa yüklenince hemen çalış (login öncesi de mobil nav görünsün)
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', mShow);
-  } else {
+  // Sayfa yüklenince nav göster + mobilde piyasaları aç
+  function _mStartup(){
     mShow();
+    if(!mob()) return;
+    // _mainInitDone hazırsa hemen piyasaları aç, değilse bekle
+    var _wait = function(n){
+      if(window._mainInitDone){
+        mGo('market', document.getElementById('mnM'));
+      } else if(n < 50) {
+        setTimeout(function(){ _wait(n+1); }, 100);
+      }
+    };
+    _wait(0);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', _mStartup);
+  } else {
+    _mStartup();
   }
 })();
 </script>
