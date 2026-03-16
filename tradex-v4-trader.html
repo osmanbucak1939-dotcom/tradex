@@ -7897,15 +7897,16 @@ function adChangePassword() {
     <span id="mqBid">—</span>
   </button>
   <div style="
-    width:70px; flex-shrink:0;
+    width:110px; flex-shrink:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2px; background:#0a0a0a;
+    border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a;
   ">
     <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">LOT</div>
-    <div style="display:flex;align-items:center;gap:3px">
-      <button onclick="mQLA(-1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">−</button>
-      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:36px;text-align:center;display:inline-block">0.01</span>
-      <button onclick="mQLA(1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">+</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
+      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:34px;text-align:center;display:inline-block">0.01</span>
+      <button onclick="mQLA(1)" style="width:26px;height:26px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
     </div>
   </div>
   <button onclick="mQOrd('buy')" style="
