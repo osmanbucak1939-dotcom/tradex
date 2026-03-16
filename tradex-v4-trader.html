@@ -7904,11 +7904,7 @@ function adChangePassword() {
     <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">LOT</div>
     <div style="display:flex;align-items:center;gap:3px">
       <button onclick="mQLA(-1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">−</button>
-      <input id="mqLot" type="text" inputmode="decimal" value="0.01"
-        style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;background:transparent;border:1px solid #2a2a2a;border-radius:3px;width:42px;text-align:center;outline:none;padding:2px 0;"
-        onchange="mQLotSet(parseFloat(this.value)||0.01)"
-        onfocus="this.select()"
-      >
+      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:36px;text-align:center;display:inline-block">0.01</span>
       <button onclick="mQLA(1)" style="width:20px;height:20px;background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">+</button>
     </div>
   </div>
@@ -8246,7 +8242,7 @@ function adChangePassword() {
     var lot=document.getElementById('mqLot');
     if(bid) bid.textContent=mid?(mid-sp/2).toFixed(dec):'—';
     if(ask) ask.textContent=mid?(mid+sp/2).toFixed(dec):'—';
-    if(lot && document.activeElement !== lot) lot.value=_mqlot;
+    if(lot) lot.textContent=_mqlot;
   }
   window.mQLA=function(d){
     var sym=typeof curSym!=='undefined'?curSym:'';
@@ -8254,7 +8250,7 @@ function adChangePassword() {
     var st=sc?parseFloat(sc.minLot)||0.01:0.01;
     _mqlot=Math.max(st,parseFloat((_mqlot+d*st).toFixed(8)));
     var lot=document.getElementById('mqLot');
-    if(lot){ lot.value=_mqlot; }
+    if(lot){ lot.textContent=_mqlot; }
   };
   window.mQLotSet=function(v){
     var sym=typeof curSym!=='undefined'?curSym:'';
@@ -8262,30 +8258,11 @@ function adChangePassword() {
     var st=sc?parseFloat(sc.minLot)||0.01:0.01;
     _mqlot=Math.max(st,isNaN(v)?st:v);
   };
-  // Klavye açılınca quick bar yukarı taşı, kapanınca geri getir
-  if(window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function(){
-      var bar = document.getElementById('mQuickBar');
-      if(!bar || bar.style.display==='none') return;
-      var offset = Math.max(0, window.innerHeight - window.visualViewport.height - 62);
-      bar.style.bottom = (62 + offset) + 'px';
-      // Klavye kapandıysa sıfırla
-      if(offset <= 0) bar.style.bottom = '62px';
-    });
-  }
-  // Input blur olunca bottom sıfırla
-  document.addEventListener('focusout', function(e){
-    if(e.target && e.target.id === 'mqLot'){
-      setTimeout(function(){
-        var bar = document.getElementById('mQuickBar');
-        if(bar) bar.style.bottom = '62px';
-      }, 300);
-    }
-  });
+
 
   window.mQOrd=function(side){
     var lotEl=document.getElementById('mqLot');
-    if(lotEl) _mqlot=Math.max(0.01,parseFloat(lotEl.value)||_mqlot);
+    if(lotEl) _mqlot=Math.max(0.01,parseFloat(lotEl.textContent)||_mqlot);
     var qe=document.getElementById('ordQty'); if(qe) qe.value=_mqlot;
     if(typeof placeOrder==='function') placeOrder(side);
     // Buton flash efekti
