@@ -1514,6 +1514,13 @@ function initAuth(){
     <div class="lp-section" id="lp-order">
       <div class="order-ticket">
         <div class="ot-header">EMİR EKRANI</div>
+        <!-- Sembol Arama -->
+        <div style="position:relative;margin-bottom:8px">
+          <input id="otSymSearch" type="text" placeholder="🔍 Sembol ara..."
+            style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box"
+            oninput="otSymFilter(this.value)" onfocus="otSymFilter(this.value)" autocomplete="off">
+          <div id="otSymList" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a1a;border:1px solid var(--border2);border-top:none;border-radius:0 0 3px 3px;max-height:180px;overflow-y:auto;z-index:500"></div>
+        </div>
         <div class="ot-sym" id="otSym">BTC/USDT</div>
         <div class="ot-price-row">
           <div class="ot-side">
@@ -3505,6 +3512,49 @@ function updateOrderTicket(price) {
   var _el_otAsk=document.getElementById('otAsk'); if(_el_otAsk) _el_otAsk.textContent = fp(ask, price>100?2:4);
   var _el_otSpread=document.getElementById('otSpread'); if(_el_otSpread) _el_otSpread.textContent = 'Spread: '+spread.toFixed(price>100?2:5);
 }
+
+function otSymFilter(val, mode) {
+  var listId = mode==='mob' ? 'mOtSymList' : 'otSymList';
+  var list = document.getElementById(listId);
+  if(!list) return;
+  var syms = typeof symConfig!=='undefined' && symConfig ? symConfig.filter(function(s){ return s.active!==false; }) : [];
+  val = (val||'').toLowerCase().trim();
+  var filtered = val ? syms.filter(function(s){
+    return s.sym.toLowerCase().indexOf(val)>=0 || (s.label||'').toLowerCase().indexOf(val)>=0;
+  }) : syms;
+  if(!filtered.length) { list.style.display='none'; return; }
+  list.innerHTML = filtered.slice(0,20).map(function(s){
+    var ico = (s.icon&&s.icon.trim()&&s.icon.trim().length<=2) ? s.icon.trim() : '';
+    var dot = ico ? ico : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(s.color||'#f0b90b')+';flex-shrink:0"></span>';
+    return '<div data-sym="'+s.sym+'" data-mode="'+(mode||'')+'" onclick="otSymPick(this.dataset.sym,this.dataset.mode)" style="padding:8px 12px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text);border-bottom:1px solid #222;display:flex;align-items:center;gap:8px;transition:background .1s" onmouseover="this.style.background=\'#222\'" onmouseout="this.style.background=\'\'">'
+      + dot
+      + '<div><div style="font-weight:700">'+s.sym+'</div><div style="font-size:9px;color:var(--muted)">'+(s.label||s.full||'')+'</div></div>'
+      + '</div>';
+  }).join('');
+  list.style.display = 'block';
+}
+
+function otSymPick(sym, mode) {
+  // Sembolü değiştir
+  if(typeof switchSym === 'function') switchSym(sym);
+  // Input ve listeyi temizle
+  var searchId = mode==='mob' ? 'mOtSymSearch' : 'otSymSearch';
+  var listId   = mode==='mob' ? 'mOtSymList'   : 'otSymList';
+  var el = document.getElementById(searchId);
+  var li = document.getElementById(listId);
+  if(el) el.value = '';
+  if(li) li.style.display = 'none';
+}
+
+// Dışarı tıklanınca listeyi kapat
+document.addEventListener('click', function(e) {
+  ['otSymList','mOtSymList'].forEach(function(id){
+    var li = document.getElementById(id);
+    if(li && !li.contains(e.target) && e.target.id !== 'otSymSearch' && e.target.id !== 'mOtSymSearch') {
+      li.style.display = 'none';
+    }
+  });
+});
 
 function setOrdType(type, btn) {
   ordType = type;
@@ -8012,6 +8062,12 @@ function adChangePassword() {
   <div class="m-phead" style="justify-content:space-between">
     <span id="mTSym">—</span>
     <span style="color:#1e1e1e;font-size:10px" id="mTSpr">—</span>
+  </div>
+  <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
+    <input id="mOtSymSearch" type="text" placeholder="🔍 Sembol ara..."
+      style="width:100%;padding:9px 14px;background:#111;border:1px solid #1e1e1e;border-radius:8px;color:#ddd;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
+      oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
+    <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:#141414;border:1px solid #2a2a2a;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
   </div>
   <div class="m-prices">
     <div class="m-side sell" onclick="mOrd('sell')">
