@@ -2961,8 +2961,12 @@ function lwRenderCandles(candles, sym) {
     try { _lwSeries.applyOptions({priceFormat: _lwPriceFormat(sym)}); } catch(e){}
   }
 
-  // Veriyi uygula
-  _lwSeries.setData(candles);
+  // Veriyi uygula - line grafiği için {time,value} formatına dönüştür
+  var _chartData = candles;
+  if(_lwChartType === 'line') {
+    _chartData = candles.map(function(c){ return {time:c.time, value:c.close}; });
+  }
+  _lwSeries.setData(_chartData);
 
   // Overlay indikatörler
   lwDrawOverlays(candles);
@@ -7373,7 +7377,7 @@ function adChangePassword() {
   .resize-handle-x { display: none !important; }
   .resize-handle-y { display: none !important; }
   #rightPanel      { display: none !important; }
-  .ind-toolbar     { display: none !important; }
+  /* ind-toolbar mobilde göster - chart-active'de */
   #quickTrade      { display: none !important; }
   .bp-tabs         { display: none !important; }
   .bp-content      { display: none !important; }
@@ -7440,6 +7444,30 @@ function adChangePassword() {
     font-family: monospace; font-size: 11px; color: #444;
     border-top: 1px solid #222; cursor: pointer;
     touch-action: manipulation;
+  }
+
+  /* ind-toolbar mobilde kompakt */
+  .ind-toolbar {
+    height: 34px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    padding: 0 !important;
+  }
+  .ind-toolbar::-webkit-scrollbar { display: none !important; }
+  .ind-btn {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 9px !important;
+    flex-shrink: 0 !important;
+    touch-action: manipulation !important;
+  }
+  .ind-settings-btn {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 9px !important;
+    touch-action: manipulation !important;
   }
 
   /* chart-toolbar mobilde kompakt */
