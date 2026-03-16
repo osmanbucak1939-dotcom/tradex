@@ -7232,11 +7232,8 @@ function adChangePassword() {
 ════════════════════════════════════════════ -->
 <style id="mobileStyle">
 /* Nav ve paneller varsayılan olarak gizli — JS açar */
-#mNav       { display: none; }
-#mPanMarket { display: none; }
-#mPanTrade  { display: none; }
-#mPanPos    { display: none; }
-#mPanAcc    { display: none; }
+#mNav                { display: none; }
+.m-pan               { display: none; }
 
 @media (max-width: 768px) {
   /* Desktop elementleri gizle */
@@ -7310,7 +7307,7 @@ function adChangePassword() {
     flex-direction: column;
     overflow: hidden;
   }
-  .m-pan.on { display: flex; }
+  .m-pan.on { display: flex !important; }
   .m-phead {
     display: flex;
     align-items: center;
