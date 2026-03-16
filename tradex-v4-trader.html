@@ -7810,9 +7810,16 @@ function adChangePassword() {
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
-    // mNav artık CSS media query ile kontrol ediliyor
-    // Masaüstünde panelleri temizle
-    if(window.innerWidth > 768){ mHideAll(); }
+    if(window.innerWidth > 768){
+      // Masaüstü - workspace görünür, panelleri temizle
+      var ws=document.getElementById('appWrap');
+      if(ws) ws.style.visibility='visible';
+      mHideAll();
+    } else {
+      // Mobil - workspace'i başlangıçta gizle (mGo açacak)
+      var ws=document.getElementById('appWrap');
+      if(ws && ws.style.visibility !== 'visible') ws.style.visibility='hidden';
+    }
   }
   function mHideAll(){
     ['mPanMarket','mPanTrade','mPanPos','mPanAcc'].forEach(function(id){
