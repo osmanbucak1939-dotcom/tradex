@@ -7380,12 +7380,12 @@ function adChangePassword() {
   }
   #mSymBtn {
     display: flex; align-items: center; gap: 3px;
-    padding: 0 8px; height: 26px;
-    background: transparent; border: none;
-    border-right: 1px solid #2a2a2a;
+    padding: 0 10px; height: 34px;
+    background: none; border: none;
+    border-right: 1px solid var(--border);
     cursor: pointer;
-    font-family: monospace; font-size: 11px; font-weight: 700;
-    color: var(--text); white-space: nowrap;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    color: var(--muted); white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     border-radius: 0;
@@ -7394,21 +7394,24 @@ function adChangePassword() {
   #mSymList {
     display: none;
     position: fixed;
-    top: 80px; left: 0; right: 0;
-    background: #111;
-    border-bottom: 1px solid #222;
+    top: 80px; left: 0; width: 200px;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
     z-index: 9500;
-    max-height: 60vh;
+    max-height: 55vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    box-shadow: 4px 4px 20px rgba(0,0,0,.6);
   }
   #mSymList.open { display: block; }
   #mSymList .msl-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #1a1a1a;
-    font-family: monospace; font-size: 12px; font-weight: 700;
+    padding: 9px 12px;
+    border-bottom: 1px solid #1e1e1e;
+    font-family: monospace; font-size: 11px; font-weight: 700;
     color: #ccc; cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 8px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -7424,25 +7427,31 @@ function adChangePassword() {
 
   /* chart-toolbar mobilde kompakt */
   .chart-toolbar {
-    height: auto !important;
-    flex-wrap: wrap !important;
-    padding: 4px 6px !important;
-    gap: 3px !important;
+    height: 34px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    padding: 0 !important;
+    gap: 0 !important;
     min-height: 34px !important;
   }
+  .chart-toolbar::-webkit-scrollbar { display: none !important; }
   .chart-toolbar .ct-label { display: none !important; } /* desktop label gizli, mobil kendi labelı var */
   #mSymDrop { display: block !important; }
 
   .chart-toolbar .ct-price-info { display: none !important; }
   .chart-toolbar .ct-intervals { gap: 2px !important; }
   .chart-toolbar .ct-btn {
-    padding: 3px 7px !important;
+    padding: 0 8px !important;
     font-size: 10px !important;
-    height: 26px !important;
+    height: 34px !important;
+    flex-shrink: 0 !important;
     touch-action: manipulation;
+    border-radius: 0 !important;
   }
-  .chart-toolbar .ct-type-btn { font-size: 12px !important; padding: 3px 6px !important; height: 26px !important; touch-action: manipulation; }
-  .chart-toolbar .draw-tool-btn { font-size: 12px !important; padding: 3px 6px !important; height: 26px !important; touch-action: manipulation; }
+  .chart-toolbar .ct-type-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
+  .chart-toolbar .draw-tool-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
   body             { padding-bottom: 62px; }
 
   /* ── Alt nav ── */
