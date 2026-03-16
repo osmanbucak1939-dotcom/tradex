@@ -277,7 +277,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .btn-alarm-add:hover { background:var(--accent); color:#000; }
 
 /* TOAST */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--mono); font-size:12px; color:var(--text); z-index:9999; opacity:0; transition:all .25s; white-space:nowrap; }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--mono); font-size:12px; color:var(--text); z-index:9999; opacity:0; transition:all .25s; white-space:nowrap; pointer-events:none; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .toast .tt { font-weight:700; margin-bottom:2px; }
 
