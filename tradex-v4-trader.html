@@ -7249,7 +7249,13 @@ function adChangePassword() {
   .bp-tabs         { display: none !important; }
   .bp-content      { display: none !important; }
   .tb-sym-list     { display: none !important; }
-  .bottom-panel    { height: 36px !important; min-height: 36px !important; }
+  .tb-wallet-btn   { display: none !important; }
+  .tb-conn         { display: none !important; }
+  .tb-login-btn    { display: none !important; }
+  .tb-user-badge   { display: none !important; }
+  .tb-mgr-btn      { display: none !important; }
+  .topbar          { height: 44px !important; }
+  .bottom-panel    { display: none !important; }
   .workspace       { flex-direction: column !important; }
   .chart-area      { width: 100% !important; }
   body             { padding-bottom: 62px; }
@@ -7607,7 +7613,23 @@ function adChangePassword() {
   // Piyasalar
   function mFM(){
     var src=document.getElementById('mwBody'), dst=document.getElementById('mMwBody');
-    if(src&&dst) dst.innerHTML=src.innerHTML;
+    if(!src||!dst) return;
+    if(!dst.children.length){
+      dst.innerHTML=src.innerHTML;
+      return;
+    }
+    var srcRows=src.querySelectorAll('.mw-row[data-sym]');
+    for(var i=0;i<srcRows.length;i++){
+      var sym=srcRows[i].dataset.sym;
+      var dstRow=dst.querySelector('.mw-row[data-sym="'+sym+'"]');
+      if(!dstRow) continue;
+      var sBid=srcRows[i].querySelector('.mw-bid');
+      var sAsk=srcRows[i].querySelector('.mw-ask');
+      var dBid=dstRow.querySelector('.mw-bid');
+      var dAsk=dstRow.querySelector('.mw-ask');
+      if(sBid&&dBid&&sBid.textContent!==dBid.textContent) dBid.textContent=sBid.textContent;
+      if(sAsk&&dAsk&&sAsk.textContent!==dAsk.textContent) dAsk.textContent=sAsk.textContent;
+    }
   }
   window.mMwPick=function(sym,gid){
     if(typeof switchSym==='function') switchSym(sym);
@@ -7762,6 +7784,12 @@ function adChangePassword() {
     mShow();
     if(mob()) mGo('chart',document.getElementById('mnC'));
   };
+  // Sayfa yüklenince hemen çalış (login öncesi de mobil nav görünsün)
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', mShow);
+  } else {
+    mShow();
+  }
 })();
 </script>
 
