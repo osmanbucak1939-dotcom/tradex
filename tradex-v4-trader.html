@@ -604,10 +604,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-icon { font-size:14px; text-align:center; }
 .mw-sym-block { min-width:0; }
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Desktop'ta chg badge gizle */
+#mwBody .mw-chg { display: none; }
 .mw-sym-full { font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-.mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; }
-.mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; }
+.mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; transition: color .3s; }
+.mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
 .mw-spread-col { font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; }
 
 /* column headers */
@@ -5753,6 +5755,8 @@ function _mwUpdateChg(sym, chg) {
 }
 
 function _mwApplyDirColor(row, up, neutral) {
+  // Sadece mobil row'lara uygula (mmwr- prefix'li)
+  if(!row || !row.id || row.id.indexOf('mmwr-') !== 0) return;
   var bidEl = row.querySelector('.mw-bid');
   var askEl = row.querySelector('.mw-ask');
   if(!bidEl || !askEl) return;
@@ -5762,13 +5766,11 @@ function _mwApplyDirColor(row, up, neutral) {
     askEl.style.background = 'rgba(38,166,154,.18)';
     askEl.style.borderColor = 'rgba(38,166,154,.25)';
   } else if(up) {
-    // Fiyat yükseldi - AL (ask) parlasın yeşil
     bidEl.style.background = 'rgba(239,83,80,.10)';
     bidEl.style.borderColor = 'rgba(239,83,80,.15)';
     askEl.style.background = 'rgba(38,166,154,.35)';
     askEl.style.borderColor = 'rgba(38,166,154,.5)';
   } else {
-    // Fiyat düştü - SAT (bid) parlasın kırmızı
     bidEl.style.background = 'rgba(239,83,80,.35)';
     bidEl.style.borderColor = 'rgba(239,83,80,.5)';
     askEl.style.background = 'rgba(38,166,154,.10)';
@@ -7476,11 +7478,11 @@ function adChangePassword() {
     gap: 3px;
   }
   #mPanMarket .mw-bid, #mPanMarket .mw-ask {
-    width: 76px !important;
-    padding: 8px 0 !important;
+    width: 82px !important;
+    padding: 10px 0 !important;
     text-align: center !important;
     border-radius: 8px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     font-family: monospace !important;
   }
