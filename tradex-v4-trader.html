@@ -492,7 +492,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .wallet-title { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent); letter-spacing:1px; }
 .wallet-close { margin-left:auto; background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:11px; padding:2px 10px; border-radius:2px; cursor:pointer; transition:all .15s; }
 .wallet-close:hover { border-color:var(--sell); color:var(--sell); }
-.wallet-tabs { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--border); flex-shrink:0; }
+.wallet-tabs { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--border); flex-shrink:0; }
 .wallet-tab { padding:10px; text-align:center; font-family:var(--mono); font-size:11px; font-weight:700; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:all .2s; }
 .wallet-tab:hover { color:var(--text); }
 .wallet-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
@@ -507,7 +507,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .wallet-method:hover { border-color:var(--accent); }
 .wallet-method.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
-.wallet-method-icon { font-size:22px; margin-bottom:6px; }
+.wallet-method-icon { font-size:22px; margin-bottom:6px; line-height:1; }
 .wallet-method-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); }
 .wallet-method-sub { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px; }
 
@@ -515,10 +515,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--bg); border:1px solid var(--border); border-radius:3px;
   padding:14px; margin:12px 0; font-family:var(--mono); font-size:11px;
 }
-.wallet-info-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #2a2a2a; gap:8px; }
+.wallet-info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:6px 0; border-bottom:1px solid #2a2a2a; gap:8px; }
 .wallet-info-row:last-child { border-bottom:none; }
-.wallet-info-key { color:var(--muted); flex-shrink:0; }
-.wallet-info-val { color:var(--text); font-weight:600; word-break:break-all; text-align:right; }
+.wallet-info-key { color:var(--muted); flex-shrink:0; padding-top:1px; }
+.wallet-info-val { color:var(--text); font-weight:600; word-break:break-word; text-align:right; min-width:0; flex:1; }
 .wallet-copy-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:9px; padding:1px 6px; border-radius:2px; cursor:pointer; flex-shrink:0; transition:all .15s; margin-left:6px; }
 .wallet-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
 
@@ -1473,19 +1473,31 @@ function initAuth(){
         if(!doc.exists) return;
         var d = doc.data(); if(!d) return;
         var changed = false;
-        var newTs = d.updatedAt||d._ts||'';
-        // Timestamp değiştiyse veya hiç set edilmemişse güncelle
-        if(newTs && newTs === window._lastUserDataTs) return;
-        window._lastUserDataTs = newTs;
-        // Pozisyonlar - hem string hem array destekle
+
+        // Pozisyonlar - timestamp yerine ID listesi karşılaştır
         if(d.positions !== undefined) {
           try {
             var newPos = Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions||'[]');
-            positions = newPos;
-            changed = true;
+            var oldIds = (positions||[]).map(function(p){return p.id;}).sort().join(',');
+            var newIds = newPos.map(function(p){return p.id;}).sort().join(',');
+            if(oldIds !== newIds) {
+              positions = newPos;
+              changed = true;
+            }
+            // SL/TP güncellemelerini de yakala
+            else if(newPos.length > 0) {
+              var slTpChanged = newPos.some(function(np) {
+                var op = (positions||[]).find(function(p){return p.id===np.id;});
+                return op && (op.sl!==np.sl || op.tp!==np.tp);
+              });
+              if(slTpChanged) { positions = newPos; changed = true; }
+            }
           } catch(e){ console.warn('positions parse err:', e); }
         }
-        if(d.balance !== undefined) { balance = parseFloat(d.balance)||0; changed = true; }
+        if(d.balance !== undefined) {
+          var nb = parseFloat(d.balance)||0;
+          if(Math.abs(nb - balance) > 0.001) { balance = nb; changed = true; }
+        }
         if(d.tradeHistory !== undefined) {
           try {
             tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : JSON.parse(d.tradeHistory||'[]');
@@ -1994,9 +2006,15 @@ function initAuth(){
   </div>
 
   <div class="wallet-tabs">
-    <div class="wallet-tab active" data-tab="deposit" onclick="walletTab('deposit',this)">⬇ Para Yatır</div>
-    <div class="wallet-tab" data-tab="withdraw" onclick="walletTab('withdraw',this)">⬆ Para Çek</div>
-    <div class="wallet-tab" data-tab="history" onclick="walletTab('history',this)">📋 Geçmiş</div>
+    <div class="wallet-tab active" data-tab="deposit" onclick="walletTab('deposit',this)">
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v14M5 10l7 7 7-7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>Para Yatır
+    </div>
+    <div class="wallet-tab" data-tab="withdraw" onclick="walletTab('withdraw',this)">
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 21V7M5 14l7-7 7 7"/><line x1="3" y1="3" x2="21" y2="3"/></svg>Para Çek
+    </div>
+    <div class="wallet-tab" data-tab="history" onclick="walletTab('history',this)">
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>Geçmiş
+    </div>
   </div>
 
   <div class="wallet-body">
@@ -2014,11 +2032,11 @@ function initAuth(){
           <input class="wallet-amount-input" id="depositAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="depositCurrency">USD</div>
         </div>
-        <div class="wallet-quick-btns">
-          <div class="wallet-quick" onclick="setDepositAmt(100)">$100</div>
-          <div class="wallet-quick" onclick="setDepositAmt(500)">$500</div>
-          <div class="wallet-quick" onclick="setDepositAmt(1000)">$1.000</div>
-          <div class="wallet-quick" onclick="setDepositAmt(5000)">$5.000</div>
+        <div class="wallet-quick-btns" id="depositQuickBtns">
+          <div class="wallet-quick" onclick="setDepositAmt(100)">100</div>
+          <div class="wallet-quick" onclick="setDepositAmt(500)">500</div>
+          <div class="wallet-quick" onclick="setDepositAmt(1000)">1.000</div>
+          <div class="wallet-quick" onclick="setDepositAmt(5000)">5.000</div>
         </div>
         <div class="wallet-note" id="depositNote"></div>
         <button class="wallet-submit deposit" onclick="submitDeposit()">PARA YATIRMA TALEBİ GÖNDER</button>
@@ -2037,10 +2055,10 @@ function initAuth(){
           <input class="wallet-amount-input" id="withdrawAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="withdrawCurrency">USD</div>
         </div>
-        <div class="wallet-quick-btns">
-          <div class="wallet-quick" onclick="setWithdrawAmt(100)">$100</div>
-          <div class="wallet-quick" onclick="setWithdrawAmt(500)">$500</div>
-          <div class="wallet-quick" onclick="setWithdrawAmt(1000)">$1.000</div>
+        <div class="wallet-quick-btns" id="withdrawQuickBtns">
+          <div class="wallet-quick" onclick="setWithdrawAmt(100)">100</div>
+          <div class="wallet-quick" onclick="setWithdrawAmt(500)">500</div>
+          <div class="wallet-quick" onclick="setWithdrawAmt(1000)">1.000</div>
           <div class="wallet-quick" onclick="setWithdrawAmt('all')">Tümü</div>
         </div>
         <div class="wallet-note" id="withdrawNote"></div>
@@ -3677,6 +3695,10 @@ function setOrdType(type, btn) {
   }
   var mLimitRow = document.getElementById('mLimitRow');
   if(mLimitRow) mLimitRow.style.display = isPending ? 'flex' : 'none';
+  var mMarketBtns = document.getElementById('mMarketBtns');
+  if(mMarketBtns) mMarketBtns.style.display = isPending ? 'none' : 'grid';
+  var mPendingBtn = document.getElementById('mPendingBtn');
+  if(mPendingBtn) mPendingBtn.style.display = isPending ? 'block' : 'none';
 }
 
 function _applyReadOnlyUI(ro) {
@@ -3689,6 +3711,22 @@ function _applyReadOnlyUI(ro) {
   if(wb){ wb.style.opacity=ro?'0.3':'1'; wb.style.pointerEvents=ro?'none':''; }
   // Kapat butonları
   document.querySelectorAll('.close-ord').forEach(function(b){ b.style.opacity=ro?'0.3':'1'; b.style.pointerEvents=ro?'none':''; });
+}
+
+// Pozisyon ve bakiye kaydet (localStorage + Firebase)
+function save() {
+  try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+  try { localStorage.setItem('tx_hist', JSON.stringify(tradeHistory)); } catch(e){}
+  // Firebase'e yaz - admin görsün, diğer cihazlar senkronize olsun
+  if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu && _cu.id) {
+    var _now = new Date().toISOString();
+    fbSaveUserData(_cu.id, {
+      positions: positions,
+      tradeHistory: tradeHistory.slice(0,50),
+      balance: balance,
+      updatedAt: _now
+    });
+  }
 }
 
 function placeOrder(side) {
@@ -5730,12 +5768,32 @@ function renderWalletHistory() {
   }
 }
 
+// Ödeme yöntemi ikonu - emoji yerine SVG
+function _walletMethodIcon(m) {
+  var t = m.type || 'bank';
+  var ico = m.icon || '';
+  // Emoji değilse (SVG içeriyorsa) direkt dön
+  if(ico.indexOf('<svg') !== -1) return ico;
+  // Type'a göre SVG seç
+  var svgBank = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  var svgCrypto = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><circle cx="12" cy="12" r="9"/><path d="M9 8h4.5a2 2 0 0 1 0 4H9m0 0h5a2 2 0 0 1 0 4H9m0-8v8m3-10v12"/></svg>';
+  var svgCard = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>';
+  var svgWallet = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><circle cx="16" cy="14" r="1" fill="currentColor"/></svg>';
+  if(t === 'bank') return svgBank;
+  if(t === 'crypto') return svgCrypto;
+  if(t === 'card') return svgCard;
+  // Emoji'den tahmin et
+  if(ico==='💳'||ico==='🃏') return svgCard;
+  if(ico==='₮'||ico==='₿'||ico==='Ξ') return svgCrypto;
+  return svgWallet;
+}
+
 function renderDepositMethods() {
   const active = payMethods.filter(p=>p.active);
   const grid = document.getElementById('depositMethodGrid');
   grid.innerHTML = active.map(m => `
     <div class="wallet-method" id="dm-${m.id}" onclick="selectDepositMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
+      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:#f0b90b;margin:0 auto 8px">${_walletMethodIcon(m)}</div>
       <div class="wallet-method-name">${m.name}</div>
       <div class="wallet-method-sub">${m.type==='bank'?m.currency+' · Min '+m.currency+' '+(m.min||0):m.network+' · Min '+m.min+' '+m.currency}</div>
     </div>
@@ -5753,6 +5811,18 @@ function selectDepositMethod(id) {
   const m = selectedDepositMethod;
   var _st_depositDetails=document.getElementById('depositDetails'); if(_st_depositDetails) _st_depositDetails.style.display = 'block';
   var _el_depositCurrency=document.getElementById('depositCurrency'); if(_el_depositCurrency) _el_depositCurrency.textContent = m.currency;
+  // Hazır miktar butonlarını güncelle
+  var _dqb = document.getElementById('depositQuickBtns');
+  if(_dqb) {
+    var _dcur = m.currency||'';
+    var _dsym = _dcur==='USD'?'$':_dcur==='EUR'?'€':_dcur==='TRY'?'₺':_dcur==='GBP'?'£':_dcur+' ';
+    _dqb.querySelectorAll('.wallet-quick').forEach(function(btn){
+      var txt = btn.textContent.trim();
+      if(txt==='Tümü') return;
+      var num = txt.replace(/[^0-9.]/g,'');
+      btn.textContent = _dsym + num;
+    });
+  }
 
   let infoHtml = '';
   if(m.type==='bank') {
@@ -5810,7 +5880,7 @@ function renderWithdrawMethods() {
   const grid = document.getElementById('withdrawMethodGrid');
   grid.innerHTML = active.map(m => `
     <div class="wallet-method" id="wm-${m.id}" onclick="selectWithdrawMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
+      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:#f0b90b;margin:0 auto 8px">${_walletMethodIcon(m)}</div>
       <div class="wallet-method-name">${m.name}</div>
       <div class="wallet-method-sub">${m.type==='bank'?m.currency:m.network+' · '+m.currency}</div>
     </div>
@@ -5828,6 +5898,18 @@ function selectWithdrawMethod(id) {
   const m = selectedWithdrawMethod;
   var _st_withdrawDetails=document.getElementById('withdrawDetails'); if(_st_withdrawDetails) _st_withdrawDetails.style.display = 'block';
   var _el_withdrawCurrency=document.getElementById('withdrawCurrency'); if(_el_withdrawCurrency) _el_withdrawCurrency.textContent = m.currency;
+  // Hazır miktar butonlarını güncelle
+  var _wqb = document.getElementById('withdrawQuickBtns');
+  if(_wqb) {
+    var _wcur = m.currency||'';
+    var _wsym = _wcur==='USD'?'$':_wcur==='EUR'?'€':_wcur==='TRY'?'₺':_wcur==='GBP'?'£':_wcur+' ';
+    _wqb.querySelectorAll('.wallet-quick').forEach(function(btn){
+      var txt = btn.textContent.trim();
+      if(txt==='Tümü') return;
+      var num = txt.replace(/[^0-9.]/g,'');
+      btn.textContent = _wsym + num;
+    });
+  }
   var _gbe2de5=document.getElementById('withdrawAddress'); if(_gbe2de5) _gbe2de5.placeholder = m.type==='bank'?'IBAN numaranızı girin':'Cüzdan adresinizi girin';
   var _el_withdrawNote=document.getElementById('withdrawNote'); if(_el_withdrawNote) _el_withdrawNote.textContent = m.type==='bank'
     ? '⚠ Lütfen size ait IBAN numarasını girin. Başkasına ait hesaba işlem yapılmaz.'
@@ -6812,6 +6894,56 @@ function startRealFeed() {
   txListenPrices();
   txListenPricesChg();
   txListenOverrides();
+  txLoadBrokerInfo();
+}
+
+function txLoadBrokerInfo() {
+  if(typeof db==='undefined'||!db) return;
+  db.collection('broker').doc('info').get().then(function(doc){
+    if(!doc.exists) return;
+    var d = doc.data(); if(!d) return;
+    window._txBrokerInfo = d;
+    _txRenderBrokerInfo(d);
+  }).catch(function(){});
+}
+
+function _txRenderBrokerInfo(d) {
+  var box = document.getElementById('mBrokerInfo');
+  var rows = document.getElementById('mBIRows');
+  if(!box||!rows) return;
+  var fields = [
+    {k:'name',       label:'Broker'},
+    {k:'company',    label:'Şirket'},
+    {k:'website',    label:'Web Sitesi', link:true},
+    {k:'email',      label:'E-posta',    link:'mailto:'},
+    {k:'phone',      label:'Telefon'},
+    {k:'license',    label:'Lisans'},
+    {k:'regulator',  label:'Düzenleyici'},
+    {k:'address',    label:'Adres'},
+    {k:'support',    label:'Destek',     link:true},
+    {k:'disclaimer', label:'Yasal Uyarı', small:true},
+  ];
+  var html = fields.filter(function(f){ return d[f.k]; }).map(function(f){
+    var val = d[f.k];
+    var valHtml;
+    if(f.link===true) {
+      valHtml = '<a href="'+val+'" target="_blank" style="color:#f0b90b;text-decoration:none;word-break:break-all">'+val+'</a>';
+    } else if(f.link) {
+      valHtml = '<a href="'+f.link+val+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
+    } else if(f.small) {
+      valHtml = '<span style="color:#555;font-size:9px;line-height:1.4">'+val+'</span>';
+    } else {
+      valHtml = '<span style="color:#ccc">'+val+'</span>';
+    }
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a;gap:8px">'
+      +'<div style="font-family:monospace;font-size:10px;color:#555;flex-shrink:0">'+f.label+'</div>'
+      +'<div style="font-family:monospace;font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
+      +'</div>';
+  }).join('');
+  if(html) {
+    rows.innerHTML = html;
+    box.style.display = 'block';
+  }
 }
 
 function stopRealFeed() {
@@ -8497,6 +8629,12 @@ function adChangePassword() {
       </button>
 
       <!-- Çıkış -->
+      <!-- Broker Bilgileri -->
+      <div id="mBrokerInfo" style="display:none;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:10px;padding:14px;margin-bottom:4px">
+        <div style="font-family:monospace;font-size:9px;color:#555;letter-spacing:1px;margin-bottom:10px">BROKER BİLGİLERİ</div>
+        <div id="mBIRows"></div>
+      </div>
+
       <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()" style="border-color:rgba(239,83,80,.2);margin-top:4px">
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
@@ -9022,15 +9160,22 @@ function adChangePassword() {
   // Mobil bekleyen emir ver
   window.mPlacePending = function() {
     var lpEl = document.getElementById('mLimitPrice');
-    var lpDt = document.getElementById('limitPrice');
-    if(lpEl && lpDt) lpDt.value = lpEl.value;
+    var limitPriceVal = lpEl ? parseFloat(lpEl.value)||0 : 0;
     var lot = parseFloat((document.getElementById('mLI')||{}).value)||0.01;
     var sl = parseFloat((document.getElementById('mSL')||{}).value)||null;
     var tp = parseFloat((document.getElementById('mTP')||{}).value)||null;
+
+    if(!limitPriceVal) { if(typeof showToast==='function') showToast('Hata','Emir fiyatı girin!'); return; }
+    if(ordType==='market') { if(typeof showToast==='function') showToast('Hata','Bekleyen emir tipi seçin!'); return; }
+
+    // Desktop input'larını doldur
+    var lpDt=document.getElementById('limitPrice'); if(lpDt) lpDt.value=limitPriceVal;
     var qe=document.getElementById('ordQty'); if(qe) qe.value=lot;
     var se=document.getElementById('ordSL'); if(se) se.value=sl||'';
     var te=document.getElementById('ordTP'); if(te) te.value=tp||'';
-    if(typeof placeOrder==='function') placeOrder(ordType==='buy_limit'||ordType==='buy_stop'?'buy':'sell');
+
+    var side = (ordType==='buy_limit'||ordType==='buy_stop') ? 'buy' : 'sell';
+    if(typeof placeOrder==='function') placeOrder(side);
     if(lpEl) lpEl.value='';
   };
 
