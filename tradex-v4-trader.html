@@ -6571,8 +6571,27 @@ function txApplyPrice(sym, rawMid) {
   var bid  = rawMid - half;
   var ask  = rawMid + half;
   var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
-  var baseRef = (SIM_PRICES && SIM_PRICES[sym]) ? SIM_PRICES[sym].p : rawMid;
-  var chg  = baseRef ? (rawMid - baseRef) / baseRef * 100 : 0;
+
+  // Günlük açılış fiyatını localStorage'dan yükle veya oluştur
+  if(!window._dayOpen) {
+    try {
+      var _storedDay = localStorage.getItem('_txDayOpen');
+      var _storedDate = localStorage.getItem('_txDayOpenDate');
+      var _today = new Date().toDateString();
+      if(_storedDay && _storedDate === _today) {
+        window._dayOpen = JSON.parse(_storedDay);
+      } else {
+        window._dayOpen = {};
+        localStorage.setItem('_txDayOpenDate', _today);
+      }
+    } catch(e) { window._dayOpen = {}; }
+  }
+  if(!window._dayOpen[sym]) {
+    window._dayOpen[sym] = rawMid;
+    try { localStorage.setItem('_txDayOpen', JSON.stringify(window._dayOpen)); } catch(e){}
+  }
+  var dayOpen = window._dayOpen[sym];
+  var chg = dayOpen ? (rawMid - dayOpen) / dayOpen * 100 : 0;
 
   // Merkezi fiyat depola
   prices[sym]    = { price:rawMid, bid:bid, ask:ask, chg:chg };
@@ -6625,6 +6644,25 @@ function txListenPrices() {
   }, function(e){ console.warn('[Trader] prices snap err:', e); });
 }
 
+// ── Firebase pricesChg dinle ─────────────────────────────────
+function txListenPricesChg() {
+  if(typeof db === 'undefined' || !db) return;
+  db.collection('broker').doc('pricesChg').onSnapshot(function(doc){
+    if(!doc.exists) return;
+    var pd = doc.data(); if(!pd) return;
+    Object.keys(pd).forEach(function(sym){
+      if(sym.charAt(0)==='_') return;
+      var chg = parseFloat(pd[sym]);
+      if(isNaN(chg)) return;
+      // chg değerini güncelle
+      if(prices[sym]) prices[sym].chg = chg;
+      if(mwPrices[sym]) mwPrices[sym].chg = chg;
+      // Mobil badge güncelle
+      if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
+    });
+  }, function(e){ console.warn('[Trader] pricesChg snap err:', e); });
+}
+
 // ── Firebase overrides dinle ──────────────────────────────────
 function txListenOverrides() {
   if(typeof db === 'undefined' || !db) return;
@@ -6666,6 +6704,7 @@ function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
   txListenPrices();
+  txListenPricesChg();
   txListenOverrides();
 }
 
