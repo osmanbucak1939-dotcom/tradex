@@ -4524,6 +4524,7 @@ function startLiveFeed() {
       checkAlarms(sym,np);
     }
     updatePositions(); buildTicker();
+    if(typeof mTick==='function') mTick();
   }, 800);
 
   setInterval(function() {
@@ -4544,6 +4545,7 @@ function startLiveFeed() {
       updateMwRow(sym,np,prev);
       if(sym===curSym) updateOrderTicket(np);
     }
+    if(typeof mTick==='function') mTick();
   }, 3000);
 }
 
