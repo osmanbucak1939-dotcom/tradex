@@ -8659,7 +8659,7 @@ function adChangePassword() {
         var dec=sc?parseInt(sc.decimals)||2:2;
         var pnl=parseFloat(h.pnl)||0; var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
         var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-        return '<div class="m-card" onclick="mHistDetail(this,h)" style="cursor:pointer">'
+        return '<div class="m-card" data-hid="'+h.id+'" onclick="mHistDetail(this)" style="cursor:pointer">'
           +'<div class="m-cl">'
             +'<div class="m-csym">'+(h.label||h.sym)+'<span class="m-bdg '+(h.side==='buy'?'b':'s')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></div>'
             +'<div class="m-cmeta">'+h.qty+' lot · '+dt+'</div>'
@@ -8801,6 +8801,7 @@ function adChangePassword() {
     set('mPMCur', 'Güncel: '+fp2(cur,dec));
     set('mPMOpen', fp2(pos.openPrice,dec));
     set('mPMCurPrice', fp2(cur,dec));
+    var curLbl2=document.getElementById('mPMCurLabel'); if(curLbl2) curLbl2.textContent='Mevcut';
     set('mPMLot', pos.qty);
     set('mPMCost', pos.cost?'$'+fp2(pos.cost):'—');
     set('mPMSL', pos.sl?fp2(pos.sl,dec):'—');
@@ -8814,7 +8815,11 @@ function adChangePassword() {
     if(modal){ modal.style.display='flex'; }
   };
 
-  window.mHistDetail = function(el, h) {
+  window.mHistDetail = function(el) {
+    var hid = el ? el.dataset.hid : null;
+    var hist = typeof tradeHistory !== 'undefined' ? tradeHistory : [];
+    var h = hid ? hist.find(function(x){ return String(x.id)===String(hid); }) : null;
+    if(!h) return;
     // Geçmiş pozisyon - sadece görüntüleme, kapat butonu yok
     var sc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===h.sym;}):null;
     var dec = sc?parseInt(sc.decimals)||2:2;
@@ -8829,9 +8834,11 @@ function adChangePassword() {
     set('mPMType', (h.side==='buy'?'▲ AL':'▼ SAT')+' · KAPALI');
     set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
     setc('mPMPnl', pnl>=0?'#26a69a':'#ef5350');
-    set('mPMCur', 'Kapanış: '+fp2(h.closePrice,dec));
+    var _cp = h.closePrice || h.close_price || h.exitPrice || 0;
+    set('mPMCur', 'Kapanış: '+fp2(_cp,dec));
     set('mPMOpen', fp2(h.openPrice,dec));
-    set('mPMCurPrice', fp2(h.closePrice,dec));
+    set('mPMCurPrice', fp2(_cp,dec));
+    var curLbl=document.getElementById('mPMCurLabel'); if(curLbl) curLbl.textContent='Kapanış';
     set('mPMLot', h.qty);
     set('mPMCost', '—');
     set('mPMSL', h.sl?fp2(h.sl,dec):'—');
@@ -9139,7 +9146,7 @@ function adChangePassword() {
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMOpen">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Mevcut</div>
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCurPrice">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
