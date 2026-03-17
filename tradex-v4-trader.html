@@ -1472,22 +1472,28 @@ function initAuth(){
       window._userDataUnsub = db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
         if(!doc.exists) return;
         var d = doc.data(); if(!d) return;
-        // Admin tarafından gelen güncellemeleri uygula
         var changed = false;
-        // Pozisyonlar
-        if(d.positions) {
+        var newTs = d.updatedAt||d._ts||'';
+        // Timestamp değiştiyse veya hiç set edilmemişse güncelle
+        if(newTs && newTs === window._lastUserDataTs) return;
+        window._lastUserDataTs = newTs;
+        // Pozisyonlar - hem string hem array destekle
+        if(d.positions !== undefined) {
           try {
-            var newPos = JSON.parse(d.positions||'[]');
-            // Sadece farklıysa güncelle (timestamp kontrolü)
-            var newTs = d.updatedAt||d._ts||'';
-            if(newTs !== window._lastUserDataTs) {
-              window._lastUserDataTs = newTs;
-              positions = newPos;
-              if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
-              if(d.tradeHistory) { try { tradeHistory = JSON.parse(d.tradeHistory||'[]'); } catch(e){} }
-              if(Array.isArray(d.pendingOrders)) pendingOrders = d.pendingOrders;
-              changed = true;
-            }
+            var newPos = Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions||'[]');
+            positions = newPos;
+            changed = true;
+          } catch(e){ console.warn('positions parse err:', e); }
+        }
+        if(d.balance !== undefined) { balance = parseFloat(d.balance)||0; changed = true; }
+        if(d.tradeHistory !== undefined) {
+          try {
+            tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : JSON.parse(d.tradeHistory||'[]');
+          } catch(e){}
+        }
+        if(d.pendingOrders !== undefined) {
+          try {
+            pendingOrders = Array.isArray(d.pendingOrders) ? d.pendingOrders : JSON.parse(d.pendingOrders||'[]');
           } catch(e){}
         }
         if(changed) {
