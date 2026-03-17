@@ -1835,7 +1835,21 @@ console.log('Firebase bağlandı ✓');
                 <option value="index">Endeks</option>
               </select>
             </div>
-            <div><label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">SPREAD</label><input class="mgr-input" id="ns_spread" type="number" step="any" value="0.0002" style="width:100%;"></div>
+            <div>
+              <label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">SPREAD</label>
+              <input class="mgr-input" id="ns_spread" type="number" step="any" value="0.0002" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">SPREAD TİPİ</label>
+              <select class="mgr-input" id="ns_spreadType" style="width:100%;" onchange="document.getElementById('ns_spreadVarianceRow').style.display=this.value==='dynamic'?'block':'none'">
+                <option value="fixed">Sabit</option>
+                <option value="dynamic">Değişken</option>
+              </select>
+            </div>
+            <div id="ns_spreadVarianceRow" style="display:none">
+              <label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">VARYANS % (max ±%)</label>
+              <input class="mgr-input" id="ns_spreadVariance" type="number" step="1" min="1" max="50" value="20" style="width:100%;">
+            </div>
             <div><label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">SWAP AL</label><input class="mgr-input" id="ns_swapBuy" type="number" step="any" value="0" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">SWAP SAT</label><input class="mgr-input" id="ns_swapSell" type="number" step="any" value="0" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#888;display:block;margin-bottom:3px;">MIN LOT</label><input class="mgr-input" id="ns_minlot" type="number" step="any" value="0.01" style="width:100%;"></div>
@@ -3195,17 +3209,38 @@ var _FX = { prices:{}, raw:{}, writeTimer:null, writeBuf:{} };
 // Spread al — symConfig öncelikli, sonra MARKET_GROUPS
 function _adGetSpread(sym) {
   if(_pcOverrides && _pcOverrides[sym]) return 0;
+  var baseSpread = 0, spreadType = 'fixed', spreadVariance = 20;
   if(typeof symConfig !== 'undefined' && symConfig) {
     var sc = symConfig.find(function(s){ return s.sym===sym; });
-    if(sc && sc.spread !== undefined) return parseFloat(sc.spread)||0;
-  }
-  if(typeof MARKET_GROUPS !== 'undefined') {
-    for(var i=0;i<MARKET_GROUPS.length;i++){
-      var it = MARKET_GROUPS[i].items.find(function(x){ return x.sym===sym; });
-      if(it && it.spread !== undefined) return parseFloat(it.spread)||0;
+    if(sc && sc.spread !== undefined) {
+      baseSpread = parseFloat(sc.spread)||0;
+      spreadType = sc.spreadType || 'fixed';
+      spreadVariance = parseFloat(sc.spreadVariance)||20;
     }
   }
-  return 0;
+  if(!baseSpread && typeof MARKET_GROUPS !== 'undefined') {
+    for(var i=0;i<MARKET_GROUPS.length;i++){
+      var it = MARKET_GROUPS[i].items.find(function(x){ return x.sym===sym; });
+      if(it && it.spread !== undefined) { baseSpread = parseFloat(it.spread)||0; break; }
+    }
+  }
+  if(spreadType === 'dynamic' && baseSpread > 0) {
+    // ±variance% arasında rasgele, ancak yavaş hareket için önceki değeri baz al
+    if(!window._dynSpread) window._dynSpread = {};
+    var prev = window._dynSpread[sym] !== undefined ? window._dynSpread[sym] : baseSpread;
+    var maxMove = baseSpread * (spreadVariance/100);
+    // Her tick'te max %5 kayma — kademeli değişim
+    var maxStep = baseSpread * 0.05;
+    var delta = (Math.random() - 0.5) * 2 * maxStep;
+    var newSpread = prev + delta;
+    // Sınırla: base ± variance%
+    var lo = baseSpread * (1 - spreadVariance/100);
+    var hi = baseSpread * (1 + spreadVariance/100);
+    newSpread = Math.max(lo, Math.min(hi, newSpread));
+    window._dynSpread[sym] = newSpread;
+    return newSpread;
+  }
+  return baseSpread;
 }
 
 // ── Tek fiyat kaynağı ─────────────────────────────────────────
@@ -3230,22 +3265,8 @@ function adReceiveRawPrice(sym, rawMid) {
   var bid    = rawMid - half;
   var ask    = rawMid + half;
   var prev   = _FX.prices[sym] ? _FX.prices[sym].mid : rawMid;
-  // Günlük açılış fiyatı - localStorage'da sakla
-  if(!window._adDayOpen) {
-    try {
-      var _sd = localStorage.getItem('_adDayOpen');
-      var _sdd = localStorage.getItem('_adDayOpenDate');
-      var _today = new Date().toDateString();
-      window._adDayOpen = (_sd && _sdd===_today) ? JSON.parse(_sd) : {};
-      if(_sdd !== _today) localStorage.setItem('_adDayOpenDate', _today);
-    } catch(e) { window._adDayOpen = {}; }
-  }
-  if(!window._adDayOpen[sym]) {
-    window._adDayOpen[sym] = rawMid;
-    try { localStorage.setItem('_adDayOpen', JSON.stringify(window._adDayOpen)); } catch(e){}
-  }
-  var dayOpen = window._adDayOpen[sym];
-  var chg = dayOpen ? (rawMid - dayOpen) / dayOpen * 100 : 0;
+  var baseRef= (typeof AD_SIM!=='undefined'&&AD_SIM[sym]) ? AD_SIM[sym].p : rawMid;
+  var chg    = baseRef ? (rawMid-baseRef)/baseRef*100 : 0;
   // Merkezi depoya yaz
   _FX.prices[sym] = { mid:rawMid, bid:bid, ask:ask, spread:spread, chg:chg, ts:Date.now() };
   _FX.raw[sym]    = rawMid;
@@ -3279,18 +3300,6 @@ function adReceiveRawPrice(sym, rawMid) {
       var upd=Object.assign({_ts:Date.now()},buf);
       db.collection('broker').doc('prices').set(upd,{merge:true})
         .catch(function(e){console.warn('[Feed] FB write error:',e);});
-      // chg değerlerini ayrı dokümanına yaz
-      if(window._adDayOpen) {
-        var chgUpd = {_ts: Date.now()};
-        Object.keys(buf).forEach(function(sym){
-          var dayOpen = window._adDayOpen[sym];
-          if(dayOpen) chgUpd[sym] = dayOpen ? (parseFloat(buf[sym])-dayOpen)/dayOpen*100 : 0;
-        });
-        if(Object.keys(chgUpd).length > 1) {
-          db.collection('broker').doc('pricesChg').set(chgUpd,{merge:true})
-            .catch(function(e){console.warn('[Feed] chg write error:',e);});
-        }
-      }
     },2000);
   }
 }
@@ -3484,7 +3493,14 @@ var MW_MAP = {};
 var mwPrices = {};
 var mwGroupState = {};
 
-function saveSymConfig(){ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }
+function saveSymConfig(){
+  localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+  // Firebase'e yaz
+  if(typeof db!=='undefined'&&db){
+    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true})
+      .catch(function(e){console.warn('saveSymConfig FB err:',e);});
+  }
+}
 
 function saveAccounts(){ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); fbSaveAccounts(); }
 
@@ -3551,7 +3567,8 @@ function renderSymMgr(filterCat) {
       '<td><input class="mgr-input" style="width:90px;padding:3px 6px;" value="'+s.label+'" onchange="updateSym('+i+',\'label\',this.value)"></td>' +
       '<td style="font-size:11px;">'+(catMap[s.category||'crypto']||s.category||'-')+'</td>' +
       '<td style="font-family:var(--mono);font-size:10px;color:'+(s.priceSource?'#f5c518':'#555')+';">'+(s.priceSource||'&#8212;')+'</td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.spread||0)+'" onchange="updateSym('+i+',\'spread\',parseFloat(this.value))"></td>' +
+      '<td style="white-space:nowrap"><input class="mgr-input" style="width:70px;padding:3px 6px;" type="number" step="any" value="'+(s.spread||0)+'" onchange="updateSym('+i+',\'spread\',parseFloat(this.value))">'+
+      '<span style="margin-left:4px;font-size:9px;padding:1px 5px;border-radius:3px;background:'+(s.spreadType==='dynamic'?'#0a2a1a':'#1a1a2a')+';color:'+(s.spreadType==='dynamic'?'#26a69a':'#888')+'">'+((s.spreadType||'fixed')==='dynamic'?'±'+( s.spreadVariance||20)+'%':'SABİT')+'</span></td>' +
       '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.swapBuy||0)+'" onchange="updateSym('+i+',\'swapBuy\',parseFloat(this.value))"></td>' +
       '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.swapSell||0)+'" onchange="updateSym('+i+',\'swapSell\',parseFloat(this.value))"></td>' +
       '<td><input class="mgr-input" style="width:90px;padding:3px 6px;" type="number" step="any" value="'+(s.contractSize||1)+'" onchange="updateSym('+i+',\'contractSize\',parseFloat(this.value))"></td>' +
@@ -3601,7 +3618,9 @@ function saveSymbolMgr() {
   var sym          = document.getElementById('ns_sym').value.toUpperCase().trim();
   var label        = document.getElementById('ns_label').value.trim();
   var sh           = document.getElementById('ns_short').value.toUpperCase().trim();
-  var spread       = parseFloat(document.getElementById('ns_spread').value) || 0.0002;
+  var spread         = parseFloat(document.getElementById('ns_spread').value) || 0.0002;
+  var spreadType     = (document.getElementById('ns_spreadType')||{value:'fixed'}).value || 'fixed';
+  var spreadVariance = parseFloat((document.getElementById('ns_spreadVariance')||{value:20}).value) || 20;
   var swapBuy      = parseFloat(document.getElementById('ns_swapBuy').value)  || 0;
   var swapSell     = parseFloat(document.getElementById('ns_swapSell').value) || 0;
   var color        = document.getElementById('ns_color').value;
@@ -3614,7 +3633,8 @@ function saveSymbolMgr() {
   if(!sym || !label || !sh) { showToast('Hata', 'Sembol, etiket ve kisa ad zorunlu!'); return; }
 
   var priceSource = (document.getElementById('ns_priceSource')||{}).value || '';
-  var obj = {sym:sym, label:label, s:sh, spread:spread, swapBuy:swapBuy, swapSell:swapSell, color:color, minLot:minLot,
+  var obj = {sym:sym, label:label, s:sh, spread:spread, spreadType:spreadType, spreadVariance:spreadVariance,
+             swapBuy:swapBuy, swapSell:swapSell, color:color, minLot:minLot,
              active:true, contractSize:contractSize, margin:margin, decimals:decimals, category:category,
              priceSource:priceSource};
 
@@ -3751,6 +3771,9 @@ function editSymForm(i) {
   document.getElementById('ns_label').value        = s.label || '';
   document.getElementById('ns_short').value        = s.s || '';
   document.getElementById('ns_spread').value       = s.spread || 0;
+  var stEl = document.getElementById('ns_spreadType'); if(stEl) { stEl.value = s.spreadType||'fixed'; }
+  var svEl = document.getElementById('ns_spreadVariance'); if(svEl) svEl.value = s.spreadVariance||20;
+  var svRow = document.getElementById('ns_spreadVarianceRow'); if(svRow) svRow.style.display = (s.spreadType==='dynamic')?'block':'none';
   document.getElementById('ns_swapBuy').value      = s.swapBuy  || 0;
   document.getElementById('ns_swapSell').value     = s.swapSell || 0;
   document.getElementById('ns_color').value        = s.color || '#f0b90b';
