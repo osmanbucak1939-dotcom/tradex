@@ -8693,28 +8693,32 @@ function adChangePassword() {
   }
 
   // Canlı tick
+  // Pozisyon K/Z canlı güncelle - sekme bağımsız
+  function _mTickPos(){
+    var pos=typeof positions!=='undefined'?positions:[];
+    var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
+    pos.forEach(function(p){
+      var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
+      var dec=sc?parseInt(sc.decimals)||2:2;
+      var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
+      var cs=parseFloat(p.contractSize)||1;
+      var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
+      var pe=document.querySelector('[data-mp="'+p.id+'"]');
+      var ce=document.querySelector('[data-mc="'+p.id+'"]');
+      if(pe){pe.textContent=(pnl>=0?'+':'-')+'$'+fp(Math.abs(pnl));pe.className='m-cpnl '+(pnl>=0?'u':'d');}
+      if(ce) ce.textContent=fp(cur,dec);
+    });
+  }
+
   window.mTick=function(){
     if(!mob()) return;
+    // Aktif sekmeye göre güncelle
     if(_ct==='trade') mFT();
-    if(_ct==='pos'){
-      var pos=typeof positions!=='undefined'?positions:[];
-      var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
-      pos.forEach(function(p){
-        var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
-        var dec=sc?parseInt(sc.decimals)||2:2;
-        var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
-        var cs=parseFloat(p.contractSize)||1;
-        var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
-        var pe=document.querySelector('[data-mp="'+p.id+'"]');
-        var ce=document.querySelector('[data-mc="'+p.id+'"]');
-        if(pe){pe.textContent=(pnl>=0?'+':'-')+'$'+fp(Math.abs(pnl));pe.className='m-cpnl '+(pnl>=0?'u':'d');}
-        if(ce) ce.textContent=fp(cur,dec);
-      });
-      mFA();
-    }
-    if(_ct==='acc') mFA();
     if(_ct==='market') mFM();
     if(_ct==='chart') mQUpdate();
+    // Pos ve acc her zaman güncelle (aktif olsun olmasın)
+    _mTickPos();
+    mFA();
   };
 
   // Hızlı al-sat fonksiyonları
