@@ -1189,6 +1189,11 @@ function _authSuccess(user) {
   // Gece yarısı swap zamanla
   scheduleSwap();
 
+  // Gerçek zamanlı veri senkronizasyonu başlat
+  if(typeof fbListenUserData==='function' && _cu && _cu.id) {
+    fbListenUserData(_cu.id);
+  }
+
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
   function _txSendHeartbeat() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
@@ -1457,6 +1462,40 @@ function initAuth(){
           callback(doc.exists ? doc.data() : null);
         })
         .catch(function(e){ console.warn('fbLoadUserData error:', e); callback(null); });
+    }
+
+    // Gerçek zamanlı pozisyon/bakiye senkronizasyonu
+    window._userDataUnsub = null;
+    function fbListenUserData(userId) {
+      if(!db || !userId) return;
+      if(window._userDataUnsub) { try{window._userDataUnsub();}catch(e){} }
+      window._userDataUnsub = db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
+        if(!doc.exists) return;
+        var d = doc.data(); if(!d) return;
+        // Admin tarafından gelen güncellemeleri uygula
+        var changed = false;
+        // Pozisyonlar
+        if(d.positions) {
+          try {
+            var newPos = JSON.parse(d.positions||'[]');
+            // Sadece farklıysa güncelle (timestamp kontrolü)
+            var newTs = d.updatedAt||d._ts||'';
+            if(newTs !== window._lastUserDataTs) {
+              window._lastUserDataTs = newTs;
+              positions = newPos;
+              if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
+              if(d.tradeHistory) { try { tradeHistory = JSON.parse(d.tradeHistory||'[]'); } catch(e){} }
+              if(Array.isArray(d.pendingOrders)) pendingOrders = d.pendingOrders;
+              changed = true;
+            }
+          } catch(e){}
+        }
+        if(changed) {
+          renderPositions(); renderHistory(); updateAccount();
+          if(typeof mFP==='function') mFP();
+          if(typeof renderPendingOrders==='function') renderPendingOrders();
+        }
+      }, function(e){ console.warn('fbListenUserData err:', e); });
     }
 
     // Spread gruplarını Firebase'e kaydet
@@ -8639,8 +8678,15 @@ function adChangePassword() {
     set('mBid',mid?(mid-sp/2).toFixed(dec):'—');
     set('mAsk',mid?(mid+sp/2).toFixed(dec):'—');
     var minL=sc?parseFloat(sc.minLot)||0.01:0.01;
-    _lot=Math.max(_lot,minL);
-    var li=document.getElementById('mLI'); if(li){li.min=minL;li.step=minL;li.value=_lot;}
+    var li=document.getElementById('mLI');
+    // Kullanıcı input'a yazıyorsa _lot'u input'tan al, üzerine yazma
+    if(li && document.activeElement===li) {
+      _lot=Math.max(minL, parseFloat(li.value)||minL);
+    } else {
+      _lot=Math.max(_lot,minL);
+      if(li){li.min=minL;li.step=minL;li.value=_lot;}
+    }
+    if(li){li.min=minL;li.step=minL;}
     var pr=document.getElementById('mPrs');
     if(pr){ var a=[minL,+(minL*10).toPrecision(2),+(minL*100).toPrecision(2)];
       pr.innerHTML=a.map(function(v){ var on=Math.abs(v-_lot)<1e-9?' on':''; return'<button class="m-pr'+on+'" onclick="mLS('+v+',this)">'+v+'</button>';}).join(''); }
@@ -9044,12 +9090,46 @@ function adChangePassword() {
   window.mTick=function(){
     if(!mob()) return;
     // Aktif sekmeye göre güncelle
-    if(_ct==='trade') mFT();
+    if(_ct==='trade') {
+      // Lot input'a yazılıyorsa mFT'nin lot kısmını atla - sadece fiyatları güncelle
+      var _liEl=document.getElementById('mLI');
+      if(_liEl && document.activeElement===_liEl) {
+        // Sadece bid/ask güncelle, mFT'yi çağırma
+        var _sym=typeof curSym!=='undefined'?curSym:'';
+        var _sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===_sym;}):null;
+        var _dec=_sc?parseInt(_sc.decimals)||2:2;
+        var _sp=_sc?parseFloat(_sc.spread)||0:0;
+        var _p=(typeof prices!=='undefined'&&prices[_sym])?prices[_sym]:null;
+        var _mid=_p?_p.price:0;
+        var _bid=document.getElementById('mBid'); if(_bid&&_mid) _bid.textContent=(_mid-_sp/2).toFixed(_dec);
+        var _ask=document.getElementById('mAsk'); if(_ask&&_mid) _ask.textContent=(_mid+_sp/2).toFixed(_dec);
+      } else {
+        mFT();
+      }
+    }
     if(_ct==='market') mFM();
     if(_ct==='chart') mQUpdate();
     // Pos ve acc her zaman güncelle (aktif olsun olmasın)
     _mTickPos();
     mFA();
+    // Pozisyon detay modal açıksa canlı güncelle
+    if(_mPosId && document.getElementById('mPosModal') && document.getElementById('mPosModal').style.display!=='none') {
+      var _mp = (typeof positions!=='undefined'?positions:[]).find(function(p){return p.id===_mPosId;});
+      if(_mp) {
+        var _msc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===_mp.sym;}):null;
+        var _mdec=_msc?parseInt(_msc.decimals)||2:2;
+        var _mcur=(typeof prices!=='undefined'&&prices[_mp.sym])?prices[_mp.sym].price:_mp.openPrice;
+        var _mcs=parseFloat(_mp.contractSize)||1;
+        var _mpnl=(_mp.side==='buy'?_mcur-_mp.openPrice:_mp.openPrice-_mcur)*(parseFloat(_mp.qty)||0)*_mcs+(parseFloat(_mp.swapTotal)||0);
+        var _fp2=function(n,d){return parseFloat(n||0).toFixed(d||2);};
+        var _se=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+        var _sc2=function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
+        _se('mPMCurPrice', _fp2(_mcur,_mdec));
+        _se('mPMPnl', (_mpnl>=0?'+':'')+('$'+_fp2(_mpnl)));
+        _sc2('mPMPnl', _mpnl>=0?'#26a69a':'#ef5350');
+        _se('mPMCur', 'Güncel: '+_fp2(_mcur,_mdec));
+      }
+    }
   };
 
   // Hızlı al-sat fonksiyonları
