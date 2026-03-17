@@ -1189,6 +1189,40 @@ function _authSuccess(user) {
   // Gece yarısı swap zamanla
   scheduleSwap();
 
+  // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
+  function _txSendHeartbeat() {
+    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
+    var now = new Date().toISOString();
+    // broker/accounts içindeki hesabı güncelle
+    db.collection('broker').doc('accounts').get().then(function(doc) {
+      if(!doc.exists) return;
+      try {
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
+        if(idx >= 0) {
+          accs[idx].lastSeen = now;
+          accs[idx].online = true;
+          db.collection('broker').doc('accounts').set({data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
+        }
+      } catch(e){}
+    }).catch(function(){});
+    // users koleksiyonuna da yaz (hızlı erişim için)
+    db.collection('users').doc(String(_cu.id)).set({lastSeen:now, online:true},{merge:true}).catch(function(){});
+  }
+
+  // Hemen bir kez ve sonra her 30 saniyede
+  _txSendHeartbeat();
+  if(window._heartbeatTimer) clearInterval(window._heartbeatTimer);
+  window._heartbeatTimer = setInterval(_txSendHeartbeat, 5000);
+
+  // Sekme kapanınca offline yap
+  window.addEventListener('beforeunload', function() {
+    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
+    db.collection('users').doc(String(_cu.id)).set({online:false},{merge:true}).catch(function(){});
+  });
+  // ──────────────────────────────────────────────────────────
+
+
   // Firebase'den güncel spreadGroup al ve MW'e uygula
   if(typeof db !== 'undefined' && db && _cu && _cu.id) {
     db.collection('users').doc(String(_cu.id)).get().then(function(doc){
@@ -1724,8 +1758,8 @@ function initAuth(){
       <div class="bp-tabs" style="flex-shrink:0;display:flex;height:28px;">
         <div class="bp-tab active" onclick="bpSwitch('pos',this)">Pozisyonlar</div>
         <div class="bp-tab" onclick="bpSwitch('hist',this)">İşlem Geçmişi</div>
-        <div class="bp-tab" onclick="bpSwitch('pending',this)">⏳ Bekleyen</div>
-        <div class="bp-tab" onclick="bpSwitch('finans',this)">💰 Finans</div>
+        <div class="bp-tab" onclick="bpSwitch('pending',this)">Bekleyen</div>
+        <div class="bp-tab" onclick="bpSwitch('finans',this)">Finans</div>
       </div>
 
       <!-- İZLEYİCİ MODU BANDI -->
@@ -1776,8 +1810,7 @@ function initAuth(){
   <th>Yön</th>
   <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:#444;font-size:9px;">⇅</span></th>
   <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#26a69a;font-size:9px;">↓</span></th>
-  <th>Açılış</th><th>Güncel</th>
-  <th>Cihaz</th>
+  <th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th>
   <th>Swap</th>
   <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:#444;font-size:9px;">⇅</span></th>
   <th>Kapat</th>
@@ -3951,7 +3984,8 @@ function renderPositions() {
       <td style="font-size:10px;color:${_posSortCol==='time'?'#aaa':'var(--muted)'};white-space:nowrap">${pos.time ? fmtDate(pos.time) : '—'}</td>
       <td>$${fp(pos.openPrice, pos.decimals||2)}</td>
       <td data-cur="${pos.id}">$${fp(cur, pos.decimals||2)}</td>
-      <td style="font-size:10px;color:var(--muted);white-space:nowrap">${deviceIcon(pos.device||'web')}</td>
+      <td style="font-size:10px;color:#ef5350">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '—'}</td>
+      <td style="font-size:10px;color:#26a69a">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '—'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#26a69a':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor}">${pnlSign}$${fp(Math.abs(pnl))}</td>
       <td><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
