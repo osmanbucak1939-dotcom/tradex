@@ -7615,14 +7615,14 @@ function adChangePassword() {
   /* Wallet paneli mobilde tam genişlik bottom sheet */
   .wallet-overlay {
     align-items: flex-end !important;
-    padding: 0 0 62px 0 !important;
+    padding: 0 !important;
   }
   .wallet-panel {
     width: 100vw !important;
     max-width: 100vw !important;
-    max-height: calc(88vh - 62px) !important;
+    max-height: 80vh !important;
     border-radius: 14px 14px 0 0 !important;
-    margin: 0 !important;
+    margin: 0 0 62px 0 !important;
     box-sizing: border-box !important;
   }
   /* Desktop elementleri gizle */
@@ -7999,15 +7999,15 @@ function adChangePassword() {
   .m-li {
     flex: 1; text-align: center;
     background: transparent; border: none;
-    color: #fff; font-family: monospace;
+    color: #e0e0e0; font-family: monospace;
     font-size: 20px; font-weight: 700; height: 52px;
   }
   .m-li:focus { outline: none; }
   .m-prs { display: flex; gap: 8px; flex-wrap: wrap; }
   .m-pr {
     padding: 5px 13px; border-radius: 20px;
-    border: 1px solid #1e1e1e; background: #111;
-    color: #444; font-family: monospace; font-size: 11px;
+    border: 1px solid #2a2a2a; background: #111;
+    color: #888; font-family: monospace; font-size: 11px;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .m-pr.on { border-color: #26a69a; color: #26a69a; background: #0a1a16; }
@@ -8015,7 +8015,7 @@ function adChangePassword() {
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
   .m-il { font-family: monospace; font-size: 9px; color: #888; letter-spacing: .5px; }
   .m-in {
-    background: #111; border: 1px solid #1e1e1e;
+    background: #111; border: 1px solid #2a2a2a;
     border-radius: 6px; color: #ddd;
     font-family: monospace; font-size: 14px;
     padding: 10px 12px; width: 100%; box-sizing: border-box;
@@ -8072,12 +8072,12 @@ function adChangePassword() {
   }
   .m-bdg.b { background: #081a14; color: #26a69a; }
   .m-bdg.s { background: #1a0808; color: #ef5350; }
-  .m-cmeta { font-family: monospace; font-size: 10px; color: #777; margin-top: 2px; }
+  .m-cmeta { font-family: monospace; font-size: 10px; color: #999; margin-top: 2px; }
   .m-cr { text-align: right; }
   .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
   .m-cpnl.u { color: #26a69a; }
   .m-cpnl.d { color: #ef5350; }
-  .m-ccur { font-family: monospace; font-size: 10px; color: #777; margin-top: 2px; }
+  .m-ccur { font-family: monospace; font-size: 10px; color: #999; margin-top: 2px; }
   .m-cx {
     width: 32px; height: 32px; flex-shrink: 0;
     background: #111; border: 1px solid #1e1e1e;
@@ -8247,15 +8247,15 @@ function adChangePassword() {
   <!-- Hesap listesi -->
   <div style="border-bottom:1px solid #1a1a1a;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#999">Bakiye</div>
+      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="balance">Bakiye</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSBal">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#999">Varlık</div>
+      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="equity">Varlık</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSEq">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111" id="mPosBonusRow">
-      <div style="font-family:monospace;font-size:12px;color:#999">Bonus</div>
+      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="bonus">Bonus</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
@@ -8276,7 +8276,7 @@ function adChangePassword() {
   <div class="m-tabs" style="flex-shrink:0">
     <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
     <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
-    <button class="m-tab" onclick="mPT('pending',this)">⏳ BEKLEYEN</button>
+    <button class="m-tab" onclick="mPT('pending',this)">BEKLEYEN</button>
   </div>
   <div class="m-plist" id="mPL"></div>
 </div>
@@ -8314,17 +8314,17 @@ function adChangePassword() {
       </div>
       <!-- Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#999">Teminat</div>
+        <div style="font-family:monospace;font-size:12px;color:#999" data-lang="margin">Teminat</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSMar">—</div>
       </div>
       <!-- Serbest Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#999">Serbest Teminat</div>
+        <div style="font-family:monospace;font-size:12px;color:#999" data-lang="freeMargin">Serbest Teminat</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSFr">—</div>
       </div>
       <!-- Teminat Seviyesi -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#999">Teminat Seviyesi</div>
+        <div style="font-family:monospace;font-size:12px;color:#999" data-lang="marginLvl">Teminat Seviyesi</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#26a69a" id="mSML">—</div>
       </div>
     </div>
