@@ -8639,16 +8639,16 @@ function adChangePassword() {
         var cs=parseFloat(p.contractSize)||1;
         var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
         var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
-        return '<div class="m-card">'
+        return '<div class="m-card" onclick="mPosDetail('+p.id+')" style="cursor:pointer">'
           +'<div class="m-cl">'
             +'<div class="m-csym">'+(p.label||p.sym)+'<span class="m-bdg '+(p.side==='buy'?'b':'s')+'">'+(p.side==='buy'?'AL':'SAT')+'</span></div>'
-            +'<div class="m-cmeta">'+p.qty+' lot · '+fp(p.openPrice,dec)+'</div>'
+            +'<div class="m-cmeta">'+p.qty+' lot · '+fp(p.openPrice,dec)+(p.sl?' · SL:'+fp(p.sl,dec):'')+(p.tp?' · TP:'+fp(p.tp,dec):'')+'</div>'
           +'</div>'
           +'<div class="m-cr">'
             +'<div class="m-cpnl '+cls+'" data-mp="'+p.id+'">'+sgn+'$'+fp(Math.abs(pnl))+'</div>'
             +'<div class="m-ccur" data-mc="'+p.id+'">'+fp(cur,dec)+'</div>'
           +'</div>'
-          +'<button class="m-cx" onclick="mCP('+p.id+');event.stopPropagation()">✕</button>'
+          +'<svg style="width:14px;height:14px;flex-shrink:0;opacity:.3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'
         +'</div>';
       }).join('');
     } else {
@@ -8659,7 +8659,7 @@ function adChangePassword() {
         var dec=sc?parseInt(sc.decimals)||2:2;
         var pnl=parseFloat(h.pnl)||0; var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
         var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-        return '<div class="m-card">'
+        return '<div class="m-card" onclick="mHistDetail(this,h)" style="cursor:pointer">'
           +'<div class="m-cl">'
             +'<div class="m-csym">'+(h.label||h.sym)+'<span class="m-bdg '+(h.side==='buy'?'b':'s')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></div>'
             +'<div class="m-cmeta">'+h.qty+' lot · '+dt+'</div>'
@@ -8775,6 +8775,106 @@ function adChangePassword() {
 
   // Başlangıçta uygula
   setTimeout(function(){ mApplyLang(_curLang); }, 500);
+  // ──────────────────────────────────────────────────
+
+  // ── POZİSYON DETAY MODAL ──────────────────────────
+  var _mPosId = null;
+
+  window.mPosDetail = function(id) {
+    var pos = (typeof positions!=='undefined'?positions:[]).find(function(p){return p.id===id;});
+    if(!pos) return;
+    _mPosId = id;
+    var sc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===pos.sym;}):null;
+    var dec = sc?parseInt(sc.decimals)||2:2;
+    var cur = (typeof prices!=='undefined'&&prices[pos.sym])?prices[pos.sym].price:pos.openPrice;
+    var cs = parseFloat(pos.contractSize)||1;
+    var pnl = (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs+(parseFloat(pos.swapTotal)||0);
+    var fp2 = function(n,d){return parseFloat(n||0).toFixed(d||2);};
+    var set = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    var setc = function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
+    var dt = pos.openTime?new Date(pos.openTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    set('mPMSym', (pos.label||pos.sym));
+    set('mPMType', (pos.side==='buy'?'▲ AL':'▼ SAT')+' · #'+pos.id);
+    set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
+    setc('mPMPnl', pnl>=0?'#26a69a':'#ef5350');
+    set('mPMCur', 'Güncel: '+fp2(cur,dec));
+    set('mPMOpen', fp2(pos.openPrice,dec));
+    set('mPMCurPrice', fp2(cur,dec));
+    set('mPMLot', pos.qty+' lot');
+    set('mPMCost', pos.cost?'$'+fp2(pos.cost):'—');
+    set('mPMSL', pos.sl?fp2(pos.sl,dec):'—');
+    set('mPMTP', pos.tp?fp2(pos.tp,dec):'—');
+    set('mPMSwap', pos.swapTotal?'$'+fp2(pos.swapTotal):'$0.00');
+    set('mPMTime', dt);
+    // Input'ları doldur
+    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value=pos.sl||'';
+    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value=pos.tp||'';
+    var modal=document.getElementById('mPosModal');
+    if(modal){ modal.style.display='flex'; }
+  };
+
+  window.mHistDetail = function(el, h) {
+    // Geçmiş pozisyon - sadece görüntüleme, kapat butonu yok
+    var sc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===h.sym;}):null;
+    var dec = sc?parseInt(sc.decimals)||2:2;
+    var fp2 = function(n,d){return parseFloat(n||0).toFixed(d||2);};
+    var set = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    var setc = function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
+    var pnl = parseFloat(h.pnl)||0;
+    var dt = h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    var dtOpen = h.openTime?new Date(h.openTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    _mPosId = null;
+    set('mPMSym', (h.label||h.sym));
+    set('mPMType', (h.side==='buy'?'▲ AL':'▼ SAT')+' · KAPALI');
+    set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
+    setc('mPMPnl', pnl>=0?'#26a69a':'#ef5350');
+    set('mPMCur', 'Kapanış: '+fp2(h.closePrice,dec));
+    set('mPMOpen', fp2(h.openPrice,dec));
+    set('mPMCurPrice', fp2(h.closePrice,dec));
+    set('mPMLot', h.qty+' lot');
+    set('mPMCost', '—');
+    set('mPMSL', h.sl?fp2(h.sl,dec):'—');
+    set('mPMTP', h.tp?fp2(h.tp,dec):'—');
+    set('mPMSwap', h.swapTotal?'$'+fp2(h.swapTotal):'$0.00');
+    set('mPMTime', dtOpen+' → '+dt);
+    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value='';
+    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value='';
+    // Kapat butonu gizle, güncelle butonu gizle
+    var closeBtn=document.getElementById('mPMCloseBtn');
+    if(closeBtn) closeBtn.style.display='none';
+    var modal=document.getElementById('mPosModal');
+    if(modal){ modal.style.display='flex'; }
+  };
+
+  window.mPosModalClose = function(){
+    var modal=document.getElementById('mPosModal');
+    if(modal) modal.style.display='none';
+    var closeBtn=document.getElementById('mPMCloseBtn');
+    if(closeBtn) closeBtn.style.display='block';
+    _mPosId=null;
+  };
+
+  window.mPosClose = function(){
+    if(!_mPosId) return;
+    if(typeof closePosition==='function') closePosition(_mPosId);
+    mPosModalClose();
+    setTimeout(mFP, 200);
+  };
+
+  window.mPosUpdate = function(){
+    if(!_mPosId) return;
+    var slVal = parseFloat((document.getElementById('mPMSLInput')||{}).value)||null;
+    var tpVal = parseFloat((document.getElementById('mPMTPInput')||{}).value)||null;
+    var pos = (typeof positions!=='undefined'?positions:[]).find(function(p){return p.id===_mPosId;});
+    if(!pos) return;
+    pos.sl = slVal;
+    pos.tp = tpVal;
+    if(typeof save==='function') save();
+    if(typeof fbSaveUserData==='function'&&_cu) fbSaveUserData(_cu.id,{positions:positions});
+    if(typeof showToast==='function') showToast('Güncellendi ✓','SL/TP ayarlandı');
+    mPosModalClose();
+    setTimeout(mFP,200);
+  };
   // ──────────────────────────────────────────────────
 
   window.mCancelPending=function(i){
@@ -9014,6 +9114,84 @@ function adChangePassword() {
   }
 })();
 </script>
+
+<!-- MOBİL POZİSYON DETAY MODAL -->
+<div id="mPosModal" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)mPosModalClose()">
+  <div style="width:100%;background:#111;border-radius:12px 12px 0 0;border-top:1px solid #222;max-height:65vh;display:flex;flex-direction:column;margin-bottom:62px">
+    <!-- Header kompakt -->
+    <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#e0e0e0" id="mPMSym">—</div>
+        <div style="font-family:monospace;font-size:9px;color:#666;margin-top:1px" id="mPMType">—</div>
+      </div>
+      <div style="text-align:right;margin-right:12px">
+        <div style="font-family:monospace;font-size:16px;font-weight:700" id="mPMPnl">—</div>
+        <div style="font-family:monospace;font-size:9px;color:#666" id="mPMCur">—</div>
+      </div>
+      <button onclick="mPosModalClose()" style="background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
+    </div>
+    <!-- Detaylar kompakt -->
+    <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#1a1a1a;margin:8px;border-radius:6px;overflow:hidden">
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Açılış</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMOpen">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Mevcut</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCurPrice">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Lot</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMLot">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Swap</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMSwap">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:2px">Stop Loss</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ef5350" id="mPMSL">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#26a69a;margin-bottom:2px">Take Profit</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a" id="mPMTP">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Teminat</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCost">—</div>
+        </div>
+        <div style="background:#0f0f0f;padding:7px 10px">
+          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Saat</div>
+          <div style="font-family:monospace;font-size:9px;font-weight:700;color:#ccc" id="mPMTime">—</div>
+        </div>
+      </div>
+      <!-- SL/TP Güncelle kompakt -->
+      <div style="margin:0 8px 8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:end">
+        <div>
+          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:3px">SL</div>
+          <input id="mPMSLInput" type="number" placeholder="—" step="any" inputmode="decimal"
+            style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:5px;color:#ef5350;font-family:monospace;font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-family:monospace;font-size:8px;color:#26a69a;margin-bottom:3px">TP</div>
+          <input id="mPMTPInput" type="number" placeholder="—" step="any" inputmode="decimal"
+            style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:5px;color:#26a69a;font-family:monospace;font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
+        </div>
+        <button onclick="mPosUpdate()" style="padding:8px 4px;background:#1a1400;border:1px solid #f0b90b;border-radius:5px;color:#f0b90b;font-family:monospace;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+          ✓ Güncelle
+        </button>
+      </div>
+    </div>
+    <!-- Kapat butonu kompakt -->
+    <div style="padding:8px;flex-shrink:0;border-top:1px solid #1a1a1a">
+      <button onclick="mPosClose()" id="mPMCloseBtn"
+        style="width:100%;padding:11px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;color:#ef5350;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">
+        ✕ Pozisyonu Kapat
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
