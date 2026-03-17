@@ -606,7 +606,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Desktop'ta chg badge gizle */
 #mwBody .mw-chg { display: none !important; }
-.mw-sym-full { font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mw-sym-full { font-family:var(--mono); font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; transition: color .3s; }
 .mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
@@ -7772,7 +7772,7 @@ function adChangePassword() {
     gap: 3px;
     background: none;
     border: none;
-    color: #3a3a3a;
+    color: #666;
     font-family: 'Courier New', monospace;
     font-size: 9px;
     font-weight: 700;
@@ -7861,7 +7861,7 @@ function adChangePassword() {
     color: #e0e0e0 !important; letter-spacing: .3px;
   }
   #mPanMarket .mw-sym-full {
-    font-size: 10px !important; color: #444 !important;
+    font-size: 10px !important; color: #888 !important;
     margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 140px;
   }
@@ -7974,7 +7974,7 @@ function adChangePassword() {
     gap: 3px;
   }
   .m-side:active { background: #111; }
-  .m-slbl { font-family: monospace; font-size: 9px; color: #333; letter-spacing: 1px; }
+  .m-slbl { font-family: monospace; font-size: 9px; color: #888; letter-spacing: 1px; }
   .m-sprc { font-family: monospace; font-size: 28px; font-weight: 700; }
   .m-side.sell .m-sprc { color: #ef5350; }
   .m-side.buy  .m-sprc { color: #26a69a; }
@@ -8013,7 +8013,7 @@ function adChangePassword() {
   .m-pr.on { border-color: #26a69a; color: #26a69a; background: #0a1a16; }
   .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
-  .m-il { font-family: monospace; font-size: 9px; color: #333; letter-spacing: .5px; }
+  .m-il { font-family: monospace; font-size: 9px; color: #888; letter-spacing: .5px; }
   .m-in {
     background: #111; border: 1px solid #1e1e1e;
     border-radius: 6px; color: #ddd;
@@ -8072,12 +8072,12 @@ function adChangePassword() {
   }
   .m-bdg.b { background: #081a14; color: #26a69a; }
   .m-bdg.s { background: #1a0808; color: #ef5350; }
-  .m-cmeta { font-family: monospace; font-size: 10px; color: #2a2a2a; margin-top: 2px; }
+  .m-cmeta { font-family: monospace; font-size: 10px; color: #777; margin-top: 2px; }
   .m-cr { text-align: right; }
   .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
   .m-cpnl.u { color: #26a69a; }
   .m-cpnl.d { color: #ef5350; }
-  .m-ccur { font-family: monospace; font-size: 10px; color: #2a2a2a; margin-top: 2px; }
+  .m-ccur { font-family: monospace; font-size: 10px; color: #777; margin-top: 2px; }
   .m-cx {
     width: 32px; height: 32px; flex-shrink: 0;
     background: #111; border: 1px solid #1e1e1e;
@@ -8095,7 +8095,7 @@ function adChangePassword() {
     margin: 12px; border-radius: 10px; overflow: hidden;
   }
   .m-stat { background: #0f0f0f; padding: 14px 16px; }
-  .m-stl { font-family: monospace; font-size: 9px; color: #2a2a2a; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .m-stl { font-family: monospace; font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
   .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: #bbb; }
   .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
   .m-abt {
@@ -8148,7 +8148,7 @@ function adChangePassword() {
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:#2a2a2a;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="font-family:monospace;font-size:9px;color:#666;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -8165,7 +8165,7 @@ function adChangePassword() {
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:#2a2a2a;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div style="font-family:monospace;font-size:9px;color:#666;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -8216,7 +8216,7 @@ function adChangePassword() {
     gap:2px; background:#0a0a0a;
     border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a;
   ">
-    <div style="font-family:monospace;font-size:8px;color:#333;letter-spacing:.5px">LOT</div>
+    <div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:.5px">LOT</div>
     <div style="display:flex;align-items:center;gap:6px">
       <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
       <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:34px;text-align:center;display:inline-block">0.01</span>
@@ -8245,27 +8245,27 @@ function adChangePassword() {
   <!-- Hesap listesi -->
   <div style="border-bottom:1px solid #1a1a1a;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#555">Bakiye</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Bakiye</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSBal">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#555">Varlık</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Varlık</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSEq">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111" id="mPosBonusRow">
-      <div style="font-family:monospace;font-size:12px;color:#555">Bonus</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Bonus</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#555">Teminat</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Teminat</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSMar">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#555">Serbest Teminat</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Serbest Teminat</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mPSFr">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px">
-      <div style="font-family:monospace;font-size:12px;color:#555">Teminat Seviyesi</div>
+      <div style="font-family:monospace;font-size:12px;color:#999">Teminat Seviyesi</div>
       <div style="font-family:monospace;font-size:13px;font-weight:700;color:#26a69a" id="mPSML">—</div>
     </div>
   </div>
@@ -8297,32 +8297,32 @@ function adChangePassword() {
     <div style="padding:0 0 8px">
       <!-- Bakiye -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#555">Bakiye</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Bakiye</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSBal">—</div>
       </div>
       <!-- Varlık -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#555">Varlık</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Varlık</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSEq">—</div>
       </div>
       <!-- Bonus -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111" id="mAccBonusRow">
-        <div style="font-family:monospace;font-size:12px;color:#555">Bonus</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Bonus</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#f5c518" id="mSBon">—</div>
       </div>
       <!-- Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#555">Teminat</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Teminat</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSMar">—</div>
       </div>
       <!-- Serbest Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#555">Serbest Teminat</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Serbest Teminat</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#ccc" id="mSFr">—</div>
       </div>
       <!-- Teminat Seviyesi -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:12px;color:#555">Teminat Seviyesi</div>
+        <div style="font-family:monospace;font-size:12px;color:#999">Teminat Seviyesi</div>
         <div style="font-family:monospace;font-size:13px;font-weight:700;color:#26a69a" id="mSML">—</div>
       </div>
     </div>
