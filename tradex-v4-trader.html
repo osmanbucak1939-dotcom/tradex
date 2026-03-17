@@ -1844,11 +1844,11 @@ function initAuth(){
         <div class="bp-section active" id="bp-pos">
           <table class="orders-table">
             <thead><tr>
-  <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#26a69a;font-size:9px;">↓</span></th>
   <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:#444;font-size:9px;">⇅</span></th>
   <th>Yön</th>
   <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:#444;font-size:9px;">⇅</span></th>
-  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#26a69a;font-size:9px;">↓</span></th>
+  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#444;font-size:9px;">⇅</span></th>
   <th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th>
   <th>Swap</th>
   <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:#444;font-size:9px;">⇅</span></th>
@@ -3953,7 +3953,7 @@ function updatePositions() {
   updateAccount();
 }
 
-var _posSortCol = 'time', _posSortDir = -1;
+var _posSortCol = 'id', _posSortDir = -1;
 
 function sortPos(col) {
   if (_posSortCol === col) { _posSortDir *= -1; }
@@ -8729,6 +8729,8 @@ function adChangePassword() {
     if(_ptab==='open'){
       var pos=typeof positions!=='undefined'?positions:[];
       if(!pos.length){el.innerHTML='<div class="m-empty">Açık pozisyon yok</div>';return;}
+      // En son açılandan eskiye sırala
+      pos = pos.slice().sort(function(a,b){ return (parseFloat(b.id)||0)-(parseFloat(a.id)||0); });
       el.innerHTML=pos.map(function(p){
         var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
         var dec=sc?parseInt(sc.decimals)||2:2;
