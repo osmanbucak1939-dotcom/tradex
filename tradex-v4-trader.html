@@ -2293,6 +2293,13 @@ function initAuth(){
           </div>
         </div>
 
+        <!-- Swap Test -->
+        <div class="mgr-section-title" style="margin-top:8px;">SWAP TEST</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="mgr-btn secondary" onclick="applyDailySwap();showToast('Swap','Manuel swap uygulandı')">⚡ Swap Uygula (Manuel)</button>
+          <button class="mgr-btn secondary" onclick="positions.forEach(function(p){console.log('Pos #'+p.id+' swapBuy:'+p.swapBuy+' swapSell:'+p.swapSell+' swapTotal:'+p.swapTotal)});showToast('Swap Debug','Konsola yazıldı')">🔍 Swap Debug</button>
+        </div>
+
         <!-- Hızlı kaydırma -->
         <div class="mgr-section-title" style="margin-top:8px;">HIZLI KAYDIRMA</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="pc_quick_btns">
@@ -4506,25 +4513,12 @@ function startLiveFeed() {
       var sym=cryptos[i], cfg=SIM_PRICES[sym];
       if(!cfg||!mwPrices[sym]) continue;
       var cur=mwPrices[sym].price;
-      var d=cur*cfg.v*(Math.random()-0.5)*0.08; // çok küçük adım
-      // Max %0.08 tek adımda hareket (gerçekçi tick boyutu)
       var maxMove = cur * 0.0008;
-      d = Math.max(-maxMove, Math.min(maxMove, d));
+      var d = Math.max(-maxMove, Math.min(maxMove, cur*cfg.v*(Math.random()-0.5)*0.08));
       var mult=Math.pow(10,cfg.d);
       var np=Math.round((cur+d)*mult)/mult;
-      var prev=cur; var chg=((np-cfg.p)/cfg.p*100);
-      mwPrices[sym]={price:np,prev:prev,chg:chg};
-      prices[sym]={price:np,chg:chg,bid:np,ask:np*(1+0.0001)};
-      updateMwRow(sym,np,prev);
-      updateTopSym(sym,np,chg);
-      if(sym===curSym){
-        updateOrderTicket(np);
-        if(typeof updateQuickTrade==='function'){
-          var _mwItSim=MW_MAP[sym];
-          updateQuickTrade(np, _mwItSim?(_mwItSim.spread||0):0);
-        }
-      }
-      checkAlarms(sym,np);
+      // txApplyPrice üzerinden geç → dinamik spread dahil tüm hesaplamalar yapılır
+      if(typeof txApplyPrice==='function') { txApplyPrice(sym, np); }
     }
     updatePositions(); buildTicker();
     if(typeof mTick==='function') mTick();
@@ -4536,17 +4530,11 @@ function startLiveFeed() {
       var sym=others[i], cfg=SIM_PRICES[sym];
       if(!cfg||!mwPrices[sym]) continue;
       var cur=mwPrices[sym].price;
-      var d=cur*cfg.v*(Math.random()-0.5)*0.08; // küçük adım
-      // Max %0.08 tek adımda hareket
       var maxMove = cur * 0.0008;
-      d = Math.max(-maxMove, Math.min(maxMove, d));
+      var d = Math.max(-maxMove, Math.min(maxMove, cur*cfg.v*(Math.random()-0.5)*0.08));
       var mult=Math.pow(10,cfg.d);
       var np=Math.round((cur+d)*mult)/mult;
-      var prev=cur; var chg=((np-cfg.p)/cfg.p*100);
-      mwPrices[sym]={price:np,prev:prev,chg:chg};
-      prices[sym]={price:np,chg:chg,bid:np,ask:np*(1+0.00005)};
-      updateMwRow(sym,np,prev);
-      if(sym===curSym) updateOrderTicket(np);
+      if(typeof txApplyPrice==='function') { txApplyPrice(sym, np); }
     }
     if(typeof mTick==='function') mTick();
   }, 3000);
