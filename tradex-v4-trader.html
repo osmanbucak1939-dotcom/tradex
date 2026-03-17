@@ -3971,6 +3971,9 @@ function closePosition(id, reason='') {
   tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
   if (tradeHistory.length > 50) tradeHistory.pop();
   save();
+  if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
+    fbSaveUserData(_cu.id, {balance:balance, positions:positions, finlog:finlog});
+  }
   renderPositions();
   renderHistory();
   updateAccount();
@@ -4692,6 +4695,16 @@ function toggleSym(i, val) {
   symConfig[i].active = val;
   saveSymConfig();
   applySymConfig();
+}
+
+function deleteSymMgr(i) {
+  if(!symConfig || !symConfig[i]) return;
+  var sym = symConfig[i].sym || symConfig[i].label || ('Sembol #'+i);
+  if(!confirm(sym + ' sembolünü silmek istediğinizden emin misiniz?')) return;
+  symConfig.splice(i, 1);
+  saveSymConfig();
+  applySymConfig();
+  renderSymTable();
 }
 
 function updateSym(i, key, val) {
