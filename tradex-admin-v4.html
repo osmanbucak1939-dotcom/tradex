@@ -1530,6 +1530,8 @@ console.log('Firebase bağlandı ✓');
               if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
               if(old._openCount!==undefined)   na._openCount=old._openCount;
+              // Online/lastSeen cache'den koru (users snapshot daha güncel olabilir)
+              if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
           accounts=newAccs;
@@ -1538,6 +1540,39 @@ console.log('Firebase bağlandı ✓');
           if(secAcc&&secAcc.style.display!=='none') renderAccTable();
         }catch(e){console.warn('accounts onSnapshot err:',e);}
       },function(err){console.warn('accounts onSnapshot error:',err);});
+
+      // users koleksiyonunu dinle - sadece hesaplar sayfası açıkken
+      window._usersSnapUnsub = null;
+      function _startUsersSnap() {
+        if(window._usersSnapUnsub) return; // zaten aktif
+        window._usersSnapUnsub = db.collection('users').onSnapshot(function(snap){
+          snap.forEach(function(udoc){
+            var ud = udoc.data();
+            if(!ud) return;
+            var acc = accounts.find(function(a){ return String(a.id)===udoc.id; });
+            if(!acc) return;
+            if(ud.lastSeen) {
+              acc.lastSeen = ud.lastSeen;
+              acc._onlineFromUsers = true;
+              // 15 saniye içinde aktifse online
+              var ms = new Date(ud.lastSeen).getTime();
+              acc.online = !!(ud.online) || (Date.now()-ms < 15000);
+            }
+          });
+          var secAcc=document.getElementById('sec-accounts');
+          if(secAcc&&secAcc.style.display!=='none') renderAccTable();
+          var dot=document.getElementById('adOnlineDot');
+          if(dot&&window._adDetailId){
+            var a=accounts.find(function(x){return String(x.id)===String(window._adDetailId);});
+            if(a) dot.style.background=a.online?'#26a69a':'#444';
+          }
+        },function(err){console.warn('users onSnapshot err:',err);});
+      }
+      function _stopUsersSnap() {
+        if(window._usersSnapUnsub) { window._usersSnapUnsub(); window._usersSnapUnsub=null; }
+      }
+      window._startUsersSnap = _startUsersSnap;
+      window._stopUsersSnap  = _stopUsersSnap;
     }
 
   </script>
@@ -3535,7 +3570,8 @@ function mgrTab(id, el) {
   if(sec) sec.classList.add('active');
   if (id==='alarmsmgr')    renderAlarmMgr();
   if (id==='portfoliomgr') renderPortMgr();
-  if (id==='accounts')     renderAccCards();
+  if (id==='accounts')     { renderAccCards(); if(typeof _startUsersSnap==='function') _startUsersSnap(); }
+  else { if(typeof _stopUsersSnap==='function') _stopUsersSnap(); }
   if (id==='newaccount')   renderAccListSmall();
   if (id==='spreadgroups') {
     if(!window._symConfig && typeof symConfig !== 'undefined') window._symConfig = symConfig;
