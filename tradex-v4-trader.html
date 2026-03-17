@@ -5985,6 +5985,9 @@ function _mwUpdateChg(sym, chg) {
   // Desktop
   var el = document.getElementById('mwc-'+sym);
   if(el) { el.textContent = txt; el.className = cls; }
+  // Mobil
+  var mel = document.getElementById('mmwc-'+sym);
+  if(mel) { mel.textContent = txt; mel.className = cls; }
 }
 
 function _mwApplyDirColor(row, up, neutral) {
@@ -6659,6 +6662,11 @@ function txListenPricesChg() {
       if(mwPrices[sym]) mwPrices[sym].chg = chg;
       // Mobil badge güncelle
       if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
+      // mwPrices'a da kaydet ki mFM yeniden render edilince güncel gelsin
+      if(typeof mwPrices !== 'undefined') {
+        if(!mwPrices[sym]) mwPrices[sym] = {};
+        mwPrices[sym].chg = chg;
+      }
     });
   }, function(e){ console.warn('[Trader] pricesChg snap err:', e); });
 }
@@ -7775,7 +7783,12 @@ function adChangePassword() {
     -webkit-user-select: none;
     transition: color .15s;
   }
-  .mn-btn .ic { font-size: 22px; line-height: 1; }
+  .mn-btn .ic { 
+    width: 22px; 
+    height: 22px; 
+    display: block;
+    stroke: currentColor;
+  }
   .mn-btn.on  { color: #26a69a; }
   .mn-btn.on::after {
     content: '';
@@ -8255,6 +8268,7 @@ function adChangePassword() {
   <div class="m-tabs" style="flex-shrink:0">
     <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
     <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
+    <button class="m-tab" onclick="mPT('pending',this)">⏳ BEKLEYEN</button>
   </div>
   <div class="m-plist" id="mPL"></div>
 </div>
@@ -8317,11 +8331,44 @@ function adChangePassword() {
 </div>
 
 <div id="mNav">
-  <button class="mn-btn on"  id="mnM" onclick="mGo('market',this)"><span class="ic">🌐</span><span>Piyasalar</span></button>
-  <button class="mn-btn"     id="mnC" onclick="mGo('chart',this)"><span class="ic">📈</span><span>Grafik</span></button>
-  <button class="mn-btn"     id="mnT" onclick="mGo('trade',this)"><span class="ic">💹</span><span>İşlem</span></button>
-  <button class="mn-btn"     id="mnP" onclick="mGo('pos',this)"><span class="ic">📋</span><span>Pozisyon</span></button>
-  <button class="mn-btn"     id="mnA" onclick="mGo('acc',this)"><span class="ic">👤</span><span>Hesap</span></button>
+  <!-- Piyasalar -->
+  <button class="mn-btn on" id="mnM" onclick="mGo('market',this)">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+    <span>Piyasalar</span>
+  </button>
+  <!-- Grafik -->
+  <button class="mn-btn" id="mnC" onclick="mGo('chart',this)">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    <span>Grafik</span>
+  </button>
+  <!-- İşlem -->
+  <button class="mn-btn" id="mnT" onclick="mGo('trade',this)">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    <span>İşlem</span>
+  </button>
+  <!-- Pozisyon -->
+  <button class="mn-btn" id="mnP" onclick="mGo('pos',this)">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M3 9h18M9 21V9"/>
+    </svg>
+    <span>Pozisyon</span>
+  </button>
+  <!-- Hesap -->
+  <button class="mn-btn" id="mnA" onclick="mGo('acc',this)">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    <span>Hesap</span>
+  </button>
 </div>
 
 <script>
@@ -8430,6 +8477,13 @@ function adChangePassword() {
     }
     dst.innerHTML=html;
     dst.scrollTop=scrollTop;
+    // Render sonrası chg badge'leri güncelle
+    if(typeof mwPrices !== 'undefined') {
+      Object.keys(mwPrices).forEach(function(sym){
+        var c = mwPrices[sym] ? mwPrices[sym].chg : 0;
+        if(c && typeof _mwUpdateChg==='function') _mwUpdateChg(sym, c);
+      });
+    }
   }
   window.mMwPick=function(sym,gid){
     if(typeof switchSym==='function') switchSym(sym);
@@ -8534,8 +8588,32 @@ function adChangePassword() {
         +'</div>';
       }).join('');
     }
+    if(_ptab==='pending') {
+      var pords=typeof pendingOrders!=='undefined'?pendingOrders:[];
+      if(!pords.length){el.innerHTML='<div class="m-empty">Bekleyen emir yok</div>';return;}
+      el.innerHTML=pords.map(function(po,i){
+        var typeLabel={buy_limit:'Buy Limit',sell_limit:'Sell Limit',buy_stop:'Buy Stop',sell_stop:'Sell Stop'}[po.type]||po.type;
+        var sideColor=po.side==='buy'?'#26a69a':'#ef5350';
+        var sideClass=po.side==='buy'?'b':'s';
+        return '<div class="m-card">'
+          +'<div class="m-cl">'
+            +'<div class="m-csym">'+(po.label||po.sym)+'<span class="m-bdg '+sideClass+'">'+typeLabel+'</span></div>'
+            +'<div class="m-cmeta">'+po.qty+' lot · Fiyat: '+po.price+'</div>'
+            +(po.sl?'<div class="m-cmeta">SL: '+po.sl+(po.tp?' · TP: '+po.tp:'')+'</div>':'')
+          +'</div>'
+          +'<div class="m-cr">'
+            +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:'+sideColor+'">@ '+po.price+'</div>'
+          +'</div>'
+          +'<button class="m-cx" onclick="mCancelPending('+i+');event.stopPropagation()" title="İptal">✕</button>'
+        +'</div>';
+      }).join('');
+    }
   }
   window.mCP=function(id){ if(typeof closePosition==='function') closePosition(id); setTimeout(mFP,200); };
+  window.mCancelPending=function(i){
+    if(typeof cancelPending==='function') cancelPending(i);
+    setTimeout(mFP,200);
+  };
 
   // Hesap
   // Mobil emir tipi buton
