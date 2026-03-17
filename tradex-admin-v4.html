@@ -2919,12 +2919,28 @@ function closePosition(id, reason='') {
   const pos = positions[idx];
   const p = prices[pos.sym];
   const closePrice = p ? p.price : pos.openPrice;
-  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * pos.qty;
-  balance += pos.cost + pnl;
+  const _swapC = parseFloat(pos.swapTotal)||0;
+  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * pos.qty + _swapC;
+  balance += (pos.cost||0) + pnl;
   positions.splice(idx, 1);
-  tradeHistory.unshift({ ...pos, closePrice, pnl, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
+  tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
   if (tradeHistory.length > 50) tradeHistory.pop();
-  save();
+  // Accounts'a yaz
+  if(_adAccId) {
+    var _adAcc = accounts.find(function(a){ return String(a.id)===String(_adAccId); });
+    if(_adAcc) { _adAcc.balance = balance; }
+  }
+  saveAccounts();
+  // Firebase users/{id}'ye pozisyonları yaz — trader anında görsün
+  if(typeof db!=='undefined' && db && _adAccId) {
+    var _now = new Date().toISOString();
+    db.collection('users').doc(String(_adAccId)).set({
+      positions: positions,
+      tradeHistory: tradeHistory.slice(0,50),
+      balance: balance,
+      updatedAt: _now
+    }, { merge: true }).catch(function(e){ console.warn('closePos FB err:', e); });
+  }
   renderPositions();
   renderHistory();
   updateAccount();
