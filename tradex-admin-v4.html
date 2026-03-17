@@ -1618,6 +1618,7 @@ console.log('Firebase bağlandı ✓');
     <button class="nav-btn" onclick="adminNav('feed',this)">📡 Feed</button>
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('staff',this)">👤 Personel</button>
+    <button class="nav-btn" onclick="adminNav('brokerinfo',this)">🏢 Broker Bilgileri</button>
     <button class="nav-btn" onclick="adminNav('walletsettings',this)">💳 Ödeme Yöntemleri</button>
     <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
@@ -1998,6 +1999,72 @@ console.log('Firebase bağlandı ✓');
     </div>
 
     <!-- ÖDEME YÖNTEMLERİ -->
+    <!-- BROKER BİLGİLERİ -->
+    <div class="admin-section" id="sec-brokerinfo" style="display:none;flex:1;overflow-y:auto;padding:16px;">
+      <div class="mgr-section-title">BROKER BİLGİLERİ</div>
+      <div style="max-width:600px">
+        <div class="mgr-row cols2" style="margin-bottom:12px">
+          <div class="mgr-field">
+            <label class="mgr-label">Broker Adı</label>
+            <input class="mgr-input" id="bi_name" type="text" placeholder="TradeX Broker">
+          </div>
+          <div class="mgr-field">
+            <label class="mgr-label">Şirket Tam Adı</label>
+            <input class="mgr-input" id="bi_company" type="text" placeholder="TradeX Ltd.">
+          </div>
+        </div>
+        <div class="mgr-row cols2" style="margin-bottom:12px">
+          <div class="mgr-field">
+            <label class="mgr-label">Web Sitesi</label>
+            <input class="mgr-input" id="bi_website" type="text" placeholder="https://tradex.com">
+          </div>
+          <div class="mgr-field">
+            <label class="mgr-label">E-posta</label>
+            <input class="mgr-input" id="bi_email" type="text" placeholder="support@tradex.com">
+          </div>
+        </div>
+        <div class="mgr-row cols2" style="margin-bottom:12px">
+          <div class="mgr-field">
+            <label class="mgr-label">Telefon</label>
+            <input class="mgr-input" id="bi_phone" type="text" placeholder="+1 234 567 890">
+          </div>
+          <div class="mgr-field">
+            <label class="mgr-label">Lisans No</label>
+            <input class="mgr-input" id="bi_license" type="text" placeholder="FCA #123456">
+          </div>
+        </div>
+        <div class="mgr-row cols2" style="margin-bottom:12px">
+          <div class="mgr-field">
+            <label class="mgr-label">Düzenleyici Kurum</label>
+            <input class="mgr-input" id="bi_regulator" type="text" placeholder="FCA, CySEC, FSCA...">
+          </div>
+          <div class="mgr-field">
+            <label class="mgr-label">Adres</label>
+            <input class="mgr-input" id="bi_address" type="text" placeholder="123 Street, London, UK">
+          </div>
+        </div>
+        <div class="mgr-row cols2" style="margin-bottom:12px">
+          <div class="mgr-field">
+            <label class="mgr-label">Canlı Destek (WhatsApp/Telegram)</label>
+            <input class="mgr-input" id="bi_support" type="text" placeholder="https://wa.me/...">
+          </div>
+          <div class="mgr-field">
+            <label class="mgr-label">Slogan / Kısa Açıklama</label>
+            <input class="mgr-input" id="bi_slogan" type="text" placeholder="Güvenli ve hızlı trading">
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label class="mgr-label">Yasal Uyarı / Disclaimer</label>
+          <textarea class="mgr-input" id="bi_disclaimer" rows="3" style="width:100%;resize:vertical" placeholder="CFD'ler karmaşık araçlardır ve kaldıraç nedeniyle para kaybetme riski yüksektir..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="mgr-btn primary" onclick="saveBrokerInfo()" style="padding:9px 24px">💾 Kaydet</button>
+          <button class="mgr-btn secondary" onclick="loadBrokerInfo()" style="padding:9px 16px">↺ Yenile</button>
+        </div>
+        <div id="bi_toast" style="display:none;margin-top:10px;padding:8px 14px;background:#0a2a1a;border:1px solid #26a69a;border-radius:4px;font-family:var(--mono);font-size:11px;color:#26a69a"></div>
+      </div>
+    </div>
+
     <div class="admin-section" id="sec-walletsettings" style="display:none;flex:1;overflow-y:auto;padding:16px;">
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">💳 ÖDEME YÖNTEMLERİ</div>
       <div class="ad-sect" style="margin-bottom:16px;">
@@ -3543,6 +3610,52 @@ var MARKET_GROUPS = [
 var MW_MAP = {};
 var mwPrices = {};
 var mwGroupState = {};
+
+// ── BROKER BİLGİLERİ ─────────────────────────────────────────
+var _brokerInfo = {};
+
+function loadBrokerInfo() {
+  // Önce localStorage'dan yükle
+  try { _brokerInfo = JSON.parse(localStorage.getItem('tx_brokerInfo')||'{}'); } catch(e){ _brokerInfo={}; }
+  var fields = ['name','company','website','email','phone','license','regulator','address','support','slogan','disclaimer'];
+  fields.forEach(function(k){
+    var el = document.getElementById('bi_'+k);
+    if(el) el.value = _brokerInfo[k]||'';
+  });
+  // Firebase'den de yükle
+  if(typeof db!=='undefined'&&db){
+    db.collection('broker').doc('info').get().then(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data(); if(!d) return;
+      _brokerInfo = d;
+      localStorage.setItem('tx_brokerInfo', JSON.stringify(d));
+      fields.forEach(function(k){ var el=document.getElementById('bi_'+k); if(el) el.value=d[k]||''; });
+    }).catch(function(){});
+  }
+}
+
+function saveBrokerInfo() {
+  var fields = ['name','company','website','email','phone','license','regulator','address','support','slogan','disclaimer'];
+  var data = {};
+  fields.forEach(function(k){
+    var el = document.getElementById('bi_'+k);
+    if(el) data[k] = el.value.trim();
+  });
+  data._ts = Date.now();
+  _brokerInfo = data;
+  localStorage.setItem('tx_brokerInfo', JSON.stringify(data));
+  // Firebase'e yaz
+  if(typeof db!=='undefined'&&db){
+    db.collection('broker').doc('info').set(data,{merge:true}).then(function(){
+      var t=document.getElementById('bi_toast');
+      if(t){ t.textContent='✓ Kaydedildi'; t.style.display='block'; setTimeout(function(){t.style.display='none';},2500); }
+    }).catch(function(e){
+      var t=document.getElementById('bi_toast');
+      if(t){ t.textContent='Hata: '+e.message; t.style.background='#2a0a0a'; t.style.borderColor='#ef5350'; t.style.color='#ef5350'; t.style.display='block'; }
+    });
+  }
+}
+// ─────────────────────────────────────────────────────────────
 
 function saveSymConfig(){
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
@@ -7212,6 +7325,7 @@ function adminNav(sec,btn){
   if(sec==='staff')loadStaffTab();
   if(sec==='pricecontrol')pcInit();
   if(sec==='feed'){ adFeedRenderSymTable(); adFeedCheckConnections(); }
+  if(sec==='brokerinfo'){ loadBrokerInfo(); }
   if(sec==='walletsettings'){
     // Her zaman Firebase'den taze yükle
     var _renderPM = function() {
