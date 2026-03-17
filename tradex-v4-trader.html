@@ -8792,7 +8792,8 @@ function adChangePassword() {
     var fp2 = function(n,d){return parseFloat(n||0).toFixed(d||2);};
     var set = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
     var setc = function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
-    var dt = pos.openTime?new Date(pos.openTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    var _ot = pos.openTime || pos.time || null;
+    var dt = _ot ? new Date(_ot).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
     set('mPMSym', (pos.label||pos.sym));
     set('mPMType', (pos.side==='buy'?'▲ AL':'▼ SAT')+' · #'+pos.id);
     set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
@@ -8800,7 +8801,7 @@ function adChangePassword() {
     set('mPMCur', 'Güncel: '+fp2(cur,dec));
     set('mPMOpen', fp2(pos.openPrice,dec));
     set('mPMCurPrice', fp2(cur,dec));
-    set('mPMLot', pos.qty+' lot');
+    set('mPMLot', pos.qty);
     set('mPMCost', pos.cost?'$'+fp2(pos.cost):'—');
     set('mPMSL', pos.sl?fp2(pos.sl,dec):'—');
     set('mPMTP', pos.tp?fp2(pos.tp,dec):'—');
@@ -8831,7 +8832,7 @@ function adChangePassword() {
     set('mPMCur', 'Kapanış: '+fp2(h.closePrice,dec));
     set('mPMOpen', fp2(h.openPrice,dec));
     set('mPMCurPrice', fp2(h.closePrice,dec));
-    set('mPMLot', h.qty+' lot');
+    set('mPMLot', h.qty);
     set('mPMCost', '—');
     set('mPMSL', h.sl?fp2(h.sl,dec):'—');
     set('mPMTP', h.tp?fp2(h.tp,dec):'—');
