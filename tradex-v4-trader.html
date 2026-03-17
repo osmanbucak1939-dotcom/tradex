@@ -8099,14 +8099,16 @@ function adChangePassword() {
   .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: #bbb; }
   .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
   .m-abt {
-    padding: 14px 16px; border-radius: 8px;
-    border: 1px solid #1a1a1a; background: #0f0f0f;
-    color: #aaa; font-family: monospace; font-size: 13px; font-weight: 600;
+    padding: 14px 16px; border-radius: 10px;
+    border: 1px solid #1e1e1e; background: #111;
+    color: #bbb; font-family: monospace; font-size: 13px; font-weight: 600;
     text-align: left; cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 12px;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background .15s;
   }
-  .m-abt:active { background: #141414; }
+  .m-abt:active { background: #1a1a1a; }
   .m-aic { font-size: 18px; }
 }
 </style>
@@ -8282,7 +8284,7 @@ function adChangePassword() {
 <div id="mPanAcc" class="m-pan">
   <!-- Üst: Hesap başlığı + login -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
-    <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a;letter-spacing:1px">HESABIM</div>
+    <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a;letter-spacing:1px" data-lang="myAccount">HESABIM</div>
     <div style="font-family:monospace;font-size:10px;color:#333" id="mALg">—</div>
   </div>
 
@@ -8328,10 +8330,85 @@ function adChangePassword() {
     </div>
 
     <!-- Butonlar -->
-    <div class="m-acts" style="padding:12px">
-      <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')"><span class="m-aic">💰</span>Para Yatır</button>
-      <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')"><span class="m-aic">💸</span>Para Çek</button>
-      <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()"><span class="m-aic">🚪</span>Çıkış Yap</button>
+    <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+
+      <!-- Para işlemleri -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('deposit')" style="flex-direction:column;gap:6px;padding:14px 8px">
+          <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="#26a69a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v14M5 9l7 7 7-7"/><path d="M3 20h18"/>
+          </svg>
+          <span style="font-size:11px" data-lang="deposit">Para Yatır</span>
+        </button>
+        <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('withdraw')" style="flex-direction:column;gap:6px;padding:14px 8px">
+          <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22V8M5 15l7-7 7 7"/><path d="M3 4h18"/>
+          </svg>
+          <span style="font-size:11px" data-lang="withdraw">Para Çek</span>
+        </button>
+      </div>
+
+      <!-- Finans geçmişi -->
+      <button class="m-abt" onclick="if(typeof openWallet==='function')openWallet('history')">
+        <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/>
+        </svg>
+        Finans Geçmişi
+        <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- Dil seçimi -->
+      <button class="m-abt" onclick="mLangToggle()">
+        <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span id="mLangBtnTxt" data-lang="lang">Dil: Türkçe</span>
+        <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- Dil seçim paneli -->
+      <div id="mLangPanel" style="display:none;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden">
+        <div onclick="mSetLang('tr')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangTR">
+          <span style="font-size:18px">🇹🇷</span> Türkçe
+          <span style="margin-left:auto;color:#26a69a;display:none" id="mLangTRCheck">✓</span>
+        </div>
+        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangEN">
+          <span style="font-size:18px">🇬🇧</span> English
+          <span style="margin-left:auto;color:#26a69a;display:none" id="mLangENCheck">✓</span>
+        </div>
+        <div onclick="mSetLang('ar')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangAR">
+          <span style="font-size:18px">🇸🇦</span> العربية
+          <span style="margin-left:auto;color:#26a69a;display:none" id="mLangARCheck">✓</span>
+        </div>
+      </div>
+
+      <!-- Şifre değiştir -->
+      <button class="m-abt" onclick="if(typeof openPwModal==='function')openPwModal()">
+        <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Şifre Değiştir
+        <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- KYC -->
+      <button class="m-abt" onclick="if(typeof openKycModal==='function')openKycModal()">
+        <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 11h8M8 15h5"/><circle cx="7" cy="9" r="1.5"/>
+        </svg>
+        KYC Doğrulama
+        <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- Çıkış -->
+      <button class="m-abt" onclick="if(typeof logoutUser==='function')logoutUser()" style="border-color:rgba(239,83,80,.2);margin-top:4px">
+        <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span style="color:#ef5350">Çıkış Yap</span>
+        <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
     </div>
   </div>
 </div>
@@ -8616,6 +8693,90 @@ function adChangePassword() {
     }
   }
   window.mCP=function(id){ if(typeof closePosition==='function') closePosition(id); setTimeout(mFP,200); };
+  // ── DİL SİSTEMİ ──────────────────────────────────────
+  var _LANGS = {
+    tr: {
+      markets:'Piyasalar', chart:'Grafik', trade:'İşlem', pos:'Pozisyon', acc:'Hesap',
+      deposit:'Para Yatır', withdraw:'Para Çek', history:'Finans Geçmişi',
+      changePw:'Şifre Değiştir', kyc:'KYC Doğrulama', logout:'Çıkış Yap',
+      lang:'Dil: Türkçe', balance:'Bakiye', equity:'Varlık', bonus:'Bonus',
+      margin:'Teminat', freeMargin:'Serbest Teminat', marginLvl:'Teminat Seviyesi',
+      openPnl:'AÇIK KAR / ZARAR', open:'AÇIK', histTab:'GEÇMİŞ', pending:'⏳ BEKLEYEN',
+      sell:'SAT', buy:'AL', lot:'LOT', orderType:'EMİR TİPİ', stopLoss:'STOP LOSS', takeProfit:'TAKE PROFIT',
+      noPos:'Açık pozisyon yok', noHist:'Geçmiş yok', noPending:'Bekleyen emir yok',
+      myAccount:'HESABIM', dir:'rtl-no'
+    },
+    en: {
+      markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
+      deposit:'Deposit', withdraw:'Withdraw', history:'Finance History',
+      changePw:'Change Password', kyc:'KYC Verification', logout:'Logout',
+      lang:'Lang: English', balance:'Balance', equity:'Equity', bonus:'Bonus',
+      margin:'Margin', freeMargin:'Free Margin', marginLvl:'Margin Level',
+      openPnl:'OPEN P&L', open:'OPEN', histTab:'HISTORY', pending:'⏳ PENDING',
+      sell:'SELL', buy:'BUY', lot:'LOT', orderType:'ORDER TYPE', stopLoss:'STOP LOSS', takeProfit:'TAKE PROFIT',
+      noPos:'No open positions', noHist:'No history', noPending:'No pending orders',
+      myAccount:'MY ACCOUNT', dir:'rtl-no'
+    },
+    ar: {
+      markets:'الأسواق', chart:'الرسم', trade:'تداول', pos:'المراكز', acc:'الحساب',
+      deposit:'إيداع', withdraw:'سحب', history:'السجل المالي',
+      changePw:'تغيير كلمة المرور', kyc:'التحقق من الهوية', logout:'تسجيل الخروج',
+      lang:'اللغة: العربية', balance:'الرصيد', equity:'حقوق الملكية', bonus:'مكافأة',
+      margin:'الهامش', freeMargin:'الهامش الحر', marginLvl:'مستوى الهامش',
+      openPnl:'الربح/الخسارة', open:'مفتوح', histTab:'السجل', pending:'⏳ معلق',
+      sell:'بيع', buy:'شراء', lot:'حجم', orderType:'نوع الأمر', stopLoss:'وقف الخسارة', takeProfit:'جني الأرباح',
+      noPos:'لا توجد مراكز مفتوحة', noHist:'لا يوجد سجل', noPending:'لا توجد أوامر معلقة',
+      myAccount:'حسابي', dir:'rtl'
+    }
+  };
+  var _curLang = localStorage.getItem('_txLang') || 'tr';
+
+  function mApplyLang(lang) {
+    var L = _LANGS[lang] || _LANGS['tr'];
+    var set = function(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+    // Nav butonları
+    var navBtns = document.querySelectorAll('.mn-btn span:not(.ic)');
+    var navKeys = ['markets','chart','trade','pos','acc'];
+    navBtns.forEach(function(s, i){ if(navKeys[i]) s.textContent = L[navKeys[i]]; });
+    // Hesap paneli
+    set('mLangBtnTxt', L.lang);
+    // Hesap paneli buton metinleri - data-lang ile
+    document.querySelectorAll('[data-lang]').forEach(function(el){
+      var key = el.dataset.lang;
+      if(L[key]) el.textContent = L[key];
+    });
+    // RTL
+    var accPan = document.getElementById('mPanAcc');
+    if(accPan) accPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
+    var posPan = document.getElementById('mPanPos');
+    if(posPan) posPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
+    var trdPan = document.getElementById('mPanTrade');
+    if(trdPan) trdPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
+    // Checkmark güncelle
+    ['tr','en','ar'].forEach(function(l){
+      var el = document.getElementById('mLang'+l.toUpperCase()+'Check');
+      if(el) el.style.display = (l===lang) ? 'block' : 'none';
+    });
+  }
+
+  window.mLangToggle = function(){
+    var p = document.getElementById('mLangPanel');
+    if(p) p.style.display = p.style.display==='none' ? 'block' : 'none';
+    mApplyLang(_curLang);
+  };
+
+  window.mSetLang = function(lang){
+    _curLang = lang;
+    localStorage.setItem('_txLang', lang);
+    mApplyLang(lang);
+    var p = document.getElementById('mLangPanel');
+    if(p) p.style.display = 'none';
+  };
+
+  // Başlangıçta uygula
+  setTimeout(function(){ mApplyLang(_curLang); }, 500);
+  // ──────────────────────────────────────────────────
+
   window.mCancelPending=function(i){
     if(typeof cancelPending==='function') cancelPending(i);
     setTimeout(mFP,200);
