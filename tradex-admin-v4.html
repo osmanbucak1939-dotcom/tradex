@@ -3230,8 +3230,22 @@ function adReceiveRawPrice(sym, rawMid) {
   var bid    = rawMid - half;
   var ask    = rawMid + half;
   var prev   = _FX.prices[sym] ? _FX.prices[sym].mid : rawMid;
-  var baseRef= (typeof AD_SIM!=='undefined'&&AD_SIM[sym]) ? AD_SIM[sym].p : rawMid;
-  var chg    = baseRef ? (rawMid-baseRef)/baseRef*100 : 0;
+  // Günlük açılış fiyatı - localStorage'da sakla
+  if(!window._adDayOpen) {
+    try {
+      var _sd = localStorage.getItem('_adDayOpen');
+      var _sdd = localStorage.getItem('_adDayOpenDate');
+      var _today = new Date().toDateString();
+      window._adDayOpen = (_sd && _sdd===_today) ? JSON.parse(_sd) : {};
+      if(_sdd !== _today) localStorage.setItem('_adDayOpenDate', _today);
+    } catch(e) { window._adDayOpen = {}; }
+  }
+  if(!window._adDayOpen[sym]) {
+    window._adDayOpen[sym] = rawMid;
+    try { localStorage.setItem('_adDayOpen', JSON.stringify(window._adDayOpen)); } catch(e){}
+  }
+  var dayOpen = window._adDayOpen[sym];
+  var chg = dayOpen ? (rawMid - dayOpen) / dayOpen * 100 : 0;
   // Merkezi depoya yaz
   _FX.prices[sym] = { mid:rawMid, bid:bid, ask:ask, spread:spread, chg:chg, ts:Date.now() };
   _FX.raw[sym]    = rawMid;
@@ -3265,6 +3279,18 @@ function adReceiveRawPrice(sym, rawMid) {
       var upd=Object.assign({_ts:Date.now()},buf);
       db.collection('broker').doc('prices').set(upd,{merge:true})
         .catch(function(e){console.warn('[Feed] FB write error:',e);});
+      // chg değerlerini ayrı dokümanına yaz
+      if(window._adDayOpen) {
+        var chgUpd = {_ts: Date.now()};
+        Object.keys(buf).forEach(function(sym){
+          var dayOpen = window._adDayOpen[sym];
+          if(dayOpen) chgUpd[sym] = dayOpen ? (parseFloat(buf[sym])-dayOpen)/dayOpen*100 : 0;
+        });
+        if(Object.keys(chgUpd).length > 1) {
+          db.collection('broker').doc('pricesChg').set(chgUpd,{merge:true})
+            .catch(function(e){console.warn('[Feed] chg write error:',e);});
+        }
+      }
     },2000);
   }
 }
@@ -4935,13 +4961,7 @@ function clearPortfolio() {
   portfolio = []; save(); renderPortMgr(); renderPortfolio();
 }
 
-function savePayMethods() {
-  localStorage.setItem('tx_paymethods', JSON.stringify(payMethods));
-  if(typeof db!=='undefined'&&db){
-    db.collection('broker').doc('payMethods').set({ data: JSON.stringify(payMethods) })
-      .catch(function(e){ console.warn('payMethods Firebase yazma hatası:', e); });
-  }
-}
+function savePayMethods() { localStorage.setItem('tx_paymethods', JSON.stringify(payMethods)); }
 
 function saveRequests() {
   localStorage.setItem('tx_wreqs', JSON.stringify(withdrawRequests));
@@ -5202,9 +5222,7 @@ function addPayMethod() {
     window._editPayMethodIdx = undefined;
   } else {
     payMethods.push(m);
-  }
-  savePayMethods();
-  renderPayMethodList();
+  }yMethodList();
   showToast('Eklendi ✓', name+' ödeme yöntemi eklendi');
   ['pm_name','pm_icon','pm_bank_name','pm_holder','pm_iban','pm_ref','pm_network','pm_wallet','pm_note','pm_min','pm_crypto_min'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
