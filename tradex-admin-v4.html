@@ -4400,6 +4400,13 @@ function adBonus(sign) {
   a.bonus  = newBonus;
   a.equity = Math.max(0, (a.equity || a.balance) + diff);
   saveAccounts(); renderAccTable();
+  // users/{id}'ye bonus yaz - trader anlık görsün
+  if(typeof db!=='undefined' && db && _adAccId) {
+    db.collection('users').doc(String(_adAccId)).set({
+      bonus: newBonus,
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('bonus sync err:', e); });
+  }
   showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
   adRenderTab('finance');
 }
