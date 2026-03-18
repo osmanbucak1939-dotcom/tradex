@@ -6770,25 +6770,13 @@ function txApplyPrice(sym, rawMid) {
   var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
 
   // Günlük açılış fiyatını localStorage'dan yükle veya oluştur
-  if(!window._dayOpen) {
-    try {
-      var _storedDay = localStorage.getItem('_txDayOpen');
-      var _storedDate = localStorage.getItem('_txDayOpenDate');
-      var _today = new Date().toDateString();
-      if(_storedDay && _storedDate === _today) {
-        window._dayOpen = JSON.parse(_storedDay);
-      } else {
-        window._dayOpen = {};
-        localStorage.setItem('_txDayOpenDate', _today);
-      }
-    } catch(e) { window._dayOpen = {}; }
+  // chg: Firebase pricesChg en doğru kaynak - simülasyon dayOpen bozmasın
+  var chg = 0;
+  if(window._fbChg && window._fbChg[sym] !== undefined) {
+    chg = window._fbChg[sym]; // Firebase'den gelen gerçek günlük değişim
+  } else if(prices[sym] && prices[sym].chg !== undefined) {
+    chg = prices[sym].chg; // Önceki değeri koru
   }
-  if(!window._dayOpen[sym]) {
-    window._dayOpen[sym] = rawMid;
-    try { localStorage.setItem('_txDayOpen', JSON.stringify(window._dayOpen)); } catch(e){}
-  }
-  var dayOpen = window._dayOpen[sym];
-  var chg = dayOpen ? (rawMid - dayOpen) / dayOpen * 100 : 0;
 
   // Merkezi fiyat depola
   prices[sym]    = { price:rawMid, bid:bid, ask:ask, chg:chg };
@@ -6855,11 +6843,17 @@ function txListenPricesChg() {
       if(prices[sym]) prices[sym].chg = chg;
       if(mwPrices[sym]) mwPrices[sym].chg = chg;
       // Mobil badge güncelle
+      // Firebase chg cache'ini güncelle - txApplyPrice bunu kullanır
+      if(!window._fbChg) window._fbChg = {};
+      window._fbChg[sym] = chg;
       if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
-      // mwPrices'a da kaydet ki mFM yeniden render edilince güncel gelsin
+      // mwPrices ve prices'a da kaydet
       if(typeof mwPrices !== 'undefined') {
         if(!mwPrices[sym]) mwPrices[sym] = {};
         mwPrices[sym].chg = chg;
+      }
+      if(typeof prices !== 'undefined' && prices[sym]) {
+        prices[sym].chg = chg;
       }
     });
   }, function(e){ console.warn('[Trader] pricesChg snap err:', e); });
