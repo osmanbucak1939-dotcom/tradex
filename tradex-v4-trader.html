@@ -16,7 +16,8 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 html { touch-action: manipulation; }
-body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+html { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }
+body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-behavior: none; -webkit-overscroll-behavior: none; }
 :root {
   --bg:       #1a1a1a;
   --panel:    #222222;
@@ -35,8 +36,8 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { height:100%; overflow:hidden; }
-body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; }
-body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; position:fixed; width:100%; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; width:100vw; display:flex; flex-direction:column; overflow:hidden; position:fixed; top:0; left:0; overscroll-behavior:none; }
 
 /* ── USER DROPDOWN ── */
 .tb-user-badge { position:relative; }
