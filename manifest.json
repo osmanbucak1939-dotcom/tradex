@@ -1,0 +1,16 @@
+{
+  "name": "TradeX",
+  "short_name": "TradeX",
+  "start_url": "./tradex-v4-trader.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
