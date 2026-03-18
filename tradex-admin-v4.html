@@ -1113,8 +1113,10 @@ function _authSuccess(user) {
   // Firebase'den kullanıcı verisini yükle
   fbLoadUserData(user.id, function(data) {
     if(data) {
-      try { if(data.positions) positions = JSON.parse(data.positions); } catch(e){}
-      try { if(data.tradeHistory) tradeHistory = JSON.parse(data.tradeHistory); } catch(e){}
+      try { if(data.positions) {
+        positions = Array.isArray(data.positions) ? data.positions : JSON.parse(data.positions);
+      }} catch(e){}
+      try { if(data.tradeHistory) { var _rt=data.tradeHistory; tradeHistory=Array.isArray(_rt)?_rt:JSON.parse(_rt); }} catch(e){}
       try { if(data.portfolio) portfolio = JSON.parse(data.portfolio); } catch(e){}
       try { if(data.alarms) alarms = JSON.parse(data.alarms); } catch(e){}
       if(data.balance !== undefined && typeof balance !== 'undefined') balance = data.balance;
@@ -3383,8 +3385,19 @@ function adReceiveRawPrice(sym, rawMid) {
   var bid    = rawMid - half;
   var ask    = rawMid + half;
   var prev   = _FX.prices[sym] ? _FX.prices[sym].mid : rawMid;
-  var baseRef= (typeof AD_SIM!=='undefined'&&AD_SIM[sym]) ? AD_SIM[sym].p : rawMid;
-  var chg    = baseRef ? (rawMid-baseRef)/baseRef*100 : 0;
+  // Günlük açılış: ilk gelen gerçek feed fiyatı - simülasyon bozmasın
+  if(!window._adDayOpen) {
+    try {
+      var _sd=localStorage.getItem('_adDayOpen'), _sdd=localStorage.getItem('_adDayOpenDate'), _td=new Date().toDateString();
+      window._adDayOpen = (_sd&&_sdd===_td) ? JSON.parse(_sd) : {};
+      if(_sdd!==_td) localStorage.setItem('_adDayOpenDate', _td);
+    } catch(e) { window._adDayOpen={}; }
+  }
+  if(!window._adDayOpen[sym]) {
+    window._adDayOpen[sym] = rawMid;
+    try { localStorage.setItem('_adDayOpen', JSON.stringify(window._adDayOpen)); } catch(e){}
+  }
+  var chg = window._adDayOpen[sym] ? (rawMid-window._adDayOpen[sym])/window._adDayOpen[sym]*100 : 0;
   // Merkezi depoya yaz
   _FX.prices[sym] = { mid:rawMid, bid:bid, ask:ask, spread:spread, chg:chg, ts:Date.now() };
   _FX.raw[sym]    = rawMid;
@@ -3418,6 +3431,18 @@ function adReceiveRawPrice(sym, rawMid) {
       var upd=Object.assign({_ts:Date.now()},buf);
       db.collection('broker').doc('prices').set(upd,{merge:true})
         .catch(function(e){console.warn('[Feed] FB write error:',e);});
+      // pricesChg - günlük % değişim trader için
+      if(window._adDayOpen) {
+        var chgUpd={_ts:Date.now()};
+        Object.keys(buf).forEach(function(sym){
+          var dayO=window._adDayOpen[sym];
+          if(dayO) chgUpd[sym]=(parseFloat(buf[sym])-dayO)/dayO*100;
+        });
+        if(Object.keys(chgUpd).length>1) {
+          db.collection('broker').doc('pricesChg').set(chgUpd,{merge:true})
+            .catch(function(e){console.warn('[Feed] chg write error:',e);});
+        }
+      }
     },2000);
   }
 }
@@ -7385,7 +7410,10 @@ function loadAllPositionsAndUpdate() {
     db.collection('users').doc(String(acc.id)).get()
       .then(function(doc) {
         if(doc.exists && doc.data()) {
-          try { acc.positions = JSON.parse(doc.data().positions || '[]'); } catch(e){ acc.positions = []; }
+          try {
+            var _pd = doc.data().positions;
+            acc.positions = Array.isArray(_pd) ? _pd : JSON.parse(_pd || '[]');
+          } catch(e){ acc.positions = []; }
         } else { acc.positions = []; }
         pending--;
         if(pending <= 0) {
@@ -7482,7 +7510,7 @@ function _loadAllEquities(cb){
   customers.forEach(function(a){
     fbLoadUserData(a.id, function(data){
       var poses = [];
-      if(data){ try{ poses = JSON.parse(data.positions||'[]'); }catch(e){} }
+      if(data){ try{ var _rp7=data.positions||'[]'; poses=Array.isArray(_rp7)?_rp7:JSON.parse(_rp7); }catch(e){} }
       _allAccountPositions[a.id] = poses;
       var _st2=adCalcStats(a,poses);
       a._liveEquity=_st2.equity;
@@ -8059,7 +8087,7 @@ function adSaveUserTrades(){
   a.positions = _adPositions;
   var ts = new Date().toISOString();
   // balance yazmıyoruz — sadece trader deposit/withdraw ile manager kaynaklı yazılır
-  var payload = {positions:JSON.stringify(_adPositions),tradeHistory:JSON.stringify(_adHistory),_balanceSource:'admin',updatedAt:ts};
+  var payload = {positions:_adPositions, tradeHistory:_adHistory, _balanceSource:'admin', updatedAt:ts};
   console.log('[SYNC] Yaziliyor -> users/'+a.id+' | pozisyon sayisi:',_adPositions.length,'| updatedAt:',ts);
   if(!db){ console.error('[SYNC] db yok!'); }
   db && db.collection('users').doc(String(a.id)).set(payload, {merge:true})
@@ -8180,8 +8208,8 @@ function adLoadAndRender(){
   function _apply(data){
     var newPos=[], newHist=[];
     if(data){
-      try{ newPos = JSON.parse(data.positions||'[]'); }catch(e){}
-      try{ newHist = JSON.parse(data.tradeHistory||'[]'); }catch(e){}
+      try{ var _rp8=data.positions||'[]'; newPos=Array.isArray(_rp8)?_rp8:JSON.parse(_rp8); }catch(e){}
+      try{ var _rh8=data.tradeHistory||'[]'; newHist=Array.isArray(_rh8)?_rh8:JSON.parse(_rh8); }catch(e){}
       if(Array.isArray(data.finlog)) a.finlog = data.finlog;
     }
     // Atomik güncelle
