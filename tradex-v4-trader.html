@@ -1498,6 +1498,10 @@ function initAuth(){
           var nb = parseFloat(d.balance)||0;
           if(Math.abs(nb - balance) > 0.001) { balance = nb; changed = true; }
         }
+        if(d.bonus !== undefined && typeof _cu !== 'undefined' && _cu) {
+          var newBonus = parseFloat(d.bonus)||0;
+          if(_cu.bonus !== newBonus) { _cu.bonus = newBonus; changed = true; }
+        }
         if(d.tradeHistory !== undefined) {
           try {
             tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : JSON.parse(d.tradeHistory||'[]');
@@ -3724,6 +3728,7 @@ function save() {
       positions: positions,
       tradeHistory: tradeHistory.slice(0,50),
       balance: balance,
+      bonus: (_cu && _cu.bonus !== undefined) ? parseFloat(_cu.bonus)||0 : 0,
       updatedAt: _now
     });
   }
@@ -4531,7 +4536,14 @@ function startLiveFeed() {
               if(document.getElementById('mwBody')) renderMarketWatch();
             }
             // Bonus sync
-            if(_myAcc.bonus !== undefined) _cu.bonus = parseFloat(_myAcc.bonus)||0;
+            if(_myAcc.bonus !== undefined) {
+              var _newBonus = parseFloat(_myAcc.bonus)||0;
+              _cu.bonus = _newBonus;
+              // users/{id}'ye de yaz - tek kaynak haline getir
+              if(typeof fbSaveUserData==='function' && _cu && _cu.id) {
+                fbSaveUserData(_cu.id, {bonus: _newBonus, updatedAt: new Date().toISOString()});
+              }
+            }
             // Balance'ı broker/accounts'tan al — tek resmi kaynak
             if(_myAcc.balance !== undefined) {
               var _newBal = parseFloat(_myAcc.balance)||0;
