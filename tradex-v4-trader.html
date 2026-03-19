@@ -593,8 +593,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   position:sticky; top:0; z-index:5; background:#1e1e1e;
 }
 .mw-group-title { font-family:var(--mono); font-size:9px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
-.mw-group-arrow { font-size:9px; color:var(--muted); transition:transform .2s; }
-.mw-group-arrow.open { transform:rotate(90deg); }
+.mw-group-arrow { color:var(--muted); transition:transform .2s; display:inline-flex; align-items:center; }
 .mw-group-rows { }
 
 .mw-row {
@@ -1620,7 +1619,7 @@ function initAuth(){
         <div class="ot-header">EMİR EKRANI</div>
         <!-- Sembol Arama -->
         <div style="position:relative;margin-bottom:8px">
-          <input id="otSymSearch" type="text" placeholder="🔍 Sembol ara..."
+          <input id="otSymSearch" type="text" placeholder="Sembol ara..."
             style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box"
             oninput="otSymFilter(this.value)" onfocus="otSymFilter(this.value)" autocomplete="off">
           <div id="otSymList" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a1a;border:1px solid var(--border2);border-top:none;border-radius:0 0 3px 3px;max-height:180px;overflow-y:auto;z-index:500"></div>
@@ -1694,7 +1693,7 @@ function initAuth(){
     <!-- MARKET WATCH SECTION -->
     <div class="lp-section active" id="lp-market">
       <div class="mw-search">
-        <input class="mw-search-input" id="mwSearch" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)">
+        <input class="mw-search-input" id="mwSearch" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
       </div>
       <div class="mw-col-headers">
         <div class="mw-col-hdr"></div>
@@ -6228,7 +6227,7 @@ function renderMarketWatch(filter) {
     var isOpen = mwGroupState[g.id] !== false;
     html += '<div class="mw-group-header" data-gid="' + g.id + '" onclick="toggleMwGroup(this.dataset.gid)">';
     html += '<span class="mw-group-title">' + g.label + ' <span style="opacity:.5">(' + items.length + ')</span></span>';
-    html += '<span class="mw-group-arrow' + (isOpen ? ' open' : '') + '">▶</span></div>';
+    html += '<span class="mw-group-arrow" style="display:flex;align-items:center">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;transition:transform .2s;transform:' + (isOpen ? 'rotate(90deg)' : 'rotate(0deg)') + '"><path d=\"M9 18l6-6-6-6\"/></svg></span></div>';
 
     if(isOpen) {
       for(var ri=0; ri<items.length; ri++) {
@@ -8360,8 +8359,9 @@ function adChangePassword() {
 
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
-  <div style="padding:10px 12px;flex-shrink:0">
-    <input id="mSrch" style="width:100%;padding:11px 16px;font-size:14px;border-radius:10px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)">
+  <div style="padding:10px 12px;flex-shrink:0;position:relative">
+    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
+    <span style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center"><svg style="width:15px;height:15px;opacity:.5;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
   </div>
   <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid #1a1a1a;">
     <div style="flex:1;font-family:monospace;font-size:9px;color:#333;letter-spacing:1px;text-transform:uppercase">Sembol</div>
@@ -8377,7 +8377,7 @@ function adChangePassword() {
     <span style="color:#1e1e1e;font-size:10px" id="mTSpr">—</span>
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
-    <input id="mOtSymSearch" type="text" placeholder="🔍 Sembol ara..."
+    <input id="mOtSymSearch" type="text" placeholder="Sembol ara..."
       style="width:100%;padding:9px 14px;background:#111;border:1px solid #1e1e1e;border-radius:8px;color:#ddd;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
       oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
     <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:#141414;border:1px solid #2a2a2a;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
@@ -8429,7 +8429,7 @@ function adChangePassword() {
       <button class="m-bb" onclick="mOrd('buy')">▲ AL</button>
     </div>
     <div id="mPendingBtn" style="display:none">
-      <button style="width:100%;padding:16px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:15px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="mPlacePending()">⏳ EMİR VER</button>
+      <button style="width:100%;padding:14px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px" onclick="mPlacePending()"><svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> EMİR VER</button>
     </div>
   </div>
 </div>
