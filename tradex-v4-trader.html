@@ -2980,8 +2980,8 @@ function lwLoadKlines(sym, interval, cb) {
                    'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'].indexOf(sym) > -1;
 
   if(!isCrypto) {
-    // Kripto değil — simüle veri üret
-    lwGenSimKlines(sym, interval, cb);
+    // Gerçek feed bekleniyor - boş grafik göster
+    cb([]);
     return;
   }
 
@@ -2994,7 +2994,7 @@ function lwLoadKlines(sym, interval, cb) {
     .then(function(r){ return r.json(); })
     .then(function(data) {
       _klineLoading = false;
-      if(!Array.isArray(data) || !data.length) { lwGenSimKlines(sym,interval,cb); return; }
+      if(!Array.isArray(data) || !data.length) { cb([]); return; }
       var candles = data.map(function(k) {
         return {
           time:   Math.floor(k[0]/1000),
@@ -3016,28 +3016,32 @@ function lwLoadKlines(sym, interval, cb) {
     .catch(function(e) {
       if(e.name==='AbortError') return;
       _klineLoading = false;
-      lwGenSimKlines(sym, interval, cb);
+      cb([]);
     });
 }
 
 /* ── Simüle kline üretici (forex/emtia/endeks) ──── */
 function lwGenSimKlines(sym, interval, cb) {
   var dec   = _lwDecFor(sym);
-  var base  = (mwPrices&&mwPrices[sym]&&mwPrices[sym].price) ? mwPrices[sym].price
-            : (window._adminOverrides&&window._adminOverrides[sym]) ? window._adminOverrides[sym]
-            : (SIM_PRICES&&SIM_PRICES[sym]) ? SIM_PRICES[sym].p : 100;
+  // Base fiyat: Firebase gerçek fiyatı > admin override > mwPrices > SIM_PRICES
+  var base = (typeof prices!=='undefined' && prices[sym] && prices[sym].price > 0) ? prices[sym].price
+           : (window._adminOverrides&&window._adminOverrides[sym]) ? window._adminOverrides[sym]
+           : (mwPrices&&mwPrices[sym]&&mwPrices[sym].price > 0) ? mwPrices[sym].price
+           : (SIM_PRICES&&SIM_PRICES[sym]) ? SIM_PRICES[sym].p : 100;
   var periodSecs = {'1m':60,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400}[interval]||14400;
   var count = 300;
   // Son mum zamanını interval'e hizala — X ekseni düzenli aralıklı olsun
   var now   = Math.floor(Date.now()/1000);
   now = Math.floor(now / periodSecs) * periodSecs;
   // Volatilite sembol tipine göre
-  var vol   = sym.indexOf('JPY')>-1?0.0012 : sym.indexOf('XAU')>-1?0.0015 : sym.indexOf('USD')>-1&&sym.length<=8?0.0008 : 0.002;
+  var vol   = sym.indexOf('JPY')>-1?0.0006 : sym.indexOf('XAU')>-1?0.0008 : sym.indexOf('USD')>-1&&sym.length<=8?0.0004 : 0.001;
   var candles = [];
   var p = base;
   for(var i=count-1; i>=0; i--) {
     var t   = now - i*periodSecs;
-    var chg = (Math.random()-0.49) * vol;
+    // Mean-reversion: fiyat base'den uzaklaştıkça geri çeker
+    var drift = (base - p) / base * 0.05;
+    var chg = (Math.random()-0.5) * vol + drift;
     var o   = +p.toFixed(dec);
     var c   = +(p*(1+chg)).toFixed(dec);
     var h   = +(Math.max(o,c)*(1+Math.random()*vol*0.5)).toFixed(dec);
@@ -3098,6 +3102,13 @@ function lwRenderCandles(candles, sym) {
     try { _lwSeries.applyOptions({priceFormat: _lwPriceFormat(sym)}); } catch(e){}
   }
 
+  // Boş veri - "Gerçek veri bekleniyor" mesajı
+  if(!candles || !candles.length) {
+    if(_lwSeries) { try { _lwSeries.setData([]); } catch(e){} }
+    var lbl2 = document.getElementById('ctSym');
+    if(lbl2) lbl2.textContent = (typeof curSym!=='undefined'?curSym:'') + ' — veri bekleniyor';
+    return;
+  }
   // Veriyi uygula - line grafiği için {time,value} formatına dönüştür
   var _chartData = candles;
   if(_lwChartType === 'line') {
@@ -4646,37 +4657,13 @@ function startLiveFeed() {
     }).catch(function(){});
   }
 
+  // Simülasyon kaldırıldı - gerçek feed kullanılacak
   setInterval(function() {
-    var cryptos = Object.keys(SIM_PRICES);
-    for(var i=0; i<cryptos.length; i++) {
-      var sym=cryptos[i], cfg=SIM_PRICES[sym];
-      if(!cfg||!mwPrices[sym]) continue;
-      var cur=mwPrices[sym].price;
-      var maxMove = cur * 0.0008;
-      var d = Math.max(-maxMove, Math.min(maxMove, cur*cfg.v*(Math.random()-0.5)*0.08));
-      var mult=Math.pow(10,cfg.d);
-      var np=Math.round((cur+d)*mult)/mult;
-      // txApplyPrice üzerinden geç → dinamik spread dahil tüm hesaplamalar yapılır
-      if(typeof txApplyPrice==='function') { txApplyPrice(sym, np); }
-    }
     updatePositions(); buildTicker();
     if(typeof mTick==='function') mTick();
   }, 800);
 
-  setInterval(function() {
-    var others=['EURUSD','GBPUSD','USDJPY','USDCHF','AUDUSD','USDCAD','NZDUSD','USDTRY','EURTRY','XAUUSDT','XAGUSDT','WTIUSDT','BRENTUSDT','US30','US500','NAS100','GER40'];
-    for(var i=0; i<others.length; i++) {
-      var sym=others[i], cfg=SIM_PRICES[sym];
-      if(!cfg||!mwPrices[sym]) continue;
-      var cur=mwPrices[sym].price;
-      var maxMove = cur * 0.0008;
-      var d = Math.max(-maxMove, Math.min(maxMove, cur*cfg.v*(Math.random()-0.5)*0.08));
-      var mult=Math.pow(10,cfg.d);
-      var np=Math.round((cur+d)*mult)/mult;
-      if(typeof txApplyPrice==='function') { txApplyPrice(sym, np); }
-    }
-    if(typeof mTick==='function') mTick();
-  }, 3000);
+  // Forex/emtia simülasyonu kaldırıldı - gerçek feed kullanılacak
 }
 
 var MARKET_GROUPS = [
