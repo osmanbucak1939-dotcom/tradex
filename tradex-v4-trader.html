@@ -2980,7 +2980,7 @@ function lwLoadKlines(sym, interval, cb) {
                    'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'].indexOf(sym) > -1;
 
   if(!isCrypto) {
-    // Gerçek feed bekleniyor - boş grafik göster
+    // Gerçek feed bekleniyor
     cb([]);
     return;
   }
@@ -3102,13 +3102,8 @@ function lwRenderCandles(candles, sym) {
     try { _lwSeries.applyOptions({priceFormat: _lwPriceFormat(sym)}); } catch(e){}
   }
 
-  // Boş veri - "Gerçek veri bekleniyor" mesajı
-  if(!candles || !candles.length) {
-    if(_lwSeries) { try { _lwSeries.setData([]); } catch(e){} }
-    var lbl2 = document.getElementById('ctSym');
-    if(lbl2) lbl2.textContent = (typeof curSym!=='undefined'?curSym:'') + ' — veri bekleniyor';
-    return;
-  }
+  // Boş veri - grafiği olduğu gibi bırak (feed yok / piyasa kapalı)
+  if(!candles || !candles.length) return;
   // Veriyi uygula - line grafiği için {time,value} formatına dönüştür
   var _chartData = candles;
   if(_lwChartType === 'line') {
@@ -4657,13 +4652,12 @@ function startLiveFeed() {
     }).catch(function(){});
   }
 
-  // Simülasyon kaldırıldı - gerçek feed kullanılacak
   setInterval(function() {
     updatePositions(); buildTicker();
     if(typeof mTick==='function') mTick();
   }, 800);
 
-  // Forex/emtia simülasyonu kaldırıldı - gerçek feed kullanılacak
+
 }
 
 var MARKET_GROUPS = [
