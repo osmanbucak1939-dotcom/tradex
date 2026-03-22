@@ -6119,29 +6119,34 @@ function updateMwRow(sym, price, prev) {
   if(typeof MW_MAP === 'undefined' || !MW_MAP) return;
   var it = MW_MAP[sym];
   if(!it) return;
+  // prices[sym]'den direkt bid/ask al (tek kaynak)
+  var _pr = (typeof prices !== 'undefined' && prices[sym]) ? prices[sym] : null;
+  const bid = _pr ? _pr.bid : +(price - (it.spread||0)/2);
+  const ask = _pr ? _pr.ask : +(price + (it.spread||0)/2);
+  const bidFmt = bid.toFixed(it.decimals);
+  const askFmt = ask.toFixed(it.decimals);
+  // Desktop satır
   const row = document.getElementById('mwr-'+sym);
-  if(!row) return;
-  const bid = +(price - (it.spread||0)/2).toFixed(it.decimals);
-  const ask = +(price + (it.spread||0)/2).toFixed(it.decimals);
   const up = price > prev;
   const neutral = price === prev;
-  row.querySelector('.mw-bid').textContent = bid.toFixed(it.decimals);
-  row.querySelector('.mw-ask').textContent = ask.toFixed(it.decimals);
-  row.classList.remove('mw-flash-g','mw-flash-r');
-  void row.offsetWidth;
-  row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
-  // Yön class'ı sakla - mobil renk için
-  row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
-  _mwApplyDirColor(row, up, neutral);
-  // Chg badge güncelle
-  var chg = (typeof mwPrices!=='undefined' && mwPrices[sym]) ? mwPrices[sym].chg||0 : 0;
+  if(row) {
+    row.querySelector('.mw-bid').textContent = bidFmt;
+    row.querySelector('.mw-ask').textContent = askFmt;
+    row.classList.remove('mw-flash-g','mw-flash-r');
+    void row.offsetWidth;
+    row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
+    row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
+    _mwApplyDirColor(row, up, neutral);
+  }
+  // Chg badge güncelle - prices tek kaynaktan
+  var chg = _pr ? (_pr.chg||0) : 0;
   _mwUpdateChg(sym, chg);
   // Mobil mMwBody'deki satırı güncelle
   var mb = document.getElementById('mmwb-'+sym);
   var ma = document.getElementById('mmwa-'+sym);
   var mRow = document.getElementById('mmwr-'+sym);
-  if(mb) mb.textContent = bid.toFixed(it.decimals);
-  if(ma) ma.textContent = ask.toFixed(it.decimals);
+  if(mb) mb.textContent = bidFmt;
+  if(ma) ma.textContent = askFmt;
   if(mRow) {
     _mwApplyDirColor(mRow, up, neutral);
     var mChg = document.getElementById('mmwc-'+sym);
@@ -8774,10 +8779,9 @@ function adChangePassword() {
       if(isOpen){
         for(var ri=0;ri<items.length;ri++){
           var it2=items[ri];
-          var mwp=(typeof mwPrices!=='undefined'&&mwPrices)?mwPrices[it2.sym]:null;
-          var pr=mwp?mwp.price:(it2.mockPrice||0);
-          var bid=pr?(pr-it2.spread/2).toFixed(it2.decimals):'—';
-          var ask=pr?(pr+it2.spread/2).toFixed(it2.decimals):'—';
+          var _p2=(typeof prices!=='undefined'&&prices[it2.sym])?prices[it2.sym]:null;
+          var bid=_p2?_p2.bid.toFixed(it2.decimals):'—';
+          var ask=_p2?_p2.ask.toFixed(it2.decimals):'—';
           var pipSize=Math.pow(10,-(it2.decimals-1));
           var spd=(it2.spread/pipSize).toFixed(1);
           if(spd.endsWith('.0')) spd=spd.slice(0,-2);
@@ -9280,7 +9284,12 @@ function adChangePassword() {
         mFT();
       }
     }
-    if(_ct==='market') mFM();
+    if(_ct==='market') {
+      // mFM sadece DOM yoksa çağır (ilk render), sonra updateMwRow halleder
+      var _mwDst = document.getElementById('mMwBody');
+      if(_mwDst && !_mwDst.children.length) mFM();
+      // else: updateMwRow zaten txApplyPrice içinden çağrılıyor
+    }
     if(_ct==='chart') mQUpdate();
     // Pos ve acc her zaman güncelle (aktif olsun olmasın)
     _mTickPos();
@@ -9291,7 +9300,8 @@ function adChangePassword() {
       if(_mp) {
         var _msc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===_mp.sym;}):null;
         var _mdec=_msc?parseInt(_msc.decimals)||2:2;
-        var _mcur=(typeof prices!=='undefined'&&prices[_mp.sym])?prices[_mp.sym].price:_mp.openPrice;
+        var _mpr=(typeof prices!=='undefined'&&prices[_mp.sym])?prices[_mp.sym]:null;
+        var _mcur=_mpr?(_mp.side==='buy'?(_mpr.bid||_mpr.price):(_mpr.ask||_mpr.price)):_mp.openPrice;
         var _mcs=parseFloat(_mp.contractSize)||1;
         var _mpnl=(_mp.side==='buy'?_mcur-_mp.openPrice:_mp.openPrice-_mcur)*(parseFloat(_mp.qty)||0)*_mcs+(parseFloat(_mp.swapTotal)||0);
         var _fp2=function(n,d){return parseFloat(n||0).toFixed(d||2);};
