@@ -3424,14 +3424,19 @@ function _adGetSpread(sym) {
 }
 
 // ── Tek fiyat kaynağı ─────────────────────────────────────────
-function adGetPrice(sym) {
+function adGetPrice(sym, side) {
+  // side: 'buy'=ask fiyatı, 'sell'=bid fiyatı, undefined=mid
   if(_pcOverrides && _pcOverrides[sym]) return _pcOverrides[sym];
-  if(_FX.prices[sym]) return _FX.prices[sym].mid;
+  if(_FX.prices[sym]) {
+    if(side==='buy')  return _FX.prices[sym].ask || _FX.prices[sym].mid;
+    if(side==='sell') return _FX.prices[sym].bid || _FX.prices[sym].mid;
+    return _FX.prices[sym].mid;
+  }
   if(typeof AD_SIM!=='undefined' && AD_SIM[sym]) return AD_SIM[sym].p;
   if(typeof SIM_PRICES!=='undefined' && SIM_PRICES[sym]) return SIM_PRICES[sym].p;
   if(typeof symConfig!=='undefined' && symConfig) {
     var sc2 = symConfig.find(function(s){ return s.sym===sym; });
-    if(sc2 && sc2.priceSource && sc2.priceSource!==sym) return adGetPrice(sc2.priceSource);
+    if(sc2 && sc2.priceSource && sc2.priceSource!==sym) return adGetPrice(sc2.priceSource, side);
   }
   return 0;
 }
@@ -3458,13 +3463,13 @@ function adReceiveRawPrice(sym, rawMid) {
     try { localStorage.setItem('_adDayOpen', JSON.stringify(window._adDayOpen)); } catch(e){}
   }
   var chg = window._adDayOpen[sym] ? (rawMid-window._adDayOpen[sym])/window._adDayOpen[sym]*100 : 0;
-  // Merkezi depoya yaz
-  _FX.prices[sym] = { mid:rawMid, bid:bid, ask:ask, spread:spread, chg:chg, ts:Date.now() };
+  // TEK KAYNAK: tüm fiyat nesneleri aynı objeyi gösterir
+  var _priceObj = { mid:rawMid, price:rawMid, bid:bid, ask:ask, spread:spread, chg:chg, prev:prev, ts:Date.now() };
+  _FX.prices[sym] = _priceObj;
   _FX.raw[sym]    = rawMid;
-  // Geriye dönük uyumluluk
-  mwPrices[sym]  = { price:bid, prev:prev, chg:chg };
-  prices[sym]    = { price:rawMid, bid:bid, ask:ask, chg:chg };
-  _adPrices[sym] = rawMid;
+  prices[sym]     = _priceObj;   // alias
+  mwPrices[sym]   = _priceObj;   // alias
+  _adPrices[sym]  = rawMid;
   if(typeof AD_SIM!=='undefined'&&AD_SIM[sym]) AD_SIM[sym].p = rawMid;
   if(typeof SIM_PRICES!=='undefined'&&SIM_PRICES[sym]) SIM_PRICES[sym].p = rawMid;
   // UI
@@ -3567,9 +3572,11 @@ function adCalcStats(account, positions) {
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
   (positions||[]).forEach(function(pos){
-    var mid=adGetPrice(pos.sym); if(!mid) return;
+    // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
+    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy');
+    if(!closeP) return;
     var cs=parseFloat(pos.contractSize)||1, qty=parseFloat(pos.qty)||0;
-    openPnl += (pos.side==='buy' ? mid-pos.openPrice : pos.openPrice-mid)*qty*cs;
+    openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs;
     openPnl += parseFloat(pos.swapTotal)||0;
   });
   var equity=bal+bonus+openPnl;
@@ -7564,7 +7571,7 @@ function updateMarginCallPanel() {
     // Anlık K/Z ve margin hesapla
     var openPnl = 0, usedMargin = 0;
     positions.forEach(function(p) {
-      var cur = adGetPrice(p.sym)||0;
+      var cur = adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
       if(cur) {
         var pnl = (p.side==='buy' ? cur-p.openPrice : p.openPrice-cur) * (parseFloat(p.qty)||0);
         openPnl += pnl;
@@ -7798,7 +7805,7 @@ function updateReports(){
     if(_pos.length){
       openPosCount+=_pos.length;
       _pos.forEach(function(p){
-        var cur=adGetPrice(p.sym)||0;
+        var cur=adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
         if(cur){
           var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0);
           netPnl+=pnl;
@@ -7885,7 +7892,7 @@ function updateReports(){
         +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">K/Z</th>'
         +'</tr></thead><tbody>';
       allPos.forEach(function(p,idx){
-        var cur=adGetPrice(p.sym)||0;
+        var cur=adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
         var pnl=cur?((p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)):0;
         var pc=pnl>=0?'#26a69a':'#ef5350';
         var bg=idx%2===0?'':'background:#0d0d0d;';
@@ -8653,7 +8660,7 @@ function adSortArrow(prefix, state){
 function adTickOpenTable(){
   if(!_adPositions || !_adPositions.length) return;
   _adPositions.forEach(function(pos){
-    var cur = adGetPrice(pos.sym);
+    var cur = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy');
     if(!cur) return;
     var cs  = parseFloat(pos.contractSize)||1;
     var qty = parseFloat(pos.qty)||0;
@@ -8697,7 +8704,7 @@ function adRenderOpenTable(){
 
   var totalPnl = 0;
   tb.innerHTML = sorted.map(function(pos,idx){
-    var cur = adGetPrice(pos.sym);
+    var cur = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy');
     var cs  = parseFloat(pos.contractSize)||1;
     var qty = parseFloat(pos.qty)||0;
     var raw = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * qty * cs;
