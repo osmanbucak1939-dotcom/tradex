@@ -8018,6 +8018,71 @@ function savePermModal(id) {
   showAdminToast('Kaydedildi', s.name+' için '+perms.length+' yetki ayarlandı', 'success');
 }
 
+function staffAction(btn, action) {
+  var id = btn.dataset.id;
+  if(action === 1) { // Ata
+    openAssignModal(id);
+  } else if(action === 2) { // Kapat/Aç
+    toggleStaffStatus(id);
+  } else if(action === 3) { // Sil
+    deleteStaff(id);
+  }
+}
+
+function openAssignModal(id) {
+  var s = _staffList.find(function(x){ return x.id===id; });
+  if(!s) return;
+  var assigned = s.assignedAccounts || [];
+  var customers = accounts.filter(function(a){ return !a.role || a.role==='customer'; });
+
+  var m = document.getElementById('assignModal');
+  if(!m){ m=document.createElement('div'); m.id='assignModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;'; document.body.appendChild(m); }
+
+  var html = '<div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:24px;width:480px;max-height:80vh;overflow-y:auto;">'
+    +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
+    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">HESAP ATA — '+s.name+'</div>'
+    +'<button onclick="closeAssignModal()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#555;margin-bottom:12px;">Personelin yönetebileceği hesapları seçin:</div>'
+    +'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
+
+  customers.forEach(function(a) {
+    var isAssigned = assigned.indexOf(String(a.id)) >= 0 || assigned.indexOf(a.id) >= 0;
+    html += '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#111;border-radius:6px;cursor:pointer;">'
+      +'<input type="checkbox" class="assign-cb-'+id+'" data-acc="'+a.id+'" '+(isAssigned?'checked':'')+'>'
+      +'<span style="font-family:var(--mono);font-size:11px;color:#ccc;">#'+(a.login||a.id)+' — '+a.name+(a.surname?' '+a.surname:'')+'</span>'
+      +'<span style="margin-left:auto;font-size:10px;color:#555;">'+(a.active?'Aktif':'Pasif')+'</span>'
+      +'</label>';
+  });
+
+  html += '</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="mgr-btn success" onclick="saveAssign(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;">💾 Kaydet</button>'
+    +'<button class="mgr-btn" onclick="closeAssignModal()" style="flex:1;padding:9px;">İptal</button>'
+    +'</div></div>';
+
+  m.innerHTML = html;
+  m.style.display = 'flex';
+}
+
+function closeAssignModal() {
+  var m = document.getElementById('assignModal');
+  if(m) m.style.display = 'none';
+}
+
+function saveAssign(id) {
+  if(id && id.dataset) id = id.dataset.id;
+  var s = _staffList.find(function(x){ return x.id===id; });
+  if(!s) return;
+  var selected = [];
+  document.querySelectorAll('.assign-cb-'+id+':checked').forEach(function(cb){ selected.push(cb.dataset.acc); });
+  s.assignedAccounts = selected;
+  fbSaveStaff(_staffList);
+  renderStaffTable();
+  document.getElementById('assignModal').style.display = 'none';
+  showAdminToast('Kaydedildi', s.name+' için '+selected.length+' hesap atandı', 'success');
+}
+
 function toggleStaffStatus(id){var s=_staffList.find(function(x){return x.id===id;});if(!s)return;s.active=!s.active;fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Güncellendi',s.name+' '+(s.active?'aktif':'pasif'),'info');}
 function deleteStaff(id){if(!confirm('Bu personeli silmek istediğinizden emin misiniz?'))return;_staffList=_staffList.filter(function(s){return s.id!==id;});fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Silindi','Personel kaldırıldı','info');}
 function openAssignModal(staffId){_assignStaffId=staffId;var modal=document.getElementById('assignModal');if(modal){modal.style.display='flex';renderAssignList();}}
