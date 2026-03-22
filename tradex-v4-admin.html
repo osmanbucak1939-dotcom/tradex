@@ -1611,17 +1611,17 @@ console.log('Firebase bağlandı ✓');
     </div>
   </div>
   <div style="background:#111;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 12px;height:40px;flex-shrink:0;gap:2px;overflow-x:auto;">
-    <button class="nav-btn active" onclick="adminNav('accounts',this)">👥 Hesaplar</button>
+    <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view">👥 Hesaplar</button>
     <button class="nav-btn" onclick="adminNav('reports',this)">📑 Raporlar</button>
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('spreadgroups',this)">⚙ Spread Grupları</button>
+    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Spread Grupları</button>
     <button class="nav-btn" onclick="adminNav('symbols',this)">📈 Semboller</button>
-    <button class="nav-btn" onclick="adminNav('pricecontrol',this)">💹 Kotasyon</button>
-    <button class="nav-btn" onclick="adminNav('feed',this)">📡 Feed</button>
+    <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="feed.edit">💹 Kotasyon</button>
+    <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('staff',this)">👤 Personel</button>
-    <button class="nav-btn" onclick="adminNav('brokerinfo',this)">🏢 Broker Bilgileri</button>
-    <button class="nav-btn" onclick="adminNav('walletsettings',this)">💳 Ödeme Yöntemleri</button>
+    <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
+    <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit">🏢 Broker Bilgileri</button>
+    <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
     <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
 
@@ -7298,12 +7298,81 @@ var _currentStaff = null;
 var _staffList = [];
 var _assignStaffId = null;
 var ROLES = {
-  superadmin:{label:'Süper Admin',perms:['all']},
-  manager:{label:'Manager',perms:['accounts','finance','trades','spreadgroups','reports','symbols','settings']},
-  employee:{label:'Çalışan',perms:['finance','trades','reports']}
+  superadmin:{label:'Süper Admin', perms:['all']},
+  admin:{label:'Admin', perms:['accounts','finance','trades','spreadgroups','reports','symbols','settings','feed','staff']},
+  manager:{label:'Manager', perms:['accounts','finance','trades','spreadgroups','reports','symbols','settings']},
+  employee:{label:'Çalışan', perms:['finance','trades','reports']}
 };
 
-function hasPerm(p){if(!_currentStaff)return false;var r=ROLES[_currentStaff.role];if(!r)return false;return r.perms.indexOf('all')>=0||r.perms.indexOf(p)>=0;}
+// Granüler izin tanımları
+var PERM_DEFS = [
+  {group:'Hesaplar', perms:[
+    {key:'accounts.view',    label:'Hesapları Görüntüle'},
+    {key:'accounts.edit',    label:'Hesap Düzenle'},
+    {key:'accounts.create',  label:'Hesap Oluştur'},
+    {key:'accounts.delete',  label:'Hesap Sil'},
+    {key:'accounts.password',label:'Şifre Değiştir'},
+  ]},
+  {group:'Finans', perms:[
+    {key:'finance.view',     label:'Finans Görüntüle'},
+    {key:'finance.deposit',  label:'Para Yatır'},
+    {key:'finance.withdraw', label:'Para Çek'},
+    {key:'finance.bonus',    label:'Bonus Ekle/Çıkar'},
+  ]},
+  {group:'İşlemler', perms:[
+    {key:'trades.view',      label:'Pozisyonları Görüntüle'},
+    {key:'trades.close',     label:'Pozisyon Kapat'},
+    {key:'trades.open',      label:'Pozisyon Aç'},
+    {key:'trades.edit',      label:'SL/TP Düzenle'},
+    {key:'trades.pending',   label:'Bekleyen Emirler'},
+  ]},
+  {group:'Semboller & Spread', perms:[
+    {key:'symbols.view',     label:'Sembolleri Görüntüle'},
+    {key:'symbols.edit',     label:'Sembol Düzenle'},
+    {key:'spreadgroups.view',label:'Spread Grupları Görüntüle'},
+    {key:'spreadgroups.edit',label:'Spread Grubu Düzenle'},
+  ]},
+  {group:'Sistem', perms:[
+    {key:'feed.view',        label:'Feed Görüntüle'},
+    {key:'feed.edit',        label:'Feed Yönet'},
+    {key:'settings.view',    label:'Ayarları Görüntüle'},
+    {key:'settings.edit',    label:'Ayarları Düzenle'},
+    {key:'reports.view',     label:'Raporları Görüntüle'},
+    {key:'staff.view',       label:'Personeli Görüntüle'},
+  ]},
+];
+
+// Rol bazlı varsayılan izinler
+var ROLE_DEFAULT_PERMS = {
+  superadmin: ['all'],
+  admin: ['accounts.view','accounts.edit','accounts.create','accounts.delete','accounts.password',
+          'finance.view','finance.deposit','finance.withdraw','finance.bonus',
+          'trades.view','trades.close','trades.open','trades.edit','trades.pending',
+          'symbols.view','symbols.edit','spreadgroups.view','spreadgroups.edit',
+          'feed.view','feed.edit','settings.view','settings.edit','reports.view','staff.view'],
+  manager: ['accounts.view','accounts.edit','accounts.create','accounts.password',
+             'finance.view','finance.deposit','finance.withdraw','finance.bonus',
+             'trades.view','trades.close','trades.open','trades.edit','trades.pending',
+             'symbols.view','spreadgroups.view','spreadgroups.edit',
+             'reports.view','settings.view','staff.view'],
+  employee:  ['accounts.view','finance.view','trades.view','trades.close','reports.view'],
+};
+
+function hasPerm(p) {
+  if(!_currentStaff) return false;
+  // Süper admin her şeye erişebilir
+  if(_currentStaff.role === 'superadmin') return true;
+  // Granüler izinler varsa onları kullan
+  if(_currentStaff.customPerms && _currentStaff.customPerms.length) {
+    return _currentStaff.customPerms.indexOf(p) >= 0 ||
+           _currentStaff.customPerms.indexOf(p.split('.')[0]) >= 0;
+  }
+  // Yoksa rol bazlı varsayılan
+  var r = ROLES[_currentStaff.role];
+  if(!r) return false;
+  if(r.perms.indexOf('all') >= 0) return true;
+  return r.perms.indexOf(p) >= 0 || r.perms.indexOf(p.split('.')[0]) >= 0;
+}
 function applyRoleUI(){document.querySelectorAll('[data-perm]').forEach(function(el){el.style.display=hasPerm(el.getAttribute('data-perm'))?'':'none';});}
 
 function adminLogin(){
@@ -7763,9 +7832,25 @@ function loadStaffTab(){fbLoadStaff(function(list){_staffList=list||[];renderSta
 function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
   if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:#555;text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
-  var rl={superadmin:'Süper Admin',manager:'Manager',employee:'Çalışan'};
+  var rl={superadmin:'Süper Admin',admin:'Admin',manager:'Manager',employee:'Çalışan'};
   var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#1a1a1a;"><th style="padding:8px 10px;text-align:left;color:#888;">Ad</th><th style="padding:8px 10px;text-align:left;color:#888;">E-posta</th><th style="padding:8px 10px;text-align:left;color:#888;">Rol</th><th style="padding:8px 10px;text-align:left;color:#888;">Durum</th><th style="padding:8px 10px;text-align:left;color:#888;">Atanan</th><th style="padding:8px 10px;text-align:left;color:#888;">İşlem</th></tr></thead><tbody>';
-  _staffList.forEach(function(s){var cnt=(s.assignedAccounts||[]).length;html+='<tr style="border-bottom:1px solid #1a1a1a;"><td style="padding:7px 10px;font-weight:600;">'+s.name+'</td><td style="padding:7px 10px;color:#888;font-size:11px;">'+s.email+'</td><td style="padding:7px 10px;font-size:11px;color:var(--accent);">'+(rl[s.role]||s.role)+'</td><td style="padding:7px 10px;">'+(s.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td><td style="padding:7px 10px;font-size:11px;">'+cnt+'</td><td style="padding:7px 10px;white-space:nowrap;"><button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">Ata</button> <button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> <button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button></td></tr>';});
+  _staffList.forEach(function(s){
+    var cnt=(s.assignedAccounts||[]).length;
+    var customCnt = (s.customPerms||[]).length;
+    var permBadge = customCnt ? '<span style="font-size:9px;color:#f0b90b;margin-left:4px;">⚙ Özel ('+customCnt+')</span>' : '';
+    html+='<tr style="border-bottom:1px solid #1a1a1a;">'
+      +'<td style="padding:7px 10px;font-weight:600;">'+s.name+'</td>'
+      +'<td style="padding:7px 10px;color:#888;font-size:11px;">'+s.email+'</td>'
+      +'<td style="padding:7px 10px;font-size:11px;color:var(--accent);">'+(rl[s.role]||s.role)+permBadge+'</td>'
+      +'<td style="padding:7px 10px;">'+(s.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>'
+      +'<td style="padding:7px 10px;font-size:11px;">'+cnt+'</td>'
+      +'<td style="padding:7px 10px;white-space:nowrap;">'
+        +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">Ata</button> '
+        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openPermModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">⚙ Yetki</button> '
+        +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
+        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
+      +'</td></tr>';
+  });
   html+='</tbody></table>';wrap.innerHTML=html;
 }
 function addStaff(){
@@ -7777,7 +7862,7 @@ function addStaff(){
     +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Ad Soyad</label><input class="mgr-input" id="ns_name" style="width:100%;" placeholder="Ad Soyad"></div>'
     +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">E-posta</label><input class="mgr-input" id="ns_email" style="width:100%;" placeholder="email@domain.com"></div>'
     +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Şifre</label><input class="mgr-input" id="ns_pass" style="width:100%;" placeholder="Şifre"></div>'
-    +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rol</label><select class="mgr-input" id="ns_role" style="width:100%;"><option value="employee">Çalışan</option><option value="manager">Manager</option></select></div>'
+    +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rol</label><select class="mgr-input" id="ns_role" style="width:100%;"><option value="employee">Çalışan</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>'
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:16px;">'
     +'<button class="mgr-btn success" onclick="saveNewStaff()" style="flex:1;">Kaydet</button>'
@@ -7791,11 +7876,93 @@ function saveNewStaff(){
   var pass=(document.getElementById('ns_pass')||{}).value||'';
   var role=(document.getElementById('ns_role')||{}).value||'employee';
   if(!name||!email||!pass){showAdminToast('Hata','Tüm alanlar zorunlu','error');return;}
-  var s={id:'staff_'+Date.now(),name:name,email:email,password:pass,role:role,active:true,assignedAccounts:[],created:new Date().toISOString()};
+  var defaultPerms = (typeof ROLE_DEFAULT_PERMS!=='undefined' && ROLE_DEFAULT_PERMS[role]) ? ROLE_DEFAULT_PERMS[role] : [];
+  var s={id:'staff_'+Date.now(),name:name,email:email,password:pass,role:role,active:true,assignedAccounts:[],customPerms:defaultPerms,created:new Date().toISOString()};
   _staffList.push(s);fbSaveStaff(_staffList);renderStaffTable();
   document.getElementById("addStaffModal").style.display="none";
   showAdminToast('Eklendi',name+' personel olarak eklendi','success');
 }
+function openPermModal(id) {
+  if(_currentStaff && _currentStaff.role !== 'superadmin') {
+    showAdminToast('Yetersiz Yetki','Sadece Süper Admin yetki düzenleyebilir','error'); return;
+  }
+  var s = _staffList.find(function(x){return x.id===id;});
+  if(!s) return;
+  var currentPerms = s.customPerms || ROLE_DEFAULT_PERMS[s.role] || [];
+  
+  var m = document.getElementById('permModal');
+  if(!m){m=document.createElement('div');m.id='permModal';m.style.cssText='position:fixed;inset:0;z-index:50001;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px;';document.body.appendChild(m);}
+  
+  var html = '<div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
+    +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
+      +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">⚙ YETKİ DÜZENLEMESİ — '+s.name+'</div>'
+      +'<button onclick="closePermModal()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>'
+    +'</div>'
+    +'<div style="font-family:var(--mono);font-size:10px;color:#555;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
+  
+  // Tüm seç / Hiçbiri butonu
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px;">'
+    +'<button class="mgr-btn secondary" onclick="permSelectAll(this)" data-id="'+id+'" data-all="1" style="font-size:11px;padding:4px 12px;">Tümünü Seç</button>'
+    +'<button class="mgr-btn" onclick="permSelectAll(this)" data-id="'+id+'" data-all="0" style="font-size:11px;padding:4px 12px;">Hiçbirini Seçme</button>'
+    +'<button class="mgr-btn secondary" onclick="permLoadDefaults(this)" data-id="'+id+'" style="font-size:11px;padding:4px 12px;">Rol Varsayılanı</button>'
+    +'</div>';
+  
+  PERM_DEFS.forEach(function(group){
+    html += '<div style="margin-bottom:14px;">'
+      +'<div style="font-family:var(--mono);font-size:10px;color:#f0b90b;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #2a2a2a;">'+group.group.toUpperCase()+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+    group.perms.forEach(function(p){
+      var checked = currentPerms.indexOf('all')>=0 || currentPerms.indexOf(p.key)>=0;
+      html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:#ccc;">'
+        +'<input type="checkbox" class="perm-cb-'+id+'" data-key="'+p.key+'" '+(checked?'checked':'')+'>'
+        +p.label+'</label>';
+    });
+    html += '</div></div>';
+  });
+  
+  html += '<div style="display:flex;gap:8px;margin-top:16px;">'
+    +'<button class="mgr-btn success" onclick="savePermModal(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;">💾 Kaydet</button>'
+    +'<button class="mgr-btn" onclick="closePermModal()" style="flex:1;padding:9px;">İptal</button>'
+    +'</div></div>';
+  
+  m.innerHTML = html;
+  m.style.display = 'flex';
+}
+
+function permSelectAll(el) {
+  var id = el.dataset.id, all = el.dataset.all === '1';
+  document.querySelectorAll('.perm-cb-'+id).forEach(function(cb){ cb.checked = all; });
+}
+
+function permLoadDefaults(el) {
+  var id = el.dataset.id;
+  var s = _staffList.find(function(x){return x.id===id;});
+  if(!s) return;
+  var defaults = ROLE_DEFAULT_PERMS[s.role] || [];
+  document.querySelectorAll('.perm-cb-'+id).forEach(function(cb){
+    cb.checked = defaults.indexOf(cb.dataset.key) >= 0;
+  });
+}
+
+function closePermModal() {
+  var m = document.getElementById('permModal');
+  if(m) m.style.display = 'none';
+}
+
+function savePermModal(id) {
+  // data-id attribute'dan veya direkt id olarak gelebilir
+  if(id && id.dataset) id = id.dataset.id;
+  var s = _staffList.find(function(x){return x.id===id;});
+  if(!s) return;
+  var perms = [];
+  document.querySelectorAll('.perm-cb-'+id+':checked').forEach(function(cb){ perms.push(cb.dataset.key); });
+  s.customPerms = perms;
+  fbSaveStaff(_staffList);
+  renderStaffTable();
+  document.getElementById('permModal').style.display = 'none';
+  showAdminToast('Kaydedildi', s.name+' için '+perms.length+' yetki ayarlandı', 'success');
+}
+
 function toggleStaffStatus(id){var s=_staffList.find(function(x){return x.id===id;});if(!s)return;s.active=!s.active;fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Güncellendi',s.name+' '+(s.active?'aktif':'pasif'),'info');}
 function deleteStaff(id){if(!confirm('Bu personeli silmek istediğinizden emin misiniz?'))return;_staffList=_staffList.filter(function(s){return s.id!==id;});fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Silindi','Personel kaldırıldı','info');}
 function openAssignModal(staffId){_assignStaffId=staffId;var modal=document.getElementById('assignModal');if(modal){modal.style.display='flex';renderAssignList();}}
