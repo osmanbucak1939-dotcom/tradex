@@ -1224,6 +1224,11 @@ function _authSuccess(user) {
   }
 
   // Hemen bir kez ve sonra her 30 saniyede
+  // Giriş anında lastLogin yaz
+  if(typeof db!=='undefined' && db && typeof _cu!=='undefined' && _cu && _cu.id) {
+    var _loginNow = new Date().toISOString();
+    db.collection('users').doc(String(_cu.id)).set({lastLogin:_loginNow, online:true},{merge:true}).catch(function(){});
+  }
   _txSendHeartbeat();
   if(window._heartbeatTimer) clearInterval(window._heartbeatTimer);
   window._heartbeatTimer = setInterval(_txSendHeartbeat, 5000);
