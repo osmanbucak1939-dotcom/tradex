@@ -1661,73 +1661,113 @@ console.log('Firebase bağlandı ✓');
         <div id="fin_result" style="margin-top:10px;font-size:12px;"></div>
       </div>
     </div>
-    <div id="sec-reports" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-  <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:14px;">&#128209; RAPORLAR</div>
+    <div id="sec-reports" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px 24px;background:#0d0d0d;">
 
-  <!-- Üst widget satırı -->
-  <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:14px;">
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">TOPLAM HESAP</div>
-      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);" id="rep-totalAccs">&#8212;</div>
+  <!-- Başlık -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <div style="font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.5px;">RAPORLAR</div>
+      <div style="font-size:11px;color:#444;margin-top:2px;font-family:var(--mono);">Genel Bakış & İstatistikler</div>
     </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">AKT&#304;F HESAP</div>
-      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:#26a69a;" id="rep-activeAccs">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">TOPLAM BAK&#304;YE</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;" id="rep-totalBal">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">TOPLAM BONUS</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#f5c518;" id="rep-totalBonus">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">TOPLAM YATIRIM</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#26a69a;" id="rep-totalDeposit">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">TOPLAM &#199;EK&#304;M</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#ef5350;" id="rep-totalWithdraw">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">A&#199;IK POZ&#304;SYON</div>
-      <div style="font-family:var(--mono);font-size:20px;font-weight:700;" id="rep-openPos">&#8212;</div>
-    </div>
-    <div class="ad-sect" style="padding:10px 12px;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:4px;">NET POZ&#304;SYON K/Z</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;" id="rep-netPoz">&#8212;</div>
-    </div>
+    <button onclick="updateReports()" style="background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;">↺ Yenile</button>
   </div>
 
-  <!-- 3 sütun: Demo/Gerçek | Son Talepler | Açık Pozisyonlar -->
-  <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:12px;align-items:start;">
+  <!-- KPI Kartlar - 4+4 grid -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
 
-    <!-- SOL: Demo / Gerçek -->
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div class="ad-sect" style="padding:12px;">
-        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">DEMO HESAPLAR</div>
-        <div id="rep-demo">&#8212;</div>
+    <!-- Toplam Hesap -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f0b90b;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#f0b90b;padding-left:8px;" id="rep-totalAccs">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
+    </div>
+
+    <!-- Toplam Bakiye -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalBal">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
+    </div>
+
+    <!-- Toplam Yatırım -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalDeposit">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+    </div>
+
+    <!-- Toplam Çekim -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#ef5350;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#ef5350;padding-left:8px;" id="rep-totalWithdraw">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+    </div>
+
+  </div>
+
+  <!-- İkinci satır KPI -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+
+    <!-- Aktif Hesap -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-activeAccs">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
+    </div>
+
+    <!-- Toplam Bonus -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f5c518;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f5c518;padding-left:8px;" id="rep-totalBonus">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+    </div>
+
+    <!-- Açık Pozisyon -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#9c27b0;border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#ce93d8;padding-left:8px;" id="rep-openPos">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+    </div>
+
+    <!-- Net K/Z -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#888;border-radius:10px 0 0 10px;" id="rep-netPoz-bar"></div>
+      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;padding-left:8px;" id="rep-netPoz">—</div>
+      <div style="font-size:9px;color:#444;margin-top:4px;padding-left:8px;">anlık hesaplama</div>
+    </div>
+
+  </div>
+
+  <!-- Alt bölüm: 2 sütun -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- Son Talepler -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#888;flex:1;">SON YATIRIM / ÇEKİM TALEPLERİ</div>
+        <span style="font-size:9px;color:#555;" id="rep-reqs-count"></span>
       </div>
-      <div class="ad-sect" style="padding:12px;">
-        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">GER&#199;EK HESAPLAR</div>
-        <div id="rep-real">&#8212;</div>
+      <div id="rep-recentReqs">
+        <div style="padding:24px;text-align:center;color:#333;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
-    <!-- ORTA: Son Talepler -->
-    <div class="ad-sect" style="padding:0;overflow:hidden;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;padding:10px 12px 6px;border-bottom:1px solid #1a1a1a;">SON YATIRIM / &#199;EK&#304;M TALEPLERI</div>
-      <div id="rep-recentReqs" style="font-size:11px;">
-        <span style="color:#555;padding:12px;display:block;">Y&#252;kleniyor...</span>
+    <!-- Açık Pozisyonlar -->
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#888;flex:1;">AÇIK POZİSYONLAR</div>
+        <span style="font-size:9px;color:#555;" id="rep-pos-count"></span>
       </div>
-    </div>
-
-    <!-- SAĞ: Açık Pozisyonlar -->
-    <div class="ad-sect" style="padding:0;overflow:hidden;">
-      <div style="font-size:9px;color:#666;letter-spacing:1px;padding:10px 12px 6px;border-bottom:1px solid #1a1a1a;">A&#199;IK POZ&#304;SYONLAR (T&#220;M HESAPLAR)</div>
-      <div id="rep-posTable" style="overflow-y:auto;max-height:420px;">
-        <span style="color:#555;font-size:11px;padding:12px;display:block;">Y&#252;kleniyor...</span>
+      <div id="rep-posTable" style="overflow-y:auto;max-height:380px;">
+        <div style="padding:24px;text-align:center;color:#333;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
@@ -7611,6 +7651,12 @@ function updateReports(){
   set('rep-activeAccs', act.length);
   set('rep-totalBal', fp2(tb));
   set('rep-totalBonus', fp2(bo));
+  // Yeni sub-label'lar
+  var _demoLen = c2.filter(function(a){return a.type==='demo';}).length;
+  var _realLen = c2.filter(function(a){return a.type!=='demo';}).length;
+  set('rep-activeAccs-sub', act.length + ' aktif');
+  set('rep-totalBonus-sub', fp2(bo) + ' bonus');
+  set('rep-demoreal-sub', _demoLen + ' demo / ' + _realLen + ' gerçek');
 
   // Finlog'dan yatırım/çekim topla
   var totalDep=0, totalWdr=0;
@@ -7655,6 +7701,8 @@ function updateReports(){
     npEl.textContent=(netPnl>=0?'+':'')+fp2(netPnl);
     npEl.style.color=netPnl>=0?'#26a69a':'#ef5350';
   }
+  var npBar=document.getElementById('rep-netPoz-bar');
+  if(npBar) npBar.style.background=netPnl>=0?'#26a69a':'#ef5350';
 
   // Demo / gerçek
   var dEl=document.getElementById('rep-demo');
@@ -7690,20 +7738,20 @@ function updateReports(){
         var mgrLabel = r.manager ? '<span style="color:#666;font-size:10px;margin-left:4px;">['+r.manager+']</span>' : '';
         var srcBadge = r.source==='manager' ? '<span style="background:#1a3a2a;color:#26a69a;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>' : '';
         var rowBg = rIdx%2===0 ? '' : 'background:#0d0d0d;'; rIdx++;
-        html+='<div style="display:flex;gap:8px;padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:11px;align-items:center;'+rowBg+'">'
-          +'<span style="color:'+arrowColor+';font-size:14px;">'+arrow+'</span>'
-          +'<span style="flex:1;font-family:var(--mono);">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</span>'
-          +'<span style="font-family:var(--mono);color:#888;font-size:10px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</span>'
-          +'<span style="font-family:var(--mono);color:#ccc;white-space:nowrap;">$'+parseFloat(r.amount||0).toFixed(2)+'</span>'
-          +'<span style="color:'+sc+';">'+sl+'</span>'
-          +'</div>';
-      });
+        html+='<div style="display:flex;gap:10px;padding:8px 16px;border-bottom:1px solid #161616;align-items:center;'+rowBg+'">'
+          +'<div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:'+(isW?'rgba(239,83,80,.1)':'rgba(38,166,154,.1)')+';flex-shrink:0;">'
+          +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
+          +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-family:var(--mono);font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
+          +'<div style="font-size:9px;color:#444;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
+          +'<div style="text-align:right;flex-shrink:0;">'
+          +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+arrowColor+';">$'+parseFloat(r.amount||0).toFixed(2)+'</div>'
+          +'<div style="font-size:9px;color:'+sc+';margin-top:2px;">'+sl+'</div></div></div>';
+      }); // forEach sonu
       rrEl.innerHTML=html;
     }
+    if(rc) rc.textContent=allReqs.length+' talep';
   }
-
-  // Pozisyon tablosu - tüm hesapların açık pozisyonları
-  var ptEl = document.getElementById('rep-posTable');
   if(ptEl) {
     var allPos = [];
     c2.forEach(function(a){
@@ -7715,33 +7763,35 @@ function updateReports(){
     if(!allPos.length){
       ptEl.innerHTML='<span style="color:#555;font-size:11px;">Açık pozisyon yok</span>';
     } else {
-      var ptHtml='<table style="width:100%;border-collapse:collapse;font-size:10px;">'
-        +'<thead><tr style="color:#666;border-bottom:1px solid #2a2a2a;">'
-        +'<th style="padding:4px 6px;text-align:left;">Hesap</th>'
-        +'<th style="padding:4px 6px;text-align:left;">Sembol</th>'
-        +'<th style="padding:4px 6px;">Yön</th>'
-        +'<th style="padding:4px 6px;text-align:right;">Lot</th>'
-        +'<th style="padding:4px 6px;text-align:right;">Açılış</th>'
-        +'<th style="padding:4px 6px;text-align:right;">Güncel</th>'
-        +'<th style="padding:4px 6px;text-align:right;">K/Z</th>'
+      var ptHtml='<table style="width:100%;border-collapse:collapse;">'
+        +'<thead><tr style="background:#161616;">'
+        +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">HESAP</th>'
+        +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">SEMBOL</th>'
+        +'<th style="padding:8px 12px;text-align:center;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">YÖN</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">LOT</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">AÇILIŞ</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">GÜNCEL</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">K/Z</th>'
         +'</tr></thead><tbody>';
       allPos.forEach(function(p,idx){
         var cur=adGetPrice(p.sym)||0;
         var pnl=cur?((p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)):0;
         var pc=pnl>=0?'#26a69a':'#ef5350';
         var bg=idx%2===0?'':'background:#0d0d0d;';
-        ptHtml+='<tr style="'+bg+'border-bottom:1px solid #1a1a1a;">'
-          +'<td style="padding:4px 6px;color:#888;">'+p._accName+'</td>'
-          +'<td style="padding:4px 6px;font-family:var(--mono);font-weight:700;">'+p.sym+'</td>'
-          +'<td style="padding:4px 6px;text-align:center;color:'+(p.side==='buy'?'#26a69a':'#ef5350')+';">'+(p.side==='buy'?'▲AL':'▼SAT')+'</td>'
-          +'<td style="padding:4px 6px;text-align:right;font-family:var(--mono);">'+parseFloat(p.qty||0).toFixed(2)+'</td>'
-          +'<td style="padding:4px 6px;text-align:right;font-family:var(--mono);color:#888;">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
-          +'<td style="padding:4px 6px;text-align:right;font-family:var(--mono);color:var(--accent);">'+cur.toFixed(4)+'</td>'
-          +'<td style="padding:4px 6px;text-align:right;font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+fp2(pnl)+'</td>'
+        ptHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
+          +'<td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:#666;">'+p._accName+'</td>'
+          +'<td style="padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:700;color:#ddd;">'+p.sym+'</td>'
+          +'<td style="padding:7px 12px;text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;background:'+(p.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(p.side==="buy"?"#26a69a":"#ef5350")+';">'+  (p.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#ccc;">'+parseFloat(p.qty||0).toFixed(2)+'</td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#666;">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--accent);">'+cur.toFixed(4)+'</td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:'+pc+';">'+( pnl>=0?"+":"")+fp2(pnl)+'</td>'
           +'</tr>';
       });
       ptHtml+='</tbody></table>';
       ptEl.innerHTML=ptHtml;
+      var pc2=document.getElementById('rep-pos-count');
+      if(pc2) pc2.textContent=allPos.length+' pozisyon';
     }
   }
 }
