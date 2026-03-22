@@ -3357,9 +3357,9 @@ function cancelPending(i) {
 function lwTickUpdate() {
   if(!_lwSeries || !_klineData.length) return;
   var sym = curSym;
-  // Mid fiyatı kullan (grafik mid gösterir, MW bid/ask gösterir)
-  var price = (prices[sym] && prices[sym].price) ? prices[sym].price
-            : (mwPrices[sym] && mwPrices[sym].price) ? mwPrices[sym].price : 0;
+  // Grafik mid fiyatı gösterir - prices[sym].price = rawMid (mid)
+  // mwPrices[sym].price = bid olduğu için kullanma
+  var price = (prices[sym] && prices[sym].price) ? prices[sym].price : 0;
   if(!price) return;
 
   var dec        = _lwDecFor(sym);
