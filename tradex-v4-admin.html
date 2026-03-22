@@ -1553,6 +1553,9 @@ console.log('Firebase bağlandı ✓');
             if(!ud) return;
             var acc = accounts.find(function(a){ return String(a.id)===udoc.id; });
             if(!acc) return;
+            if(ud.lastLogin) {
+              acc.lastLogin = ud.lastLogin;
+            }
             if(ud.lastSeen) {
               acc.lastSeen = ud.lastSeen;
               acc._onlineFromUsers = true;
@@ -4097,7 +4100,7 @@ function adRenderTab(tab) {
           '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
             adIR('Account ID', a.id) + adIR('Ad Soyad', a.name) + adIR('E-posta', a.email) +
             adIR('Kayıt Tarihi', a.regDate ? fmtDate(a.regDate) : (a.created||'—')) +
-            adIR('Son Görülme', a.lastSeen ? fmtDate(a.lastSeen) : '—') +
+            adIR('Son Giriş', a.lastLogin ? fmtDate(a.lastLogin) : (a.lastSeen ? fmtDate(a.lastSeen) : '—')) +
             adIR('Hesap Tipi', a.type==='demo'?'Demo':'Gerçek') +
           '</table>' +
         '</div>' +
@@ -4933,7 +4936,8 @@ function renderAccTable(){
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       var isOnline=!!a.online||(lsMs&&(now-lsMs)<300000);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
-      var lastSeen=a.lastSeen?_timeAgo(a.lastSeen):'—';
+      var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
+                  : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
