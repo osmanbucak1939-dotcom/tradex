@@ -8785,7 +8785,7 @@ function adChangePassword() {
           var pipSize=Math.pow(10,-(it2.decimals-1));
           var spd=(it2.spread/pipSize).toFixed(1);
           if(spd.endsWith('.0')) spd=spd.slice(0,-2);
-          var chgVal=mwp&&mwp.chg!==undefined?mwp.chg:0;
+          var chgVal=_p2&&_p2.chg!==undefined?_p2.chg:0;
           var chgAbs=Math.abs(chgVal).toFixed(2);
           var chgUp=chgVal>=0;
           var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
