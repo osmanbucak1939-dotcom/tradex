@@ -1032,9 +1032,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 select option { background:#1a1a1a; color:#e0e0e0; }
 select { color-scheme: dark; }
 .ad-input:focus, .mgr-input:focus { outline:none; border-color:var(--accent); }
-.acc-row-even { background:#141414; }
-.acc-row-odd  { background:#1c1c1c; }
-.acc-row-even td, .acc-row-odd td { border-bottom:1px solid #2a2a2a; }
+.acc-row-even { background:#141414; border-bottom:1px solid #222; }
+.acc-row-odd  { background:#1c1c1c; border-bottom:1px solid #222; }
+.acc-row-even td, .acc-row-odd td { }
 .acc-row-even:hover, .acc-row-odd:hover { background:#252525; cursor:pointer; }
 .ad-label { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:.5px; }
 .ad-card { background:#111; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
@@ -1455,7 +1455,8 @@ function fmtDateShort(input) {
   if(!input) return '—';
   var d = _parseDate(input);
   if(!d) return String(input);
-  return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+  var p = function(n){ return String(n).padStart(2,'0'); };
+  return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
 }
 function parseFinlogDate(input) {
   var d = _parseDate(input);
