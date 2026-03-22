@@ -1654,7 +1654,7 @@ console.log('Firebase bağlandı ✓');
         <div style="font-size:8px;color:#444;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
         <div style="font-size:8px;color:#444;font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
-      <div id="mcBody" style="max-height:180px;overflow-y:auto;background:#0a0a0a;">
+      <div id="mcBody" style="max-height:156px;overflow-y:auto;background:#0a0a0a;">
         <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#333;">Yükleniyor...</div>
       </div>
     </div>
@@ -3475,10 +3475,40 @@ function adReceiveRawPrice(sym, rawMid) {
   // Hesap detayı açıksa pozisyon tablosu ve badge'leri güncelle
   if(_adAccId && document.getElementById('accDetailOverlay') &&
      document.getElementById('accDetailOverlay').style.display !== 'none') {
-    // Bu sembolde açık pozisyon var mı?
     var _hasSym = (_adPositions||[]).some(function(p){ return p.sym===sym; });
     if(_hasSym) {
       if(typeof adTickOpenTable==='function') adTickOpenTable();
+      if(typeof adRefreshBadges==='function') adRefreshBadges();
+    }
+  }
+  // Hesap listesi - bu sembolde pozisyonu olan hesapların K/Z ve varlığını güncelle
+  if(typeof _allAccountPositions!=='undefined' && _allAccountPositions) {
+    var _secAcc = document.getElementById('sec-accounts');
+    if(_secAcc && _secAcc.style.display!=='none') {
+      var _fp3 = function(n){ return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+      Object.keys(_allAccountPositions).forEach(function(accId) {
+        var poses = _allAccountPositions[accId];
+        if(!poses || !poses.length) return;
+        // Bu hesapta bu sembolde pozisyon var mı?
+        var hasSym = poses.some(function(p){ return p.sym===sym; });
+        if(!hasSym) return;
+        var acc = accounts.find(function(a){ return String(a.id)===String(accId); });
+        if(!acc) return;
+        var st = adCalcStats(acc, poses);
+        acc._liveEquity = st.equity;
+        acc._openPnl    = st.openPnl;
+        acc._openCount  = st.openCount;
+        // DOM hücrelerini güncelle
+        document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
+          el.textContent = '$'+_fp3(st.equity);
+          el.style.color = st.equity>=(acc.balance||0)?'#26a69a':'#ef5350';
+        });
+        document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
+          var v = st.openPnl||0;
+          el.textContent = poses.length===0?'—':((v>=0?'+':'')+( v>=0?'$':'-$')+_fp3(Math.abs(v)));
+          el.style.color = v>0?'#26a69a':v<0?'#ef5350':'#555';
+        });
+      });
     }
   }
   // Firebase'e toplu yaz
@@ -7567,7 +7597,7 @@ function updateMarginCallPanel() {
   }
 
   var html = '';
-  mcList.slice(0,9).forEach(function(m) {
+  mcList.slice(0,6).forEach(function(m) {
     var lvl = m.marginLevel;
     var color = lvl < 30 ? '#ef5350' : lvl < 70 ? '#f5c518' : '#ff8c00';
     var bg = lvl < 30 ? 'rgba(239,83,80,.08)' : 'rgba(245,197,24,.05)';
@@ -7599,9 +7629,7 @@ function loadAllPositionsAndUpdate() {
 
   if(!needFetch.length || typeof db === 'undefined' || !db) {
     // Tümü cache'de var - direkt güncelle
-    c2.forEach(function(a){ a._repPositions = a.positions || []; });
     updateReports();
-    c2.forEach(function(a){ delete a._repPositions; });
     return;
   }
 
@@ -7618,18 +7646,14 @@ function loadAllPositionsAndUpdate() {
         } else { acc.positions = []; }
         pending--;
         if(pending <= 0) {
-          c2.forEach(function(a){ a._repPositions = a.positions || []; });
           updateReports();
-          c2.forEach(function(a){ delete a._repPositions; });
         }
       })
       .catch(function() {
         acc.positions = [];
         pending--;
         if(pending <= 0) {
-          c2.forEach(function(a){ a._repPositions = a.positions || []; });
           updateReports();
-          c2.forEach(function(a){ delete a._repPositions; });
         }
       });
   });
@@ -7770,7 +7794,7 @@ function updateReports(){
   // Açık pozisyon sayısı ve net K/Z
   var openPosCount=0, netPnl=0;
   c2.forEach(function(a){
-    var _pos = a.positions || a._repPositions || [];
+    var _pos = Array.isArray(a.positions) ? a.positions : [];
     if(_pos.length){
       openPosCount+=_pos.length;
       _pos.forEach(function(p){
@@ -7842,7 +7866,7 @@ function updateReports(){
   if(ptEl) {
     var allPos = [];
     c2.forEach(function(a){
-      var _pos = a.positions || a._repPositions || [];
+      var _pos = Array.isArray(a.positions) ? a.positions : [];
       _pos.forEach(function(p){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
