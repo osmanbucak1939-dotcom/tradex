@@ -4039,7 +4039,8 @@ function sortPos(col) {
 
 function _calcPnl(pos) {
   const p = prices[pos.sym];
-  const cur = p ? p.price : pos.openPrice;
+  // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
+  const cur = p ? (pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price)) : pos.openPrice;
   const _cs = pos.contractSize || 1;
   const rawPnl = (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs;
   return rawPnl + (pos.swapTotal || 0);
@@ -4073,7 +4074,7 @@ function renderPositions() {
 
   tb.innerHTML = sorted.map(pos => {
     const p = prices[pos.sym];
-    const cur = p ? p.price : pos.openPrice;
+    const cur = p ? (pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price)) : pos.openPrice;
     const _cs = pos.contractSize || 1;
     const rawPnl = (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs;
     const swapAcc = pos.swapTotal || 0;
@@ -6772,9 +6773,10 @@ function txApplyPrice(sym, rawMid) {
     chg = prices[sym].chg; // Önceki değeri koru
   }
 
-  // Merkezi fiyat depola
-  prices[sym]    = { price:rawMid, bid:bid, ask:ask, chg:chg };
-  mwPrices[sym]  = { price:bid, prev:prev, chg:chg };
+  // TEK KAYNAK - tüm sistem prices[sym]'den okur
+  prices[sym] = { mid:rawMid, price:rawMid, bid:bid, ask:ask, chg:chg, prev:prev };
+  // mwPrices artık prices'ın alias'ı - Market Watch bid gösterir
+  mwPrices[sym] = prices[sym];
   if(SIM_PRICES && SIM_PRICES[sym]) SIM_PRICES[sym].p = rawMid;
 
   // İlk gerçek fiyat gelince grafik yenile
@@ -6837,18 +6839,14 @@ function txListenPricesChg() {
       if(prices[sym]) prices[sym].chg = chg;
       if(mwPrices[sym]) mwPrices[sym].chg = chg;
       // Mobil badge güncelle
-      // Firebase chg cache'ini güncelle - txApplyPrice bunu kullanır
+      // chg → prices üzerinden güncelle (tek kaynak)
       if(!window._fbChg) window._fbChg = {};
       window._fbChg[sym] = chg;
-      if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
-      // mwPrices ve prices'a da kaydet
-      if(typeof mwPrices !== 'undefined') {
-        if(!mwPrices[sym]) mwPrices[sym] = {};
-        mwPrices[sym].chg = chg;
-      }
       if(typeof prices !== 'undefined' && prices[sym]) {
         prices[sym].chg = chg;
+        if(mwPrices[sym]) mwPrices[sym] = prices[sym]; // alias güncelle
       }
+      if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
     });
   }, function(e){ console.warn('[Trader] pricesChg snap err:', e); });
 }
@@ -7471,7 +7469,9 @@ function txCalcStats(account, posArr) {
     var p = prices[pos.sym];
     if(!p) return;
     var cs = parseFloat(pos.contractSize)||1;
-    openPnl += (pos.side==='buy' ? p.price-pos.openPrice : pos.openPrice-p.price) * (parseFloat(pos.qty)||0) * cs;
+    // MT4 mantığı: buy→bid, sell→ask ile kapatma fiyatı hesapla
+    var closeP = pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price);
+    openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP) * (parseFloat(pos.qty)||0) * cs;
     openPnl += parseFloat(pos.swapTotal)||0;
   });
   var equity = bal + bonus + openPnl;
@@ -7479,6 +7479,7 @@ function txCalcStats(account, posArr) {
   (posArr||[]).forEach(function(pos){
     if(!nets[pos.sym]) nets[pos.sym]={buy:0,sell:0,price:0};
     nets[pos.sym][pos.side]+=(parseFloat(pos.qty)||0);
+    // Margin hesabı mid fiyatla yapılır
     nets[pos.sym].price=(prices[pos.sym]?prices[pos.sym].price:0)||pos.openPrice;
   });
   var margin=0;
@@ -8887,7 +8888,8 @@ function adChangePassword() {
       el.innerHTML=pos.map(function(p){
         var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
         var dec=sc?parseInt(sc.decimals)||2:2;
-        var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
+        var _pr=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym]:null;
+        var cur=_pr?(p.side==='buy'?(_pr.bid||_pr.price):(_pr.ask||_pr.price)):p.openPrice;
         var cs=parseFloat(p.contractSize)||1;
         var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
         var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
@@ -9248,7 +9250,8 @@ function adChangePassword() {
     pos.forEach(function(p){
       var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
       var dec=sc?parseInt(sc.decimals)||2:2;
-      var cur=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym].price:p.openPrice;
+      var pr=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym]:null;
+      var cur=pr?(p.side==='buy'?(pr.bid||pr.price):(pr.ask||pr.price)):p.openPrice;
       var cs=parseFloat(p.contractSize)||1;
       var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
       var pe=document.querySelector('[data-mp="'+p.id+'"]');
