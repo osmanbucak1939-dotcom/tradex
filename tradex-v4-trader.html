@@ -5051,7 +5051,7 @@ function renderAccTable(){
         else if(cid==='opnl'){
           var _opnl=a._openPnl!==undefined?a._openPnl:0;
           var _opnlColor=_opnl>0?'#26a69a':_opnl<0?'#ef5350':'#555';
-          var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
+          var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
         }
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>';
@@ -8651,7 +8651,7 @@ function adRefreshBadges(){
   // Açık K/Z
   var opnlColor = st.openPnl > 0 ? '#26a69a' : st.openPnl < 0 ? '#ef5350' : '#888';
   var opnlTxt   = st.openCount === 0 ? '—'
-    : (st.openPnl >= 0 ? '+' : '') + '$' + fp(Math.abs(st.openPnl));
+    : (st.openPnl >= 0 ? '+' : '-') + '$' + fp(Math.abs(st.openPnl));
   set('adBadgeOpnl', opnlTxt);
   setc('adBadgeOpnl', opnlColor);
   var opnlEl = document.getElementById('adBadgeOpnl');
