@@ -3080,6 +3080,7 @@ function closePosition(id, reason='') {
 
 function renderHistory() {
   const tb = document.getElementById('histBody');
+  if (!tb) return;
   if (!tradeHistory.length) { tb.innerHTML = '<tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr>'; return; }
   var _reasonMap = {'manuel':'<span style="color:#888;font-size:10px">Manuel</span>','stop_out':'<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>','sl':'<span style="color:#ef5350;font-size:10px">Stop Loss</span>','tp':'<span style="color:#26a69a;font-size:10px">Take Profit</span>','margin':'<span style="color:#ff9800;font-size:10px">Margin Call</span>'};
   tb.innerHTML = tradeHistory.slice(0,30).map(function(h) {
@@ -3188,7 +3189,9 @@ function updateAccount() {
 
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
-    var _soAcc = accounts.find(function(a){ return a.id===_adAccId; });
+    // _adAccId ile hesabı bul, yoksa tüm accounts'tan ara
+    var _soAccId = _adAccId || (typeof _currentAcc !== 'undefined' ? _currentAcc : null);
+    var _soAcc = _soAccId ? accounts.find(function(a){ return String(a.id)===String(_soAccId); }) : null;
     var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : '';
     showToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym + ' kapatıldı · Teminat: %' + (marginLvl ? marginLvl.toFixed(2) : '0'));
     setTimeout(function(){ closePosition(toClose.id, 'stop_out'); }, 100);
@@ -7922,8 +7925,8 @@ function updateReports(){
   if(ptEl) {
     var allPos = [];
     c2.forEach(function(a){
-      // positions: accounts array'den, _allAccountPositions'dan veya Firebase'den yüklenen
-      var _pos = Array.isArray(a.positions) ? a.positions : 
+      // positions: Firebase'den yüklenen (loadAllPositionsAndUpdate sonrası a.positions dolu olmalı)
+      var _pos = Array.isArray(a.positions) ? a.positions :
                  (typeof _allAccountPositions!=='undefined' && _allAccountPositions && _allAccountPositions[a.id]) ? _allAccountPositions[a.id] : [];
       _pos.forEach(function(p){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
