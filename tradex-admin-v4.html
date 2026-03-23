@@ -7876,6 +7876,7 @@ function updateReports(){
       }); // forEach sonu
       rrEl.innerHTML=html;
     }
+    var rc=document.getElementById('rep-reqs-count');
     if(rc) rc.textContent=allReqs.length+' talep';
   }
   if(ptEl) {
@@ -7888,7 +7889,7 @@ function updateReports(){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
     });
-    console.log('[Raporlar] Açık pozisyon sayısı:', allPos.length, '| Hesap sayısı:', c2.length);
+    console.log('[Reports] Open positions:', allPos.length, 'accounts:', c2.length);
     // Sekmeye göre filtrele
     if(_repTab === 'closed') {
       // Kapalı pozisyonlar - tradeHistory'den al
