@@ -1560,9 +1560,34 @@ console.log('Firebase bağlandı ✓');
             if(ud.lastSeen) {
               acc.lastSeen = ud.lastSeen;
               acc._onlineFromUsers = true;
-              // 15 saniye içinde aktifse online
               var ms = new Date(ud.lastSeen).getTime();
               acc.online = !!(ud.online) || (Date.now()-ms < 15000);
+            }
+            // Pozisyon değişimlerini accounts'a yansıt
+            if(ud.positions !== undefined) {
+              try {
+                var _np = Array.isArray(ud.positions) ? ud.positions : JSON.parse(ud.positions||'[]');
+                if(JSON.stringify(_np) !== JSON.stringify(acc.positions||[])) {
+                  acc.positions = _np;
+                  if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = _np;
+                  // Raporlar açıksa güncelle
+                  var secRep = document.getElementById('sec-reports');
+                  if(secRep && secRep.style.display !== 'none') {
+                    clearTimeout(window._repRefreshTimer);
+                    window._repRefreshTimer = setTimeout(updateReports, 500);
+                  }
+                }
+              } catch(e){}
+            }
+            if(ud.tradeHistory !== undefined) {
+              try {
+                var _nth = Array.isArray(ud.tradeHistory) ? ud.tradeHistory : JSON.parse(ud.tradeHistory||'[]');
+                acc.tradeHistory = _nth;
+              } catch(e){}
+            }
+            if(ud.balance !== undefined) {
+              var _nb = parseFloat(ud.balance)||0;
+              if(acc.balance !== _nb) acc.balance = _nb;
             }
           });
           var secAcc=document.getElementById('sec-accounts');
@@ -7559,7 +7584,11 @@ function adminNav(sec,btn){
   if(btn)btn.classList.add('active');
   if(sec==='accounts')renderAccTable();
   if(sec==='finance')populateFinAccSelect();
-  if(sec==='reports')loadAllPositionsAndUpdate();
+  if(sec==='reports'){
+    loadAllPositionsAndUpdate();
+    // Raporlar açıkken users snap aktif olsun - canlı pozisyon takibi
+    if(typeof _startUsersSnap==='function') _startUsersSnap();
+  }
   if(sec==='spreadgroups')renderSgSection();
   if(sec==='symbols')renderSymSection();
   if(sec==='staff')loadStaffTab();
