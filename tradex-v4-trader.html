@@ -3993,7 +3993,8 @@ function txTickPositions() {
   positions.forEach(function(pos){
     var p = prices[pos.sym];
     if(!p) return;
-    var cur = p.price;
+    // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
+    var cur = pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price);
     var cs  = parseFloat(pos.contractSize)||1;
     var raw = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * (parseFloat(pos.qty)||0) * cs;
     var pnl = raw + (parseFloat(pos.swapTotal)||0);
