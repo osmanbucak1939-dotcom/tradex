@@ -7632,20 +7632,13 @@ function loadAllPositionsAndUpdate() {
   if(!c2.length) { updateReports(); return; }
 
   var ptEl = document.getElementById('rep-posTable');
-  if(ptEl) ptEl.innerHTML = '<span style="color:#888;font-size:11px;">Yukleniyor...</span>';
+  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yukleniyor...</div>';
 
-  // Hangi hesapların cache'i eksik?
-  var needFetch = c2.filter(function(a){ return !Array.isArray(a.positions) || !Array.isArray(a.tradeHistory); });
+  if(typeof db === 'undefined' || !db) { updateReports(); return; }
 
-  if(!needFetch.length || typeof db === 'undefined' || !db) {
-    // Tümü cache'de var - direkt güncelle
-    updateReports();
-    return;
-  }
-
-  // Eksik olanları Firebase'den çek
-  var pending = needFetch.length;
-  needFetch.forEach(function(acc) {
+  // Her rapor acilisinda Firebase'den ZORLA cek
+  var pending = c2.length;
+  c2.forEach(function(acc) {
     db.collection('users').doc(String(acc.id)).get()
       .then(function(doc) {
         if(doc.exists && doc.data()) {
@@ -7658,18 +7651,18 @@ function loadAllPositionsAndUpdate() {
             var _td = doc.data().tradeHistory;
             acc.tradeHistory = Array.isArray(_td) ? _td : JSON.parse(_td || '[]');
           } catch(e){ acc.tradeHistory = []; }
-        } else { acc.positions = []; }
-        pending--;
-        if(pending <= 0) {
-          updateReports();
+        } else {
+          acc.positions = [];
+          acc.tradeHistory = [];
         }
+        pending--;
+        if(pending <= 0) updateReports();
       })
       .catch(function() {
-        acc.positions = [];
+        acc.positions = acc.positions || [];
+        acc.tradeHistory = acc.tradeHistory || [];
         pending--;
-        if(pending <= 0) {
-          updateReports();
-        }
+        if(pending <= 0) updateReports();
       });
   });
 }
@@ -7889,7 +7882,7 @@ function updateReports(){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
     });
-    console.log('[Reports] Open positions:', allPos.length, 'accounts:', c2.length);
+
     // Sekmeye göre filtrele
     if(_repTab === 'closed') {
       // Kapalı pozisyonlar - tradeHistory'den al
