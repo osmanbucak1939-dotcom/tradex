@@ -355,8 +355,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* MANAGER FORM ELEMENTS */
 .mgr-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
-.mgr-table th { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:left; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; }
-.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid #2a2a2a; vertical-align:middle; }
+.mgr-table th { font-family:var(--mono); font-size:10px; color:#aaa; text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); font-weight:600; letter-spacing:.5px; }
+.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid #1e1e1e; color:#ccc; }
 .mgr-table tr:last-child td { border-bottom:none; }
 .mgr-table tr:hover td { background:rgba(255,255,255,.02); }
 
@@ -1645,8 +1645,8 @@ console.log('Firebase bağlandı ✓');
 
     <!-- MARGIN CALL PANEL -->
     <div style="flex-shrink:0;border-top:1px solid #1a1a1a;">
-      <div style="display:flex;align-items:center;padding:6px 10px;background:#0d0d0d;">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;color:#ef5350;flex:1;">⚠ MARGIN CALL</div>
+      <div style="display:flex;align-items:center;padding:7px 10px;background:#150a0a;border-top:1px solid #2a1a1a;">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#ef5350;flex:1;">⚠ MARGIN CALL</div>
         <span id="mcCount" style="font-size:9px;color:#555;font-family:var(--mono);">0</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#111;">
@@ -1654,7 +1654,7 @@ console.log('Firebase bağlandı ✓');
         <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
         <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
-      <div id="mcBody" style="max-height:216px;overflow-y:auto;background:#0a0a0a;">
+      <div id="mcBody" style="max-height:240px;overflow-y:auto;background:#0a0a0a;">
         <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#777;">Yükleniyor...</div>
       </div>
     </div>
@@ -6616,8 +6616,8 @@ function sgRenderInner() {
     var star = gs!=='' || swb!=='' || sws!=='';
     html += '<tr style="'+(star?'background:rgba(240,185,11,0.04)':'')+'">'
       +'<td style="font-family:monospace;font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
-      +'<td style="font-size:11px;color:#666;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
-      +'<td style="font-family:monospace;color:#666;">'+ds+'</td>'
+      +'<td style="font-size:11px;color:#aaa;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
+      +'<td style="font-family:monospace;color:#ccc;">'+ds+'</td>'
       +'<td><input class="mgr-input" id="sgs_'+s.sym+'" type="number" step="any" value="'+gs+'" placeholder="'+ds+'" style="width:120px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgb_'+s.sym+'" type="number" step="any" value="'+swb+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgsl_'+s.sym+'" type="number" step="any" value="'+sws+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
