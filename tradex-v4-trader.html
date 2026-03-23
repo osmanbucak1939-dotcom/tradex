@@ -6826,8 +6826,8 @@ function txListenPrices() {
       if(!price || price <= 0) return;
       // Admin override'ı varsa bu fiyatı kullan (override Firebase'den geliyor)
       // WebSocket bağlıysa Firebase fiyatını yoksay
-      var _tdOk = typeof _txTdWs!=="undefined" && _txTdWs && _txTdWs.readyState===1;
-      var _bnOk = typeof _txBnWs!=="undefined" && _txBnWs && _txBnWs.readyState===1;
+      var _tdOk = window._txTdWs && window._txTdWs.readyState===1;
+      var _bnOk = window._txBnWs && window._txBnWs.readyState===1;
       var _isCrypto = sym.endsWith("USDT") || sym.endsWith("BTC");
       if(_isCrypto && _bnOk) return; // Kripto Binance WS'den geliyor
       if(!_isCrypto && _tdOk) return; // Forex/emtia Twelvedata WS'den geliyor
@@ -6901,6 +6901,7 @@ function txListenOverrides() {
 // ── Feed başlat ───────────────────────────────────────────────
 // ── Trader Direkt WebSocket Feed ─────────────────────────────
 var _txTdWs = null, _txBnWs = null;
+window._txTdWs = null; window._txBnWs = null;
 var _txTdKey = '6be463dd71664cc0b5db780dd0a189ab';
 
 var TX_TD_MAP = {
@@ -6920,6 +6921,7 @@ var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
 function txStartTwelvedataWs() {
   if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
   _txTdWs = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey='+_txTdKey);
+  window._txTdWs = _txTdWs;
   _txTdWs.onopen = function() {
     var syms = Object.values(TX_TD_MAP);
     if(typeof symConfig!=='undefined'&&symConfig) {
@@ -6952,6 +6954,7 @@ function txStartBinanceWs() {
   if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
   var streams=TX_BN_SYMS.map(function(s){return s+'@miniTicker';}).join('/');
   _txBnWs = new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
+  window._txBnWs = _txBnWs;
   _txBnWs.onopen = function(){ console.log('[WS] Binance bağlandı'); };
   _txBnWs.onmessage = function(e) {
     try {
