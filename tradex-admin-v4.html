@@ -8024,11 +8024,14 @@ function updateReports(){
         +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">GÜNCEL</th>'
         +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">K/Z</th>'
         +'</tr></thead><tbody>';
-      // En son açılan üstte - açılış zamanına göre sırala
+      // En son açılan üstte - id büyükten küçüğe (id artan sırada açılıyor)
       allPos.sort(function(a,b){
-        var ta = new Date(a.time||a.openTime||0).getTime();
-        var tb2 = new Date(b.time||b.openTime||0).getTime();
-        return tb2 - ta;
+        // Önce time ile dene
+        var ta = a.time ? new Date(a.time).getTime() : 0;
+        var tb2 = b.time ? new Date(b.time).getTime() : 0;
+        if(ta && tb2) return tb2 - ta;
+        // time yoksa id ile sırala
+        return (parseFloat(b.id)||0) - (parseFloat(a.id)||0);
       });
       allPos.forEach(function(p,idx){
         var cur=adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
