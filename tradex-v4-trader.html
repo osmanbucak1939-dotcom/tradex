@@ -6825,6 +6825,12 @@ function txListenPrices() {
       var price = parseFloat(pd[sym]);
       if(!price || price <= 0) return;
       // Admin override'ı varsa bu fiyatı kullan (override Firebase'den geliyor)
+      // WebSocket bağlıysa Firebase fiyatını yoksay
+      var _tdOk = typeof _txTdWs!=="undefined" && _txTdWs && _txTdWs.readyState===1;
+      var _bnOk = typeof _txBnWs!=="undefined" && _txBnWs && _txBnWs.readyState===1;
+      var _isCrypto = sym.endsWith("USDT") || sym.endsWith("BTC");
+      if(_isCrypto && _bnOk) return; // Kripto Binance WS'den geliyor
+      if(!_isCrypto && _tdOk) return; // Forex/emtia Twelvedata WS'den geliyor
       txApplyPrice(sym, price);
     });
   }, function(e){ console.warn('[Trader] prices snap err:', e); });
