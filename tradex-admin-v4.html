@@ -7757,6 +7757,7 @@ function _loadAllEquities(cb){
 function filterAccTable(){renderAccTable();}
 
 function updateReports(){
+  var ptEl = document.getElementById('rep-posTable');
   var c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var act=c2.filter(function(a){return a.active;});
   var tb=c2.reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0);
