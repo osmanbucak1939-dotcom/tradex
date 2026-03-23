@@ -5059,7 +5059,7 @@ function renderAccTable(){
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>';
         else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:#888;">'+(a.type==='demo'?'Demo':'Real')+'</td>';
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||'Standard')+'</td>';
-        else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#666;'+ellipsis+'">'+( a.email||'—')+'</td>';
+        else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;'+ellipsis+'">'+( a.email||'—')+'</td>';
         else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+regDate+'</td>';
         else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+lastSeen+'</td>';
       });
@@ -7652,6 +7652,7 @@ function loadAllPositionsAndUpdate() {
           try {
             var _pd = doc.data().positions;
             acc.positions = Array.isArray(_pd) ? _pd : JSON.parse(_pd || '[]');
+            if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = acc.positions;
           } catch(e){ acc.positions = []; }
           try {
             var _td = doc.data().tradeHistory;
@@ -7880,11 +7881,14 @@ function updateReports(){
   if(ptEl) {
     var allPos = [];
     c2.forEach(function(a){
-      var _pos = Array.isArray(a.positions) ? a.positions : [];
+      // positions: accounts array'den, _allAccountPositions'dan veya Firebase'den yüklenen
+      var _pos = Array.isArray(a.positions) ? a.positions : 
+                 (typeof _allAccountPositions!=='undefined' && _allAccountPositions && _allAccountPositions[a.id]) ? _allAccountPositions[a.id] : [];
       _pos.forEach(function(p){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
     });
+    console.log('[Raporlar] Açık pozisyon sayısı:', allPos.length, '| Hesap sayısı:', c2.length);
     // Sekmeye göre filtrele
     if(_repTab === 'closed') {
       // Kapalı pozisyonlar - tradeHistory'den al
