@@ -1606,7 +1606,7 @@ console.log('Firebase bağlandı ✓');
 <div id="adminApp" style="display:none;flex-direction:column;height:100vh;min-width:0;background:var(--bg);">
   <div style="background:#111;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
     <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">TRADEX</span>
-    <span style="color:#333;margin:0 10px;">|</span>
+    <span style="color:#777;margin:0 10px;">|</span>
     <span style="font-size:11px;color:#555;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
       <span style="color:#888;" id="topbar-user">—</span>
@@ -1650,12 +1650,12 @@ console.log('Firebase bağlandı ✓');
         <span id="mcCount" style="font-size:9px;color:#555;font-family:var(--mono);">0</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#111;">
-        <div style="font-size:8px;color:#444;font-family:var(--mono);">HESAP</div>
-        <div style="font-size:8px;color:#444;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
-        <div style="font-size:8px;color:#444;font-family:var(--mono);text-align:right;">VARLIK</div>
+        <div style="font-size:8px;color:#777;font-family:var(--mono);">HESAP</div>
+        <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
+        <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
-      <div id="mcBody" style="max-height:156px;overflow-y:auto;background:#0a0a0a;">
-        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#333;">Yükleniyor...</div>
+      <div id="mcBody" style="max-height:216px;overflow-y:auto;background:#0a0a0a;">
+        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#777;">Yükleniyor...</div>
       </div>
     </div>
   </div>
@@ -1696,7 +1696,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f0b90b;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#f0b90b;padding-left:8px;" id="rep-totalAccs">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
     </div>
 
     <!-- Toplam Bakiye -->
@@ -1704,7 +1704,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalBal">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
     </div>
 
     <!-- Toplam Yatırım -->
@@ -1712,7 +1712,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalDeposit">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
 
     <!-- Toplam Çekim -->
@@ -1720,7 +1720,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#ef5350;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#ef5350;padding-left:8px;" id="rep-totalWithdraw">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
 
   </div>
@@ -1733,7 +1733,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-activeAccs">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
     </div>
 
     <!-- Toplam Bonus -->
@@ -1741,7 +1741,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f5c518;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f5c518;padding-left:8px;" id="rep-totalBonus">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Açık Pozisyon -->
@@ -1749,7 +1749,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#9c27b0;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#ce93d8;padding-left:8px;" id="rep-openPos">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Net K/Z -->
@@ -1757,7 +1757,7 @@ console.log('Firebase bağlandı ✓');
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#888;border-radius:10px 0 0 10px;" id="rep-netPoz-bar"></div>
       <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;padding-left:8px;" id="rep-netPoz">—</div>
-      <div style="font-size:9px;color:#666;margin-top:4px;padding-left:8px;">anlık hesaplama</div>
+      <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">anlık hesaplama</div>
     </div>
 
   </div>
@@ -1772,18 +1772,19 @@ console.log('Firebase bağlandı ✓');
         <span style="font-size:9px;color:#555;" id="rep-reqs-count"></span>
       </div>
       <div id="rep-recentReqs">
-        <div style="padding:24px;text-align:center;color:#666;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
+        <div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
-    <!-- Açık Pozisyonlar -->
+    <!-- Açık / Kapalı Pozisyonlar -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
-      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#888;flex:1;">AÇIK POZİSYONLAR</div>
-        <span style="font-size:9px;color:#555;" id="rep-pos-count"></span>
+      <div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;gap:0;">
+        <button id="rep-tab-open" onclick="repSwitchTab('open')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:var(--accent);cursor:pointer;border-bottom:2px solid var(--accent);">AÇIK</button>
+        <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:#555;cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
+        <span style="font-size:9px;color:#555;margin-left:auto;" id="rep-pos-count"></span>
       </div>
       <div id="rep-posTable" style="overflow-y:auto;max-height:380px;">
-        <div style="padding:24px;text-align:center;color:#666;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
+        <div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
@@ -2055,7 +2056,7 @@ console.log('Firebase bağlandı ✓');
       <div style="background:#161616;border:1px solid #2a2a2a;border-radius:6px;padding:16px;">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">SEMBOL VERİ KAYNAKLARI</div>
         <div id="adFeedSymTable" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
-          <div style="color:#444;font-size:10px;font-family:monospace;">Feed sekmesi açılınca yüklenir...</div>
+          <div style="color:#777;font-size:10px;font-family:monospace;">Feed sekmesi açılınca yüklenir...</div>
         </div>
       </div>
     </div>
@@ -3187,7 +3188,9 @@ function updateAccount() {
 
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
-    showToast('⚠ STOP OUT', toClose.sym + ' pozisyon kapatıldı (Margin: %' + (marginLvl ? marginLvl.toFixed(2) : '0') + ')');
+    var _soAcc = accounts.find(function(a){ return a.id===_adAccId; });
+    var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : '';
+    showToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym + ' kapatıldı · Teminat: %' + (marginLvl ? marginLvl.toFixed(2) : '0'));
     setTimeout(function(){ closePosition(toClose.id, 'stop_out'); }, 100);
   }
 }
@@ -5050,15 +5053,15 @@ function renderAccTable(){
         else if(cid==='opnl'){
           var _opnl=a._openPnl!==undefined?a._openPnl:0;
           var _opnlColor=_opnl>0?'#26a69a':_opnl<0?'#ef5350':'#555';
-          var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
+          var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
         }
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>';
         else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:#888;">'+(a.type==='demo'?'Demo':'Real')+'</td>';
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||'Standard')+'</td>';
         else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#666;'+ellipsis+'">'+( a.email||'—')+'</td>';
-        else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#666;">'+regDate+'</td>';
-        else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#666;">'+lastSeen+'</td>';
+        else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+regDate+'</td>';
+        else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+lastSeen+'</td>';
       });
       tbodyHtml+='</tr>';
     });
@@ -5616,7 +5619,7 @@ function renderWithdrawReqs() {
   if(!list.length) {
     tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#555;padding:24px;">'
       + '<div style="font-size:13px;">Kayıt bulunamadı</div>'
-      + (search ? '<div style="font-size:11px;margin-top:6px;color:#444;">Arama: <b style=\'color:#888;\'>' + search + '</b></div>' : '')
+      + (search ? '<div style="font-size:11px;margin-top:6px;color:#777;">Arama: <b style=\'color:#888;\'>' + search + '</b></div>' : '')
       + '</td></tr>';
     return;
   }
@@ -6937,7 +6940,7 @@ function adFeedRenderSymTable() {
     MARKET_GROUPS.forEach(function(g){ g.items && g.items.forEach(function(it){ allSyms.push(it); }); });
   }
   if(!allSyms.length) {
-    if(el) el.innerHTML='<div style="color:#444;font-size:10px;font-family:monospace;">Market grubu yok</div>';
+    if(el) el.innerHTML='<div style="color:#777;font-size:10px;font-family:monospace;">Market grubu yok</div>';
     return;
   }
 
@@ -6991,7 +6994,7 @@ function adFeedRenderSymTable() {
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
             '<span style="color:'+col+';font-size:12px;">●</span>'+
             '<span style="font-family:monospace;font-size:12px;font-weight:700;color:#fff;">'+it.name+'</span>'+
-            '<span style="font-family:monospace;font-size:9px;color:#444;margin-left:4px;">'+it.sym+'</span>'+
+            '<span style="font-family:monospace;font-size:9px;color:#777;margin-left:4px;">'+it.sym+'</span>'+
             '<span style="margin-left:auto;background:'+col+'22;color:'+col+';font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;">'+srcLabel+'</span>'+
             (grpName==='Simülasyon'?'<span style="background:#2a2000;color:#f0b90b;font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;margin-left:4px;">SİM</span>':'')+
           '</div>'+
@@ -7599,7 +7602,7 @@ function updateMarginCallPanel() {
   if(mcCount) mcCount.textContent = mcList.length || '0';
 
   if(!mcList.length) {
-    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#333;">Margin call yok</div>';
+    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#777;">Margin call yok</div>';
     return;
   }
 
@@ -7632,7 +7635,7 @@ function loadAllPositionsAndUpdate() {
   if(ptEl) ptEl.innerHTML = '<span style="color:#888;font-size:11px;">Yukleniyor...</span>';
 
   // Hangi hesapların cache'i eksik?
-  var needFetch = c2.filter(function(a){ return !Array.isArray(a.positions); });
+  var needFetch = c2.filter(function(a){ return !Array.isArray(a.positions) || !Array.isArray(a.tradeHistory); });
 
   if(!needFetch.length || typeof db === 'undefined' || !db) {
     // Tümü cache'de var - direkt güncelle
@@ -7650,6 +7653,10 @@ function loadAllPositionsAndUpdate() {
             var _pd = doc.data().positions;
             acc.positions = Array.isArray(_pd) ? _pd : JSON.parse(_pd || '[]');
           } catch(e){ acc.positions = []; }
+          try {
+            var _td = doc.data().tradeHistory;
+            acc.tradeHistory = Array.isArray(_td) ? _td : JSON.parse(_td || '[]');
+          } catch(e){ acc.tradeHistory = []; }
         } else { acc.positions = []; }
         pending--;
         if(pending <= 0) {
@@ -7861,7 +7868,7 @@ function updateReports(){
           +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-family:var(--mono);font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
-          +'<div style="font-size:9px;color:#444;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
+          +'<div style="font-size:9px;color:#777;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+arrowColor+';">$'+parseFloat(r.amount||0).toFixed(2)+'</div>'
           +'<div style="font-size:9px;color:'+sc+';margin-top:2px;">'+sl+'</div></div></div>';
@@ -7878,8 +7885,57 @@ function updateReports(){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
     });
+    // Sekmeye göre filtrele
+    if(_repTab === 'closed') {
+      // Kapalı pozisyonlar - tradeHistory'den al
+      var allClosed = [];
+      c2.forEach(function(a){
+        var hist = Array.isArray(a.tradeHistory) ? a.tradeHistory : [];
+        hist.forEach(function(h){
+          allClosed.push(Object.assign({},h,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
+        });
+      });
+      allClosed.sort(function(a,b){ return new Date(b.closeTime||0)-new Date(a.closeTime||0); });
+      var pcEl2=document.getElementById('rep-pos-count');
+      if(pcEl2) pcEl2.textContent=allClosed.length+' işlem';
+      if(!allClosed.length){
+        ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#555;font-family:var(--mono);font-size:11px;">Kapalı işlem yok</div>';
+      } else {
+        var fp2c=function(n){return '$'+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+        var chHtml='<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#161616;">'
+          +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;">HESAP</th>'
+          +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;">SEMBOL</th>'
+          +'<th style="padding:8px 12px;text-align:center;color:#555;font-family:var(--mono);font-size:9px;">YÖN</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">LOT</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">AÇILIŞ</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">KAPANIS</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">K/Z</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">TARIH</th>'
+          +'</tr></thead><tbody>';
+        allClosed.slice(0,100).forEach(function(h,idx){
+          var pnl=parseFloat(h.pnl)||0;
+          var pc=pnl>=0?'#26a69a':'#ef5350';
+          var bg=idx%2===0?'':'background:#0d0d0d;';
+          var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+          chHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
+            +'<td style="padding:6px 12px;font-family:var(--mono);font-size:11px;color:#666;">'+h._accName+'</td>'
+            +'<td style="padding:6px 12px;font-family:var(--mono);font-size:11px;font-weight:700;color:#ddd;">'+h.sym+'</td>'
+            +'<td style="padding:6px 12px;text-align:center;"><span style="display:inline-block;padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;background:'+(h.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(h.side==="buy"?"#26a69a":"#ef5350")+';">'+(h.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#ccc;">'+parseFloat(h.qty||0).toFixed(2)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#666;">'+parseFloat(h.openPrice||0).toFixed(4)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#aaa;">'+parseFloat(h.closePrice||0).toFixed(4)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+fp2c(pnl)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:10px;color:#555;">'+dt+'</td>'
+            +'</tr>';
+        });
+        chHtml+='</tbody></table>';
+        ptEl.innerHTML=chHtml;
+      }
+      return; // Kapalı tab render bitti
+    }
+
     if(!allPos.length){
-      ptEl.innerHTML='<span style="color:#555;font-size:11px;">Açık pozisyon yok</span>';
+      ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#555;font-family:var(--mono);font-size:11px;">Açık pozisyon yok</div>';
     } else {
       var ptHtml='<table style="width:100%;border-collapse:collapse;">'
         +'<thead><tr style="background:#161616;">'
@@ -7913,6 +7969,28 @@ function updateReports(){
     }
   }
 }
+
+// ── Raporlar sekme sistemi ────────────────────────────────────
+var _repTab = 'open'; // 'open' veya 'closed'
+
+function repSwitchTab(tab) {
+  _repTab = tab;
+  var btnOpen   = document.getElementById('rep-tab-open');
+  var btnClosed = document.getElementById('rep-tab-closed');
+  if(btnOpen) {
+    btnOpen.style.color   = tab==='open'   ? 'var(--accent)' : '#555';
+    btnOpen.style.borderBottom = tab==='open' ? '2px solid var(--accent)' : '2px solid transparent';
+  }
+  if(btnClosed) {
+    btnClosed.style.color = tab==='closed' ? 'var(--accent)' : '#555';
+    btnClosed.style.borderBottom = tab==='closed' ? '2px solid var(--accent)' : '2px solid transparent';
+  }
+  // Pozisyon tablosunu yenile
+  var ptEl = document.getElementById('rep-posTable');
+  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>';
+  loadAllPositionsAndUpdate();
+}
+// ─────────────────────────────────────────────────────────────
 
 function populateFinAccSelect(){
   var sel=document.getElementById('fin_acc');
@@ -8575,7 +8653,7 @@ function adRefreshBadges(){
   // Açık K/Z
   var opnlColor = st.openPnl > 0 ? '#26a69a' : st.openPnl < 0 ? '#ef5350' : '#888';
   var opnlTxt   = st.openCount === 0 ? '—'
-    : (st.openPnl >= 0 ? '+' : '') + '$' + fp(Math.abs(st.openPnl));
+    : (st.openPnl >= 0 ? '+' : '-') + '$' + fp(Math.abs(st.openPnl));
   set('adBadgeOpnl', opnlTxt);
   setc('adBadgeOpnl', opnlColor);
   var opnlEl = document.getElementById('adBadgeOpnl');
