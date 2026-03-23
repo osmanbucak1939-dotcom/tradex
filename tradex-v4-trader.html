@@ -6893,13 +6893,86 @@ function txListenOverrides() {
 }
 
 // ── Feed başlat ───────────────────────────────────────────────
+// ── Trader Direkt WebSocket Feed ─────────────────────────────
+var _txTdWs = null, _txBnWs = null;
+var _txTdKey = '6be463dd71664cc0b5db780dd0a189ab';
+
+var TX_TD_MAP = {
+  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
+  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
+  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
+  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
+  'SPX500X':'SPX',     'NAS100X':'NDX',      'DJ30X':'DJI',
+  'FTSE100X':'FTSE',   'DAX40X':'DAX',
+  'USOIL':'WTI/USD',   'BRTUSD':'BRENT/USD'
+};
+var TX_TD_REV = {};
+Object.keys(TX_TD_MAP).forEach(function(k){ TX_TD_REV[TX_TD_MAP[k]] = k; });
+var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
+                  'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
+
+function txStartTwelvedataWs() {
+  if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
+  _txTdWs = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey='+_txTdKey);
+  _txTdWs.onopen = function() {
+    var syms = Object.values(TX_TD_MAP);
+    if(typeof symConfig!=='undefined'&&symConfig) {
+      symConfig.forEach(function(s){
+        if(s.tdSymbol&&!TX_TD_REV[s.tdSymbol]){
+          TX_TD_REV[s.tdSymbol]=s.sym; syms.push(s.tdSymbol);
+        }
+      });
+    }
+    _txTdWs.send(JSON.stringify({action:'subscribe',params:{symbols:syms.join(',')}}));
+    console.log('[WS] Twelvedata bağlandı');
+  };
+  _txTdWs.onmessage = function(e) {
+    try {
+      var d=JSON.parse(e.data);
+      if(d.event!=='price') return;
+      var sym=TX_TD_REV[d.symbol]||d.symbol.replace('/','');
+      var price=parseFloat(d.price);
+      if(sym&&price>0) txApplyPrice(sym,price);
+    } catch(err){}
+  };
+  _txTdWs.onerror = function(){ console.warn('[WS] TD hata'); };
+  _txTdWs.onclose = function(){
+    _txTdWs=null;
+    if(_txFeedActive) setTimeout(txStartTwelvedataWs,5000);
+  };
+}
+
+function txStartBinanceWs() {
+  if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
+  var streams=TX_BN_SYMS.map(function(s){return s+'@miniTicker';}).join('/');
+  _txBnWs = new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
+  _txBnWs.onopen = function(){ console.log('[WS] Binance bağlandı'); };
+  _txBnWs.onmessage = function(e) {
+    try {
+      var d=JSON.parse(e.data),t=d.data||d;
+      if(t.s&&t.c) txApplyPrice(t.s.toUpperCase(),parseFloat(t.c));
+    } catch(err){}
+  };
+  _txBnWs.onerror = function(){ console.warn('[WS] BN hata'); };
+  _txBnWs.onclose = function(){
+    _txBnWs=null;
+    if(_txFeedActive) setTimeout(txStartBinanceWs,5000);
+  };
+}
+// ─────────────────────────────────────────────────────────────
+
 function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
-  txListenPrices();
+  // Direkt WebSocket - anlık fiyat (admin ile aynı hız)
+  txStartTwelvedataWs();
+  txStartBinanceWs();
+  // Firebase - chg badge ve backup
   txListenPricesChg();
   txListenOverrides();
   txLoadBrokerInfo();
+  // Firebase prices backup olarak dinle
+  txListenPrices();
 }
 
 function txLoadBrokerInfo() {
@@ -6953,6 +7026,8 @@ function _txRenderBrokerInfo(d) {
 
 function stopRealFeed() {
   _txFeedActive = false;
+  if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
+  if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
   if(_txOverUnsub)  { try{_txOverUnsub();}catch(e){}  _txOverUnsub=null; }
 }
