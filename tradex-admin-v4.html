@@ -6483,9 +6483,9 @@ function submitPwChange() {
 // SPREAD GRUPLARI
 // ═══════════════════════════════════════
 var spreadGroups = [
-  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false},
-  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:200, desc:'', deletable:false},
-  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLev:500, desc:'', deletable:false},
+  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:100, desc:'', deletable:false},
+  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:200, desc:'', deletable:false},
+  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:500, desc:'', deletable:false},
   {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false}
 ];
 var _activeSgId = 'standard';
@@ -6585,8 +6585,8 @@ function sgRenderInner() {
   var del = document.getElementById('sgDeleteBtn');
   if(del) del.style.display = g.deletable ? 'inline-block' : 'none';
 
-  var mc = document.getElementById('sg_mc');    if(mc) mc.value = g.marginCall||80;
-  var so = document.getElementById('sg_so');    if(so) so.value = g.stopOut||50;
+  var mc = document.getElementById('sg_mc');    if(mc) mc.value = g.marginCall||100;
+  var so = document.getElementById('sg_so');    if(so) so.value = g.stopOut||20;
   var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLev||100);
   var dc = document.getElementById('sg_desc');  if(dc) dc.value = g.desc||'';
 
@@ -6629,8 +6629,8 @@ function sgRenderInner() {
 
 function sgSaveGeneral() {
   var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
-  var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||80;
-  var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||50;
+  var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||100;
+  var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||20;
   var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLev     = parseInt(ml.value)||100;
   var dc = document.getElementById('sg_desc');  if(dc)  g.desc       = dc.value||'';
   sgSave(); sgRenderInner(); showToast('Kaydedildi ✓', g.name);
@@ -6706,13 +6706,48 @@ var spreadGroups = null;
 function loadSpreadGroups() {
   try { spreadGroups = JSON.parse(localStorage.getItem('tx_spread_groups') || 'null'); } catch(e) { spreadGroups = null; }
   if(!spreadGroups) {
+    // localStorage boş - Firebase'den yükle
+    if(typeof fbLoadSpreadGroups === 'function') {
+      fbLoadSpreadGroups(function(data) {
+        if(data && data.length) {
+          spreadGroups = data;
+          // marginCall/stopOut eksikse varsayılan ekle
+          spreadGroups.forEach(function(g) {
+            if(!g.marginCall) g.marginCall = 100;
+            if(!g.stopOut && g.stopOut !== 0) g.stopOut = 20;
+            if(!g.spreads) g.spreads = {};
+            if(!g.swaps) g.swaps = {};
+          });
+        } else {
+          spreadGroups = [
+            {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
+            {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
+            {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
+            {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
+          ];
+        }
+        localStorage.setItem('tx_spread_groups', JSON.stringify(spreadGroups));
+        if(typeof sgLoad==='function') sgLoad();
+      });
+      return;
+    }
     spreadGroups = [
-      {id:'standard', name:'Standard', mult:1.0,   fixed:0,       desc:'Varsayılan grup'},
-      {id:'ecn',      name:'ECN',      mult:0.8,   fixed:0,       desc:'ECN düşük spread'},
-      {id:'vip',      name:'VIP',      mult:0.5,   fixed:-0.0001, desc:'VIP özel koşullar'},
-      {id:'zero',     name:'Zero Spread', mult:0,  fixed:0,       desc:'Sıfır spread'},
+      {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
+      {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
+      {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
+      {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
     ];
     saveSpreadGroups();
+  } else {
+    // localStorage'dan geldi - marginCall/stopOut eksikse ekle
+    var changed = false;
+    spreadGroups.forEach(function(g) {
+      if(!g.marginCall) { g.marginCall = 100; changed = true; }
+      if(!g.stopOut && g.stopOut !== 0) { g.stopOut = 20; changed = true; }
+      if(!g.spreads) { g.spreads = {}; changed = true; }
+      if(!g.swaps) { g.swaps = {}; changed = true; }
+    });
+    if(changed) saveSpreadGroups();
   }
 }
 
@@ -7585,13 +7620,23 @@ function updateMarginCallPanel() {
     var equity = balance + bonus + openPnl;
     var marginLevel = usedMargin > 0 ? (equity / usedMargin * 100) : 0;
 
-    if(marginLevel > 0 && marginLevel < 100) {
+    // Hesabın spread grubundan margin call seviyesini al
+    var mcLevel = 80; // varsayılan
+    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
+      var sg = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+      if(sg && sg.marginCall) mcLevel = parseFloat(sg.marginCall)||80;
+    }
+
+    // Sadece %100 altı teminat seviyesini göster
+    if(usedMargin > 0 && marginLevel > 0 && marginLevel < 100) {
       mcList.push({
         id: a.id,
         login: a.login || a.id,
         name: a.name + (a.surname?' '+a.surname:''),
         marginLevel: marginLevel,
-        equity: equity
+        mcLevel: mcLevel,
+        equity: equity,
+        isCritical: marginLevel < mcLevel
       });
     }
   });
@@ -7609,8 +7654,9 @@ function updateMarginCallPanel() {
   var html = '';
   mcList.slice(0,6).forEach(function(m) {
     var lvl = m.marginLevel;
-    var color = lvl < 30 ? '#ef5350' : lvl < 70 ? '#f5c518' : '#ff8c00';
-    var bg = lvl < 30 ? 'rgba(239,83,80,.08)' : 'rgba(245,197,24,.05)';
+    var mcLvl = m.mcLevel || 80;
+    var color = m.isCritical ? '#ef5350' : lvl < mcLvl*1.5 ? '#f5c518' : '#ff8c00';
+    var bg = m.isCritical ? 'rgba(239,83,80,.08)' : 'rgba(245,197,24,.05)';
     html += '<div data-id="'+m.id+'" onclick="openAccDetail(this.dataset.id)" style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:5px 10px;border-bottom:1px solid #141414;cursor:pointer;">'
       +'<div style="min-width:0;">'
         +'<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">#'+m.login+'</div>'
