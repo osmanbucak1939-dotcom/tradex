@@ -5068,9 +5068,9 @@ function renderAccTable(){
     var arrow='';
     if(sortKey) arrow='<span style="color:'+(sc===sortKey?'#f0b90b':'#555')+';margin-left:3px;font-size:9px;">'+(sc===sortKey?(sd==='asc'?'▲':'▼'):'⇅')+'</span>';
     var w = cd&&cd.w ? cd.w : 'auto';
-    var style='padding:7px 10px;text-align:left;color:#888;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:#111;'
-      +'width:'+w+';min-width:'+w+';max-width:'+w+';overflow:hidden;'
-      +'border-right:1px solid #1e1e1e;box-sizing:border-box;';
+    var style='padding:7px 10px;text-align:left;color:#888;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;'
+      +'background:#111;position:sticky;top:0;z-index:2;border-bottom:2px solid #2a2a2a;'
+      +'width:'+w+';min-width:'+w+';max-width:'+w+';overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
     if(cd&&cd.align==='center') style+='text-align:center;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
     var onclick=sortKey?' onclick="_accSortBy(\''+sortKey+'\')"':'';
@@ -5109,9 +5109,9 @@ function renderAccTable(){
       var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
                   : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
-      var TDC='padding:7px 10px;white-space:nowrap;border-right:1px solid #1a1a1a;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;';
+      var TDC='padding:7px 10px;white-space:nowrap;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';border-right:1px solid #1a1a1a;width:80px;min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:80px;min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+cd.w+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
@@ -5140,44 +5140,14 @@ function renderAccTable(){
     });
   }
 
-  // Başlık ayrı div (sabit), gövde ayrı div (scroll)
-  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:#111;border-bottom:2px solid #333;">'
-    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;min-width:100%;">'
-    +'<thead><tr>'+theadHtml+'</tr></thead></table></div>';
-  var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;min-width:100%;">'
+  // Tek tablo - sticky header ile kayma ve titreme yok
+  var tableDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
+    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:max-content;min-width:100%;">'
+    +'<thead><tr>'+theadHtml+'</tr></thead>'
     +'<tbody>'+tbodyHtml+'</tbody></table></div>';
 
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
-  container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar+headerDiv+bodyDiv+'</div>';
-
-  // Yatay scroll senkronizasyonu + kolon genişliği eşitleme
-  setTimeout(function(){
-    var hScroll = document.getElementById('accHeaderScroll');
-    var bScroll = document.getElementById('accBodyScroll');
-    var hTable  = document.getElementById('accHeaderTable');
-    var bTable  = document.getElementById('accBodyTable');
-    if(!hScroll||!bScroll||!hTable||!bTable) return;
-
-    // Yatay scroll: body scroll olunca header'ı da kaydır
-    bScroll.addEventListener('scroll', function(){ hScroll.scrollLeft = bScroll.scrollLeft; });
-
-    // Kolon genişliklerini eşitle
-    function syncCols(){
-      var bThs = bTable.querySelectorAll('tbody tr:first-child td');
-      var hThs = hTable.querySelectorAll('thead tr th');
-      if(!bThs.length) return;
-      var totalW = 0;
-      bThs.forEach(function(td, i){
-        var w = td.getBoundingClientRect().width;
-        totalW += w;
-        if(hThs[i]){ hThs[i].style.width = w+'px'; hThs[i].style.minWidth = w+'px'; }
-      });
-      hTable.style.width = bTable.getBoundingClientRect().width + 'px';
-    }
-    syncCols();
-    window.addEventListener('resize', syncCols);
-  }, 30);
+  container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar+tableDiv+'</div>';
 }
 var _accSort={col:'eq',dir:'desc'};
 var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','opnl'];
@@ -7627,7 +7597,32 @@ function adminNav(sec,btn){
   var el=document.getElementById('sec-'+sec);
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
-  if(sec==='accounts')renderAccTable();
+  if(sec==='accounts'){
+    renderAccTable(); // önce mevcut veriyle göster
+    // Pozisyonları Firebase'den yükle ve tabloyu güncelle
+    if(typeof db!=='undefined' && db) {
+      var _c2 = accounts.filter(function(a){return !a.role||a.role==='customer';});
+      var _pending = _c2.length;
+      if(!_pending) return;
+      _c2.forEach(function(acc){
+        db.collection('users').doc(String(acc.id)).get().then(function(doc){
+          if(doc.exists && doc.data()){
+            try {
+              var _pd = doc.data().positions;
+              acc.positions = Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');
+              if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id]=acc.positions;
+            } catch(e){ acc.positions=[]; }
+            try {
+              var _bval = doc.data().balance;
+              if(_bval!==undefined) acc.balance = parseFloat(_bval)||acc.balance;
+            } catch(e){}
+          }
+          _pending--;
+          if(_pending<=0) renderAccTable(); // tüm veriler gelince yeniden render
+        }).catch(function(){ _pending--; if(_pending<=0) renderAccTable(); });
+      });
+    }
+  }
   if(sec==='finance')populateFinAccSelect();
   if(sec==='reports'){
     loadAllPositionsAndUpdate();
