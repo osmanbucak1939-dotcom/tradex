@@ -3537,7 +3537,7 @@ function adReceiveRawPrice(sym, rawMid) {
         acc._openCount  = st.openCount;
         // DOM hücrelerini güncelle
         document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
-          el.textContent = adFmtMoney(st.equity);
+          el.textContent = (st.equity<0?'-$':'$')+Math.abs(st.equity).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
           el.style.color = st.equity>=(acc.balance||0)?'#26a69a':'#ef5350';
         });
         document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
@@ -5056,7 +5056,7 @@ function renderAccTable(){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
-      var eq=adFmtMoney(liveEq);
+      var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var openCnt=a._openCount||(_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id].length:0);
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
@@ -8517,7 +8517,7 @@ var AD_SIM={
         var _fp2=function(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
         // Varlık
         document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
-          el.textContent=adFmtMoney(a._liveEquity);
+          el.textContent=(a._liveEquity<0?'-$':'$')+Math.abs(a._liveEquity||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
           el.style.color=a._liveEquity>=(a.balance||0)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
@@ -8703,7 +8703,6 @@ function adFpDec(sym) {
   if(p>1)     return 4;
   return 5;
 }
-var adFmtMoney=function(n){ n=parseFloat(n||0); return (n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
 function adFpSym(n, sym){ return parseFloat(n||0).toFixed(adFpDec(sym)); }
 function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -8731,7 +8730,7 @@ function adRefreshBadges(){
   set('adBadgeBal',   '$'+fp(st.balance));
   set('adBadgeBonus', '$'+fp(st.bonus));
 
-  set('adBadgeEq',    adFmtMoney(st.equity));
+  set('adBadgeEq',    '$'+fp(st.equity));
   setc('adBadgeEq',   st.equity >= st.balance ? '#26a69a' : '#ef5350');
 
   set('adBadgeMar',   '$'+fp(st.margin));
