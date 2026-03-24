@@ -5075,7 +5075,7 @@ function renderAccTable(){
     var w = cd&&cd.w ? cd.w : 'auto';
     var style='padding:7px 10px;text-align:left;color:#888;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;'
       +'background:#111;position:sticky;top:0;z-index:2;border-bottom:2px solid #2a2a2a;'
-      +'min-width:'+w+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     if(cd&&cd.align==='center') style+='text-align:center;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
     var onclick=sortKey?' onclick="_accSortBy(\''+sortKey+'\')"':'';
@@ -5083,6 +5083,13 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
+  // colgroup - genişlikleri bir kez tanımla, hem thead hem tbody kullanır
+  var colgroupHtml = '<colgroup><col style="width:80px;min-width:80px">';
+  COL_DEFS.forEach(function(cd){
+    if(cols.indexOf(cd.id)>=0) colgroupHtml += '<col style="width:'+cd.w+';min-width:'+cd.w+'">';
+  });
+  colgroupHtml += '</colgroup>';
+
   var theadHtml = '<tr>'+th('LOGIN','login',null,{w:'80px'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
@@ -5116,9 +5123,9 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';min-width:80px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
-        var tdW='min-width:'+cd.w+';';
+        var tdW='';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;">'+(isOnline
@@ -5147,7 +5154,8 @@ function renderAccTable(){
 
   // Tek tablo - sticky header ile kayma ve titreme yok
   var tableDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;width:100%;">'
+    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;width:100%;table-layout:fixed;">'
+    +colgroupHtml
     +'<thead><tr>'+theadHtml+'</tr></thead>'
     +'<tbody>'+tbodyHtml+'</tbody></table></div>';
 
