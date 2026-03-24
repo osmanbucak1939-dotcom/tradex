@@ -5073,7 +5073,7 @@ function renderAccTable(){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
-      var eq=liveEq.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var eq=(liveEq<0?'-$':'')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var openCnt=a._openCount||(_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id].length:0);
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
@@ -8585,8 +8585,9 @@ var AD_SIM={
         var _fp2=function(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
         // Varlık
         document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
-          el.textContent='$'+_fp2(a._liveEquity);
-          el.style.color=a._liveEquity>=(a.balance||0)?'#26a69a':'#ef5350';
+          var _leq=a._liveEquity||0;
+          el.textContent=(_leq<0?'-$':'')+_fp2(Math.abs(_leq));
+          el.style.color=_leq>=(a.balance||0)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
         document.querySelectorAll('[data-open="'+a.id+'"]').forEach(function(el){
@@ -8798,7 +8799,7 @@ function adRefreshBadges(){
   set('adBadgeBal',   '$'+fp(st.balance));
   set('adBadgeBonus', '$'+fp(st.bonus));
 
-  set('adBadgeEq',    '$'+fp(st.equity));
+  set('adBadgeEq',    (st.equity<0?'-$':'$')+fp(Math.abs(st.equity)));
   setc('adBadgeEq',   st.equity >= st.balance ? '#26a69a' : '#ef5350');
 
   set('adBadgeMar',   '$'+fp(st.margin));
