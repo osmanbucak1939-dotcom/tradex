@@ -4298,11 +4298,17 @@ function adRenderTab(tab) {
         '<div>' +
           '<div class="ad-section-title">Hesap Bilgileri</div>' +
           '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-            adIR('Account ID', a.id) + adIR('Ad Soyad', a.name) + adIR('E-posta', a.email) +
+            adIR('Account ID', a.id) +
+            adIE('Login No', 'login', a.login||a.id) +
+            adIE('Ad', 'name', a.name) +
+            adIE('Soyad', 'surname', a.surname) +
+            adIE('E-posta', 'email', a.email) +
+            adIE('Telefon', 'phone', a.phone) +
             adIR('Kayıt Tarihi', a.regDate ? fmtDate(a.regDate) : (a.created||'—')) +
             adIR('Son Giriş', a.lastLogin ? fmtDate(a.lastLogin) : (a.lastSeen ? fmtDate(a.lastSeen) : '—')) +
             adIR('Hesap Tipi', a.type==='demo'?'Demo':'Gerçek') +
           '</table>' +
+          '<button onclick="adSaveAccInfo()" class="ad-btn ad-btn-success" style="margin-top:8px;width:100%;">💾 Bilgileri Kaydet</button>' +
         '</div>' +
         '<div>' +
           '<div class="ad-section-title">Ticaret Ayarları</div>' +
@@ -4547,7 +4553,25 @@ function adRenderTab(tab) {
   }
 }
 
+function adSaveAccInfo(){
+  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  if(!a) return;
+  var inputs = document.querySelectorAll('#adContent [data-field]');
+  inputs.forEach(function(inp){
+    var field = inp.getAttribute('data-field');
+    var val = inp.value.trim();
+    if(val) a[field] = val;
+  });
+  saveAccounts();
+  // Başlıkta login güncelle
+  var idEl = document.getElementById('adAccId');
+  if(idEl) idEl.textContent = '#'+(a.login||a.id);
+  renderAccTable();
+  showAdminToast('Kaydedildi', a.name+' '+a.surname, 'success');
+}
+
 function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
+function adIE(l,field,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:3px 0;"><input class="ad-input" style="width:100%;padding:3px 6px;font-size:11px;" data-field="'+field+'" value="'+(v||'')+'"></td></tr>'; }
 
 function adDeposit() {
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
@@ -5118,7 +5142,7 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',null,{w:'75px',maxw:'75px'});
+  var theadHtml = '<tr>'+th('Login','login',{w:'75px',maxw:'75px'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
 
@@ -5172,10 +5196,10 @@ function renderAccTable(){
 
   // Başlık ayrı div (sabit), gövde ayrı div (scroll)
   var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:#111;border-bottom:2px solid #333;">'
-    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:100%;">'
+    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:11px;table-layout:auto;width:100%;">'
     +'<thead><tr>'+theadHtml+'</tr></thead></table></div>';
   var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:100%;">'
+    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:auto;width:100%;">'
     +'<tbody>'+tbodyHtml+'</tbody></table></div>';
 
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
@@ -5189,23 +5213,27 @@ function renderAccTable(){
     var bTable  = document.getElementById('accBodyTable');
     if(!hScroll||!bScroll||!hTable||!bTable) return;
 
-    // Yatay scroll: body scroll olunca header'ı da kaydır
-    bScroll.addEventListener('scroll', function(){ hScroll.scrollLeft = bScroll.scrollLeft; });
-
-    // Kolon genişliklerini eşitle
+    // Kolon genişliklerini eşitle - body'deki td genişliklerini header'a uygula
     function syncCols(){
-      var bThs = bTable.querySelectorAll('tbody tr:first-child td');
+      var firstRow = bTable.querySelector('tbody tr:first-child');
+      if(!firstRow) return;
+      var bTds = firstRow.querySelectorAll('td');
       var hThs = hTable.querySelectorAll('thead tr th');
-      if(!bThs.length) return;
-      var totalW = 0;
-      bThs.forEach(function(td, i){
-        var w = td.getBoundingClientRect().width;
-        totalW += w;
-        if(hThs[i]){ hThs[i].style.width = w+'px'; hThs[i].style.minWidth = w+'px'; }
+      bTds.forEach(function(td, i){
+        var w = td.offsetWidth;
+        if(w && hThs[i]){
+          hThs[i].style.width = w+'px';
+          hThs[i].style.minWidth = w+'px';
+          hThs[i].style.maxWidth = w+'px';
+        }
       });
-      hTable.style.width = bTable.getBoundingClientRect().width + 'px';
+      // Toplam genişliği eşitle
+      var bw = bTable.offsetWidth;
+      if(bw) hTable.style.width = bw+'px';
     }
-    syncCols();
+    setTimeout(syncCols, 0);
+    setTimeout(syncCols, 100);
+    bScroll.addEventListener('scroll', function(){ hScroll.scrollLeft = bScroll.scrollLeft; });
     window.addEventListener('resize', syncCols);
   }, 30);
 }
