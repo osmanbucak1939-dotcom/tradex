@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+,<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -4309,8 +4309,13 @@ function updateAccount() {
       return plA - plB; // en negatif (en büyük zarar) önce
     });
     var toClose = sortedPos[0];
-    var _soAccName = (typeof _cu !== 'undefined' && _cu) ? ('#'+((_cu.login||_cu.id)||'?') + ' ' + (_cu.name||'')) : '';
-    showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym + ' · Tem: %' + (marginLvl ? marginLvl.toFixed(1) : '0'), 'danger');
+    var _soAccName = '';
+    if(typeof _cu !== 'undefined' && _cu) {
+      _soAccName = '#'+((_cu.login||_cu.id)||'?')+' '+(_cu.name||'');
+    } else if(typeof currentUser !== 'undefined' && currentUser) {
+      _soAccName = '#'+(currentUser.login||currentUser.id||'?')+' '+(currentUser.name||'');
+    }
+    showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
     setTimeout(function(){
       closePosition(toClose.id, 'stop_out');
       window._stopOutBusy = false; // bir sonraki tick'te tekrar kontrol edilebilir
