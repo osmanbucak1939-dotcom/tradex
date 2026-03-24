@@ -3215,12 +3215,12 @@ function updateAccount() {
 
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
-    // _adAccId ile hesabı bul, yoksa tüm accounts'tan ara
-    // Hesap bilgisini toClose'daki pozisyondan bul - her pozisyonda accId var mı?
-    var _soAccId = _adAccId;
-    var _soAcc = _soAccId ? accounts.find(function(a){ return String(a.id)===String(_soAccId); }) : null;
-    var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : _soAccId ? '#'+_soAccId : '';
-    showAdminToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
+    var _soName = '';
+    if(typeof showAdminToast==='function') {
+      showAdminToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
+    } else {
+      showToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
+    }
     setTimeout(function(){ closePosition(toClose.id, 'stop_out'); }, 100);
   }
 }
