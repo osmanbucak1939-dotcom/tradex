@@ -1290,11 +1290,15 @@ function genId(prefix) {
 
 function fbSaveAccounts() {
       if(!db) return;
-      if(!accounts || accounts.length === 0) { console.warn('fbSaveAccounts: bos array korundu'); return; }
+      if(!accounts || accounts.length === 0) { console.warn('fbSaveAccounts: bos array - yazilmadi'); return; }
+      var _ts = new Date().toISOString();
+      var _data = JSON.stringify(accounts);
       try {
-        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
+        // Katman 1: Ana kaynak
+        db.collection('broker').doc('accounts').set({ data: _data, updatedAt: _ts, count: accounts.length })
           .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
-        // Yedek olarak users koleksiyonuna da temel bilgileri yaz
+
+        // Katman 2: Her hesabı users/{id} altına yaz
         accounts.forEach(function(a) {
           if(!a.id) return;
           db.collection('users').doc(String(a.id)).set({
@@ -1302,9 +1306,18 @@ function fbSaveAccounts() {
             login: a.login||a.id, type: a.type||'live', spreadGroup: a.spreadGroup||'standard',
             leverage: a.leverage||100, active: a.active!==false,
             created: a.created||'', regDate: a.regDate||'',
-            phone: a.phone||'', password: a.password||''
+            phone: a.phone||'', password: a.password||'',
+            currency: a.currency||'USD', bonus: a.bonus||0,
+            _accountBackup: true, _backupAt: _ts
           }, { merge: true }).catch(function(){});
         });
+
+        // Katman 3: Saatlik yedek (son 24 yedek tutulur)
+        var _hour = new Date().toISOString().substring(0,13).replace('T','_');
+        db.collection('broker').doc('accounts_backup_'+_hour).set({
+          data: _data, savedAt: _ts, count: accounts.length
+        }).catch(function(){});
+
       } catch(e) { console.warn(e); }
     }
 
@@ -1350,11 +1363,55 @@ function fbSaveAccounts() {
       db.collection('broker').doc('accounts').get()
         .then(function(doc) {
           if(doc.exists) {
-            try { callback(JSON.parse(doc.data().data||'[]')); }
-            catch(e) { callback([]); }
-          } else { callback([]); }
+            try {
+              var data = JSON.parse(doc.data().data||'[]');
+              // Boş gelirse backup'tan kurtar
+              if(!data.length) {
+                console.warn('fbLoadAccounts: bos geldi, backup aranıyor...');
+                fbLoadAccountsFromBackup(callback);
+                return;
+              }
+              callback(data);
+            } catch(e) { fbLoadAccountsFromBackup(callback); }
+          } else { fbLoadAccountsFromBackup(callback); }
         })
         .catch(function(e){ console.warn('fbLoadAccounts error:', e); callback([]); });
+    }
+
+    function fbLoadAccountsFromBackup(callback) {
+      if(!db) { callback([]); return; }
+      // Son 24 saatlik backupları tara
+      var found = false;
+      var hours = [];
+      for(var i=0; i<24; i++) {
+        var d = new Date(Date.now() - i*3600000);
+        hours.push(d.toISOString().substring(0,13).replace('T','_'));
+      }
+      var tryHour = function(idx) {
+        if(idx >= hours.length) { callback([]); return; }
+        db.collection('broker').doc('accounts_backup_'+hours[idx]).get()
+          .then(function(doc) {
+            if(doc.exists) {
+              try {
+                var data = JSON.parse(doc.data().data||'[]');
+                if(data.length) {
+                  console.warn('Backup bulundu:', hours[idx], data.length, 'hesap');
+                  callback(data);
+                  // Ana kaynağı onar
+                  db.collection('broker').doc('accounts').set({
+                    data: JSON.stringify(data),
+                    updatedAt: new Date().toISOString(),
+                    restoredFrom: hours[idx]
+                  }).catch(function(){});
+                  return;
+                }
+              } catch(e){}
+            }
+            tryHour(idx+1);
+          })
+          .catch(function(){ tryHour(idx+1); });
+      };
+      tryHour(0);
     }
 
     // Müşteri verilerini Firebase'e kaydet (pozisyonlar, geçmiş)
