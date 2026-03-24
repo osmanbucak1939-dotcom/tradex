@@ -1550,7 +1550,8 @@ console.log('Firebase bağlandı ✓');
           var newAccs=JSON.parse(doc.data().data||'[]');
           // Cache'leri koru
           newAccs.forEach(function(na){
-            var old=accounts.find(function(x){return x.id===na.id;});
+            var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
+            var old=_accs.find(function(x){return x.id===na.id;});
             if(old){
               if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
@@ -1559,7 +1560,7 @@ console.log('Firebase bağlandı ✓');
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
-          accounts=newAccs;
+          if(typeof accounts!=='undefined'){accounts=newAccs;}else{window.accounts=newAccs;}
           try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
           var secAcc=document.getElementById('sec-accounts');
           if(secAcc&&secAcc.style.display!=='none') renderAccTable();
