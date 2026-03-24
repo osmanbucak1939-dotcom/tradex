@@ -5142,7 +5142,7 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',{w:'75px',maxw:'75px'});
+  var theadHtml = '<tr>'+th('Login','login',{w:'80px',maxw:'80px'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
 
@@ -5154,7 +5154,7 @@ function renderAccTable(){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
-      var eq=(liveEq<0?'-$':'')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var openCnt=a._openCount||(_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id].length:0);
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
@@ -5165,7 +5165,7 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:80px;min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
@@ -8671,7 +8671,7 @@ var AD_SIM={
         // Varlık
         document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
           var _leq=a._liveEquity||0;
-          el.textContent=(_leq<0?'-$':'')+_fp2(Math.abs(_leq));
+          el.textContent=(_leq<0?'-$':'$')+_fp2(Math.abs(_leq));
           el.style.color=_leq>=(a.balance||0)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
