@@ -1290,9 +1290,21 @@ function genId(prefix) {
 
 function fbSaveAccounts() {
       if(!db) return;
+      if(!accounts || accounts.length === 0) { console.warn('fbSaveAccounts: bos array korundu'); return; }
       try {
         db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
           .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
+        // Yedek olarak users koleksiyonuna da temel bilgileri yaz
+        accounts.forEach(function(a) {
+          if(!a.id) return;
+          db.collection('users').doc(String(a.id)).set({
+            name: a.name||'', surname: a.surname||'', email: a.email||'',
+            login: a.login||a.id, type: a.type||'live', spreadGroup: a.spreadGroup||'standard',
+            leverage: a.leverage||100, active: a.active!==false,
+            created: a.created||'', regDate: a.regDate||'',
+            phone: a.phone||'', password: a.password||''
+          }, { merge: true }).catch(function(){});
+        });
       } catch(e) { console.warn(e); }
     }
 
@@ -3821,7 +3833,11 @@ function saveSymConfig(){
   }
 }
 
-function saveAccounts(){ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); fbSaveAccounts(); }
+function saveAccounts(){
+  if(!accounts || !accounts.length) { console.warn('saveAccounts: bos array, yazilmadi'); return; }
+  localStorage.setItem('tx_accounts', JSON.stringify(accounts));
+  fbSaveAccounts();
+}
 
 function saveSettingsData(){ localStorage.setItem('tx_settings', JSON.stringify(settings)); }
 
@@ -6722,16 +6738,19 @@ function getSwap(sym,groupId,side) {
 // ── Raporlar canlı pozisyon snap ─────────────────────────────
 var _repSnapUnsub = null;
 function startReportsLiveSnap() {
-  if(_repSnapUnsub) return; // zaten aktif
+  if(_repSnapUnsub) return;
   if(typeof db==='undefined'||!db) return;
+  var _firstSnap = true; // ilk snapshot'ı atla
   _repSnapUnsub = db.collection('users').onSnapshot(function(snap) {
+    // İlk snapshot loadAllPositionsAndUpdate ile zaten yüklendi - atla
+    if(_firstSnap) { _firstSnap = false; return; }
     var changed = false;
     snap.docChanges().forEach(function(change) {
+      if(change.type === 'removed') return;
       var ud = change.doc.data();
       if(!ud) return;
       var acc = accounts.find(function(a){ return String(a.id)===change.doc.id; });
       if(!acc) return;
-      // Pozisyon güncelle
       if(ud.positions !== undefined) {
         try {
           var np = Array.isArray(ud.positions) ? ud.positions : JSON.parse(ud.positions||'[]');
