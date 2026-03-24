@@ -6718,6 +6718,45 @@ function getSwap(sym,groupId,side) {
 }
 
 // Eski isimleri yönlendir
+// ── Raporlar canlı pozisyon snap ─────────────────────────────
+var _repSnapUnsub = null;
+function startReportsLiveSnap() {
+  if(_repSnapUnsub) return; // zaten aktif
+  if(typeof db==='undefined'||!db) return;
+  _repSnapUnsub = db.collection('users').onSnapshot(function(snap) {
+    var changed = false;
+    snap.docChanges().forEach(function(change) {
+      var ud = change.doc.data();
+      if(!ud) return;
+      var acc = accounts.find(function(a){ return String(a.id)===change.doc.id; });
+      if(!acc) return;
+      // Pozisyon güncelle
+      if(ud.positions !== undefined) {
+        try {
+          var np = Array.isArray(ud.positions) ? ud.positions : JSON.parse(ud.positions||'[]');
+          acc.positions = np;
+          if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = np;
+          changed = true;
+        } catch(e){}
+      }
+      if(ud.tradeHistory !== undefined) {
+        try {
+          acc.tradeHistory = Array.isArray(ud.tradeHistory) ? ud.tradeHistory : JSON.parse(ud.tradeHistory||'[]');
+        } catch(e){}
+      }
+      if(ud.balance !== undefined) acc.balance = parseFloat(ud.balance)||0;
+    });
+    if(changed) {
+      clearTimeout(window._repRefreshTimer);
+      window._repRefreshTimer = setTimeout(function(){ updateReports(); }, 300);
+    }
+  }, function(e){ console.warn('repSnap err:', e); });
+}
+function stopReportsLiveSnap() {
+  if(_repSnapUnsub) { try{_repSnapUnsub();}catch(e){} _repSnapUnsub=null; }
+}
+// ─────────────────────────────────────────────────────────────
+
 function loadSpreadGroups() { sgLoad(); }
 function saveSpreadGroups() { sgSave(); }
 function renderSpreadGroups() { sgRender(); }
@@ -7578,6 +7617,8 @@ function adminLogout(){
 }
 
 function adminNav(sec,btn){
+  // Raporlar dışına geçince snap durdur
+  if(sec!=='reports' && typeof stopReportsLiveSnap==='function') stopReportsLiveSnap();
   document.querySelectorAll('.admin-section').forEach(function(el){el.style.display='none';});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   var el=document.getElementById('sec-'+sec);
@@ -7587,8 +7628,7 @@ function adminNav(sec,btn){
   if(sec==='finance')populateFinAccSelect();
   if(sec==='reports'){
     loadAllPositionsAndUpdate();
-    // Raporlar açıkken users snap aktif olsun - canlı pozisyon takibi
-    if(typeof _startUsersSnap==='function') _startUsersSnap();
+    startReportsLiveSnap();
   }
   if(sec==='spreadgroups')renderSgSection();
   if(sec==='symbols')renderSymSection();
@@ -8027,11 +8067,10 @@ function updateReports(){
         +'</tr></thead><tbody>';
       // En son açılan üstte - id büyükten küçüğe (id artan sırada açılıyor)
       allPos.sort(function(a,b){
-        // Önce time ile dene
-        var ta = a.time ? new Date(a.time).getTime() : 0;
-        var tb2 = b.time ? new Date(b.time).getTime() : 0;
+        // _parseDate hem ISO hem DD.MM.YYYY formatını handle eder
+        var ta = (typeof _parseDate==='function' && a.time) ? (_parseDate(a.time)||{getTime:function(){return 0;}}).getTime() : (a.time ? new Date(a.time).getTime() : 0);
+        var tb2 = (typeof _parseDate==='function' && b.time) ? (_parseDate(b.time)||{getTime:function(){return 0;}}).getTime() : (b.time ? new Date(b.time).getTime() : 0);
         if(ta && tb2) return tb2 - ta;
-        // time yoksa id ile sırala
         return (parseFloat(b.id)||0) - (parseFloat(a.id)||0);
       });
       allPos.forEach(function(p,idx){
