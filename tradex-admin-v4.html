@@ -3156,7 +3156,9 @@ function updateAccount() {
 
   var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return x.id===_adAccId;}):null;
   var _defLev=typeof leverage!=='undefined'?leverage:((typeof settings!=='undefined'&&settings&&settings.leverage)?settings.leverage:100);
-  var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},positions);
+  // Admin: _adAccId açıksa _adPositions kullan, değilse positions (trader context)
+  var _posArr = (_adAccId && typeof _adPositions!=='undefined' && _adPositions.length) ? _adPositions : positions;
+  var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},_posArr);
   var openPL=_ua.openPnl, marginUsed=_ua.margin, equity=_ua.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
   const cls = openPL >= 0 ? 'up' : 'down';
@@ -3184,16 +3186,16 @@ function updateAccount() {
   if(positions.length === 0) return;
 
   // Aktif hesabın stop out seviyesini al (spread grubundan)
-  var stopOutLevel = 50; // varsayılan %50
-  var marginCallLevel = 80;
+  var stopOutLevel = 20; // varsayılan %20
+  var marginCallLevel = 100;
   try {
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
-       typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
-      var _acc = accounts.find(function(a){ return a.active; });
-      if(!_acc) _acc = accounts[0];
-      if(_acc) {
-        var _sg = spreadGroups.find(function(g){ return g.id === (_acc.spreadGroup||'standard'); });
-        if(_sg) { stopOutLevel = _sg.stopOut || 50; marginCallLevel = _sg.marginCall || 80; }
+    if(typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups)) {
+      // _adAccId ile aktif hesabın spread grubunu al
+      var _soAccObj = (typeof accounts!=='undefined' && _adAccId) ?
+        accounts.find(function(a){ return String(a.id)===String(_adAccId); }) : null;
+      if(_soAccObj) {
+        var _sg = spreadGroups.find(function(g){ return g.id===(_soAccObj.spreadGroup||'standard'); });
+        if(_sg) { stopOutLevel = parseFloat(_sg.stopOut)||20; marginCallLevel = parseFloat(_sg.marginCall)||100; }
       }
     }
   } catch(e) {}
@@ -3203,9 +3205,9 @@ function updateAccount() {
   if(equity <= 0) triggerStopOut = true;
   if(marginLvl !== null && marginLvl <= stopOutLevel) triggerStopOut = true;
 
-  if(triggerStopOut && positions.length > 0) {
+  if(triggerStopOut && _posArr.length > 0) {
     // Zararı en yüksekten en düşüğe sırala
-    var sortedPos = positions.slice().sort(function(a, b) {
+    var sortedPos = _posArr.slice().sort(function(a, b) {
       var pa = prices[a.sym] ? prices[a.sym].price : a.openPrice;
       var pb = prices[b.sym] ? prices[b.sym].price : b.openPrice;
       var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty;
