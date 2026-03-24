@@ -3126,7 +3126,12 @@ function closePosition(id, reason='') {
   renderPositions();
   renderHistory();
   updateAccount();
-  if (reason) showToast(reason, `#${id} $${fp(Math.abs(pnl))} ${pnl>=0?'kâr':'zarar'}`);
+  if (reason) {
+    var _toastAcc = (_adAccId && typeof accounts!=='undefined') ? accounts.find(function(a){return String(a.id)===String(_adAccId);}) : null;
+    var _toastName = _toastAcc ? ('#'+(_toastAcc.login||_toastAcc.id)+' '+(_toastAcc.name||'')) : ('#'+_adAccId);
+    showAdminToast(reason==='stop_out'?'⚠ STOP OUT':reason==='tp'?'✓ Take Profit':reason==='sl'?'✗ Stop Loss':'Kapatıldı',
+      _toastName+' — '+pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl), reason==='stop_out'?'danger':pnl>=0?'success':'error');
+  }
   else showToast('Pozisyon Kapatıldı', `#${id} — ${pnl>=0?'+':''}$${fp(pnl)}`);
 }
 
@@ -4997,19 +5002,19 @@ function renderAccTable(){
   var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
   var cols=_accCols;
   var COL_DEFS=[
-    {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'95px',  ellipsis:true},
+    {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'110px', ellipsis:true},
     {id:'name',   label:'Ad Soyad',     sort:'name', w:'130px', ellipsis:true},
-    {id:'email',  label:'E-posta',      sort:null,   w:'145px', ellipsis:true},
-    {id:'online', label:'Online',       sort:null,   w:'52px',  align:'center'},
-    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'95px',  ellipsis:true},
-    {id:'status', label:'Durum',        sort:null,   w:'70px'},
-    {id:'type',   label:'Tip',          sort:null,   w:'45px'},
-    {id:'group',  label:'Grup',         sort:null,   w:'75px'},
-    {id:'balance',label:'Bakiye',       sort:'bal',  w:'110px'},
-    {id:'bonus',  label:'Bonus',        sort:null,   w:'90px'},
-    {id:'equity', label:'Varlık',       sort:'eq',   w:'110px'},
-    {id:'open',   label:'Açık İşlem',   sort:'open', w:'72px',  align:'center'},
-    {id:'opnl',   label:'Açık K/Z',     sort:'opnl', w:'105px'}
+    {id:'email',  label:'E-posta',      sort:null,   w:'140px', ellipsis:true},
+    {id:'online', label:'Online',       sort:null,   w:'55px',  align:'center'},
+    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'110px', ellipsis:true},
+    {id:'status', label:'Durum',        sort:null,   w:'75px'},
+    {id:'type',   label:'Tip',          sort:null,   w:'50px'},
+    {id:'group',  label:'Grup',         sort:null,   w:'80px'},
+    {id:'balance',label:'Bakiye',       sort:'bal',  w:'115px'},
+    {id:'bonus',  label:'Bonus',        sort:null,   w:'95px'},
+    {id:'equity', label:'Varlık',       sort:'eq',   w:'115px'},
+    {id:'open',   label:'Açık İşlem',   sort:'open', w:'75px',  align:'center'},
+    {id:'opnl',   label:'Açık K/Z',     sort:'opnl', w:'110px'}
   ];
 
   // ── Kolon picker (sabit panel, her zaman DOM'da) ──
@@ -5070,7 +5075,7 @@ function renderAccTable(){
     var w = cd&&cd.w ? cd.w : 'auto';
     var style='padding:7px 10px;text-align:left;color:#888;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;'
       +'background:#111;position:sticky;top:0;z-index:2;border-bottom:2px solid #2a2a2a;'
-      +'width:'+w+';min-width:'+w+';max-width:'+w+';overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
+      +'min-width:'+w+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     if(cd&&cd.align==='center') style+='text-align:center;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
     var onclick=sortKey?' onclick="_accSortBy(\''+sortKey+'\')"':'';
@@ -5078,7 +5083,7 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',null,{w:'80px'});
+  var theadHtml = '<tr>'+th('LOGIN','login',null,{w:'80px'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
 
@@ -5111,9 +5116,9 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:80px;min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';min-width:80px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
-        var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+cd.w+';';
+        var tdW='min-width:'+cd.w+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;">'+(isOnline
@@ -5142,7 +5147,7 @@ function renderAccTable(){
 
   // Tek tablo - sticky header ile kayma ve titreme yok
   var tableDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:max-content;min-width:100%;">'
+    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;width:100%;">'
     +'<thead><tr>'+theadHtml+'</tr></thead>'
     +'<tbody>'+tbodyHtml+'</tbody></table></div>';
 
