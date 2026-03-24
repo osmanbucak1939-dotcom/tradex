@@ -3216,10 +3216,11 @@ function updateAccount() {
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
     // _adAccId ile hesabı bul, yoksa tüm accounts'tan ara
-    var _soAccId = _adAccId || (typeof _currentAcc !== 'undefined' ? _currentAcc : null);
+    // Hesap bilgisini toClose'daki pozisyondan bul - her pozisyonda accId var mı?
+    var _soAccId = _adAccId;
     var _soAcc = _soAccId ? accounts.find(function(a){ return String(a.id)===String(_soAccId); }) : null;
-    var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : '';
-    showToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym + ' kapatıldı · Teminat: %' + (marginLvl ? marginLvl.toFixed(2) : '0'));
+    var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : _soAccId ? '#'+_soAccId : '';
+    showAdminToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
     setTimeout(function(){ closePosition(toClose.id, 'stop_out'); }, 100);
   }
 }
@@ -7655,9 +7656,18 @@ function adminNav(sec,btn){
 
 function showAdminToast(title,msg,type){
   var t=document.getElementById('adminToast');
-  if(!t){t=document.createElement('div');t.id='adminToast';t.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:6px;color:#fff;font-size:12px;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;min-width:200px;';document.body.appendChild(t);}
-  var cols={success:'#26a69a',error:'#ef5350',info:'#42a5f5',warning:'#ffa726'};
-  t.style.background=cols[type]||'#424242';t.style.opacity='1';
+  if(!t){t=document.createElement('div');t.id='adminToast';t.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:4px;font-size:12px;font-family:var(--mono,monospace);box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:opacity 0.3s;min-width:220px;max-width:320px;border:1px solid #222;';document.body.appendChild(t);}
+  var cols={
+    success: {bg:'#0d1f17', border:'#26a69a', color:'#26a69a'},
+    error:   {bg:'#1f0d0d', border:'#ef5350', color:'#ef5350'},
+    danger:  {bg:'#1f0d0d', border:'#ef5350', color:'#ef5350'},
+    warning: {bg:'#1f1a0d', border:'#f5c518', color:'#f5c518'},
+    info:    {bg:'#111',    border:'#444',    color:'#ccc'}
+  };
+  var c=cols[type]||cols.info;
+  t.style.background=c.bg;
+  t.style.borderLeft='3px solid '+c.border;
+  t.style.color=c.color;t.style.opacity='1';
   t.innerHTML='<strong>'+title+'</strong><br><span style="opacity:0.9;font-size:11px;">'+msg+'</span>';
   clearTimeout(t._tmr);t._tmr=setTimeout(function(){t.style.opacity='0';},3500);
 }
