@@ -3215,7 +3215,14 @@ function updateAccount() {
 
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
+    // Hesap bilgisi - _accObj updateAccount başında zaten set edildi
     var _soName = '';
+    if(_accObj) {
+      _soName = '#'+(_accObj.login||_accObj.id)+' '+(_accObj.name||'');
+    } else if(typeof _adAccId!=='undefined' && _adAccId && typeof accounts!=='undefined') {
+      var _soAcc2 = accounts.find(function(a){ return String(a.id)===String(_adAccId); });
+      if(_soAcc2) _soName = '#'+(_soAcc2.login||_soAcc2.id)+' '+(_soAcc2.name||'');
+    }
     if(typeof showAdminToast==='function') {
       showAdminToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
     } else {
