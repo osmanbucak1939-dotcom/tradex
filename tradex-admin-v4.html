@@ -1560,8 +1560,9 @@ console.log('Firebase bağlandı ✓');
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
-          if(typeof accounts!=='undefined'){accounts=newAccs;}else{window.accounts=newAccs;}
-          try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
+          window.accounts = newAccs;
+          if(typeof accounts!=='undefined') accounts = newAccs;
+          try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
           var secAcc=document.getElementById('sec-accounts');
           if(secAcc&&secAcc.style.display!=='none') renderAccTable();
         }catch(e){console.warn('accounts onSnapshot err:',e);}
