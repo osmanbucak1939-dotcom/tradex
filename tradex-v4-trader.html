@@ -4310,7 +4310,7 @@ function updateAccount() {
     });
     var toClose = sortedPos[0];
     var _soAccName = (typeof _cu !== 'undefined' && _cu) ? ('#'+((_cu.login||_cu.id)||'?') + ' ' + (_cu.name||'')) : '';
-    showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym + ' kapatıldı · Teminat: %' + (marginLvl ? marginLvl.toFixed(1) : '0'));
+    showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym + ' · Tem: %' + (marginLvl ? marginLvl.toFixed(1) : '0'), 'danger');
     setTimeout(function(){
       closePosition(toClose.id, 'stop_out');
       window._stopOutBusy = false; // bir sonraki tick'te tekrar kontrol edilebilir
@@ -4431,10 +4431,26 @@ function _renderBpFinansTable(el) {
 }
 
 var tTmr;
-function showToast(t, m) {
+function showToast(t, m, type) {
   var _el_toastT=document.getElementById('toastT'); if(_el_toastT) _el_toastT.textContent = t;
   var _el_toastM=document.getElementById('toastM'); if(_el_toastM) _el_toastM.textContent = m;
   const el = document.getElementById('toast');
+  // Tip bazlı renk
+  var cols = {
+    danger:  {bg:'#1f0d0d', border:'#ef5350', color:'#ef5350'},
+    success: {bg:'#0d1f17', border:'#26a69a', color:'#26a69a'},
+    warning: {bg:'#1f1a0d', border:'#f5c518', color:'#f5c518'}
+  };
+  var c = cols[type];
+  if(c) {
+    el.style.background = c.bg;
+    el.style.borderLeft = '3px solid '+c.border;
+    el.style.color = c.color;
+  } else {
+    el.style.background = '';
+    el.style.borderLeft = '';
+    el.style.color = '';
+  }
   el.classList.add('show');
   clearTimeout(tTmr);
   tTmr = setTimeout(()=>el.classList.remove('show'), 4000);
