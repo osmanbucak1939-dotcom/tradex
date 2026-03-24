@@ -3070,15 +3070,17 @@ function renderPositions() {
 }
 
 function closePosition(id, reason='') {
-  const idx = positions.findIndex(p=>p.id===id);
+  // Admin: _adAccId açıksa _adPositions, değilse positions
+  var _cPosArr = (_adAccId && typeof _adPositions!=='undefined' && _adPositions.length) ? _adPositions : positions;
+  const idx = _cPosArr.findIndex(p=>p.id===id);
   if (idx === -1) return;
-  const pos = positions[idx];
+  const pos = _cPosArr[idx];
   const p = prices[pos.sym];
   const closePrice = p ? p.price : pos.openPrice;
   const _swapC = parseFloat(pos.swapTotal)||0;
   const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * pos.qty + _swapC;
   balance += (pos.cost||0) + pnl;
-  positions.splice(idx, 1);
+  _cPosArr.splice(idx, 1);
   tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
   if (tradeHistory.length > 50) tradeHistory.pop();
   // Accounts'a yaz
@@ -3091,7 +3093,7 @@ function closePosition(id, reason='') {
   if(typeof db!=='undefined' && db && _adAccId) {
     var _now = new Date().toISOString();
     db.collection('users').doc(String(_adAccId)).set({
-      positions: positions,
+      positions: _cPosArr,
       tradeHistory: tradeHistory.slice(0,50),
       balance: balance,
       updatedAt: _now
@@ -5058,8 +5060,9 @@ function renderAccTable(){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       // Varlık ve K/Z hesabı - adCalcStats ile (hesap detay penceresiyle aynı mantık)
-      var _accPoses = Array.isArray(a.positions)&&a.positions.length ? a.positions :
-                      (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length) ? _allAccountPositions[a.id] : [];
+      // _allAccountPositions her zaman en güncel - önce onu dene
+      var _accPoses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length) ? _allAccountPositions[a.id] :
+                      (Array.isArray(a.positions)&&a.positions.length) ? a.positions : [];
       var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
       var liveEq = _accSt ? _accSt.equity : (a._liveEquity!==undefined ? a._liveEquity : (a.balance||0));
       var _accOpenPnl = _accSt ? _accSt.openPnl : (a._openPnl||0);
@@ -7627,8 +7630,15 @@ function adminNav(sec,btn){
 function showAdminToast(title,msg,type){
   var t=document.getElementById('adminToast');
   if(!t){t=document.createElement('div');t.id='adminToast';t.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:6px;color:#fff;font-size:12px;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;min-width:200px;';document.body.appendChild(t);}
-  var cols={success:'#26a69a',error:'#ef5350',info:'#42a5f5',warning:'#ffa726'};
-  t.style.background=cols[type]||'#424242';t.style.opacity='1';
+  var cols={
+    success:{bg:'#0d1f17',border:'#26a69a',color:'#26a69a'},
+    error:  {bg:'#1f0d0d',border:'#ef5350',color:'#ef5350'},
+    danger: {bg:'#1f0d0d',border:'#ef5350',color:'#ef5350'},
+    warning:{bg:'#1f1a0d',border:'#f5c518',color:'#f5c518'},
+    info:   {bg:'#111',   border:'#555',   color:'#ccc'}
+  };
+  var _c=cols[type]||cols.info;
+  t.style.background=_c.bg; t.style.borderLeft='3px solid '+_c.border; t.style.color=_c.color; t.style.opacity='1';
   t.innerHTML='<strong>'+title+'</strong><br><span style="opacity:0.9;font-size:11px;">'+msg+'</span>';
   clearTimeout(t._tmr);t._tmr=setTimeout(function(){t.style.opacity='0';},3500);
 }
