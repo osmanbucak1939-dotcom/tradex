@@ -1290,9 +1290,31 @@ function genId(prefix) {
 
 function fbSaveAccounts() {
       if(!db) return;
+      if(!accounts || accounts.length < 1) {
+        console.warn('fbSaveAccounts: ENGELLENDI - bos array yazilmaz');
+        return;
+      }
       try {
-        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
+        var _ts = new Date().toISOString();
+        var _data = JSON.stringify(accounts);
+        db.collection('broker').doc('accounts').set({ data: _data, updatedAt: _ts, count: accounts.length })
           .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
+        // Saatlik yedek
+        var _hour = new Date().toISOString().substring(0,13).replace('T','_');
+        db.collection('broker').doc('accounts_backup_'+_hour).set({ data: _data, savedAt: _ts, count: accounts.length })
+          .catch(function(){});
+        // users koleksiyonuna yedek
+        accounts.forEach(function(a) {
+          if(!a.id) return;
+          db.collection('users').doc(String(a.id)).set({
+            name:a.name||'',surname:a.surname||'',email:a.email||'',
+            login:a.login||a.id,type:a.type||'live',spreadGroup:a.spreadGroup||'standard',
+            leverage:a.leverage||100,active:a.active!==false,
+            created:a.created||'',regDate:a.regDate||'',
+            phone:a.phone||'',password:a.password||'',
+            currency:a.currency||'USD',bonus:a.bonus||0
+          }, { merge: true }).catch(function(){});
+        });
       } catch(e) { console.warn(e); }
     }
 
@@ -3824,7 +3846,11 @@ function saveSymConfig(){
   }
 }
 
-function saveAccounts(){ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); fbSaveAccounts(); }
+function saveAccounts(){
+  if(!accounts || accounts.length < 1) { console.warn('saveAccounts: ENGELLENDI - bos array'); return; }
+  localStorage.setItem('tx_accounts', JSON.stringify(accounts));
+  fbSaveAccounts();
+}
 
 function saveSettingsData(){ localStorage.setItem('tx_settings', JSON.stringify(settings)); }
 
@@ -5991,7 +6017,7 @@ function closeApiKeyModal() {}
 function saveApiKey() {}
 
 symConfig = null;
-accounts = [];
+// accounts = []; // KALDIRILDI - Firebase'den yükleniyor, sıfırlanmamalı
 settings = {};
 payMethods = [];
 withdrawRequests = [];
