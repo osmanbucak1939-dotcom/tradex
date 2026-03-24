@@ -5044,7 +5044,7 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',null,{w:'75px',maxw:'75px'});
+  var theadHtml = '<tr>'+th('Login','login',null,{w:'80px',maxw:'80px'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
 
@@ -5054,11 +5054,20 @@ function renderAccTable(){
   } else {
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
+      var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      // Varlık ve K/Z hesabı - adCalcStats ile (hesap detay penceresiyle aynı mantık)
+      var _accPoses = Array.isArray(a.positions)&&a.positions.length ? a.positions :
+                      (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length) ? _allAccountPositions[a.id] : [];
+      var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
+      var liveEq = _accSt ? _accSt.equity : (a._liveEquity!==undefined ? a._liveEquity : (a.balance||0));
+      var _accOpenPnl = _accSt ? _accSt.openPnl : (a._openPnl||0);
+      var _accOpenCnt = _accPoses.length;
+      // Cache güncelle
+      if(_accSt) { a._liveEquity=liveEq; a._openPnl=_accOpenPnl; a._openCount=_accOpenCnt; }
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      var openCnt=a._openCount||(_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id].length:0);
+      var openCnt=_accOpenCnt||a._openCount||0;
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       var isOnline=!!a.online||(lsMs&&(now-lsMs)<300000);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
@@ -5067,7 +5076,7 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:80px;min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
@@ -5080,7 +5089,7 @@ function renderAccTable(){
         else if(cid==='bonus')   tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:#f5c518;">$'+bon+'</td>';
         else if(cid==='open')    tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;color:'+(openCnt?'#f5c518':'#444')+';font-weight:'+(openCnt?'700':'400')+';\" data-open="'+a.id+'">'+openCnt+'</td>';
         else if(cid==='opnl'){
-          var _opnl=a._openPnl!==undefined?a._openPnl:0;
+          var _opnl=_accOpenPnl!==undefined?_accOpenPnl:(a._openPnl||0);
           var _opnlColor=_opnl>0?'#26a69a':_opnl<0?'#ef5350':'#555';
           var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
