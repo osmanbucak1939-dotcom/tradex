@@ -5152,7 +5152,20 @@ function renderAccTable(){
   } else {
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
+      // _liveEquity yoksa adCalcStats ile anlık hesapla
+      var liveEq;
+      if(a._liveEquity!==undefined) {
+        liveEq = a._liveEquity;
+      } else {
+        var _poses = Array.isArray(a.positions)?a.positions:((_allAccountPositions&&_allAccountPositions[a.id])||[]);
+        if(_poses.length && typeof adCalcStats==='function') {
+          var _st = adCalcStats(a, _poses);
+          liveEq = _st.equity;
+          a._liveEquity = liveEq; // cache'e yaz
+        } else {
+          liveEq = a.balance||0;
+        }
+      }
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
