@@ -3215,13 +3215,22 @@ function updateAccount() {
 
     // En zararlı pozisyonu kapat
     var toClose = sortedPos[0];
-    // Hesap bilgisi - _accObj updateAccount başında zaten set edildi
+    // Hesap bilgisi - pozisyon sahibini accounts'tan bul
     var _soName = '';
-    if(_accObj) {
-      _soName = '#'+(_accObj.login||_accObj.id)+' '+(_accObj.name||'');
-    } else if(typeof _adAccId!=='undefined' && _adAccId && typeof accounts!=='undefined') {
-      var _soAcc2 = accounts.find(function(a){ return String(a.id)===String(_adAccId); });
-      if(_soAcc2) _soName = '#'+(_soAcc2.login||_soAcc2.id)+' '+(_soAcc2.name||'');
+    // toClose pozisyonunun hangi hesaba ait olduğunu bul
+    var _posOwner = null;
+    if(typeof accounts!=='undefined' && accounts) {
+      accounts.forEach(function(a) {
+        if(_posOwner) return;
+        var plist = Array.isArray(a.positions) ? a.positions : [];
+        if(plist.some(function(p){ return String(p.id)===String(toClose.id); })) {
+          _posOwner = a;
+        }
+      });
+    }
+    if(!_posOwner && _accObj) _posOwner = _accObj;
+    if(_posOwner) {
+      _soName = '#'+(_posOwner.login||_posOwner.id)+' '+(_posOwner.name||'');
     }
     if(typeof showAdminToast==='function') {
       showAdminToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
