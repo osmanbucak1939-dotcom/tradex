@@ -1203,6 +1203,26 @@ function _authSuccess(user) {
   }
 
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
+
+  function _txSetOffline() {
+    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
+    var _now = new Date().toISOString();
+    // users koleksiyonu
+    db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_now},{merge:true}).catch(function(){});
+    // broker/accounts koleksiyonu - admin tablosu buradan okuyor
+    db.collection('broker').doc('accounts').get().then(function(doc){
+      if(!doc.exists) return;
+      try {
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
+        if(idx >= 0) {
+          accs[idx].online = false;
+          accs[idx].lastSeen = _now;
+          db.collection('broker').doc('accounts').set({data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
+        }
+      } catch(e){}
+    }).catch(function(){});
+  }
   function _txSendHeartbeat() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     var now = new Date().toISOString();
@@ -1240,17 +1260,14 @@ function _authSuccess(user) {
 
   // Sekme kapanınca offline yap
   window.addEventListener('beforeunload', function() {
-    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
-    var _offNow = new Date().toISOString();
-    db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_offNow},{merge:true}).catch(function(){});
+    _txSetOffline();
   });
   // visibilitychange - sekme gizlenince/gösterilince
   document.addEventListener('visibilitychange', function() {
-    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     if(document.hidden) {
-      var _hideNow = new Date().toISOString();
-      db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_hideNow},{merge:true}).catch(function(){});
+      _txSetOffline();
     } else {
+      if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
       db.collection('users').doc(String(_cu.id)).set({online:true},{merge:true}).catch(function(){});
     }
   });
@@ -1361,11 +1378,8 @@ function _doRegister() {
   });
 }
 function logoutUser() {
-  // Çıkış anında online:false ve lastSeen yaz
-  if(typeof _cu!=='undefined' && _cu && _cu.id && typeof db!=='undefined' && db) {
-    var _logoutNow = new Date().toISOString();
-    db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_logoutNow},{merge:true}).catch(function(){});
-  }
+  // Çıkış anında online:false ve lastSeen yaz - hem users hem broker/accounts
+  _txSetOffline();
   if(window._heartbeatTimer){ clearInterval(window._heartbeatTimer); window._heartbeatTimer=null; }
   if(window._fbSyncInterval) { clearInterval(window._fbSyncInterval); window._fbSyncInterval = null; clearInterval(window._fbPriceInterval); window._fbPriceInterval = null; if(window._fbUnsubscribe){ try{window._fbUnsubscribe();}catch(e){} window._fbUnsubscribe=null; } }
   _cu=null;
