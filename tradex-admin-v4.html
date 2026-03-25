@@ -1567,7 +1567,7 @@ console.log('Firebase bağlandı ✓');
               acc.lastSeen = ud.lastSeen;
               acc._onlineFromUsers = true;
               var ms = new Date(ud.lastSeen).getTime();
-              acc.online = !!(ud.online) || (Date.now()-ms < 15000);
+              acc.online = !!(ud.online) || (Date.now()-ms < 60000);
             }
             // Pozisyon değişimlerini accounts'a yansıt
             if(ud.positions !== undefined) {
@@ -1637,7 +1637,7 @@ console.log('Firebase bağlandı ✓');
 <div id="adminApp" style="display:none;flex-direction:column;height:100vh;min-width:0;background:var(--bg);">
   <div style="background:#111;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
     <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">TRADEX</span>
-    <span style="color:#777;margin:0 10px;">|</span>
+    <span style="color:#d4d4d4;margin:0 10px;">|</span>
     <span style="font-size:11px;color:#555;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
       <span style="color:#888;" id="topbar-user">—</span>
@@ -1681,12 +1681,12 @@ console.log('Firebase bağlandı ✓');
         <span id="mcCount" style="font-size:9px;color:#555;font-family:var(--mono);">0</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#111;">
-        <div style="font-size:8px;color:#777;font-family:var(--mono);">HESAP</div>
-        <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
-        <div style="font-size:8px;color:#777;font-family:var(--mono);text-align:right;">VARLIK</div>
+        <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);">HESAP</div>
+        <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
+        <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
       <div id="mcBody" style="max-height:240px;overflow-y:auto;background:#0a0a0a;">
-        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#777;">Yükleniyor...</div>
+        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#d4d4d4;">Yükleniyor...</div>
       </div>
     </div>
   </div>
@@ -2010,7 +2010,7 @@ console.log('Firebase bağlandı ✓');
     <!-- KOTASYON YÖNETİMİ -->
     <div id="sec-pricecontrol" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:4px;">
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">💹 KOTASYON YÖNETİMİ</div>
-      <p style="font-family:var(--mono);font-size:10px;color:#777;margin-bottom:16px;">
+      <p style="font-family:var(--mono);font-size:10px;color:#d4d4d4;margin-bottom:16px;">
         Seçilen sembolün fiyatını manuel olarak ayarlayın. Gerçek feed üzerine yazılır.
       </p>
 
@@ -2087,7 +2087,7 @@ console.log('Firebase bağlandı ✓');
       <div style="background:#161616;border:1px solid #2a2a2a;border-radius:6px;padding:16px;">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">SEMBOL VERİ KAYNAKLARI</div>
         <div id="adFeedSymTable" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
-          <div style="color:#777;font-size:10px;font-family:monospace;">Feed sekmesi açılınca yüklenir...</div>
+          <div style="color:#d4d4d4;font-size:10px;font-family:monospace;">Feed sekmesi açılınca yüklenir...</div>
         </div>
       </div>
     </div>
@@ -4949,7 +4949,7 @@ function renderAccTable(){
     if(fStatus==='active'&&!a.active)return false;
     if(fStatus==='passive'&&a.active)return false;
     if(fSg&&(a.spreadGroup||'standard')!==fSg)return false;
-    if(fOnline){var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;var on=!!a.online||(ms&&(now-ms)<300000);if(fOnline==='online'&&!on)return false;if(fOnline==='offline'&&on)return false;}
+    if(fOnline){var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;var on=!!a.online||(ms&&(now-ms)<60000);if(fOnline==='online'&&!on)return false;if(fOnline==='offline'&&on)return false;}
     return true;
   });
 
@@ -5074,7 +5074,7 @@ function renderAccTable(){
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
-      var isOnline=!!a.online||(lsMs&&(now-lsMs)<300000);
+      var isOnline=!!a.online||(lsMs&&(now-lsMs)<60000);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
       var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
                   : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
@@ -5662,7 +5662,7 @@ function renderWithdrawReqs() {
   if(!list.length) {
     tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#555;padding:24px;">'
       + '<div style="font-size:13px;">Kayıt bulunamadı</div>'
-      + (search ? '<div style="font-size:11px;margin-top:6px;color:#777;">Arama: <b style=\'color:#888;\'>' + search + '</b></div>' : '')
+      + (search ? '<div style="font-size:11px;margin-top:6px;color:#d4d4d4;">Arama: <b style=\'color:#888;\'>' + search + '</b></div>' : '')
       + '</td></tr>';
     return;
   }
@@ -7018,7 +7018,7 @@ function adFeedRenderSymTable() {
     MARKET_GROUPS.forEach(function(g){ g.items && g.items.forEach(function(it){ allSyms.push(it); }); });
   }
   if(!allSyms.length) {
-    if(el) el.innerHTML='<div style="color:#777;font-size:10px;font-family:monospace;">Market grubu yok</div>';
+    if(el) el.innerHTML='<div style="color:#d4d4d4;font-size:10px;font-family:monospace;">Market grubu yok</div>';
     return;
   }
 
@@ -7072,7 +7072,7 @@ function adFeedRenderSymTable() {
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
             '<span style="color:'+col+';font-size:12px;">●</span>'+
             '<span style="font-family:monospace;font-size:12px;font-weight:700;color:#fff;">'+it.name+'</span>'+
-            '<span style="font-family:monospace;font-size:9px;color:#777;margin-left:4px;">'+it.sym+'</span>'+
+            '<span style="font-family:monospace;font-size:9px;color:#d4d4d4;margin-left:4px;">'+it.sym+'</span>'+
             '<span style="margin-left:auto;background:'+col+'22;color:'+col+';font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;">'+srcLabel+'</span>'+
             (grpName==='Simülasyon'?'<span style="background:#2a2000;color:#f0b90b;font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;margin-left:4px;">SİM</span>':'')+
           '</div>'+
@@ -7710,7 +7710,7 @@ function updateMarginCallPanel() {
   if(mcCount) mcCount.textContent = mcList.length || '0';
 
   if(!mcList.length) {
-    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#777;">Margin call yok</div>';
+    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#d4d4d4;">Margin call yok</div>';
     return;
   }
 
@@ -7972,7 +7972,7 @@ function updateReports(){
           +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-family:var(--mono);font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
-          +'<div style="font-size:9px;color:#777;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
+          +'<div style="font-size:9px;color:#d4d4d4;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+arrowColor+';">$'+parseFloat(r.amount||0).toFixed(2)+'</div>'
           +'<div style="font-size:9px;color:'+sc+';margin-top:2px;">'+sl+'</div></div></div>';
