@@ -8852,6 +8852,28 @@ function adRefreshBadges(){
   a._liveEquity = st.equity;
   a._openPnl    = st.openPnl;
   a._openCount  = st.openCount;
+  // _allAccountPositions senkronize et
+  if(typeof _allAccountPositions!=='undefined') _allAccountPositions[_adAccId] = _adPositions||[];
+  // Hesaplar listesi DOM - aktif hesap için direkt güncelle
+  var _secAcc = document.getElementById('sec-accounts');
+  if(_secAcc && _secAcc.style.display!=='none') {
+    var _fmtEq = function(n){ n=parseFloat(n||0); return (n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    document.querySelectorAll('[data-eq="'+_adAccId+'"]').forEach(function(el){
+      el.textContent=_fmtEq(st.equity);
+      el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
+    });
+    document.querySelectorAll('[data-opnl="'+_adAccId+'"]').forEach(function(el){
+      if(st.openCount===0){el.textContent='—';el.style.color='#999999';return;}
+      var v=st.openPnl||0;
+      el.textContent=(v>=0?'+$':'-$')+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#999999';
+    });
+    document.querySelectorAll('[data-open="'+_adAccId+'"]').forEach(function(el){
+      el.textContent=String(st.openCount||0);
+      el.style.color=st.openCount?'#f5c518':'#aaaaaa';
+      el.style.fontWeight=st.openCount?'700':'400';
+    });
+  }
 }
 
 // ── Hesap verilerini Firebase'den dinle, render et ────────────
