@@ -1662,7 +1662,7 @@ console.log('Firebase bağlandı ✓');
 
   <div style="flex:1;display:flex;overflow:hidden;">
   <!-- MARKET WATCH SIDEBAR -->
-  <div id="mw-sidebar" style="width:300px;min-width:300px;background:#0d0d0d;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;">
+  <div id="mw-sidebar" style="width:300px;min-width:300px;background:#0d0d0d;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;height:100%;">
     <div style="padding:8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
       <input class="mgr-input" id="mwSearch" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)"
         style="width:100%;box-sizing:border-box;font-size:11px;padding:5px 8px;">
@@ -1672,7 +1672,7 @@ console.log('Firebase bağlandı ✓');
       <div style="font-size:9px;color:#ef5350;font-family:var(--mono);text-align:right;">SATIŞ</div>
       <div style="font-size:9px;color:#26a69a;font-family:var(--mono);text-align:right;">ALIŞ</div>
     </div>
-    <div id="mwBody" style="flex:1;min-height:0;overflow-y:auto;" onclick="var t=event.target;while(t&&t.id!=='mwBody'){if(t.dataset&&t.dataset.sym){mwSelect(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
+    <div id="mwBody" style="flex:1;min-height:0;max-height:calc(100vh - 400px);overflow-y:auto;" onclick="var t=event.target;while(t&&t.id!=='mwBody'){if(t.dataset&&t.dataset.sym){mwSelect(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
 
     <!-- MARGIN CALL PANEL -->
     <div style="flex-shrink:0;border-top:1px solid #1a1a1a;">
@@ -1685,7 +1685,7 @@ console.log('Firebase bağlandı ✓');
         <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
         <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
-      <div id="mcBody" style="max-height:200px;overflow-y:auto;background:#0a0a0a;">
+      <div id="mcBody" style="height:200px;overflow-y:auto;background:#0a0a0a;">
         <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#d4d4d4;">Yükleniyor...</div>
       </div>
     </div>
