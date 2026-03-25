@@ -5097,10 +5097,6 @@ function renderAccTable(){
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       // Pozisyonları al - _allAccountPositions öncelikli (en güncel Firebase verisi)
-      // _allAccountPositions boşsa a.positions'dan doldur ve cache'e yaz
-      if(typeof _allAccountPositions!=='undefined' && (!_allAccountPositions[a.id] || !_allAccountPositions[a.id].length) && Array.isArray(a.positions) && a.positions.length) {
-        _allAccountPositions[a.id] = a.positions;
-      }
       var _accPoses=(_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)?_allAccountPositions[a.id]:
                     (Array.isArray(a.positions)&&a.positions.length?a.positions:[]);
       // adCalcStats ile hesap detay penceresiyle aynı mantık
