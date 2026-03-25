@@ -911,7 +911,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-api-btn:hover { color:var(--accent); }
 .tb-api-dot {
   width:7px; height:7px; border-radius:50%;
-  background:#555; flex-shrink:0; transition:background .3s;
+  background:#999999; flex-shrink:0; transition:background .3s;
 }
 .tb-api-dot.live { background:#26a69a; box-shadow:0 0 6px #26a69a; }
 .tb-api-dot.err  { background:var(--sell); }
@@ -1064,11 +1064,11 @@ function _authShow(sec) {
     if(l) l.style.display='block';
     if(r) r.style.display='none';
     if(tl){ tl.style.color='#f0b90b'; tl.style.borderBottomColor='#f0b90b'; }
-    if(tr){ tr.style.color='#555'; tr.style.borderBottomColor='transparent'; }
+    if(tr){ tr.style.color='#999999'; tr.style.borderBottomColor='transparent'; }
   } else {
     if(l) l.style.display='none';
     if(r) r.style.display='block';
-    if(tl){ tl.style.color='#555'; tl.style.borderBottomColor='transparent'; }
+    if(tl){ tl.style.color='#999999'; tl.style.borderBottomColor='transparent'; }
     if(tr){ tr.style.color='#f0b90b'; tr.style.borderBottomColor='#f0b90b'; }
   }
 }
@@ -1617,7 +1617,7 @@ console.log('Firebase bağlandı ✓');
 </head>
 <body style="margin:0;padding:0;height:100%;overflow:hidden;">
 <style>
-.nav-btn{padding:0 14px;height:40px;border:none;background:none;cursor:pointer;font-size:11px;color:#666;border-bottom:2px solid transparent;font-family:var(--mono);letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;}
+.nav-btn{padding:0 14px;height:40px;border:none;background:none;cursor:pointer;font-size:11px;color:#aaaaaa;border-bottom:2px solid transparent;font-family:var(--mono);letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;}
 .nav-btn:hover{color:var(--accent);}
 .nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .admin-section{animation:fadeIn 0.15s ease;}
@@ -1627,9 +1627,9 @@ console.log('Firebase bağlandı ✓');
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
   <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:40px;width:360px;">
     <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">TRADEX</div>
-    <div style="color:#555;font-size:11px;margin-bottom:28px;">ADMIN PANEL</div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:10px;color:#666;margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <div style="margin-bottom:20px;"><label style="display:block;font-size:10px;color:#666;margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div style="color:#999999;font-size:11px;margin-bottom:28px;">ADMIN PANEL</div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:10px;color:#aaaaaa;margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div style="margin-bottom:20px;"><label style="display:block;font-size:10px;color:#aaaaaa;margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <button onclick="adminLogin()" class="mgr-btn success" style="width:100%;padding:10px;font-size:13px;">Giriş Yap</button>
     <div id="al_error" style="color:#ef5350;font-size:11px;margin-top:8px;text-align:center;display:none;">Geçersiz e-posta veya şifre</div>
   </div>
@@ -1638,10 +1638,10 @@ console.log('Firebase bağlandı ✓');
   <div style="background:#111;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
     <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">TRADEX</span>
     <span style="color:#d4d4d4;margin:0 10px;">|</span>
-    <span style="font-size:11px;color:#555;">ADMIN</span>
+    <span style="font-size:11px;color:#999999;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
       <span style="color:#888;" id="topbar-user">—</span>
-      <span style="color:#555;" id="topbar-role"></span>
+      <span style="color:#999999;" id="topbar-role"></span>
       <button onclick="adminLogout()" class="mgr-btn" style="font-size:10px;padding:3px 10px;">Çıkış</button>
     </div>
   </div>
@@ -1668,7 +1668,7 @@ console.log('Firebase bağlandı ✓');
         style="width:100%;box-sizing:border-box;font-size:11px;padding:5px 8px;">
     </div>
     <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:0;padding:4px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
-      <div style="font-size:9px;color:#555;font-family:var(--mono);padding-left:2px;">SEMBOL</div>
+      <div style="font-size:9px;color:#999999;font-family:var(--mono);padding-left:2px;">SEMBOL</div>
       <div style="font-size:9px;color:#ef5350;font-family:var(--mono);text-align:right;">SATIŞ</div>
       <div style="font-size:9px;color:#26a69a;font-family:var(--mono);text-align:right;">ALIŞ</div>
     </div>
@@ -1678,7 +1678,7 @@ console.log('Firebase bağlandı ✓');
     <div style="flex-shrink:0;border-top:1px solid #1a1a1a;">
       <div style="display:flex;align-items:center;padding:7px 10px;background:#150a0a;border-top:1px solid #2a1a1a;">
         <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#ef5350;flex:1;">⚠ MARGIN CALL</div>
-        <span id="mcCount" style="font-size:9px;color:#555;font-family:var(--mono);">0</span>
+        <span id="mcCount" style="font-size:9px;color:#999999;font-family:var(--mono);">0</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#111;">
         <div style="font-size:8px;color:#d4d4d4;font-family:var(--mono);">HESAP</div>
@@ -1725,7 +1725,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Toplam Hesap -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f0b90b;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#f0b90b;padding-left:8px;" id="rep-totalAccs">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
     </div>
@@ -1733,7 +1733,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Toplam Bakiye -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalBal">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
     </div>
@@ -1741,7 +1741,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Toplam Yatırım -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalDeposit">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
@@ -1749,7 +1749,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Toplam Çekim -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#ef5350;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#ef5350;padding-left:8px;" id="rep-totalWithdraw">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
@@ -1762,7 +1762,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Aktif Hesap -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-activeAccs">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
     </div>
@@ -1770,7 +1770,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Toplam Bonus -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f5c518;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f5c518;padding-left:8px;" id="rep-totalBonus">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
@@ -1778,7 +1778,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Açık Pozisyon -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#9c27b0;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#ce93d8;padding-left:8px;" id="rep-openPos">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
@@ -1786,7 +1786,7 @@ console.log('Firebase bağlandı ✓');
     <!-- Net K/Z -->
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#888;border-radius:10px 0 0 10px;" id="rep-netPoz-bar"></div>
-      <div style="font-size:9px;color:#555;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
+      <div style="font-size:9px;color:#999999;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;padding-left:8px;" id="rep-netPoz">—</div>
       <div style="font-size:9px;color:#888;margin-top:4px;padding-left:8px;">anlık hesaplama</div>
     </div>
@@ -1800,7 +1800,7 @@ console.log('Firebase bağlandı ✓');
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
         <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#888;flex:1;">SON YATIRIM / ÇEKİM TALEPLERİ</div>
-        <span style="font-size:9px;color:#555;" id="rep-reqs-count"></span>
+        <span style="font-size:9px;color:#999999;" id="rep-reqs-count"></span>
       </div>
       <div id="rep-recentReqs">
         <div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
@@ -1811,8 +1811,8 @@ console.log('Firebase bağlandı ✓');
     <div style="background:#111;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;gap:0;">
         <button id="rep-tab-open" onclick="repSwitchTab('open')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:var(--accent);cursor:pointer;border-bottom:2px solid var(--accent);">AÇIK</button>
-        <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:#555;cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
-        <span style="font-size:9px;color:#555;margin-left:auto;" id="rep-pos-count"></span>
+        <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:#999999;cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
+        <span style="font-size:9px;color:#999999;margin-left:auto;" id="rep-pos-count"></span>
       </div>
       <div id="rep-posTable" style="overflow-y:auto;max-height:380px;">
         <div style="padding:24px;text-align:center;color:#888;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
@@ -1842,7 +1842,7 @@ console.log('Firebase bağlandı ✓');
 
       <!-- Grup sekmeleri + Ekle/Sil -->
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-        <span style="font-family:var(--mono);font-size:11px;color:#666;">GRUP:</span>
+        <span style="font-family:var(--mono);font-size:11px;color:#aaaaaa;">GRUP:</span>
         <div id="sgTabBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <input class="mgr-input" id="sg_new_name" placeholder="Yeni grup adı..." style="width:150px;padding:5px 10px;">
@@ -1886,7 +1886,7 @@ console.log('Firebase bağlandı ✓');
       <!-- Sembol spread & swap tablosu -->
       <div class="ad-sect" style="padding:14px;">
         <div class="ad-sect-title" style="margin-bottom:6px;">SEMBOL SPREAD &amp; SWAP AYARLARI</div>
-        <p style="font-family:var(--mono);font-size:10px;color:#555;margin-bottom:10px;">Boş = sembol varsayılanı kullanılır &nbsp;|&nbsp; ★ = özelleştirilmiş</p>
+        <p style="font-family:var(--mono);font-size:10px;color:#999999;margin-bottom:10px;">Boş = sembol varsayılanı kullanılır &nbsp;|&nbsp; ★ = özelleştirilmiş</p>
         <div style="overflow-x:auto;">
           <table class="mgr-table" style="min-width:650px;">
             <thead><tr>
@@ -1894,7 +1894,7 @@ console.log('Firebase bağlandı ✓');
               <th>Grup Spread</th><th>Swap AL</th><th>Swap SAT</th>
             </tr></thead>
             <tbody id="sgSymBody">
-              <tr><td colspan="6" style="text-align:center;color:#555;padding:20px;font-family:var(--mono);">Grup seçin...</td></tr>
+              <tr><td colspan="6" style="text-align:center;color:#999999;padding:20px;font-family:var(--mono);">Grup seçin...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1939,7 +1939,7 @@ console.log('Firebase bağlandı ✓');
               <th>Düzenle</th>
             </tr></thead>
             <tbody id="symMgrBody">
-              <tr><td colspan="14" style="text-align:center;color:#555;padding:20px;font-family:var(--mono);">Yükleniyor...</td></tr>
+              <tr><td colspan="14" style="text-align:center;color:#999999;padding:20px;font-family:var(--mono);">Yükleniyor...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1992,7 +1992,7 @@ console.log('Firebase bağlandı ✓');
               <select class="mgr-input" id="ns_priceSource" style="width:100%;cursor:pointer;">
                 <option value="">&#8212; Kendi fiyat&#305; &#8212;</option>
               </select>
-              <span style="font-family:var(--mono);font-size:9px;color:#555;margin-top:2px;display:block;">Ba&#351;ka sembol&#252;n fiyat&#305;n&#305; kullanmak i&#231;in se&#231;in</span>
+              <span style="font-family:var(--mono);font-size:9px;color:#999999;margin-top:2px;display:block;">Ba&#351;ka sembol&#252;n fiyat&#305;n&#305; kullanmak i&#231;in se&#231;in</span>
             </div>
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
@@ -2054,7 +2054,7 @@ console.log('Firebase bağlandı ✓');
       </div>
 
       <div style="font-size:10px;color:#888;font-weight:700;letter-spacing:1px;margin-bottom:8px;">AKTİF OVERRİDE'LAR</div>
-      <div id="pc_override_list" style="font-family:var(--mono);font-size:11px;color:#555;">Henüz override yok</div>
+      <div id="pc_override_list" style="font-family:var(--mono);font-size:11px;color:#999999;">Henüz override yok</div>
     </div>
 
   
@@ -2267,7 +2267,7 @@ console.log('Firebase bağlandı ✓');
         <input id="reqSearch" class="mgr-input" style="width:180px;" placeholder="🔍 ID / Hesap / Yöntem..." oninput="renderWithdrawReqs()">
         <button class="mgr-btn" onclick="fbLoadRequests(function(){renderWithdrawReqs();updatePendingBadge();})">🔄 Yenile</button>
         <button class="mgr-btn danger" style="font-size:10px;" onclick="clearReqFilters()">✕ Sıfırla</button>
-        <span style="font-family:var(--mono);font-size:11px;color:#555;" id="reqResultCount"></span>
+        <span style="font-family:var(--mono);font-size:11px;color:#999999;" id="reqResultCount"></span>
         <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:#f5c518;" id="pendingCount"></span>
       </div>
 
@@ -2276,18 +2276,18 @@ console.log('Firebase bağlandı ✓');
         <div style="overflow-x:auto;">
           <table class="mgr-table" style="min-width:800px;">
             <thead><tr>
-              <th onclick="sortReqs('id')" style="cursor:pointer;user-select:none;white-space:nowrap;">ID <span id="rsort-id" style="color:#555;font-size:9px;">⇅</span></th>
-              <th onclick="sortReqs('type')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tür <span id="rsort-type" style="color:#555;font-size:9px;">⇅</span></th>
+              <th onclick="sortReqs('id')" style="cursor:pointer;user-select:none;white-space:nowrap;">ID <span id="rsort-id" style="color:#999999;font-size:9px;">⇅</span></th>
+              <th onclick="sortReqs('type')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tür <span id="rsort-type" style="color:#999999;font-size:9px;">⇅</span></th>
               <th onclick="sortReqs('date')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tarih <span id="rsort-date" style="color:#26a69a;font-size:9px;">↓</span></th>
-              <th onclick="sortReqs('account')" style="cursor:pointer;user-select:none;white-space:nowrap;">Hesap <span id="rsort-account" style="color:#555;font-size:9px;">⇅</span></th>
+              <th onclick="sortReqs('account')" style="cursor:pointer;user-select:none;white-space:nowrap;">Hesap <span id="rsort-account" style="color:#999999;font-size:9px;">⇅</span></th>
               <th>Yöntem / Kaynak</th>
               <th>Adres / Not</th>
-              <th onclick="sortReqs('amount')" style="cursor:pointer;user-select:none;white-space:nowrap;">Miktar <span id="rsort-amount" style="color:#555;font-size:9px;">⇅</span></th>
-              <th onclick="sortReqs('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Durum <span id="rsort-status" style="color:#555;font-size:9px;">⇅</span></th>
+              <th onclick="sortReqs('amount')" style="cursor:pointer;user-select:none;white-space:nowrap;">Miktar <span id="rsort-amount" style="color:#999999;font-size:9px;">⇅</span></th>
+              <th onclick="sortReqs('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Durum <span id="rsort-status" style="color:#999999;font-size:9px;">⇅</span></th>
               <th>İşlem</th>
             </tr></thead>
             <tbody id="withdrawReqBody">
-              <tr><td colspan="9" style="text-align:center;color:#555;padding:20px;font-family:var(--mono);">Yükleniyor...</td></tr>
+              <tr><td colspan="9" style="text-align:center;color:#999999;padding:20px;font-family:var(--mono);">Yükleniyor...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2535,7 +2535,7 @@ function drawChart() {
   for(var g=0; g<=gridLines; g++) {
     var gp = dispMax - dispRange * g / gridLines;
     var gy = PAD_TOP + chartH * g / gridLines;
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = '#999999';
     ctx.font = '10px monospace';
     ctx.textAlign = 'left';
     var decimals = gp > 100 ? 2 : gp > 1 ? 4 : 6;
@@ -2634,7 +2634,7 @@ function drawChart() {
       ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(PAD_LEFT,y2); ctx.lineTo(W-PAD_RIGHT,y2); ctx.stroke();
     });
-    ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='left';
+    ctx.fillStyle='#999999'; ctx.font='9px monospace'; ctx.textAlign='left';
     ctx.fillText('RSI('+(indCfg.rsi||14)+')', PAD_LEFT+3, rsiY+10);
   }
 
@@ -2643,7 +2643,7 @@ function drawChart() {
   ctx.strokeStyle='#222'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(PAD_LEFT,H-PAD_BOTTOM); ctx.lineTo(W-PAD_RIGHT,H-PAD_BOTTOM); ctx.stroke();
 
-  ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='center';
+  ctx.fillStyle='#999999'; ctx.font='9px monospace'; ctx.textAlign='center';
   var labelEvery = Math.max(1, Math.round(60 / stepW));
   for(var i=0; i<vis.length; i+=labelEvery) {
     var cv = vis[i];
@@ -2654,7 +2654,7 @@ function drawChart() {
     if(tx < PAD_LEFT+20 || tx > W-PAD_RIGHT-20) continue;
     ctx.strokeStyle='#222'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(tx,PAD_TOP); ctx.lineTo(tx,H-PAD_BOTTOM); ctx.stroke();
-    ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillStyle='#999999'; ctx.font='9px monospace'; ctx.textAlign='center';
     ctx.fillText(label, tx, H-PAD_BOTTOM+11);
   }
 
@@ -3545,7 +3545,7 @@ function adReceiveRawPrice(sym, rawMid) {
         document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
           var v = st.openPnl||0;
           el.textContent = poses.length===0?'—':((v>=0?'+':'')+( v>=0?'$':'-$')+_fp3(Math.abs(v)));
-          el.style.color = v>0?'#26a69a':v<0?'#ef5350':'#555';
+          el.style.color = v>0?'#26a69a':v<0?'#ef5350':'#999999';
         });
       });
     }
@@ -3891,7 +3891,7 @@ function renderSymMgr(filterCat) {
       '<td style="font-family:var(--mono);font-weight:700;white-space:nowrap;">'+s.sym+'</td>' +
       '<td><input class="mgr-input" style="width:90px;padding:3px 6px;" value="'+s.label+'" onchange="updateSym('+i+',\'label\',this.value)"></td>' +
       '<td style="font-size:11px;">'+(catMap[s.category||'crypto']||s.category||'-')+'</td>' +
-      '<td style="font-family:var(--mono);font-size:10px;color:'+(s.priceSource?'#f5c518':'#555')+';">'+(s.priceSource||'&#8212;')+'</td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:'+(s.priceSource?'#f5c518':'#999999')+';">'+(s.priceSource||'&#8212;')+'</td>' +
       '<td style="white-space:nowrap"><input class="mgr-input" style="width:70px;padding:3px 6px;" type="number" step="any" value="'+(s.spread||0)+'" onchange="updateSym('+i+',\'spread\',parseFloat(this.value))">'+
       '<span style="margin-left:4px;font-size:9px;padding:1px 5px;border-radius:3px;background:'+(s.spreadType==='dynamic'?'#0a2a1a':'#1a1a2a')+';color:'+(s.spreadType==='dynamic'?'#26a69a':'#888')+'">'+((s.spreadType||'fixed')==='dynamic'?'±'+( s.spreadVariance||20)+'%':'SABİT')+'</span></td>' +
       '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.swapBuy||0)+'" onchange="updateSym('+i+',\'swapBuy\',parseFloat(this.value))"></td>' +
@@ -4224,7 +4224,7 @@ function adRenderTab(tab) {
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?((((a.equity||a.balance||0))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:#f5c518;">%'+_mcPct+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:#ef5350;">%'+_soPct+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:#26a69a;">Aktif</span>':'<span style="color:#555;">Pasif</span>')+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:#26a69a;">Aktif</span>':'<span style="color:#999999;">Pasif</span>')+'</div></div>' +
       '</div>' +
       '<div class="ad-grid2">' +
         '<div>' +
@@ -4274,26 +4274,26 @@ function adRenderTab(tab) {
       // ── Mini finansal özet ──
       '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0 14px;border-bottom:1px solid #222;margin-bottom:12px;">' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">Bakiye: </span><span id="adBadgeBal" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+bal+'</span></div>' +
+          '<span style="color:#aaaaaa;">Bakiye: </span><span id="adBadgeBal" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+bal+'</span></div>' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">Varlık: </span><span id="adBadgeEq" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+eq+'</span></div>' +
+          '<span style="color:#aaaaaa;">Varlık: </span><span id="adBadgeEq" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+eq+'</span></div>' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">Bonus: </span><span id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;">$'+bon+'</span></div>' +
+          '<span style="color:#aaaaaa;">Bonus: </span><span id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;">$'+bon+'</span></div>' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">Teminat: </span><span id="adBadgeMar" style="font-family:var(--mono);font-weight:700;">$'+mar+'</span></div>' +
+          '<span style="color:#aaaaaa;">Teminat: </span><span id="adBadgeMar" style="font-family:var(--mono);font-weight:700;">$'+mar+'</span></div>' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">S.Teminat: </span><span id="adBadgeFree" style="font-family:var(--mono);font-weight:700;">$'+freeM+'</span></div>' +
+          '<span style="color:#aaaaaa;">S.Teminat: </span><span id="adBadgeFree" style="font-family:var(--mono);font-weight:700;">$'+freeM+'</span></div>' +
         '<div style="background:#111;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">T.Seviyesi: </span><span id="adBadgeMarLv" style="font-family:var(--mono);color:#f5c518;font-weight:700;">'+marLv+'</span></div>' +
+          '<span style="color:#aaaaaa;">T.Seviyesi: </span><span id="adBadgeMarLv" style="font-family:var(--mono);color:#f5c518;font-weight:700;">'+marLv+'</span></div>' +
         '<div style="background:#111;border:1px solid '+((_opnl>0)?'#26a69a44':(_opnl<0)?'#ef535044':'#222')+';border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#666;">Açık K/Z: </span><span id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;">'+_opnlTxt+'</span></div>' +
+          '<span style="color:#aaaaaa;">Açık K/Z: </span><span id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;">'+_opnlTxt+'</span></div>' +
       '</div>' +
 
       // ── Sekme butonları ──
       '<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #222;">' +
         '<button data-subtab="open" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--accent);border-bottom:2px solid var(--accent);font-weight:700;font-family:var(--mono);">AÇIK</button>' +
-        '<button data-subtab="closed" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#666;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">KAPALI</button>' +
-        '<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#666;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>' +
+        '<button data-subtab="closed" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#aaaaaa;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">KAPALI</button>' +
+        '<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#aaaaaa;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>' +
         '<div style="flex:1;"></div>' +
         '<button class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>' +
         '<button class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>' +
@@ -4345,7 +4345,7 @@ function adRenderTab(tab) {
               '<th onclick="adSortOpen(\'pnl\')" style="padding:6px 6px;text-align:left;color:#888;font-size:10px;cursor:pointer;" title="Sırala">K/Z <span id="adSortO_pnl"></span></th>' +
               '<th style="padding:6px 6px;text-align:left;color:#888;font-size:10px;">İşlem</th>' +
             '</tr></thead>' +
-            '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:#555;padding:16px;">Yükleniyor...</td></tr></tbody>' +
+            '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:#999999;padding:16px;">Yükleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -4376,7 +4376,7 @@ function adRenderTab(tab) {
               '<th onclick="adSortHist(\'pnl\')" style="padding:6px 6px;text-align:left;color:#888;font-size:10px;cursor:pointer;">K/Z <span id="adSortH_pnl"></span></th>' +
               '<th style="padding:6px 6px;text-align:left;color:#888;font-size:10px;">Islem</th>' +
             '</tr></thead>' +
-            '<tbody id="adHistBody"><tr><td colspan="14" style="text-align:center;color:#555;padding:16px;">Yukleniyor...</td></tr></tbody>' +
+            '<tbody id="adHistBody"><tr><td colspan="14" style="text-align:center;color:#999999;padding:16px;">Yukleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -4448,7 +4448,7 @@ function adRenderTab(tab) {
           '</div>' +
           '<div class="ad-section-title" style="margin-top:20px;">İzleyici Şifresi</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div style="font-family:var(--mono);font-size:10px;color:#666;margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
+            '<div style="font-family:var(--mono);font-size:10px;color:#aaaaaa;margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
             '<div><label class="ad-label">İzleyici Şifresi</label><input class="ad-input" id="ad_vpw" type="text" placeholder="Örn: izle1234" value="'+(a.viewerPassword||'')+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adSaveViewerPassword()">👁 İzleyici Şifresini Kaydet</button>' +
           '</div>' +
@@ -4585,7 +4585,7 @@ function adRenderFinlog() {
 
     var rows = '';
     if(!logs.length) {
-      rows = '<tr><td colspan="5" style="text-align:center;color:#555;padding:24px;font-size:12px;">Kayıt yok</td></tr>';
+      rows = '<tr><td colspan="5" style="text-align:center;color:#999999;padding:24px;font-size:12px;">Kayıt yok</td></tr>';
     } else {
       // Tarihe göre yeniden eskiye sırala
       var sorted = logs.map(function(l,i){return {l:l,i:i};}).sort(function(a,b){return parseFinlogDate(b.l.date)-parseFinlogDate(a.l.date);});
@@ -4599,7 +4599,7 @@ function adRenderFinlog() {
           + '<td style="padding:7px 8px;font-size:11px;color:'+color+';font-weight:600;white-space:nowrap;">'+label+'</td>'
           + '<td style="padding:7px 8px;font-size:11px;font-family:var(--mono);color:'+color+';white-space:nowrap;">'+sign+'$'+parseFloat(log.amount||0).toFixed(2)+'</td>'
           + '<td style="padding:7px 8px;font-size:11px;color:#888;white-space:nowrap;">'+(log.date?fmtDate(log.date):'—')+'</td>'
-          + '<td style="padding:7px 8px;font-size:11px;color:#666;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
+          + '<td style="padding:7px 8px;font-size:11px;color:#aaaaaa;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
           + '<td style="padding:7px 8px;white-space:nowrap;">'
             + '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:#222;border:1px solid #333;color:#aaa;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;margin-right:4px;">&#9998;</button>'
             + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid #ef5350;color:#ef5350;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;">&#10005;</button>'
@@ -4993,7 +4993,7 @@ function renderAccTable(){
     pickerItems+='<div onclick="_accToggleCol(\''+cd.id+'\','+(!on)+')" style="'
       +'display:flex;align-items:center;gap:10px;padding:7px 10px;cursor:pointer;'
       +'border-radius:4px;background:'+(on?'#2a3a2a':'#2a2a2a')+';margin-bottom:4px;">'
-      +'<div style="width:14px;height:14px;border-radius:3px;border:2px solid '+(on?'#26a69a':'#555')+';'
+      +'<div style="width:14px;height:14px;border-radius:3px;border:2px solid '+(on?'#26a69a':'#999999')+';'
         +'background:'+(on?'#26a69a':'transparent')+';display:flex;align-items:center;justify-content:center;">'
         +(on?'<span style="color:#000;font-size:10px;font-weight:900;">✓</span>':'')
       +'</div>'
@@ -5030,7 +5030,7 @@ function renderAccTable(){
       +'<option value="">Tümü</option>'
       +'<option value="online"'+(fOnline==='online'?' selected':'')+'>🟢 Online</option>'
       +'<option value="offline"'+(fOnline==='offline'?' selected':'')+'>⚫ Offline</option></select>'
-    +'<span style="font-size:11px;color:#666;white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
+    +'<span style="font-size:11px;color:#aaaaaa;white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
     +'<button class="mgr-btn" id="accColBtn" onclick="_accColPickerToggle(event)" '
       +'style="flex-shrink:0;padding:5px 12px;font-size:12px;white-space:nowrap;'
       +'background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#ccc;cursor:pointer;">⚙ Kolonlar</button>'
@@ -5056,7 +5056,7 @@ function renderAccTable(){
 
   var tbodyHtml = '';
   if(!rows.length){
-    tbodyHtml='<tr><td colspan="20" style="text-align:center;color:#555;padding:40px;font-size:12px;">Hesap bulunamadı</td></tr>';
+    tbodyHtml='<tr><td colspan="20" style="text-align:center;color:#999999;padding:40px;font-size:12px;">Hesap bulunamadı</td></tr>';
   } else {
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -5088,14 +5088,14 @@ function renderAccTable(){
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;">'+(isOnline
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
-          :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #555;vertical-align:middle;"></span>')+'</td>';
+          :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
         else if(cid==='balance') tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;">$'+bal+'</td>';
         else if(cid==='equity')  tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:'+eqColor+';" data-eq="'+a.id+'">'+eq+'</td>';
         else if(cid==='bonus')   tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:#f5c518;">$'+bon+'</td>';
         else if(cid==='open')    tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;color:'+(openCnt?'#f5c518':'#444')+';font-weight:'+(openCnt?'700':'400')+';\" data-open="'+a.id+'">'+openCnt+'</td>';
         else if(cid==='opnl'){
           var _opnl=_accOpenPnl!==undefined?_accOpenPnl:(a._openPnl||0);
-          var _opnlColor=_opnl>0?'#26a69a':_opnl<0?'#ef5350':'#555';
+          var _opnlColor=_opnl>0?'#26a69a':_opnl<0?'#ef5350':'#999999';
           var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
         }
@@ -5604,7 +5604,7 @@ function sortReqs(col) {
       el.style.color = '#26a69a';
     } else {
       el.textContent = '⇅';
-      el.style.color = '#555';
+      el.style.color = '#999999';
     }
   });
   renderWithdrawReqs();
@@ -5660,7 +5660,7 @@ function renderWithdrawReqs() {
   var cntEl = document.getElementById('reqResultCount');
   if(cntEl) cntEl.textContent = list.length ? list.length + ' kayıt' : '';
   if(!list.length) {
-    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#555;padding:24px;">'
+    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999999;padding:24px;">'
       + '<div style="font-size:13px;">Kayıt bulunamadı</div>'
       + (search ? '<div style="font-size:11px;margin-top:6px;color:#d4d4d4;">Arama: <b style=\'color:#888;\'>' + search + '</b></div>' : '')
       + '</td></tr>';
@@ -5686,14 +5686,14 @@ function renderWithdrawReqs() {
            + 'onclick="rejectReq(\'' + rid + '\',\'' + rtype + '\')">'
            + '&#10005; Reddet</button>';
     } else {
-      acts = '<span style="color:#555;font-size:10px;">&#8212;</span>';
+      acts = '<span style="color:#999999;font-size:10px;">&#8212;</span>';
     }
     var mgrBadge = r.source==='manager'
       ? '<span style="background:#0d2a1a;color:#26a69a;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>'
       : '<span style="background:#1a1a2e;color:#888;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">TRADER</span>';
-    var mgrName = r.manager ? '<div style="color:#666;font-size:9px;margin-top:1px;">' + r.manager + '</div>' : '';
+    var mgrName = r.manager ? '<div style="color:#aaaaaa;font-size:9px;margin-top:1px;">' + r.manager + '</div>' : '';
     rows += '<tr>'
-      + '<td style="font-family:var(--mono);font-size:10px;color:#666;">' + (r.id||'&#8212;') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:10px;color:#aaaaaa;">' + (r.id||'&#8212;') + '</td>'
       + '<td>' + typeLabel + '</td>'
       + '<td style="font-family:var(--mono);font-size:10px;color:#888;">' + ((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'&#8212;') + '</td>'
       + '<td style="font-size:11px;">' + (r.accountName||r.account||('#'+(r.accountId||'?'))) + '</td>'
@@ -7079,12 +7079,12 @@ function adFeedRenderSymTable() {
           '<div style="font-family:monospace;font-size:11px;color:var(--accent);margin-bottom:10px;">'+(price?price.toFixed(dec):'—')+'</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
             '<div>'+
-              '<div style="font-size:9px;color:#666;margin-bottom:3px;">SPREAD</div>'+
+              '<div style="font-size:9px;color:#aaaaaa;margin-bottom:3px;">SPREAD</div>'+
               '<input id="fse_sp_'+it.sym+'" type="number" step="any" value="'+(sgData.spread||it.spread||0)+'" '+
                 'style="width:100%;background:#111;border:1px solid #333;border-radius:3px;padding:5px 8px;color:#e0e0e0;font-family:monospace;font-size:11px;box-sizing:border-box;">'+
             '</div>'+
             '<div>'+
-              '<div style="font-size:9px;color:#666;margin-bottom:3px;">SWAP AL / SAT</div>'+
+              '<div style="font-size:9px;color:#aaaaaa;margin-bottom:3px;">SWAP AL / SAT</div>'+
               '<div style="display:flex;gap:4px;">'+
                 '<input id="fse_sb_'+it.sym+'" type="number" step="any" placeholder="AL" value="'+(sgData.swapBuy||0)+'" '+
                   'style="width:50%;background:#111;border:1px solid #333;border-radius:3px;padding:5px 6px;color:#e0e0e0;font-family:monospace;font-size:11px;box-sizing:border-box;">'+
@@ -7321,7 +7321,7 @@ function pcRenderOverrides() {
     return k.charAt(0)!=='_' && /^[A-Z0-9]{2,12}X?$/.test(k);
   });
   if(!keys.length) {
-    el.innerHTML = '<span style="color:#555;font-size:11px;">Henüz override yok</span>';
+    el.innerHTML = '<span style="color:#999999;font-size:11px;">Henüz override yok</span>';
     return;
   }
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
@@ -7397,7 +7397,7 @@ function symSearchFilter(q){
   dd.innerHTML='';
   if(!filtered.length){
     var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#555;font-family:monospace;font-size:11px;';
+    empty.style.cssText='padding:16px;text-align:center;color:#999999;font-family:monospace;font-size:11px;';
     empty.textContent='Sembol bulunamadi';
     dd.appendChild(empty);
     dd.style.display='block'; return;
@@ -7411,7 +7411,7 @@ function symSearchFilter(q){
     var chgCol=p?(p.chg>=0?'#26a69a':'#ef5350'):'#888';
     var row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#d4d4d4;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#555;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
+    row.innerHTML='<div><span style="font-weight:700;color:#d4d4d4;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#999999;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
       +'<div style="display:flex;align-items:center;gap:6px;">'
       +'<span style="color:#888;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
       +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
@@ -7645,7 +7645,7 @@ function adminNav(sec,btn){
 function showAdminToast(title,msg,type){
   var t=document.getElementById('adminToast');
   if(!t){t=document.createElement('div');t.id='adminToast';t.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:6px;color:#fff;font-size:12px;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;min-width:200px;';document.body.appendChild(t);}
-  var _tc={success:{bg:'#0d1f17',b:'#26a69a',c:'#26a69a'},error:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},danger:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},warning:{bg:'#1f1a0d',b:'#f5c518',c:'#f5c518'},info:{bg:'#111',b:'#555',c:'#ccc'}};
+  var _tc={success:{bg:'#0d1f17',b:'#26a69a',c:'#26a69a'},error:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},danger:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},warning:{bg:'#1f1a0d',b:'#f5c518',c:'#f5c518'},info:{bg:'#111',b:'#999999',c:'#ccc'}};
   var _tcc=_tc[type]||_tc.info;
   t.style.background=_tcc.bg;t.style.borderLeft='3px solid '+_tcc.b;t.style.color=_tcc.c;t.style.opacity='1';
   t.innerHTML='<strong>'+title+'</strong><br><span style="opacity:0.9;font-size:11px;">'+msg+'</span>';
@@ -7723,7 +7723,7 @@ function updateMarginCallPanel() {
     html += '<div data-id="'+m.id+'" onclick="openAccDetail(this.dataset.id)" style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:5px 10px;border-bottom:1px solid #141414;cursor:pointer;">'
       +'<div style="min-width:0;">'
         +'<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">#'+m.login+'</div>'
-        +'<div style="font-family:var(--mono);font-size:9px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.name+'</div>'
+        +'<div style="font-family:var(--mono);font-size:9px;color:#999999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.name+'</div>'
       +'</div>'
       +'<div style="text-align:right;font-family:var(--mono);font-size:11px;font-weight:700;color:'+color+';align-self:center;">'+lvl.toFixed(0)+'%</div>'
       +'<div style="text-align:right;font-family:var(--mono);font-size:10px;color:#888;align-self:center;">$'+m.equity.toFixed(0)+'</div>'
@@ -7955,7 +7955,7 @@ function updateReports(){
     allReqs=allReqs.slice(0,8);
     var rIdx=0;
     if(!allReqs.length){
-      rrEl.innerHTML='<span style="color:#555;font-size:11px;">Talep yok</span>';
+      rrEl.innerHTML='<span style="color:#999999;font-size:11px;">Talep yok</span>';
     } else {
       var html='';
       allReqs.forEach(function(r){
@@ -7964,7 +7964,7 @@ function updateReports(){
         var arrowColor=isW?'#ef5350':'#26a69a';
         var sc=r.status==='approved'?'#26a69a':r.status==='rejected'?'#ef5350':'#f5c518';
         var sl=r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandı':'Reddedildi';
-        var mgrLabel = r.manager ? '<span style="color:#666;font-size:10px;margin-left:4px;">['+r.manager+']</span>' : '';
+        var mgrLabel = r.manager ? '<span style="color:#aaaaaa;font-size:10px;margin-left:4px;">['+r.manager+']</span>' : '';
         var srcBadge = r.source==='manager' ? '<span style="background:#1a3a2a;color:#26a69a;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>' : '';
         var rowBg = rIdx%2===0 ? '' : 'background:#0d0d0d;'; rIdx++;
         html+='<div style="display:flex;gap:10px;padding:8px 16px;border-bottom:1px solid #161616;align-items:center;'+rowBg+'">'
@@ -8015,18 +8015,18 @@ function updateReports(){
       var pcEl2=document.getElementById('rep-pos-count');
       if(pcEl2) pcEl2.textContent=allClosed.length+' işlem';
       if(!allClosed.length){
-        ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#555;font-family:var(--mono);font-size:11px;">Kapalı işlem yok</div>';
+        ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#999999;font-family:var(--mono);font-size:11px;">Kapalı işlem yok</div>';
       } else {
         var fp2c=function(n){return '$'+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
         var chHtml='<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#161616;">'
-          +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;">HESAP</th>'
-          +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;">SEMBOL</th>'
-          +'<th style="padding:8px 12px;text-align:center;color:#555;font-family:var(--mono);font-size:9px;">YÖN</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">LOT</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">AÇILIŞ</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">KAPANIS</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">K/Z</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;">TARIH</th>'
+          +'<th style="padding:8px 12px;text-align:left;color:#999999;font-family:var(--mono);font-size:9px;">HESAP</th>'
+          +'<th style="padding:8px 12px;text-align:left;color:#999999;font-family:var(--mono);font-size:9px;">SEMBOL</th>'
+          +'<th style="padding:8px 12px;text-align:center;color:#999999;font-family:var(--mono);font-size:9px;">YÖN</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;">LOT</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;">AÇILIŞ</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;">KAPANIS</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;">K/Z</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;">TARIH</th>'
           +'</tr></thead><tbody>';
         allClosed.slice(0,100).forEach(function(h,idx){
           var pnl=parseFloat(h.pnl)||0;
@@ -8034,14 +8034,14 @@ function updateReports(){
           var bg=idx%2===0?'':'background:#0d0d0d;';
           var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
           chHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
-            +'<td style="padding:6px 12px;font-family:var(--mono);font-size:11px;color:#666;">'+h._accName+'</td>'
+            +'<td style="padding:6px 12px;font-family:var(--mono);font-size:11px;color:#aaaaaa;">'+h._accName+'</td>'
             +'<td style="padding:6px 12px;font-family:var(--mono);font-size:11px;font-weight:700;color:#ddd;">'+h.sym+'</td>'
             +'<td style="padding:6px 12px;text-align:center;"><span style="display:inline-block;padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;background:'+(h.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(h.side==="buy"?"#26a69a":"#ef5350")+';">'+(h.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#ccc;">'+parseFloat(h.qty||0).toFixed(2)+'</td>'
-            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#666;">'+parseFloat(h.openPrice||0).toFixed(4)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#aaaaaa;">'+parseFloat(h.openPrice||0).toFixed(4)+'</td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#aaa;">'+parseFloat(h.closePrice||0).toFixed(4)+'</td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+fp2c(pnl)+'</td>'
-            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:10px;color:#555;">'+dt+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:10px;color:#999999;">'+dt+'</td>'
             +'</tr>';
         });
         chHtml+='</tbody></table>';
@@ -8051,17 +8051,17 @@ function updateReports(){
     }
 
     if(!allPos.length){
-      ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#555;font-family:var(--mono);font-size:11px;">Açık pozisyon yok</div>';
+      ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#999999;font-family:var(--mono);font-size:11px;">Açık pozisyon yok</div>';
     } else {
       var ptHtml='<table style="width:100%;border-collapse:collapse;">'
         +'<thead><tr style="background:#161616;">'
-        +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">HESAP</th>'
-        +'<th style="padding:8px 12px;text-align:left;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">SEMBOL</th>'
-        +'<th style="padding:8px 12px;text-align:center;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">YÖN</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">LOT</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">AÇILIŞ</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">GÜNCEL</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#555;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">K/Z</th>'
+        +'<th style="padding:8px 12px;text-align:left;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">HESAP</th>'
+        +'<th style="padding:8px 12px;text-align:left;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">SEMBOL</th>'
+        +'<th style="padding:8px 12px;text-align:center;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">YÖN</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">LOT</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">AÇILIŞ</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">GÜNCEL</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:#999999;font-family:var(--mono);font-size:9px;letter-spacing:.5px;">K/Z</th>'
         +'</tr></thead><tbody>';
       // En son açılan üstte - id büyükten küçüğe (id artan sırada açılıyor)
       // Yeniden eskiye sırala - _parseDate her iki formatı handle eder (ISO ve DD.MM.YYYY)
@@ -8085,11 +8085,11 @@ function updateReports(){
         var pc=pnl>=0?'#26a69a':'#ef5350';
         var bg=idx%2===0?'':'background:#0d0d0d;';
         ptHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
-          +'<td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:#666;">'+p._accName+'</td>'
+          +'<td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:#aaaaaa;">'+p._accName+'</td>'
           +'<td style="padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:700;color:#ddd;">'+p.sym+'</td>'
           +'<td style="padding:7px 12px;text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;background:'+(p.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(p.side==="buy"?"#26a69a":"#ef5350")+';">'+  (p.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#ccc;">'+parseFloat(p.qty||0).toFixed(2)+'</td>'
-          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#666;">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:#aaaaaa;">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--accent);">'+cur.toFixed(4)+'</td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:'+pc+';">'+( pnl>=0?"+":"")+fp2(pnl)+'</td>'
           +'</tr>';
@@ -8110,11 +8110,11 @@ function repSwitchTab(tab) {
   var btnOpen   = document.getElementById('rep-tab-open');
   var btnClosed = document.getElementById('rep-tab-closed');
   if(btnOpen) {
-    btnOpen.style.color   = tab==='open'   ? 'var(--accent)' : '#555';
+    btnOpen.style.color   = tab==='open'   ? 'var(--accent)' : '#999999';
     btnOpen.style.borderBottom = tab==='open' ? '2px solid var(--accent)' : '2px solid transparent';
   }
   if(btnClosed) {
-    btnClosed.style.color = tab==='closed' ? 'var(--accent)' : '#555';
+    btnClosed.style.color = tab==='closed' ? 'var(--accent)' : '#999999';
     btnClosed.style.borderBottom = tab==='closed' ? '2px solid var(--accent)' : '2px solid transparent';
   }
   // Pozisyon tablosunu yenile
@@ -8173,7 +8173,7 @@ function renderSymSection(){
   // symConfig'den direkt al - tek kaynak gerçeği
   var allSyms = (typeof symConfig !== 'undefined' && Array.isArray(symConfig)) ? symConfig : [];
   if(!allSyms.length) {
-    cnt.innerHTML = '<div class="ad-sect" style="padding:14px;color:#666;">Sembol bulunamadı</div>';
+    cnt.innerHTML = '<div class="ad-sect" style="padding:14px;color:#aaaaaa;">Sembol bulunamadı</div>';
     return;
   }
 
@@ -8200,7 +8200,7 @@ function renderSymSection(){
       '<td style="padding:6px 10px;color:#ccc;">'+( s.label||'-')+'</td>'+
       '<td style="padding:6px 10px;color:#888;font-size:10px;">'+cat+'</td>'+
       '<td style="padding:6px 10px;font-family:var(--mono);color:var(--accent);text-align:right;">'+(price ? price.toFixed(dec) : '—')+'</td>'+
-      '<td style="padding:6px 10px;font-family:var(--mono);text-align:right;color:#666;">'+s.spread+'</td>'+
+      '<td style="padding:6px 10px;font-family:var(--mono);text-align:right;color:#aaaaaa;">'+s.spread+'</td>'+
       '<td style="padding:6px 10px;text-align:center;color:'+activeColor+';font-weight:700;">'+activeText+'</td>'+
       '</tr>';
   });
@@ -8214,7 +8214,7 @@ function fbSaveStaff(list){if(!window.db)return;var batch=db.batch();list.forEac
 function loadStaffTab(){fbLoadStaff(function(list){_staffList=list||[];renderStaffTable();});}
 function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
-  if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:#555;text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
+  if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:#999999;text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
   var rl={superadmin:'Süper Admin',admin:'Admin',manager:'Manager',employee:'Çalışan'};
   var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#1a1a1a;"><th style="padding:8px 10px;text-align:left;color:#888;">Ad</th><th style="padding:8px 10px;text-align:left;color:#888;">E-posta</th><th style="padding:8px 10px;text-align:left;color:#888;">Rol</th><th style="padding:8px 10px;text-align:left;color:#888;">Durum</th><th style="padding:8px 10px;text-align:left;color:#888;">Atanan</th><th style="padding:8px 10px;text-align:left;color:#888;">İşlem</th></tr></thead><tbody>';
   _staffList.forEach(function(s){
@@ -8281,7 +8281,7 @@ function openPermModal(id) {
       +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">⚙ YETKİ DÜZENLEMESİ — '+s.name+'</div>'
       +'<button onclick="closePermModal()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
-    +'<div style="font-family:var(--mono);font-size:10px;color:#555;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
+    +'<div style="font-family:var(--mono);font-size:10px;color:#999999;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
   
   // Tüm seç / Hiçbiri butonu
   html += '<div style="display:flex;gap:8px;margin-bottom:16px;">'
@@ -8371,7 +8371,7 @@ function openAssignModal(id) {
     +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">HESAP ATA — '+s.name+'</div>'
     +'<button onclick="closeAssignModal()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
-    +'<div style="font-size:11px;color:#555;margin-bottom:12px;">Personelin yönetebileceği hesapları seçin:</div>'
+    +'<div style="font-size:11px;color:#999999;margin-bottom:12px;">Personelin yönetebileceği hesapları seçin:</div>'
     +'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
 
   customers.forEach(function(a) {
@@ -8379,7 +8379,7 @@ function openAssignModal(id) {
     html += '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#111;border-radius:6px;cursor:pointer;">'
       +'<input type="checkbox" class="assign-cb-'+id+'" data-acc="'+a.id+'" '+(isAssigned?'checked':'')+'>'
       +'<span style="font-family:var(--mono);font-size:11px;color:#ccc;">#'+(a.login||a.id)+' — '+a.name+(a.surname?' '+a.surname:'')+'</span>'
-      +'<span style="margin-left:auto;font-size:10px;color:#555;">'+(a.active?'Aktif':'Pasif')+'</span>'
+      +'<span style="margin-left:auto;font-size:10px;color:#999999;">'+(a.active?'Aktif':'Pasif')+'</span>'
       +'</label>';
   });
 
@@ -8575,7 +8575,7 @@ var AD_SIM={
         document.querySelectorAll('[data-opnl="'+a.id+'"]').forEach(function(el){
           var v=a._openPnl||0;
           el.textContent=poses.length===0?'—':((v>=0?'+':'')+( v>=0?'$':'-$')+_fp2(Math.abs(v)));
-          el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#555';
+          el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#999999';
           if(el.parentElement) el.parentElement.style.borderColor=v>0?'#26a69a44':v<0?'#ef535044':'#222';
         });
       });
@@ -8710,10 +8710,10 @@ function adSaveUserTrades(){
     .catch(function(e){ console.error('[SYNC] Firebase HATA:',e); });
   fbSaveAccounts();
 }function adDeviceIcon(d){
-  if(!d||d==='Web') return '<span style="color:#666;font-size:10px;">💻 Web</span>';
+  if(!d||d==='Web') return '<span style="color:#aaaaaa;font-size:10px;">💻 Web</span>';
   if(d==='Mobile'||d==='iOS'||d==='Android') return '<span style="color:#26a69a;font-size:10px;">📱 Mobil</span>';
   if(d==='Manager'||d==='Admin') return '<span style="color:#f5c518;font-size:10px;">👤 Manager</span>';
-  return '<span style="color:#666;font-size:10px;">'+d+'</span>';
+  return '<span style="color:#aaaaaa;font-size:10px;">'+d+'</span>';
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -8755,10 +8755,10 @@ function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFracti
 
 // Cihaz ikonu
 function adDeviceIcon(d){
-  if(!d||d==='web'||d==='Web') return '<span style="color:#666;font-size:10px;">💻</span>';
+  if(!d||d==='web'||d==='Web') return '<span style="color:#aaaaaa;font-size:10px;">💻</span>';
   if(/mobile|ios|android/i.test(d)) return '<span style="color:#26a69a;font-size:10px;">📱</span>';
   if(/manager|admin/i.test(d)) return '<span style="color:#f5c518;font-size:10px;">👤</span>';
-  return '<span style="color:#666;font-size:10px;">🌐</span>';
+  return '<span style="color:#aaaaaa;font-size:10px;">🌐</span>';
 }
 
 // ── Badge güncelle — her zaman güncel fiyatla hesapla ─────────
@@ -8898,7 +8898,7 @@ function adRenderOpenTable(){
   if(!tb) return;
 
   if(!_adPositions.length){
-    tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:#555;padding:20px;font-size:12px;">Açık pozisyon yok</td></tr>';
+    tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:#999999;padding:20px;font-size:12px;">Açık pozisyon yok</td></tr>';
     return;
   }
 
@@ -8927,7 +8927,7 @@ function adRenderOpenTable(){
     var oTime= pos.openDate||pos.time ? fmtDate(pos.openDate||pos.time) : '—';
     var row  = (idx%2===1) ? 'background:rgba(255,255,255,0.025)' : '';
     return '<tr style="border-bottom:1px solid #1a1a1a;'+row+'">'
-      +'<td style="padding:5px 8px;color:#555;font-size:10px;">'+tid+'</td>'
+      +'<td style="padding:5px 8px;color:#999999;font-size:10px;">'+tid+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);font-weight:700;">'+pos.sym+'</td>'
       +'<td style="padding:5px 8px;color:'+sc+';font-weight:700;">'+(pos.side==='buy'?'▲ AL':'▼ SAT')+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);">'+qty+'</td>'
@@ -8957,7 +8957,7 @@ function adRenderHistoryTable(){
   if(!tb) return;
 
   if(!_adHistory.length){
-    tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:#555;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
+    tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:#999999;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
     return;
   }
 
@@ -8977,7 +8977,7 @@ function adRenderHistoryTable(){
     var tid  = String(h.id).slice(-6);
     var row  = (idx%2===1) ? 'background:rgba(255,255,255,0.025)' : '';
     return '<tr style="border-bottom:1px solid #1a1a1a;'+row+'">'
-      +'<td style="padding:5px 6px;color:#555;font-size:10px;">'+tid+'</td>'
+      +'<td style="padding:5px 6px;color:#999999;font-size:10px;">'+tid+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);font-weight:700;">'+h.sym+'</td>'
       +'<td style="padding:5px 6px;color:'+sc+';font-weight:700;">'+(h.side==='buy'?'▲ AL':'▼ SAT')+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);">'+h.qty+'</td>'
@@ -9276,7 +9276,7 @@ function adSubTab(btn){
   document.querySelectorAll('[data-subtab]').forEach(function(b){
     var active = b.getAttribute('data-subtab')===tab;
     b.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
-    b.style.color = active ? 'var(--accent)' : '#666';
+    b.style.color = active ? 'var(--accent)' : '#aaaaaa';
     b.style.fontWeight = active ? '700' : 'normal';
   });
   ['adPanelOpen','adPanelClosed','adPanelFinlog'].forEach(function(id){
