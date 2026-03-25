@@ -7666,19 +7666,38 @@ function adminNav(sec,btn){
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
   if(sec==='accounts'){
+    // Önce broker/accounts'taki mevcut pozisyonları _allAccountPositions'a yaz
+    accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
+      if(typeof _allAccountPositions!=='undefined' && Array.isArray(a.positions)) {
+        _allAccountPositions[a.id] = a.positions;
+      }
+    });
     renderAccTable();
+    // Sonra users koleksiyonundan güncel balance ve positions çek
     if(typeof db!=='undefined'&&db){
       var _c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
       var _pend=_c2.length;
-      if(_pend){_c2.forEach(function(acc){
+      if(!_pend){return;}
+      _c2.forEach(function(acc){
         db.collection('users').doc(String(acc.id)).get().then(function(doc){
           if(doc.exists&&doc.data()){
-            try{var _pd=doc.data().positions;acc.positions=Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');if(typeof _allAccountPositions!=='undefined')_allAccountPositions[acc.id]=acc.positions;}catch(e){}
-            try{var _bv=doc.data().balance;if(_bv!==undefined)acc.balance=parseFloat(_bv)||acc.balance;}catch(e){}
+            // Balance güncelle
+            try{var _bv=doc.data().balance;if(_bv!==undefined&&parseFloat(_bv)){acc.balance=parseFloat(_bv);}}catch(e){}
+            // Pozisyonlar - users'da varsa kullan, yoksa broker/accounts'takini koru
+            try{
+              var _pd=doc.data().positions;
+              if(_pd!==undefined){
+                var _parsedPos=Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');
+                acc.positions=_parsedPos;
+                if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id]=_parsedPos;
+              }
+              // users'da yoksa broker/accounts'taki mevcut positions koru
+            }catch(e){}
           }
-          _pend--;if(_pend<=0)renderAccTable();
+          _pend--;
+          if(_pend<=0) renderAccTable();
         }).catch(function(){_pend--;if(_pend<=0)renderAccTable();});
-      });}
+      });
     }
   }
   if(sec==='finance')populateFinAccSelect();
