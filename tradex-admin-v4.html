@@ -3471,22 +3471,7 @@ function _adGetSpread(sym) {
       if(it && it.spread !== undefined) { baseSpread = parseFloat(it.spread)||0; break; }
     }
   }
-  if(spreadType === 'dynamic' && baseSpread > 0) {
-    // ±variance% arasında rasgele, ancak yavaş hareket için önceki değeri baz al
-    if(!window._dynSpread) window._dynSpread = {};
-    var prev = window._dynSpread[sym] !== undefined ? window._dynSpread[sym] : baseSpread;
-    var maxMove = baseSpread * (spreadVariance/100);
-    // Her tick'te max %5 kayma — kademeli değişim
-    var maxStep = baseSpread * 0.05;
-    var delta = (Math.random() - 0.5) * 2 * maxStep;
-    var newSpread = prev + delta;
-    // Sınırla: base ± variance%
-    var lo = baseSpread * (1 - spreadVariance/100);
-    var hi = baseSpread * (1 + spreadVariance/100);
-    newSpread = Math.max(lo, Math.min(hi, newSpread));
-    window._dynSpread[sym] = newSpread;
-    return newSpread;
-  }
+  // Dinamik spread kaldırıldı - tüm cihazlarda tutarlı fiyat için sabit spread
   return baseSpread;
 }
 
