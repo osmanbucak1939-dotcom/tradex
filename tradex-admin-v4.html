@@ -1649,17 +1649,17 @@ console.log('Firebase bağlandı ✓');
   </div>
   <div style="background:#111;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 12px;height:40px;flex-shrink:0;gap:2px;overflow-x:auto;">
     <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view">👥 Hesaplar</button>
-    <button class="nav-btn" onclick="adminNav('reports',this)">📑 Raporlar</button>
+    <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view">📑 Raporlar</button>
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Spread Grupları</button>
-    <button class="nav-btn" onclick="adminNav('symbols',this)">📈 Semboller</button>
+    <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view">📈 Semboller</button>
     <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="feed.edit">💹 Kotasyon</button>
     <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
     <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit">🏢 Broker Bilgileri</button>
     <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
-    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
+    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
 
   <div style="flex:1;display:flex;overflow:hidden;">
@@ -4953,7 +4953,14 @@ function renderAccTable(){
   var container=document.getElementById('accTableContainer');
   if(!container)return;
 
-  var all=accounts.filter(function(a){return !a.role||a.role==='customer';});
+  var all=accounts.filter(function(a){
+    if(a.role && a.role!=='customer') return false;
+    // Superadmin/admin tüm hesapları görür
+    if(!_currentStaff || _currentStaff.role==='superadmin' || _currentStaff.role==='admin') return true;
+    // Manager/employee sadece atanmış hesapları görür
+    var assigned = _currentStaff.assignedAccounts || [];
+    return assigned.length===0 || assigned.indexOf(String(a.id))>=0 || assigned.indexOf(a.id)>=0;
+  });
   var now=Date.now();
   var sv=function(id){return((document.getElementById(id)||{}).value||'');};
   var search=sv('acc_search').toLowerCase();
@@ -7608,6 +7615,17 @@ function adminLogout(){
 }
 
 function adminNav(sec,btn){
+  // Yetki haritası
+  var _secPerms = {
+    'accounts':'accounts.view','reports':'reports.view','finance':'finance.view',
+    'spreadgroups':'spreadgroups.view','symbols':'symbols.view','feed':'feed.view',
+    'pricecontrol':'feed.edit','staff':'staff.view','settings':'settings.view',
+    'brokerinfo':'settings.edit','walletsettings':'settings.edit','withdrawreqs':'finance.view'
+  };
+  if(_secPerms[sec] && typeof hasPerm==='function' && !hasPerm(_secPerms[sec])) {
+    showAdminToast('Yetkisiz','Bu bölüme erişim yetkiniz yok','danger');
+    return;
+  }
   document.querySelectorAll('.admin-section').forEach(function(el){el.style.display='none';});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   var el=document.getElementById('sec-'+sec);
