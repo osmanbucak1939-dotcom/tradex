@@ -3593,9 +3593,21 @@ function adApplyOverride(sym, price) {
     db.collection('broker').doc('prices').set(upd,{merge:true})
       .catch(function(e){console.warn('[Override] FB error:',e);});
   }
+  if(typeof _adQueueAccTableRefresh==='function') _adQueueAccTableRefresh();
 }
 
 // Geriye dönük uyumluluk
+// Fiyat gelince hesaplar tablosunu güncelle (throttle: 3sn)
+var _adAccTableRefTimer = null;
+function _adQueueAccTableRefresh() {
+  var secAcc = document.getElementById('sec-accounts');
+  if(!secAcc || secAcc.style.display==='none') return;
+  if(_adAccTableRefTimer) return;
+  _adAccTableRefTimer = setTimeout(function(){
+    _adAccTableRefTimer = null;
+    renderAccTable();
+  }, 3000);
+}
 function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
@@ -3607,7 +3619,7 @@ function adCalcStats(account, positions) {
   var openPnl=0;
   (positions||[]).forEach(function(pos){
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
-    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy');
+    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
     if(!closeP) return;
     var cs=parseFloat(pos.contractSize)||1, qty=parseFloat(pos.qty)||0;
     openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs;
