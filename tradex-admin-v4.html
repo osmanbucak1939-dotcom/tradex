@@ -7673,12 +7673,7 @@ function adminNav(sec,btn){
       if(_pend){_c2.forEach(function(acc){
         db.collection('users').doc(String(acc.id)).get().then(function(doc){
           if(doc.exists&&doc.data()){
-            try{
-              var _pd=doc.data().positions;
-              var _parsedPos=Array.isArray(_pd)?_pd:(typeof _pd==='string'?JSON.parse(_pd||'[]'):[]);
-              acc.positions=_parsedPos;
-              if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id]=_parsedPos;
-            }catch(e){acc.positions=[];}
+            try{var _pd=doc.data().positions;acc.positions=Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');if(typeof _allAccountPositions!=='undefined')_allAccountPositions[acc.id]=acc.positions;}catch(e){}
             try{var _bv=doc.data().balance;if(_bv!==undefined)acc.balance=parseFloat(_bv)||acc.balance;}catch(e){}
           }
           _pend--;if(_pend<=0)renderAccTable();
