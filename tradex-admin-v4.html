@@ -8003,7 +8003,15 @@ function updateReports(){
           allClosed.push(Object.assign({},h,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
         });
       });
-      allClosed.sort(function(a,b){ return new Date(b.closeTime||0)-new Date(a.closeTime||0); });
+      allClosed.sort(function(a,b){
+        var _pt=function(t){
+          if(!t) return 0;
+          if(t.indexOf('T')!==-1||t.indexOf('-')===4) return new Date(t).getTime();
+          if(typeof _parseDate==='function'){var d=_parseDate(t);return d?d.getTime():0;}
+          return 0;
+        };
+        return _pt(b.closeTime)-_pt(a.closeTime);
+      });
       var pcEl2=document.getElementById('rep-pos-count');
       if(pcEl2) pcEl2.textContent=allClosed.length+' işlem';
       if(!allClosed.length){
