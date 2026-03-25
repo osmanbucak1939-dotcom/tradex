@@ -3079,35 +3079,66 @@ function closePosition(id, reason='') {
   const idx=_cArr.findIndex(p=>p.id===id);
   if(idx===-1)return;
   const pos=_cArr[idx];
-  const p = prices[pos.sym];
-  const closePrice = p ? p.price : pos.openPrice;
-  const _swapC = parseFloat(pos.swapTotal)||0;
-  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * pos.qty + _swapC;
-  balance += (pos.cost||0) + pnl;
-  _cArr.splice(idx, 1);
-  tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
-  if (tradeHistory.length > 50) tradeHistory.pop();
-  // Accounts'a yaz
-  if(_adAccId) {
-    var _adAcc = accounts.find(function(a){ return String(a.id)===String(_adAccId); });
-    if(_adAcc) { _adAcc.balance = balance; }
+
+  // Admin: adGetPrice kullan (bid/ask doğru), trader: prices kullan
+  var closePrice;
+  if(typeof adGetPrice==='function') {
+    closePrice = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
+  } else {
+    var _p = prices&&prices[pos.sym]; closePrice = _p?_p.price:pos.openPrice;
   }
+
+  const _swapC = parseFloat(pos.swapTotal)||0;
+  const _cs = parseFloat(pos.contractSize)||1;
+  const _qty = parseFloat(pos.qty)||0;
+  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qty * _cs + _swapC;
+
+  // Hesabın balance'ını güncelle (admin: _adAcc, trader: global balance)
+  var _adAcc = (_adAccId&&typeof accounts!=='undefined') ? accounts.find(function(a){return String(a.id)===String(_adAccId);}) : null;
+  if(_adAcc) {
+    _adAcc.balance = parseFloat(_adAcc.balance||0) + (parseFloat(pos.cost)||0) + pnl;
+    balance = _adAcc.balance; // senkronize et
+  } else {
+    balance += (parseFloat(pos.cost)||0) + pnl;
+  }
+
+  _cArr.splice(idx, 1);
+
+  // _allAccountPositions güncelle - hesaplar listesi doğru görünsün
+  if(_adAccId && typeof _allAccountPositions!=='undefined') {
+    _allAccountPositions[_adAccId] = _cArr.slice();
+  }
+
+  var _closeTime = new Date().toISOString();
+  tradeHistory.unshift(Object.assign({}, pos, {closePrice:closePrice, pnl:pnl, swapTotal:_swapC, closeTime:_closeTime, closeReason:reason||'manuel'}));
+  if(tradeHistory.length > 50) tradeHistory.pop();
+
   saveAccounts();
-  // Firebase users/{id}'ye pozisyonları yaz — trader anında görsün
+
+  // Firebase users/{id}'ye yaz — trader anında görsün
   if(typeof db!=='undefined' && db && _adAccId) {
-    var _now = new Date().toISOString();
+    var _newBal = _adAcc ? _adAcc.balance : balance;
     db.collection('users').doc(String(_adAccId)).set({
       positions: _cArr,
       tradeHistory: tradeHistory.slice(0,50),
-      balance: balance,
-      updatedAt: _now
+      balance: _newBal,
+      updatedAt: _closeTime
     }, { merge: true }).catch(function(e){ console.warn('closePos FB err:', e); });
   }
+
   renderPositions();
   renderHistory();
   updateAccount();
-  if (reason) showToast(reason, `#${id} $${fp(Math.abs(pnl))} ${pnl>=0?'kâr':'zarar'}`);
-  else showToast('Pozisyon Kapatıldı', `#${id} — ${pnl>=0?'+':''}$${fp(pnl)}`);
+
+  if(reason) {
+    var _tAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
+    var _tName=_tAcc?('#'+(_tAcc.login||_tAcc.id)+' '+(_tAcc.name||'')):'';
+    var _tType=reason==='stop_out'?'danger':pnl>=0?'success':'error';
+    var _tTitle=reason==='stop_out'?'STOP OUT':reason==='tp'?'Take Profit':reason==='sl'?'Stop Loss':'Kapatıldı';
+    showAdminToast(_tTitle,(_tName?_tName+' — ':'')+pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl),_tType);
+  } else {
+    showAdminToast('Kapatıldı', pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl), pnl>=0?'success':'error');
+  }
 }
 
 function renderHistory() {
@@ -8243,7 +8274,7 @@ function renderStaffTable(){
         +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">Ata</button> '
         +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openPermModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">⚙ Yetki</button> '
         +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
-        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
+        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">🔑 Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
       +'</td></tr>';
   });
   html+='</tbody></table>';wrap.innerHTML=html;
@@ -8424,6 +8455,30 @@ function saveAssign(id) {
 }
 
 function toggleStaffStatus(id){var s=_staffList.find(function(x){return x.id===id;});if(!s)return;s.active=!s.active;fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Güncellendi',s.name+' '+(s.active?'aktif':'pasif'),'info');}
+
+function openChangePassModal(id) {
+  var s = _staffList.find(function(x){ return x.id===id; });
+  if(!s) return;
+  var m = document.getElementById('changePassModal');
+  if(!m){ m=document.createElement('div'); m.id='changePassModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;'; document.body.appendChild(m); }
+  m.innerHTML='<div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">🔑 ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#999999;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:#ef5350;font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
+  m.style.display='flex';
+  setTimeout(function(){ var el=document.getElementById('cp_pass'); if(el) el.focus(); }, 100);
+}
+
+function saveStaffPass(id) {
+  var pass = (document.getElementById('cp_pass')||{}).value||'';
+  var pass2 = (document.getElementById('cp_pass2')||{}).value||'';
+  var errEl = document.getElementById('cp_err');
+  if(!pass || pass.length < 4) { if(errEl){errEl.textContent='Şifre en az 4 karakter olmalı';errEl.style.display='block';} return; }
+  if(pass !== pass2) { if(errEl){errEl.textContent='Şifreler eşleşmiyor';errEl.style.display='block';} return; }
+  var s = _staffList.find(function(x){ return x.id===id; });
+  if(!s) return;
+  s.password = pass;
+  fbSaveStaff(_staffList);
+  document.getElementById('changePassModal').style.display='none';
+  showAdminToast('Şifre Güncellendi', s.name+' şifresi değiştirildi', 'success');
+}
 function deleteStaff(id){if(!confirm('Bu personeli silmek istediğinizden emin misiniz?'))return;_staffList=_staffList.filter(function(s){return s.id!==id;});fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Silindi','Personel kaldırıldı','info');}
 function openAssignModal(staffId){_assignStaffId=staffId;var modal=document.getElementById('assignModal');if(modal){modal.style.display='flex';renderAssignList();}}
 function renderAssignList(){
