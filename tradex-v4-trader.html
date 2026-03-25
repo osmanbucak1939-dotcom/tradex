@@ -1,4 +1,4 @@
-,<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -1221,6 +1221,11 @@ function _authSuccess(user) {
     }).catch(function(){});
     // users koleksiyonuna da yaz (hızlı erişim için)
     db.collection('users').doc(String(_cu.id)).set({lastSeen:now, online:true},{merge:true}).catch(function(){});
+    // broker/accounts'a da yaz (admin tablosunu günceller)
+    if(typeof accounts!=='undefined') {
+      var _hbAcc = accounts ? accounts.find(function(a){return String(a.id)===String(_cu.id);}) : null;
+      if(_hbAcc) { _hbAcc.lastSeen=now; _hbAcc.online=true; }
+    }
   }
 
   // Hemen bir kez ve sonra her 30 saniyede
@@ -1236,7 +1241,18 @@ function _authSuccess(user) {
   // Sekme kapanınca offline yap
   window.addEventListener('beforeunload', function() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
-    db.collection('users').doc(String(_cu.id)).set({online:false},{merge:true}).catch(function(){});
+    var _offNow = new Date().toISOString();
+    db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_offNow},{merge:true}).catch(function(){});
+  });
+  // visibilitychange - sekme gizlenince/gösterilince
+  document.addEventListener('visibilitychange', function() {
+    if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
+    if(document.hidden) {
+      var _hideNow = new Date().toISOString();
+      db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_hideNow},{merge:true}).catch(function(){});
+    } else {
+      db.collection('users').doc(String(_cu.id)).set({online:true},{merge:true}).catch(function(){});
+    }
   });
   // ──────────────────────────────────────────────────────────
 
@@ -1345,6 +1361,12 @@ function _doRegister() {
   });
 }
 function logoutUser() {
+  // Çıkış anında online:false ve lastSeen yaz
+  if(typeof _cu!=='undefined' && _cu && _cu.id && typeof db!=='undefined' && db) {
+    var _logoutNow = new Date().toISOString();
+    db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_logoutNow},{merge:true}).catch(function(){});
+  }
+  if(window._heartbeatTimer){ clearInterval(window._heartbeatTimer); window._heartbeatTimer=null; }
   if(window._fbSyncInterval) { clearInterval(window._fbSyncInterval); window._fbSyncInterval = null; clearInterval(window._fbPriceInterval); window._fbPriceInterval = null; if(window._fbUnsubscribe){ try{window._fbUnsubscribe();}catch(e){} window._fbUnsubscribe=null; } }
   _cu=null;
   try{localStorage.removeItem('tx_current_user');}catch(e){}
@@ -4309,11 +4331,12 @@ function updateAccount() {
       return plA - plB; // en negatif (en büyük zarar) önce
     });
     var toClose = sortedPos[0];
+    // _cu trader login bilgisi - localStorage'dan da kontrol et
     var _soAccName = '';
-    if(typeof _cu !== 'undefined' && _cu) {
-      _soAccName = '#'+((_cu.login||_cu.id)||'?')+' '+(_cu.name||'');
-    } else if(typeof currentUser !== 'undefined' && currentUser) {
-      _soAccName = '#'+(currentUser.login||currentUser.id||'?')+' '+(currentUser.name||'');
+    var _cuData = (typeof _cu!=='undefined'&&_cu) ? _cu : null;
+    if(!_cuData) { try{ _cuData=JSON.parse(localStorage.getItem('tx_current_user')||'null'); }catch(e){} }
+    if(_cuData) {
+      _soAccName = '#'+((_cuData.login||_cuData.id)||'?')+' '+(_cuData.name||'');
     }
     showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
     setTimeout(function(){
@@ -8438,7 +8461,7 @@ function adChangePassword() {
     margin: 12px; border-radius: 10px; overflow: hidden;
   }
   .m-stat { background: #0f0f0f; padding: 14px 16px; }
-  .m-stl { font-family: monospace; font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .m-stl { font-family: monospace; font-size: 9px; color: #d4d4d4; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
   .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: #bbb; }
   .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
   .m-abt {
