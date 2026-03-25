@@ -2828,10 +2828,10 @@ var save = () => {
     var _saveTs = new Date().toISOString();
     window._lastSyncAt = _saveTs; // kendi yazdığımızı tekrar okuyup ezmeyelim
     fbSaveUserData(_cu.id, {
-      positions: JSON.stringify(positions),
-      tradeHistory: JSON.stringify(tradeHistory),
-      portfolio: JSON.stringify(portfolio),
-      alarms: JSON.stringify(alarms),
+      positions: Array.isArray(positions) ? positions : [],
+      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory.slice(0,100) : [],
+      portfolio: Array.isArray(portfolio) ? portfolio : [],
+      alarms: Array.isArray(alarms) ? alarms : [],
       finlog: Array.isArray(finlog) ? finlog : [],
       updatedAt: _saveTs
     });
@@ -6875,11 +6875,11 @@ function txListenPrices() {
       if(!price || price <= 0) return;
       // Admin override'ı varsa bu fiyatı kullan (override Firebase'den geliyor)
       // WebSocket bağlıysa Firebase fiyatını yoksay
-      var _tdOk = window._txTdConnected && window._txTdWs && window._txTdWs.readyState===1;
       var _bnOk = window._txBnConnected && window._txBnWs && window._txBnWs.readyState===1;
+      var _tdOk = window._txTdConnected && window._txTdWs && window._txTdWs.readyState===1;
       var _isCrypto = sym.endsWith('USDT') || sym.endsWith('BTC');
-      if(_isCrypto && _bnOk) return; // Kripto Binance WS aktif
-      if(!_isCrypto && _tdOk) return; // Forex/emtia TD WS aktif
+      if(_isCrypto && _bnOk) return; // Kripto: BN WS aktif
+      if(!_isCrypto && _tdOk) return; // Forex: TD WS canlı fiyat aktif
       txApplyPrice(sym, price);
     });
   }, function(e){ console.warn('[Trader] prices snap err:', e); });
@@ -6986,10 +6986,11 @@ function txStartTwelvedataWs() {
   _txTdWs.onmessage = function(e) {
     try {
       var d=JSON.parse(e.data);
+      if(d.event==='heartbeat'||d.event==='subscribe-status') return;
       if(d.event!=='price') return;
       var sym=TX_TD_REV[d.symbol]||d.symbol.replace('/','');
       var price=parseFloat(d.price);
-      if(sym&&price>0) txApplyPrice(sym,price);
+      if(sym&&price>0) { window._txTdConnected=true; txApplyPrice(sym,price); }
     } catch(err){}
   };
   _txTdWs.onerror = function(){ console.warn('[WS] TD hata'); };
