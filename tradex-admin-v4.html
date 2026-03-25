@@ -1572,7 +1572,7 @@ console.log('Firebase bağlandı ✓');
             // Pozisyon değişimlerini güncelle
             if(ud.positions !== undefined) {
               try {
-                var _np = Array.isArray(ud.positions) ? ud.positions : JSON.parse(ud.positions||'[]');
+                var _np = Array.isArray(ud.positions) ? ud.positions : (typeof ud.positions==='string'?JSON.parse(ud.positions||'[]'):[]);
                 acc.positions = _np;
                 if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = _np;
                 // Aktif hesap detayı açıksa _adPositions da güncelle
