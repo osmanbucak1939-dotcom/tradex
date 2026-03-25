@@ -3077,6 +3077,7 @@ function renderPositions() {
 }
 
 function closePosition(id, reason='') {
+  if(!reason && typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
   var _cArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
   const idx=_cArr.findIndex(p=>p.id===id);
   if(idx===-1)return;
@@ -4158,6 +4159,7 @@ function applySymConfig() {
 }
 
 function createAccount() {
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.create')){showAdminToast('Yetkisiz','Hesap oluşturma yetkiniz yok','danger');return;}
   var name    = (document.getElementById('na_name')||{}).value||'';
   var surname = (document.getElementById('na_surname')||{}).value||'';
   var email   = (document.getElementById('na_email')||{}).value||'';
@@ -4311,8 +4313,8 @@ function adRenderTab(tab) {
         '<button data-subtab="closed" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#aaaaaa;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">KAPALI</button>' +
         '<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#aaaaaa;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>' +
         '<div style="flex:1;"></div>' +
-        '<button class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>' +
-        '<button class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>' +
+        '<button id="adBtnNewTrade" class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>' +
+        '<button id="adBtnCloseAll" class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>' +
       '</div>' +
 
       // ── Manuel işlem formu ──
@@ -4498,6 +4500,7 @@ function adRenderTab(tab) {
 function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
 
 function adDeposit() {
+  if(typeof hasPerm==='function'&&!hasPerm('finance.deposit')){showAdminToast('Yetkisiz','Para yatırma yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_dep_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
@@ -4532,6 +4535,7 @@ function adDeposit() {
 }
 
 function adWithdraw() {
+  if(typeof hasPerm==='function'&&!hasPerm('finance.withdraw')){showAdminToast('Yetkisiz','Para çekme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_wd_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
@@ -4567,6 +4571,7 @@ function adWithdraw() {
 }
 
 function adBonus(sign) {
+  if(typeof hasPerm==='function'&&!hasPerm('finance.bonus')){showAdminToast('Yetkisiz','Bonus işlemi yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_bon_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
@@ -4703,6 +4708,7 @@ function fbSyncUserFinance(a) {
   }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
 }
 function adSaveFinlog() {
+  if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
   var type    = (document.getElementById('afl_type')||{}).value;
@@ -4778,6 +4784,7 @@ function adSaveFinlog() {
 }
 
 function adDeleteFinlog(idx) {
+  if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
   if(!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   var a = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
@@ -4802,6 +4809,7 @@ function adDeleteFinlog(idx) {
 }
 
 function adSaveSettings() {
+  if(typeof hasPerm==='function'&&!hasPerm('settings.edit')){showAdminToast('Yetkisiz','Ayar değiştirme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var sg  = (document.getElementById('ad_sg')||{}).value||'standard';
   var lev = parseInt((document.getElementById('ad_lev')||{}).value)||100;
@@ -4826,6 +4834,7 @@ function adUpdateName() {
 }
 
 function adToggleStatus() {
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   a.active=!a.active; saveAccounts(); renderAccTable(); openAccDetail(_adAccId);
 }
@@ -4841,6 +4850,7 @@ function adGenDelCode() {
   if(inp) { inp.value=''; inp.focus(); }
 }
 function adDeleteAcc() {
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.delete')){showAdminToast('Yetkisiz','Hesap silme yetkiniz yok','danger');return;}
   var inp = document.getElementById('ad_del_code');
   var entered = inp ? inp.value.trim().toUpperCase() : '';
   if(!_adDelCode) { showToast('Hata', 'Önce "Kod Oluştur" butonuna basın!'); return; }
@@ -4907,6 +4917,7 @@ function adCloseTrade(pid) {
 }
 
 function adEditTrade(pid) {
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','SL/TP düzenleme yetkiniz yok','danger');return;}
   var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
   var ex=document.getElementById('editRow-'+pid);
   if(ex){ex.remove();return;}
@@ -6611,6 +6622,7 @@ function sgLoadFromFirebase(callback) {
 }
 
 function sgSave() {
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
   window._sgLastSave = Date.now();
   try { localStorage.setItem('tx_sg', JSON.stringify(spreadGroups)); } catch(e){}
   if(typeof db !== 'undefined' && db) {
@@ -6694,6 +6706,7 @@ function sgRenderInner() {
 
 
 function sgSaveGeneral() {
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
   var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||100;
   var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||20;
@@ -6703,6 +6716,7 @@ function sgSaveGeneral() {
 }
 
 function sgSaveSpreads() {
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
   var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var n=0;
   symConfig.filter(function(s){ return s.active; }).forEach(function(s){
@@ -7135,6 +7149,7 @@ function _getFeedSymSpread(sym) {
 }
 
 function adFeedSaveSym(sym) {
+  if(typeof hasPerm==='function'&&!hasPerm('feed.edit')){showAdminToast('Yetkisiz','Feed düzenleme yetkiniz yok','danger');return;}
   var sp = parseFloat((document.getElementById('fse_sp_'+sym)||{}).value)||0;
   var sb = parseFloat((document.getElementById('fse_sb_'+sym)||{}).value)||0;
   var ss = parseFloat((document.getElementById('fse_ss_'+sym)||{}).value)||0;
@@ -7477,6 +7492,7 @@ function adSaveViewerPassword(){
 }
 
 function adChangePassword() {
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.password')){showAdminToast('Yetkisiz','Şifre değiştirme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var pw1 = (document.getElementById('ad_pw1')||{}).value||'';
   var pw2 = (document.getElementById('ad_pw2')||{}).value||'';
@@ -7575,7 +7591,23 @@ function hasPerm(p) {
   if(r.perms.indexOf('all') >= 0) return true;
   return r.perms.indexOf(p) >= 0 || r.perms.indexOf(p.split('.')[0]) >= 0;
 }
-function applyRoleUI(){document.querySelectorAll('[data-perm]').forEach(function(el){el.style.display=hasPerm(el.getAttribute('data-perm'))?'':'none';});}
+function applyRoleUI(){
+  document.querySelectorAll('[data-perm]').forEach(function(el){
+    el.style.display=hasPerm(el.getAttribute('data-perm'))?'':'none';
+  });
+  // Hesap detayı butonları
+  var _btns = {
+    'adBtnDeposit':'finance.deposit', 'adBtnWithdraw':'finance.withdraw',
+    'adBtnBonus':'finance.bonus', 'adBtnNewTrade':'trades.open',
+    'adBtnCloseAll':'trades.close', 'adBtnToggle':'accounts.edit',
+    'adBtnDelete':'accounts.delete', 'adBtnChangePass':'accounts.password',
+    'adBtnSaveInfo':'accounts.edit'
+  };
+  Object.keys(_btns).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display=hasPerm(_btns[id])?'':'none';
+  });
+}
 
 function adminLogin(){
   var email=(document.getElementById('al_email')||{}).value||'';
@@ -8755,6 +8787,7 @@ function adMTFUpdatePrice(){
 }
 
 function adSaveUserTrades(){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger');return;}
   var a=accounts.find(function(x){return x.id===_adAccId;});
   if(!a){ console.error('[SYNC] adSaveUserTrades: hesap bulunamadı! _adAccId=',_adAccId); return; }
   a.positions = _adPositions;
@@ -9202,6 +9235,7 @@ function adDeletePos(){
 
 // ── Manuel işlem aç ───────────────────────────────────────────
 function adOpenTrade(btn){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.open')){showAdminToast('Yetkisiz','Pozisyon açma yetkiniz yok','danger');return;}
   var side  = btn.dataset.s || btn.getAttribute('data-s');
   var a     = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
