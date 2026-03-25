@@ -1598,8 +1598,8 @@ console.log('Firebase bağlandı ✓');
               if(acc.balance !== _nb) acc.balance = _nb;
             }
           });
-          var secAcc=document.getElementById('sec-accounts');
-          if(secAcc&&secAcc.style.display!=='none') renderAccTable();
+          // renderAccTable kaldırıldı - yanıp sönmeye neden oluyordu
+          // adRefreshBadges DOM'u günceller, renderAccTable'a gerek yok
           var dot=document.getElementById('adOnlineDot');
           if(dot&&window._adDetailId){
             var a=accounts.find(function(x){return String(x.id)===String(window._adDetailId);});
