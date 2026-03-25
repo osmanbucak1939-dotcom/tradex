@@ -3558,12 +3558,24 @@ function adReceiveRawPrice(sym, rawMid) {
       var _fp3 = function(n){ return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
       Object.keys(_allAccountPositions).forEach(function(accId) {
         var poses = _allAccountPositions[accId];
-        if(!poses || !poses.length) return;
+        var acc = accounts.find(function(a){ return String(a.id)===String(accId); });
+        if(!acc) return;
+        // Pozisyon yoksa sıfırla
+        if(!poses || !poses.length) {
+          acc._liveEquity = acc.balance||0;
+          acc._openPnl = 0;
+          acc._openCount = 0;
+          document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
+            var _eq=acc.balance||0;el.textContent=(_eq<0?'-$':'$')+Math.abs(_eq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+            el.style.color='#26a69a';
+          });
+          document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){el.textContent='—';el.style.color='#999999';});
+          document.querySelectorAll('[data-open="'+accId+'"]').forEach(function(el){el.textContent='0';el.style.color='';});
+          return;
+        }
         // Bu hesapta bu sembolde pozisyon var mı?
         var hasSym = poses.some(function(p){ return p.sym===sym; });
         if(!hasSym) return;
-        var acc = accounts.find(function(a){ return String(a.id)===String(accId); });
-        if(!acc) return;
         var st = adCalcStats(acc, poses);
         acc._liveEquity = st.equity;
         acc._openPnl    = st.openPnl;
@@ -3575,7 +3587,7 @@ function adReceiveRawPrice(sym, rawMid) {
         });
         document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
           var v = st.openPnl||0;
-          el.textContent = poses.length===0?'—':((v>=0?'+':'')+( v>=0?'$':'-$')+_fp3(Math.abs(v)));
+          el.textContent = (v>=0?'+':'')+( v>=0?'$':'-$')+_fp3(Math.abs(v));
           el.style.color = v>0?'#26a69a':v<0?'#ef5350':'#999999';
         });
       });
@@ -3624,21 +3636,9 @@ function adApplyOverride(sym, price) {
     db.collection('broker').doc('prices').set(upd,{merge:true})
       .catch(function(e){console.warn('[Override] FB error:',e);});
   }
-  if(typeof _adQueueAccTableRefresh==='function') _adQueueAccTableRefresh();
 }
 
-// Geriye dönük uyumluluk
-// Fiyat gelince hesaplar tablosunu güncelle (throttle: 3sn)
-var _adAccTableRefTimer = null;
-function _adQueueAccTableRefresh() {
-  var secAcc = document.getElementById('sec-accounts');
-  if(!secAcc || secAcc.style.display==='none') return;
-  if(_adAccTableRefTimer) return;
-  _adAccTableRefTimer = setTimeout(function(){
-    _adAccTableRefTimer = null;
-    renderAccTable();
-  }, 3000);
-}
+// Fiyat güncellemesi hesaplar tablosunu tetiklemez - sadece DOM güncellenir
 function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
