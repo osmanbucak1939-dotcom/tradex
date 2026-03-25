@@ -5097,6 +5097,10 @@ function renderAccTable(){
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       // Pozisyonları al - _allAccountPositions öncelikli (en güncel Firebase verisi)
+      // _allAccountPositions boşsa a.positions'dan doldur ve cache'e yaz
+      if(typeof _allAccountPositions!=='undefined' && (!_allAccountPositions[a.id] || !_allAccountPositions[a.id].length) && Array.isArray(a.positions) && a.positions.length) {
+        _allAccountPositions[a.id] = a.positions;
+      }
       var _accPoses=(_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)?_allAccountPositions[a.id]:
                     (Array.isArray(a.positions)&&a.positions.length?a.positions:[]);
       // adCalcStats ile hesap detay penceresiyle aynı mantık
@@ -7673,7 +7677,12 @@ function adminNav(sec,btn){
       if(_pend){_c2.forEach(function(acc){
         db.collection('users').doc(String(acc.id)).get().then(function(doc){
           if(doc.exists&&doc.data()){
-            try{var _pd=doc.data().positions;acc.positions=Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');if(typeof _allAccountPositions!=='undefined')_allAccountPositions[acc.id]=acc.positions;}catch(e){}
+            try{
+              var _pd=doc.data().positions;
+              var _parsedPos=Array.isArray(_pd)?_pd:(typeof _pd==='string'?JSON.parse(_pd||'[]'):[]);
+              acc.positions=_parsedPos;
+              if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id]=_parsedPos;
+            }catch(e){acc.positions=[];}
             try{var _bv=doc.data().balance;if(_bv!==undefined)acc.balance=parseFloat(_bv)||acc.balance;}catch(e){}
           }
           _pend--;if(_pend<=0)renderAccTable();
