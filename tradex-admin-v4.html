@@ -5070,7 +5070,7 @@ function renderAccTable(){
   function th(label,sortKey,cd){
     var arrow='';
     if(sortKey) arrow='<span style="color:'+(sc===sortKey?'#f0b90b':'#444')+';margin-left:3px;">'+(sc===sortKey?(sd==='asc'?'▲':'▼'):'⇅')+'</span>';
-    var style='padding:8px 10px;text-align:left;color:#999;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:#111;';
+    var style='padding:8px 10px;text-align:left;color:#999;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:#111;position:sticky;top:0;z-index:1;border-bottom:2px solid #2a2a2a;';
     if(cd&&cd.w) style+='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
     if(cd&&cd.align==='center') style+='text-align:center;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
@@ -5132,49 +5132,14 @@ function renderAccTable(){
   }
 
   // Başlık ayrı div (sabit), gövde ayrı div (scroll)
-  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:#111;border-bottom:2px solid #333;">'
-    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:100%;">'
-    +'<thead><tr>'+theadHtml+'</tr></thead></table></div>';
-  var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:11px;table-layout:fixed;width:100%;">'
-    +'<tbody>'+tbodyHtml+'</tbody></table></div>';
-
+  // Tek tablo sticky header - syncCols yok, kayma yok
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
-  container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar+headerDiv+bodyDiv+'</div>';
-
-  // Yatay scroll senkronizasyonu + kolon genişliği eşitleme
-  setTimeout(function(){
-    var hScroll = document.getElementById('accHeaderScroll');
-    var bScroll = document.getElementById('accBodyScroll');
-    var hTable  = document.getElementById('accHeaderTable');
-    var bTable  = document.getElementById('accBodyTable');
-    if(!hScroll||!bScroll||!hTable||!bTable) return;
-
-    // Yatay scroll: body scroll olunca header'ı da kaydır
-    bScroll.addEventListener('scroll', function(){ hScroll.scrollLeft = bScroll.scrollLeft; });
-
-    // Kolon genişliklerini eşitle - body'den ölç, header'a uygula
-    function syncCols(){
-      var firstRow = bTable.querySelector('tbody tr:first-child');
-      if(!firstRow) return;
-      var bTds = firstRow.querySelectorAll('td');
-      var hThs = hTable.querySelectorAll('thead tr th');
-      var bW = bTable.offsetWidth;
-      if(bW) hTable.style.width = bW+'px';
-      bTds.forEach(function(td, i){
-        var w = td.offsetWidth;
-        if(w>0 && hThs[i]){
-          hThs[i].style.width = w+'px';
-          hThs[i].style.minWidth = w+'px';
-        }
-      });
-    }
-    // Birden fazla kez çalıştır - render tamamlandıktan sonra
-    setTimeout(syncCols, 0);
-    setTimeout(syncCols, 50);
-    setTimeout(syncCols, 200);
-    window.addEventListener('resize', syncCols);
-  }, 30);
+  container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar
+    +'<div style="flex:1;min-height:0;overflow:auto;">'
+    +'<table style="border-collapse:collapse;font-size:11px;width:100%;">'
+    +'<thead><tr style="position:sticky;top:0;z-index:2;">'+theadHtml+'</tr></thead>'
+    +'<tbody>'+tbodyHtml+'</tbody>'
+    +'</table></div></div>';
 }
 var _accSort={col:'eq',dir:'desc'};
 var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','opnl'];
