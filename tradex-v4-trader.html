@@ -6811,18 +6811,7 @@ function txApplyPrice(sym, rawMid) {
   if(!spread && typeof MW_MAP !== 'undefined' && MW_MAP[sym]) {
     spread = parseFloat(MW_MAP[sym].spread)||0;
   }
-  // Dinamik spread - kademeli değişim
-  if(_spreadType === 'dynamic' && spread > 0) {
-    if(!window._dynSpread) window._dynSpread = {};
-    var _prev = window._dynSpread[sym] !== undefined ? window._dynSpread[sym] : spread;
-    var _maxStep = spread * 0.05;
-    var _delta = (Math.random()-0.5)*2*_maxStep;
-    var _ns = _prev + _delta;
-    var _lo = spread*(1-_spreadVariance/100);
-    var _hi = spread*(1+_spreadVariance/100);
-    spread = Math.max(_lo, Math.min(_hi, _ns));
-    window._dynSpread[sym] = spread;
-  }
+  // Dinamik spread kaldırıldı - tüm cihazlarda tutarlı fiyat için sabit spread
 
   var half = spread / 2;
   var bid  = rawMid - half;
