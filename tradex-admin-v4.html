@@ -3567,12 +3567,7 @@ function adReceiveRawPrice(sym, rawMid) {
           acc._liveEquity = acc.balance||0;
           acc._openPnl = 0;
           acc._openCount = 0;
-          document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
-            var _eq=acc.balance||0;el.textContent=(_eq<0?'-$':'$')+Math.abs(_eq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-            el.style.color='#26a69a';
-          });
-          document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){el.textContent='—';el.style.color='#999999';});
-          document.querySelectorAll('[data-open="'+accId+'"]').forEach(function(el){el.textContent='0';el.style.color='';});
+          // adTickOpenTable güncelleyecek
           return;
         }
         // Bu hesapta bu sembolde pozisyon var mı?
@@ -3582,16 +3577,7 @@ function adReceiveRawPrice(sym, rawMid) {
         acc._liveEquity = st.equity;
         acc._openPnl    = st.openPnl;
         acc._openCount  = st.openCount;
-        // DOM hücrelerini güncelle
-        document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
-          var _eq=st.equity;el.textContent=(_eq<0?'-$':'$')+Math.abs(_eq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-          el.style.color = st.equity>=(acc.balance||0)?'#26a69a':'#ef5350';
-        });
-        document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
-          var v = st.openPnl||0;
-          el.textContent = (v>=0?'+':'')+( v>=0?'$':'-$')+_fp3(Math.abs(v));
-          el.style.color = v>0?'#26a69a':v<0?'#ef5350':'#999999';
-        });
+        // DOM güncellemesi adTickOpenTable tarafından yapılır
       });
     }
   }
@@ -8618,12 +8604,12 @@ var AD_SIM={
     // Hesaplar listesindeki equity hücrelerini güncelle
     var secAcc=document.getElementById('sec-accounts');
     if(secAcc&&secAcc.style.display!=='none'){
+      // Önce aktif hesabın pozisyonlarını senkronize et
+      if(_adAccId && _adPositions) _allAccountPositions[_adAccId]=_adPositions;
       accounts.forEach(function(a){
         if(a.role&&a.role!=='customer')return;
-        var poses=_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id]:
-                  (_adAccId===a.id?_adPositions:[]);
-        // Açık hesabın pozisyonlarını _allAccountPositions'a yansıt
-        if(_adAccId===a.id && _adPositions) _allAccountPositions[a.id]=_adPositions;
+        // TEK KAYNAK: _allAccountPositions
+        var poses=(_allAccountPositions&&_allAccountPositions[a.id])||[];
         var _st3=adCalcStats(a,poses);
         a._liveEquity=_st3.equity;
         a._openCount=_st3.openCount;
