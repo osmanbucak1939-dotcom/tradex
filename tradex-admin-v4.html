@@ -1290,10 +1290,14 @@ function genId(prefix) {
 
 function fbSaveAccounts() {
       if(!db) return;
+      if(!accounts||accounts.length<1){console.warn('fbSaveAccounts: bos - engellendi');return;}
+      var _ts=new Date().toISOString(),_data=JSON.stringify(accounts);
       try {
-        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
-          .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
-      } catch(e) { console.warn(e); }
+        db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:accounts.length}).catch(function(e){console.warn(e);});
+        var _h=new Date().toISOString().substring(0,13).replace('T','_');
+        db.collection('broker').doc('accounts_backup_'+_h).set({data:_data,savedAt:_ts}).catch(function(){});
+        accounts.forEach(function(a){if(!a.id)return;db.collection('users').doc(String(a.id)).set({name:a.name||'',surname:a.surname||'',email:a.email||'',login:a.login||a.id,type:a.type||'live',spreadGroup:a.spreadGroup||'standard',leverage:a.leverage||100,active:a.active!==false,created:a.created||'',regDate:a.regDate||'',phone:a.phone||'',password:a.password||'',currency:a.currency||'USD',bonus:a.bonus||0},{merge:true}).catch(function(){});});
+      }catch(e){console.warn(e);}
     }
 
     // Güvenli hesap ekleme - race condition önler
@@ -1334,15 +1338,15 @@ function fbSaveAccounts() {
 
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
-      if(!db) { callback([]); return; }
+      if(!db){callback([]);return;}
       db.collection('broker').doc('accounts').get()
-        .then(function(doc) {
-          if(doc.exists) {
-            try { callback(JSON.parse(doc.data().data||'[]')); }
-            catch(e) { callback([]); }
-          } else { callback([]); }
-        })
-        .catch(function(e){ console.warn('fbLoadAccounts error:', e); callback([]); });
+        .then(function(doc){
+          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(d);return;}}catch(e){}}
+          var hours=[];for(var i=0;i<24;i++){var dt=new Date(Date.now()-i*3600000);hours.push(dt.toISOString().substring(0,13).replace('T','_'));}
+          var tryH=function(idx){if(idx>=hours.length){callback([]);return;}
+            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(dd);db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
+          tryH(0);
+        }).catch(function(e){console.warn(e);callback([]);});
     }
 
     // Müşteri verilerini Firebase'e kaydet (pozisyonlar, geçmiş)
@@ -1528,7 +1532,8 @@ console.log('Firebase bağlandı ✓');
           var newAccs=JSON.parse(doc.data().data||'[]');
           // Cache'leri koru
           newAccs.forEach(function(na){
-            var old=accounts.find(function(x){return x.id===na.id;});
+            var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
+            var old=_accs.find(function(x){return x.id===na.id;});
             if(old){
               if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
@@ -1537,8 +1542,9 @@ console.log('Firebase bağlandı ✓');
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
-          accounts=newAccs;
-          try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
+          window.accounts=newAccs;
+          if(typeof accounts!=='undefined')accounts=newAccs;
+          try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
           var secAcc=document.getElementById('sec-accounts');
           if(secAcc&&secAcc.style.display!=='none') renderAccTable();
         }catch(e){console.warn('accounts onSnapshot err:',e);}
@@ -3069,15 +3075,16 @@ function renderPositions() {
 }
 
 function closePosition(id, reason='') {
-  const idx = positions.findIndex(p=>p.id===id);
-  if (idx === -1) return;
-  const pos = positions[idx];
+  var _cArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
+  const idx=_cArr.findIndex(p=>p.id===id);
+  if(idx===-1)return;
+  const pos=_cArr[idx];
   const p = prices[pos.sym];
   const closePrice = p ? p.price : pos.openPrice;
   const _swapC = parseFloat(pos.swapTotal)||0;
   const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * pos.qty + _swapC;
   balance += (pos.cost||0) + pnl;
-  positions.splice(idx, 1);
+  _cArr.splice(idx, 1);
   tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
   if (tradeHistory.length > 50) tradeHistory.pop();
   // Accounts'a yaz
@@ -3090,7 +3097,7 @@ function closePosition(id, reason='') {
   if(typeof db!=='undefined' && db && _adAccId) {
     var _now = new Date().toISOString();
     db.collection('users').doc(String(_adAccId)).set({
-      positions: positions,
+      positions: _cArr,
       tradeHistory: tradeHistory.slice(0,50),
       balance: balance,
       updatedAt: _now
@@ -3155,7 +3162,8 @@ function updateAccount() {
 
   var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return x.id===_adAccId;}):null;
   var _defLev=typeof leverage!=='undefined'?leverage:((typeof settings!=='undefined'&&settings&&settings.leverage)?settings.leverage:100);
-  var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},positions);
+  var _posArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
+  var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},_posArr);
   var openPL=_ua.openPnl, marginUsed=_ua.margin, equity=_ua.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
   const cls = openPL >= 0 ? 'up' : 'down';
@@ -3183,16 +3191,12 @@ function updateAccount() {
   if(positions.length === 0) return;
 
   // Aktif hesabın stop out seviyesini al (spread grubundan)
-  var stopOutLevel = 50; // varsayılan %50
-  var marginCallLevel = 80;
+  var stopOutLevel=20, marginCallLevel=100;
   try {
     if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
        typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
-      var _acc = accounts.find(function(a){ return a.active; });
-      if(!_acc) _acc = accounts[0];
-      if(_acc) {
-        var _sg = spreadGroups.find(function(g){ return g.id === (_acc.spreadGroup||'standard'); });
-        if(_sg) { stopOutLevel = _sg.stopOut || 50; marginCallLevel = _sg.marginCall || 80; }
+      var _soAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
+      if(_soAcc){var _sg=spreadGroups.find(function(g){return g.id===(_soAcc.spreadGroup||'standard');});if(_sg){stopOutLevel=parseFloat(_sg.stopOut)||20;marginCallLevel=parseFloat(_sg.marginCall)||100;}
       }
     }
   } catch(e) {}
@@ -3202,9 +3206,8 @@ function updateAccount() {
   if(equity <= 0) triggerStopOut = true;
   if(marginLvl !== null && marginLvl <= stopOutLevel) triggerStopOut = true;
 
-  if(triggerStopOut && positions.length > 0) {
-    // Zararı en yüksekten en düşüğe sırala
-    var sortedPos = positions.slice().sort(function(a, b) {
+  if(triggerStopOut && _posArr.length > 0) {
+    var sortedPos = _posArr.slice().sort(function(a, b) {
       var pa = prices[a.sym] ? prices[a.sym].price : a.openPrice;
       var pb = prices[b.sym] ? prices[b.sym].price : b.openPrice;
       var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty;
@@ -3536,7 +3539,7 @@ function adReceiveRawPrice(sym, rawMid) {
         acc._openCount  = st.openCount;
         // DOM hücrelerini güncelle
         document.querySelectorAll('[data-eq="'+accId+'"]').forEach(function(el){
-          el.textContent = '$'+_fp3(st.equity);
+          var _eq=st.equity;el.textContent=(_eq<0?'-$':'$')+Math.abs(_eq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
           el.style.color = st.equity>=(acc.balance||0)?'#26a69a':'#ef5350';
         });
         document.querySelectorAll('[data-opnl="'+accId+'"]').forEach(function(el){
@@ -3819,7 +3822,11 @@ function saveSymConfig(){
   }
 }
 
-function saveAccounts(){ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); fbSaveAccounts(); }
+function saveAccounts(){
+  if(!accounts||accounts.length<1){console.warn('saveAccounts: bos');return;}
+  localStorage.setItem('tx_accounts', JSON.stringify(accounts));
+  fbSaveAccounts();
+}
 
 function saveSettingsData(){ localStorage.setItem('tx_settings', JSON.stringify(settings)); }
 
@@ -5055,7 +5062,7 @@ function renderAccTable(){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var liveEq=a._liveEquity!==undefined?a._liveEquity:(a.equity||a.balance||0);
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
-      var eq=liveEq.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var openCnt=a._openCount||(_allAccountPositions&&_allAccountPositions[a.id]?_allAccountPositions[a.id].length:0);
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
@@ -5066,7 +5073,7 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:75px;min-width:75px;max-width:75px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
@@ -5075,7 +5082,7 @@ function renderAccTable(){
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
           :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #555;vertical-align:middle;"></span>')+'</td>';
         else if(cid==='balance') tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;">$'+bal+'</td>';
-        else if(cid==='equity')  tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:'+eqColor+';" data-eq="'+a.id+'">$'+eq+'</td>';
+        else if(cid==='equity')  tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:'+eqColor+';" data-eq="'+a.id+'">'+eq+'</td>';
         else if(cid==='bonus')   tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:#f5c518;">$'+bon+'</td>';
         else if(cid==='open')    tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;color:'+(openCnt?'#f5c518':'#444')+';font-weight:'+(openCnt?'700':'400')+';\" data-open="'+a.id+'">'+openCnt+'</td>';
         else if(cid==='opnl'){
@@ -5976,7 +5983,7 @@ function closeApiKeyModal() {}
 function saveApiKey() {}
 
 symConfig = null;
-accounts = [];
+// accounts = []; // KALDIRILDI
 settings = {};
 payMethods = [];
 withdrawRequests = [];
@@ -7582,7 +7589,22 @@ function adminNav(sec,btn){
   var el=document.getElementById('sec-'+sec);
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
-  if(sec==='accounts')renderAccTable();
+  if(sec==='accounts'){
+    renderAccTable();
+    if(typeof db!=='undefined'&&db){
+      var _c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
+      var _pend=_c2.length;
+      if(_pend){_c2.forEach(function(acc){
+        db.collection('users').doc(String(acc.id)).get().then(function(doc){
+          if(doc.exists&&doc.data()){
+            try{var _pd=doc.data().positions;acc.positions=Array.isArray(_pd)?_pd:JSON.parse(_pd||'[]');if(typeof _allAccountPositions!=='undefined')_allAccountPositions[acc.id]=acc.positions;}catch(e){}
+            try{var _bv=doc.data().balance;if(_bv!==undefined)acc.balance=parseFloat(_bv)||acc.balance;}catch(e){}
+          }
+          _pend--;if(_pend<=0)renderAccTable();
+        }).catch(function(){_pend--;if(_pend<=0)renderAccTable();});
+      });}
+    }
+  }
   if(sec==='finance')populateFinAccSelect();
   if(sec==='reports'){
     loadAllPositionsAndUpdate();
@@ -7615,8 +7637,9 @@ function adminNav(sec,btn){
 function showAdminToast(title,msg,type){
   var t=document.getElementById('adminToast');
   if(!t){t=document.createElement('div');t.id='adminToast';t.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:6px;color:#fff;font-size:12px;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;min-width:200px;';document.body.appendChild(t);}
-  var cols={success:'#26a69a',error:'#ef5350',info:'#42a5f5',warning:'#ffa726'};
-  t.style.background=cols[type]||'#424242';t.style.opacity='1';
+  var _tc={success:{bg:'#0d1f17',b:'#26a69a',c:'#26a69a'},error:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},danger:{bg:'#1f0d0d',b:'#ef5350',c:'#ef5350'},warning:{bg:'#1f1a0d',b:'#f5c518',c:'#f5c518'},info:{bg:'#111',b:'#555',c:'#ccc'}};
+  var _tcc=_tc[type]||_tc.info;
+  t.style.background=_tcc.bg;t.style.borderLeft='3px solid '+_tcc.b;t.style.color=_tcc.c;t.style.opacity='1';
   t.innerHTML='<strong>'+title+'</strong><br><span style="opacity:0.9;font-size:11px;">'+msg+'</span>';
   clearTimeout(t._tmr);t._tmr=setTimeout(function(){t.style.opacity='0';},3500);
 }
@@ -8516,7 +8539,7 @@ var AD_SIM={
         var _fp2=function(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
         // Varlık
         document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
-          el.textContent='$'+_fp2(a._liveEquity);
+          var _leq=a._liveEquity||0;el.textContent=(_leq<0?'-$':'$')+Math.abs(_leq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
           el.style.color=a._liveEquity>=(a.balance||0)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
@@ -8702,6 +8725,7 @@ function adFpDec(sym) {
   if(p>1)     return 4;
   return 5;
 }
+var adFmtMoney=function(n){n=parseFloat(n||0);return(n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
 function adFpSym(n, sym){ return parseFloat(n||0).toFixed(adFpDec(sym)); }
 function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
