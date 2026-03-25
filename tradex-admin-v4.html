@@ -5097,23 +5097,15 @@ function renderAccTable(){
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       // Pozisyonları al - _allAccountPositions öncelikli (en güncel Firebase verisi)
-      // TEK KAYNAK: a._liveEquity ve a._openPnl adRefreshBadges tarafından güncellenir
-      // Pozisyon yoksa adCalcStats ile hesapla (hesap hiç açılmamışsa)
-      var _accPoses = Array.isArray(a.positions) ? a.positions : [];
-      var liveEq, _accOpenPnl, openCnt;
-      if(a._liveEquity !== undefined) {
-        // adRefreshBadges zaten hesaplamış - kullan
-        liveEq = a._liveEquity;
-        _accOpenPnl = a._openPnl || 0;
-        openCnt = a._openCount || 0;
-      } else {
-        // İlk kez - adCalcStats ile hesapla
-        var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
-        liveEq = _accSt ? _accSt.equity : (a.balance||0);
-        _accOpenPnl = _accSt ? _accSt.openPnl : 0;
-        openCnt = _accPoses.length;
-        if(_accSt){ a._liveEquity=liveEq; a._openPnl=_accOpenPnl; a._openCount=openCnt; }
-      }
+      // Her render'da adCalcStats ile hesapla - en güncel pozisyon ve fiyatla
+      var _accPoses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
+        ? _allAccountPositions[a.id]
+        : (Array.isArray(a.positions)?a.positions:[]);
+      var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
+      var liveEq = _accSt ? _accSt.equity : (a._liveEquity!==undefined?a._liveEquity:(a.balance||0));
+      var _accOpenPnl = _accSt ? _accSt.openPnl : (a._openPnl||0);
+      var openCnt = _accSt ? _accSt.openCount : (_accPoses.length||0);
+      if(_accSt){ a._liveEquity=liveEq; a._openPnl=_accOpenPnl; a._openCount=openCnt; }
       var eqColor=liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -8924,24 +8916,22 @@ function adRefreshBadges(){
   a._openPnl = st.openPnl;
   a._openCount = st.openCount;
 
-  // Hesaplar listesi DOM - tek doğru yer burası
+  // Hesaplar listesi DOM - sadece aktif (açık) hesap için güncelle
   var _secAcc = document.getElementById('sec-accounts');
   if(!_secAcc || _secAcc.style.display==='none') return;
   var _fmt = function(n){ n=parseFloat(n||0); return (n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
-  // Varlık
-  document.querySelectorAll('[data-eq="'+_adAccId+'"]').forEach(function(el){
-    el.textContent = _fmt(st.equity);
-    el.style.color = st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
+  var _id = _adAccId;
+  document.querySelectorAll('[data-eq="'+_id+'"]').forEach(function(el){
+    el.textContent=_fmt(st.equity);
+    el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
   });
-  // Açık K/Z
-  document.querySelectorAll('[data-opnl="'+_adAccId+'"]').forEach(function(el){
-    if(!st.openCount){ el.textContent='—'; el.style.color='#999999'; return; }
+  document.querySelectorAll('[data-opnl="'+_id+'"]').forEach(function(el){
+    if(!st.openCount){el.textContent='—';el.style.color='#999999';return;}
     var v=st.openPnl||0;
     el.textContent=(v>=0?'+$':'-$')+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
     el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#999999';
   });
-  // Açık işlem sayısı
-  document.querySelectorAll('[data-open="'+_adAccId+'"]').forEach(function(el){
+  document.querySelectorAll('[data-open="'+_id+'"]').forEach(function(el){
     el.textContent=String(st.openCount||0);
     el.style.color=st.openCount?'#f5c518':'#aaaaaa';
     el.style.fontWeight=st.openCount?'700':'400';
