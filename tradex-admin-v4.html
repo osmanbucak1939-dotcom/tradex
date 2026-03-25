@@ -4902,8 +4902,10 @@ function adRenderTrades() {
       '<td style="font-family:var(--mono);color:#26a69a;">'+(p.tp||'—')+'</td>'+
       '<td style="font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'-')+Math.abs(pnl).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
       '<td style="font-family:var(--mono);font-size:10px;">'+getDeviceIcon(p.device||'Web')+'</td>'+
-      '<td><button class="mgr-btn danger" onclick="adCloseTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Kapat</button> '+
-        '<button class="mgr-btn secondary" onclick="adEditTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Düzenle</button></td>'+
+      '<td>'
+        +(hasPerm&&hasPerm('trades.close')?'<button class="mgr-btn danger" onclick="adCloseTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Kapat</button> ':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="mgr-btn secondary" onclick="adEditTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Düzenle</button>':'')
+      +'</td>'+
     '</tr>';
   }).join('');
 }
@@ -9057,8 +9059,8 @@ function adRenderOpenTable(){
       +'<td style="padding:5px 8px;font-family:var(--mono);font-weight:700;color:'+pc+';" data-pnl="'+pos.id+'">'
         +(pnl>=0?'+':'-')+'$'+adFp(Math.abs(pnl))+'</td>'
       +'<td style="padding:5px 8px;white-space:nowrap;">'
-        +'<button class="ad-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
-        +'<button class="ad-btn ad-btn-danger" data-id="'+pos.id+'" onclick="adClosePos(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.close')?'<button class="ad-btn ad-btn-danger" data-id="'+pos.id+'" onclick="adClosePos(this)" style="font-size:10px;padding:2px 6px;">✕</button>':'')
       +'</td>'
     +'</tr>';
   }).join('');
@@ -9116,6 +9118,7 @@ function adRenderHistoryTable(){
 
 // ── Pozisyon kapat ────────────────────────────────────────────
 function adClosePos(btn){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
   var id  = parseInt(btn.dataset.id||btn.getAttribute('data-id'));
   var a   = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
@@ -9147,6 +9150,7 @@ function adClosePos(btn){
 
 // ── Pozisyon düzenle ──────────────────────────────────────────
 function adEditPos(btn){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger');return;}
   var id  = parseInt(btn.dataset.id||btn.getAttribute('data-id'));
   var pos = _adPositions.find(function(p){ return p.id===id; });
   if(!pos) return;
@@ -9196,6 +9200,7 @@ function adCloseEditModal(){
 }
 
 function adSaveEdit(){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger');return;}
   var pos = _adPositions.find(function(p){ return p.id===_adEditId; });
   if(!pos) return;
   var side = (document.getElementById('em_side')||{}).value;
@@ -9220,6 +9225,7 @@ function adSaveEdit(){
 }
 
 function adDeletePos(){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Bu işlem için yetkiniz yok','danger');return;}
   var idx = _adPositions.findIndex(function(p){ return p.id===_adEditId; });
   if(idx<0) return;
   if(!confirm('Pozisyonu silmek istediğinizden emin misiniz?')) return;
