@@ -4998,8 +4998,6 @@ function renderAccTable(){
     else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:(a.balance||0);vb=b._liveEquity!==undefined?b._liveEquity:(b.balance||0);}
     else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
     else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
-    else if(sc==='open'){va=a._openCount||0;vb=b._openCount||0;}
-    else if(sc==='opnl'){va=a._openPnl||0;vb=b._openPnl||0;}
     else return 0;
     return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
   });}
@@ -5017,9 +5015,7 @@ function renderAccTable(){
     {id:'group',  label:'Grup',         sort:null,   w:'75px',  maxw:'75px'},
     {id:'balance',label:'Bakiye',       sort:'bal',  w:'105px', maxw:'120px'},
     {id:'bonus',  label:'Bonus',        sort:null,   w:'85px',  maxw:'100px'},
-    {id:'equity', label:'Varlık',       sort:'eq',   w:'105px', maxw:'120px'},
-    {id:'open',   label:'Açık İşlem',   sort:'open', w:'72px',  maxw:'72px'},
-    {id:'opnl',   label:'Açık K/Z',     sort:'opnl', w:'100px', maxw:'115px'}
+    {id:'equity', label:'Varlık',       sort:'eq',   w:'105px', maxw:'120px'}
   ];
 
   // ── Kolon picker (sabit panel, her zaman DOM'da) ──
@@ -5180,7 +5176,7 @@ function renderAccTable(){
   }, 30);
 }
 var _accSort={col:'eq',dir:'desc'};
-var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','opnl'];
+var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity',];
 
 function _accSortBy(col){
   _accSort.dir=_accSort.col===col?(_accSort.dir==='asc'?'desc':'asc'):'desc';
@@ -8677,18 +8673,6 @@ var AD_SIM={
           el.style.color=a._liveEquity>=(a.balance||0)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
-        document.querySelectorAll('[data-open="'+a.id+'"]').forEach(function(el){
-          el.textContent=poses.length||'0';
-          el.style.color=poses.length?'#f5c518':'#444';
-          el.style.fontWeight=poses.length?'700':'400';
-        });
-        // Açık K/Z — canlı güncelle
-        document.querySelectorAll('[data-opnl="'+a.id+'"]').forEach(function(el){
-          var v=a._openPnl||0;
-          el.textContent=poses.length===0?'—':((v>=0?'+':'')+( v>=0?'$':'-$')+_fp2(Math.abs(v)));
-          el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#999999';
-          if(el.parentElement) el.parentElement.style.borderColor=v>0?'#26a69a44':v<0?'#ef535044':'#222';
-        });
       });
     }
     if(document.getElementById('adBadgeEq')) adRefreshBadges();
@@ -8924,17 +8908,6 @@ function adRefreshBadges(){
   document.querySelectorAll('[data-eq="'+_id+'"]').forEach(function(el){
     el.textContent=_fmt(st.equity);
     el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
-  });
-  document.querySelectorAll('[data-opnl="'+_id+'"]').forEach(function(el){
-    if(!st.openCount){el.textContent='—';el.style.color='#999999';return;}
-    var v=st.openPnl||0;
-    el.textContent=(v>=0?'+$':'-$')+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-    el.style.color=v>0?'#26a69a':v<0?'#ef5350':'#999999';
-  });
-  document.querySelectorAll('[data-open="'+_id+'"]').forEach(function(el){
-    el.textContent=String(st.openCount||0);
-    el.style.color=st.openCount?'#f5c518':'#aaaaaa';
-    el.style.fontWeight=st.openCount?'700':'400';
   });
 }
 
