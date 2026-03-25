@@ -1545,8 +1545,8 @@ console.log('Firebase bağlandı ✓');
           window.accounts=newAccs;
           if(typeof accounts!=='undefined')accounts=newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
-          var secAcc=document.getElementById('sec-accounts');
-          if(secAcc&&secAcc.style.display!=='none') renderAccTable();
+          // renderAccTable yerine sadece bakiye/online DOM güncelleme yap
+          // (renderAccTable çağrısı yanıp sönmeye neden olur)
         }catch(e){console.warn('accounts onSnapshot err:',e);}
       },function(err){console.warn('accounts onSnapshot error:',err);});
 
@@ -1573,7 +1573,9 @@ console.log('Firebase bağlandı ✓');
             if(ud.positions !== undefined) {
               try {
                 var _np = Array.isArray(ud.positions) ? ud.positions : JSON.parse(ud.positions||'[]');
-                if(JSON.stringify(_np) !== JSON.stringify(acc.positions||[])) {
+                // Aktif hesabın pozisyonlarını snapshot'tan alma - _adPositions kullan
+                var _isActiveAcc = (typeof _adAccId!=='undefined') && String(acc.id)===String(_adAccId);
+                if(!_isActiveAcc && JSON.stringify(_np) !== JSON.stringify(acc.positions||[])) {
                   acc.positions = _np;
                   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = _np;
                   // Raporlar açıksa güncelle
