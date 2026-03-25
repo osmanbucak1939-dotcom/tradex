@@ -924,7 +924,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-api-btn:hover { color:var(--accent); }
 .tb-api-dot {
   width:7px; height:7px; border-radius:50%;
-  background:#555; flex-shrink:0; transition:background .3s;
+  background:#999999; flex-shrink:0; transition:background .3s;
 }
 .tb-api-dot.live { background:#26a69a; box-shadow:0 0 6px #26a69a; }
 .tb-api-dot.err  { background:var(--sell); }
@@ -951,10 +951,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ad-btn-danger   { background:transparent; color:#ef5350; border:1px solid #ef5350; }
 .ad-btn-success  { background:transparent; color:#26a69a; border:1px solid #26a69a; }
 
-.ct-type-btn { background:transparent; border:none; color:#666; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
+.ct-type-btn { background:transparent; border:none; color:#aaaaaa; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
 .ct-type-btn.active { color:#fff; background:#1a1a1a; }
 .ct-type-btn:hover { color:#aaa; }
-.draw-tool-btn { background:transparent; border:none; color:#666; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
+.draw-tool-btn { background:transparent; border:none; color:#aaaaaa; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
 .draw-tool-btn.active { color:#f0b90b; background:#1a1a1a; }
 .draw-tool-btn:hover { color:#aaa; }
 
@@ -977,11 +977,11 @@ function _authShow(sec) {
     if(l) l.style.display='block';
     if(r) r.style.display='none';
     if(tl){ tl.style.color='#f0b90b'; tl.style.borderBottomColor='#f0b90b'; }
-    if(tr){ tr.style.color='#555'; tr.style.borderBottomColor='transparent'; }
+    if(tr){ tr.style.color='#999999'; tr.style.borderBottomColor='transparent'; }
   } else {
     if(l) l.style.display='none';
     if(r) r.style.display='block';
-    if(tl){ tl.style.color='#555'; tl.style.borderBottomColor='transparent'; }
+    if(tl){ tl.style.color='#999999'; tl.style.borderBottomColor='transparent'; }
     if(tr){ tr.style.color='#f0b90b'; tr.style.borderBottomColor='#f0b90b'; }
   }
 }
@@ -1598,7 +1598,7 @@ function initAuth(){
         <div class="tb-user-name" id="tbUserName">—</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div class="tb-user-type" id="tbUserType">Demo</div>
-          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:#555;letter-spacing:.5px"></div>
+          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:#999999;letter-spacing:.5px"></div>
         </div>
       </div>
       <!-- Dropdown -->
@@ -1943,7 +1943,7 @@ function initAuth(){
 
         <!-- FİNANS GEÇMİŞİ -->
         <div class="bp-section" id="bp-finans" style="padding:0;">
-          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#555;padding:16px;">Yükleniyor...</div>
+          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#999999;padding:16px;">Yükleniyor...</div>
         </div>
       </div>
     </div>
@@ -1961,10 +1961,10 @@ function initAuth(){
   <!-- Tabs -->
   <div style="padding:24px 28px 0">
     <div style="font-family:monospace;font-size:18px;font-weight:700;color:#f0b90b;letter-spacing:3px;text-align:center;margin-bottom:4px">TRADEX</div>
-    <div style="font-family:monospace;font-size:10px;color:#666;text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
+    <div style="font-family:monospace;font-size:10px;color:#aaaaaa;text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2a2a2a">
       <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer">GİRİŞ YAP</div>
-      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#555;border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
+      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#999999;border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
     </div>
   </div>
 
@@ -1972,16 +1972,16 @@ function initAuth(){
   <div id="sec-login" style="padding:20px 28px 24px">
     <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">LOGIN NO / E-POSTA</div>
+      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">LOGIN NO / E-POSTA</div>
       <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">ŞİFRE</div>
+      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">ŞİFRE</div>
       <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">GİRİŞ YAP</button>
     <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:#1e1e1e;color:#888;border:1px solid #333;border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
-    <div style="font-family:monospace;font-size:10px;color:#555;text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
+    <div style="font-family:monospace;font-size:10px;color:#999999;text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
   </div>
 
   <!-- Kayıt -->
@@ -1990,44 +1990,44 @@ function initAuth(){
     <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">AD</div>
+        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">AD</div>
         <input id="inp-name" placeholder="Adınız" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">SOYAD</div>
+        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">SOYAD</div>
         <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">TELEFON</div>
+      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">TELEFON</div>
       <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">E-POSTA</div>
+      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">E-POSTA</div>
       <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">ŞİFRE</div>
+        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">ŞİFRE</div>
         <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#666;margin-bottom:4px">TEKRAR</div>
+        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">TEKRAR</div>
         <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
       <div id="opt-demo" onclick="authAccType('demo')" style="border:1px solid #f0b90b;background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
         <div style="font-size:16px">🎮</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">DEMO</div>
-        <div style="font-family:monospace;font-size:9px;color:#666">$10,000 sanal</div>
+        <div style="font-family:monospace;font-size:9px;color:#aaaaaa">$10,000 sanal</div>
       </div>
       <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #333;background:#111;border-radius:2px;padding:10px;text-align:center;cursor:pointer">
         <div style="font-size:16px">💼</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">GERÇEK</div>
-        <div style="font-family:monospace;font-size:9px;color:#666">Canlı hesap</div>
+        <div style="font-family:monospace;font-size:9px;color:#aaaaaa">Canlı hesap</div>
       </div>
     </div>
     <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">HESAP OLUŞTUR</button>
-    <div style="font-family:monospace;font-size:10px;color:#555;text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
+    <div style="font-family:monospace;font-size:10px;color:#999999;text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
   </div>
 
 </div>
@@ -2108,7 +2108,7 @@ function initAuth(){
     <!-- İŞLEM GEÇMİŞİ -->
     <div class="wallet-section" id="ws-history" style="overflow-y:auto;max-height:400px;">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;">FİNANS GEÇMİŞİ</div>
-      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:#555;">Yükleniyor...</div>
+      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:#999999;">Yükleniyor...</div>
     </div>
 
   </div>
@@ -4440,19 +4440,19 @@ function _renderBpFinansTable(el) {
       var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : (l.type==='swap' ? (rawAmt>=0?'+':'-') : '-');
       var color = cl[l.type]||'#888';
       rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-        + '<td style="padding:6px 12px;color:#555;font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+        + '<td style="padding:6px 12px;color:#999999;font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:11px;">' + (tp[l.type]||l.type) + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:12px;text-align:right;">' + sign + '$' + Math.abs(rawAmt).toFixed(2) + '</td>'
-        + '<td style="padding:6px 12px;color:#555;font-size:10px;">' + (l.note||'—') + '</td>'
+        + '<td style="padding:6px 12px;color:#999999;font-size:10px;">' + (l.note||'—') + '</td>'
         + '</tr>';
     });
   }
   el.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
     + '<thead><tr style="background:#111;position:sticky;top:0;z-index:1;">'
-    + '<th style="padding:7px 12px;text-align:left;color:#555;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#555;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
-    + '<th style="padding:7px 12px;text-align:right;color:#555;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#555;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
+    + '<th style="padding:7px 12px;text-align:right;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
@@ -5197,10 +5197,10 @@ function adRenderTab(tab) {
         '<div class="ad-section-title">İşlem Geçmişi</div>' +
         '<table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;">' +
         '<thead><tr style="background:#111;">' +
-          '<th style="padding:6px 10px;text-align:left;color:#666;border-bottom:1px solid #222;">Tarih</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#666;border-bottom:1px solid #222;">Tip</th>' +
-          '<th style="padding:6px 10px;text-align:right;color:#666;border-bottom:1px solid #222;">Miktar</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#666;border-bottom:1px solid #222;">Not</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Tarih</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Tip</th>' +
+          '<th style="padding:6px 10px;text-align:right;color:#aaaaaa;border-bottom:1px solid #222;">Miktar</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Not</th>' +
         '</tr></thead>' +
         '<tbody>' +
         (finlog.length ? finlog.map(function(l){
@@ -5208,10 +5208,10 @@ function adRenderTab(tab) {
           var cl = {deposit:"#26a69a",withdraw:"#ef5350",bonus_in:"#f5c518",bonus_out:"#f5a623"};
           var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
           return '<tr style="border-bottom:1px solid #1a1a1a;">'
-            +'<td style="padding:5px 10px;color:#666;">'+fmtDate(l.date)+'</td>'
+            +'<td style="padding:5px 10px;color:#aaaaaa;">'+fmtDate(l.date)+'</td>'
             +'<td style="padding:5px 10px;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+(tp[l.type]||l.type)+'</td>'
             +'<td style="padding:5px 10px;text-align:right;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+ sign +'$'+ parseFloat(l.amount||0).toFixed(2) +'</td>'
-            +'<td style="padding:5px 10px;color:#555;">'+( l.note||'—')+'</td>'
+            +'<td style="padding:5px 10px;color:#999999;">'+( l.note||'—')+'</td>'
             +'</tr>';
         }).join('') : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#444;">Kayıt yok</td></tr>') +
         '</tbody></table></div>';
@@ -5792,20 +5792,20 @@ function renderWalletHistory() {
         var sign  = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
         var color = cl[l.type]||'#888';
         rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#666;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#aaaaaa;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:'+color+';font-weight:700;">' + (tp[l.type]||l.type) + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:12px;color:'+color+';font-weight:700;text-align:right;">' + sign + '$' + parseFloat(l.amount||0).toFixed(2) + '</td>'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#555;">' + (l.note||'—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#999999;">' + (l.note||'—') + '</td>'
           + '</tr>';
       });
     }
     el.innerHTML = '<div style="padding:4px 0;">'
       + '<table style="width:100%;border-collapse:collapse;">'
       + '<thead><tr style="background:#111;">'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#666;text-align:left;border-bottom:1px solid #222;">TARİH</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#666;text-align:left;border-bottom:1px solid #222;">TİP</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#666;text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#666;text-align:left;border-bottom:1px solid #222;">NOT</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">TARİH</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">TİP</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">NOT</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -5813,7 +5813,7 @@ function renderWalletHistory() {
 
   // Taze veri Firebase'den çek
   if(_cu && _cu.id && typeof fbLoadUserData === 'function') {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#555;font-size:11px;">Yükleniyor...</div>';
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#999999;font-size:11px;">Yükleniyor...</div>';
     fbLoadUserData(_cu.id, function(data) {
       if(data && Array.isArray(data.finlog)) finlog = data.finlog;
       _doRender(finlog || []);
@@ -7064,12 +7064,12 @@ function _txRenderBrokerInfo(d) {
     } else if(f.link) {
       valHtml = '<a href="'+f.link+val+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
     } else if(f.small) {
-      valHtml = '<span style="color:#555;font-size:9px;line-height:1.4">'+val+'</span>';
+      valHtml = '<span style="color:#999999;font-size:9px;line-height:1.4">'+val+'</span>';
     } else {
       valHtml = '<span style="color:#ccc">'+val+'</span>';
     }
     return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a;gap:8px">'
-      +'<div style="font-family:monospace;font-size:10px;color:#555;flex-shrink:0">'+f.label+'</div>'
+      +'<div style="font-family:monospace;font-size:10px;color:#999999;flex-shrink:0">'+f.label+'</div>'
       +'<div style="font-family:monospace;font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
       +'</div>';
   }).join('');
@@ -7389,8 +7389,8 @@ function sgRender() {
     var star = gs!=='' || swb!=='' || sws!=='';
     html += '<tr style="'+(star?'background:rgba(240,185,11,0.04)':'')+'">'
       +'<td style="font-family:monospace;font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
-      +'<td style="font-size:11px;color:#666;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
-      +'<td style="font-family:monospace;color:#666;">'+ds+'</td>'
+      +'<td style="font-size:11px;color:#aaaaaa;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
+      +'<td style="font-family:monospace;color:#aaaaaa;">'+ds+'</td>'
       +'<td><input class="mgr-input" id="sgs_'+s.sym+'" type="number" step="any" value="'+gs+'" placeholder="'+ds+'" style="width:120px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgb_'+s.sym+'" type="number" step="any" value="'+swb+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgsl_'+s.sym+'" type="number" step="any" value="'+sws+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
@@ -7769,7 +7769,7 @@ function symSearchFilter(q){
   dd.innerHTML='';
   if(!filtered.length){
     var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#555;font-family:monospace;font-size:11px;';
+    empty.style.cssText='padding:16px;text-align:center;color:#999999;font-family:monospace;font-size:11px;';
     empty.textContent='Sembol bulunamadi';
     dd.appendChild(empty);
     dd.style.display='block'; return;
@@ -7783,7 +7783,7 @@ function symSearchFilter(q){
     var chgCol=p?(p.chg>=0?'#26a69a':'#ef5350'):'#888';
     var row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#d4d4d4;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#555;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
+    row.innerHTML='<div><span style="font-weight:700;color:#d4d4d4;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#999999;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
       +'<div style="display:flex;align-items:center;gap:6px;">'
       +'<span style="color:#888;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
       +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
@@ -8030,7 +8030,7 @@ function adChangePassword() {
     touch-action: manipulation;
     border-radius: 0;
   }
-  #mSymBtn .arr { font-size: 7px; color: #555; }
+  #mSymBtn .arr { font-size: 7px; color: #999999; }
   #mSymList {
     display: none;
     position: fixed;
@@ -8138,7 +8138,7 @@ function adChangePassword() {
     gap: 3px;
     background: none;
     border: none;
-    color: #666;
+    color: #aaaaaa;
     font-family: 'Courier New', monospace;
     font-size: 9px;
     font-weight: 700;
@@ -8295,7 +8295,7 @@ function adChangePassword() {
   }
   #mPanMarket .mw-group-title {
     font-size: 10px !important; letter-spacing: 1.5px !important;
-    color: #555 !important;
+    color: #999999 !important;
   }
 
   /* Değişim yüzdesi badge */
@@ -8517,7 +8517,7 @@ function adChangePassword() {
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:#666;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="font-family:monospace;font-size:9px;color:#aaaaaa;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -8534,7 +8534,7 @@ function adChangePassword() {
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:#666;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div style="font-family:monospace;font-size:9px;color:#aaaaaa;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -8576,7 +8576,7 @@ function adChangePassword() {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#666;letter-spacing:.5px;pointer-events:none">SAT</span>
+    <span style="font-size:9px;color:#aaaaaa;letter-spacing:.5px;pointer-events:none">SAT</span>
     <span id="mqBid" style="pointer-events:none">—</span>
   </button>
   <div style="
@@ -8599,7 +8599,7 @@ function adChangePassword() {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#666;letter-spacing:.5px;pointer-events:none">AL</span>
+    <span style="font-size:9px;color:#aaaaaa;letter-spacing:.5px;pointer-events:none">AL</span>
     <span id="mqAsk" style="pointer-events:none">—</span>
   </button>
 </div>
@@ -9574,31 +9574,31 @@ function adChangePassword() {
     <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
       <div style="flex:1">
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:#e0e0e0" id="mPMSym">—</div>
-        <div style="font-family:monospace;font-size:9px;color:#666;margin-top:1px" id="mPMType">—</div>
+        <div style="font-family:monospace;font-size:9px;color:#aaaaaa;margin-top:1px" id="mPMType">—</div>
       </div>
       <div style="text-align:right;margin-right:12px">
         <div style="font-family:monospace;font-size:16px;font-weight:700" id="mPMPnl">—</div>
-        <div style="font-family:monospace;font-size:9px;color:#666" id="mPMCur">—</div>
+        <div style="font-family:monospace;font-size:9px;color:#aaaaaa" id="mPMCur">—</div>
       </div>
-      <button onclick="mPosModalClose()" style="background:#1a1a1a;border:none;color:#666;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
+      <button onclick="mPosModalClose()" style="background:#1a1a1a;border:none;color:#aaaaaa;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
     </div>
     <!-- Detaylar kompakt -->
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#1a1a1a;margin:8px;border-radius:6px;overflow:hidden">
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Açılış</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Açılış</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMOpen">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCurPrice">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Lot</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Lot</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMLot">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Swap</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Swap</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMSwap">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
@@ -9610,11 +9610,11 @@ function adChangePassword() {
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a" id="mPMTP">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Teminat</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Teminat</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCost">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#555;margin-bottom:2px">Saat</div>
+          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Saat</div>
           <div style="font-family:monospace;font-size:9px;font-weight:700;color:#ccc" id="mPMTime">—</div>
         </div>
       </div>
