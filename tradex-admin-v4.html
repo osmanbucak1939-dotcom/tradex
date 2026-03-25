@@ -3535,8 +3535,8 @@ function adReceiveRawPrice(sym, rawMid) {
      document.getElementById('accDetailOverlay').style.display !== 'none') {
     var _hasSym = (_adPositions||[]).some(function(p){ return p.sym===sym; });
     if(_hasSym) {
+      // Fiyat gelince anında güncelle - interval bekleme
       if(typeof adTickOpenTable==='function') adTickOpenTable();
-      if(typeof adRefreshBadges==='function') adRefreshBadges();
     }
   }
   // Hesap listesi - bu sembolde pozisyonu olan hesapların K/Z ve varlığını güncelle
@@ -8953,14 +8953,18 @@ function adLoadAndRender(){
     } else {
       adRefreshBadges();
     }
-  }, 1000);
+  }, 250);
 
   function _apply(data){
     var newPos=[], newHist=[];
     if(data){
-      try{ var _rp8=data.positions||'[]'; newPos=Array.isArray(_rp8)?_rp8:JSON.parse(_rp8); }catch(e){}
-      try{ var _rh8=data.tradeHistory||'[]'; newHist=Array.isArray(_rh8)?_rh8:JSON.parse(_rh8); }catch(e){}
+      try{ var _rp8=data.positions; newPos=Array.isArray(_rp8)?_rp8:(typeof _rp8==='string'?JSON.parse(_rp8||'[]'):[]); }catch(e){}
+      try{ var _rh8=data.tradeHistory; newHist=Array.isArray(_rh8)?_rh8:(typeof _rh8==='string'?JSON.parse(_rh8||'[]'):[]); }catch(e){}
       if(Array.isArray(data.finlog)) a.finlog = data.finlog;
+    }
+    // users/{id}'de positions yoksa broker/accounts'taki a.positions kullan
+    if(!newPos.length && Array.isArray(a.positions) && a.positions.length) {
+      newPos = a.positions;
     }
     // Atomik güncelle
     _adPositions = newPos;
