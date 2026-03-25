@@ -5000,19 +5000,19 @@ function renderAccTable(){
   var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
   var cols=_accCols;
   var COL_DEFS=[
-    {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'106px', ellipsis:true},
-    {id:'name',   label:'Ad Soyad',     sort:'name', w:'130px', ellipsis:true},
-    {id:'email',  label:'E-posta',      sort:null,   w:'150px', ellipsis:true},
-    {id:'online', label:'Online',       sort:null,   w:'55px',  align:'center'},
-    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'106px', ellipsis:true},
-    {id:'status', label:'Durum',        sort:null,   w:'72px'},
-    {id:'type',   label:'Tip',          sort:null,   w:'48px'},
-    {id:'group',  label:'Grup',         sort:null,   w:'80px'},
-    {id:'balance',label:'Bakiye',       sort:'bal',  w:'110px'},
-    {id:'bonus',  label:'Bonus',        sort:null,   w:'95px'},
-    {id:'equity', label:'Varlık',       sort:'eq',   w:'110px'},
-    {id:'open',   label:'Açık İşlem',   sort:'open', w:'72px',  align:'center'},
-    {id:'opnl',   label:'Açık K/Z',     sort:'opnl', w:'110px'}
+    {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'8%',  ellipsis:true},
+    {id:'name',   label:'Ad Soyad',     sort:'name', w:'9%',  ellipsis:true},
+    {id:'email',  label:'E-posta',      sort:null,   w:'10%', ellipsis:true},
+    {id:'online', label:'Online',       sort:null,   w:'4%',  align:'center'},
+    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'8%',  ellipsis:true},
+    {id:'status', label:'Durum',        sort:null,   w:'5%'},
+    {id:'type',   label:'Tip',          sort:null,   w:'4%'},
+    {id:'group',  label:'Grup',         sort:null,   w:'6%'},
+    {id:'balance',label:'Bakiye',       sort:'bal',  w:'8%'},
+    {id:'bonus',  label:'Bonus',        sort:null,   w:'7%'},
+    {id:'equity', label:'Varlık',       sort:'eq',   w:'8%'},
+    {id:'open',   label:'Açık İşlem',   sort:'open', w:'5%',  align:'center'},
+    {id:'opnl',   label:'Açık K/Z',     sort:'opnl', w:'8%'}
   ];
 
   // ── Kolon picker (sabit panel, her zaman DOM'da) ──
@@ -5080,7 +5080,7 @@ function renderAccTable(){
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',null,{w:'90px'});
+  var theadHtml = '<tr>'+th('Login','login',null,{w:'6%'});
   COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
   theadHtml += '</tr>';
 
@@ -5103,7 +5103,7 @@ function renderAccTable(){
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
-        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:90px;min-width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
+        +'<td style="'+TDC+'color:var(--accent);font-family:var(--mono);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:6%;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+cd.w+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
