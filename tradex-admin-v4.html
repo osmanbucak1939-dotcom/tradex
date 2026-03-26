@@ -4324,7 +4324,7 @@ function adRenderTab(tab) {
         '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#26a69a;">$'+((a.equity||a.balance)||0).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+(a.bonus||0).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT</div><div class="ad-stat-val">$'+(a.margin||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(Math.max(0,(a.equity||a.balance||0)-(a.margin||0))).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(function(){var _st=adCalcStats(a,Array.isArray(a.positions)?a.positions:[]);return _st.freeMargin.toFixed(2);})() +'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?((((a.equity||a.balance||0))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:#f5c518;">%'+_mcPct+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:#ef5350;">%'+_soPct+'</div></div>' +
@@ -4361,15 +4361,17 @@ function adRenderTab(tab) {
     var defDate = nowDt.toISOString().slice(0,10);
     var defTime = nowDt.toTimeString().slice(0,5);
 
-    // Finansal özet (mini)
-    var bal  = (a2.balance||0).toFixed(2);
-    var eq   = (a2.equity||a2.balance||0).toFixed(2);
-    var bon  = (a2.bonus||0).toFixed(2);
-    var mar  = (a2.margin||0).toFixed(2);
-    var freeM= Math.max(0,(a2.equity||a2.balance||0)-(a2.margin||0)).toFixed(2);
-    var marLv= a2.margin ? (((a2.equity||a2.balance||0)/a2.margin)*100).toFixed(2)+'%' : '—';
+    // Finansal özet (mini) — her zaman adCalcStats ile hesapla, a.equity field'ına güvenme
+    var _a2poses = Array.isArray(a2.positions) ? a2.positions : (typeof _allAccountPositions!=='undefined'?(_allAccountPositions[a2.id]||[]):[]);
+    var _a2st = (typeof adCalcStats==='function') ? adCalcStats(a2, _a2poses) : null;
+    var bal  = (_a2st ? _a2st.balance  : (a2.balance||0)).toFixed(2);
+    var eq   = (_a2st ? _a2st.equity   : (a2.balance||0)).toFixed(2);
+    var bon  = (_a2st ? _a2st.bonus    : (a2.bonus||0)).toFixed(2);
+    var mar  = (_a2st ? _a2st.margin   : 0).toFixed(2);
+    var freeM= (_a2st ? _a2st.freeMargin : 0).toFixed(2);
+    var marLv= (_a2st && _a2st.marginLvl) ? '%'+_a2st.marginLvl.toFixed(2) : '—';
     // Açık K/Z
-    var _opnl = a2._openPnl !== undefined ? a2._openPnl : 0;
+    var _opnl = _a2st ? _a2st.openPnl : (a2._openPnl !== undefined ? a2._openPnl : 0);
     var _opnlColor = _opnl > 0 ? '#26a69a' : _opnl < 0 ? '#ef5350' : '#888';
     var _opnlTxt = (a2._openCount||0) === 0 ? '—'
       : (_opnl >= 0 ? '+' : '') + '$' + Math.abs(_opnl).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -4593,7 +4595,7 @@ function adDeposit() {
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_dep_note')||{}).value || '';
   a.balance += amt;
-  a.equity = (a.equity||a.balance-amt)+amt;
+  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
   if(!Array.isArray(a.finlog)) a.finlog = [];
   a.finlog.unshift({ type:'deposit', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
   // depositRequests'e de ekle - raporlarda görünsün
@@ -4629,7 +4631,7 @@ function adWithdraw() {
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_wd_note')||{}).value || '';
   a.balance -= amt;
-  a.equity = Math.max(0,(a.equity||a.balance+amt)-amt);
+  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
   if(!Array.isArray(a.finlog)) a.finlog = [];
   a.finlog.unshift({ type:'withdraw', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
   // withdrawRequests'e de ekle - raporlarda görünsün
@@ -4665,7 +4667,7 @@ function adBonus(sign) {
   var newBonus = Math.max(0, oldBonus + sign * amt);
   var diff = newBonus - oldBonus; // gerçek eklenen/çıkarılan miktar
   a.bonus  = newBonus;
-  a.equity = Math.max(0, (a.equity || a.balance) + diff);
+  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
   saveAccounts(); renderAccTable();
   // users/{id}'ye bonus yaz - trader anlık görsün
   if(typeof db!=='undefined' && db && _adAccId) {
@@ -7916,6 +7918,9 @@ function updateMarginCallPanel() {
         if(_posIdx>-1) positions.splice(_posIdx,1);
         a.positions = positions;
         if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=positions;
+        // a.equity, a.margin, a._liveEquity senkronize et — tüm paneller aynı değeri görsün
+        var _soSt = (typeof adCalcStats==='function') ? adCalcStats(a, positions) : null;
+        if(_soSt){ a._liveEquity=_soSt.equity; a._openPnl=_soSt.openPnl; a._openCount=_soSt.openCount; a.equity=_soSt.equity; a.margin=_soSt.margin; }
         // tradeHistory güncelle
         if(!Array.isArray(a.tradeHistory)) a.tradeHistory=[];
         a.tradeHistory.unshift(Object.assign({},toClose,{closePrice:closeP,pnl:_pnl2,closeTime:new Date().toISOString(),closeReason:'stop_out'}));
