@@ -5174,8 +5174,10 @@ function renderAccTable(){
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       var isOnline=(a.online===true)&&(lsMs&&(now-lsMs)<60000);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
-      var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
-                  : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
+      // Online ise lastSeen (en son görülme), değilse lastLogin (son giriş)
+      var lastSeen = isOnline && a.lastSeen ? fmtDateShort(a.lastSeen)
+                   : a.lastLogin ? fmtDateShort(a.lastLogin)
+                   : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
