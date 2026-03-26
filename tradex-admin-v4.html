@@ -1575,6 +1575,8 @@ console.log('Firebase bağlandı ✓');
                 var _np = Array.isArray(ud.positions) ? ud.positions : (typeof ud.positions==='string'?JSON.parse(ud.positions||'[]'):[]);
                 acc.positions = _np;
                 if(typeof _allAccountPositions!=='undefined') _allAccountPositions[acc.id] = _np;
+                // _liveEquity cache'ini temizle - yeniden hesaplansın
+                acc._liveEquity = undefined;
                 // Aktif hesap detayı açıksa _adPositions da güncelle
                 if(String(acc.id)===String(_adAccId) && typeof _adPositions!=='undefined') {
                   _adPositions = _np;
@@ -1600,6 +1602,11 @@ console.log('Firebase bağlandı ✓');
             if(ud.balance !== undefined) {
               var _nb = parseFloat(ud.balance)||0;
               if(acc.balance !== _nb) acc.balance = _nb;
+            }
+            // bonus - users'da varsa güncelle, yoksa broker/accounts'taki değeri koru
+            if(ud.bonus !== undefined) {
+              var _nb2 = parseFloat(ud.bonus)||0;
+              if(acc.bonus !== _nb2) acc.bonus = _nb2;
             }
           });
           // renderAccTable kaldırıldı - yanıp sönmeye neden oluyordu
@@ -3617,6 +3624,32 @@ function adApplyOverride(sym, price) {
 }
 
 // Fiyat güncellemesi hesaplar tablosunu tetiklemez - sadece DOM güncellenir
+// İlk fiyatlar gelince tüm equityleri hesapla (throttle: 5sn)
+if(!window._adFirstPriceTimer) {
+  window._adFirstPriceTimer = setTimeout(function(){
+    window._adFirstPriceTimer = null;
+    adRecalcAllEquities();
+  }, 5000);
+}
+
+// Tüm hesapların varlığını hesapla ve cache'e yaz
+function adRecalcAllEquities() {
+  if(typeof accounts==='undefined' || !accounts.length) return;
+  accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
+    var _poses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
+      ? _allAccountPositions[a.id] : (Array.isArray(a.positions)?a.positions:[]);
+    if(typeof adCalcStats==='function') {
+      var st = adCalcStats(a, _poses);
+      a._liveEquity = st.equity;
+      a._openPnl = st.openPnl;
+      a._openCount = st.openCount;
+    }
+  });
+  // Hesaplar sekmesi açıksa yenile
+  var secAcc = document.getElementById('sec-accounts');
+  if(secAcc && secAcc.style.display!=='none') renderAccTable();
+}
+
 function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
@@ -5096,10 +5129,13 @@ function renderAccTable(){
   } else {
     rows.forEach(function(a,rowIdx){
       var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      // Varlık/K/Z: adRefreshBadges cache'inden oku (hesap detayından gelir, hep doğru)
-      var liveEq = a._liveEquity!==undefined ? a._liveEquity : (a.balance||0);
-      var _accOpenPnl = a._openPnl||0;
-      var openCnt = a._openCount||0;
+      // Pozisyonları al
+      var _accPoses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
+        ? _allAccountPositions[a.id] : (Array.isArray(a.positions)?a.positions:[]);
+      // adCalcStats ile her zaman hesapla - fiyat varsa doğru, yoksa balance+bonus
+      var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
+      var liveEq = _accSt ? _accSt.equity : ((a.balance||0)+(a.bonus||0));
+      if(_accSt){ a._liveEquity=_accSt.equity; a._openPnl=_accSt.openPnl; a._openCount=_accSt.openCount; }
       var eqColor = liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -7695,7 +7731,7 @@ function adminNav(sec,btn){
             }catch(e){}
           }
           _pend--;
-          if(_pend<=0) renderAccTable();
+          if(_pend<=0){ adRecalcAllEquities(); }
         }).catch(function(){_pend--;if(_pend<=0)renderAccTable();});
       });
     }
