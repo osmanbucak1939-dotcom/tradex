@@ -1291,13 +1291,19 @@ function genId(prefix) {
 function fbSaveAccounts() {
       if(!db) return;
       if(!accounts||accounts.length<1){console.warn('fbSaveAccounts: bos - engellendi');return;}
-      var _ts=new Date().toISOString(),_data=JSON.stringify(accounts);
-      try {
-        db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:accounts.length}).catch(function(e){console.warn(e);});
-        var _h=new Date().toISOString().substring(0,13).replace('T','_');
-        db.collection('broker').doc('accounts_backup_'+_h).set({data:_data,savedAt:_ts}).catch(function(){});
-        accounts.forEach(function(a){if(!a.id)return;db.collection('users').doc(String(a.id)).set({name:a.name||'',surname:a.surname||'',email:a.email||'',login:a.login||a.id,type:a.type||'live',spreadGroup:a.spreadGroup||'standard',leverage:a.leverage||100,active:a.active!==false,created:a.created||'',regDate:a.regDate||'',phone:a.phone||'',password:a.password||'',currency:a.currency||'USD',bonus:a.bonus||0},{merge:true}).catch(function(){});});
-      }catch(e){console.warn(e);}
+      // Rate limit koruması: 2 saniye içinde birden fazla çağrıyı tek yazıya indir
+      if(window._fbSaveTimer) clearTimeout(window._fbSaveTimer);
+      window._fbSaveTimer = setTimeout(function() {
+        window._fbSaveTimer = null;
+        if(!accounts||accounts.length<1) return;
+        var _ts=new Date().toISOString(),_data=JSON.stringify(accounts);
+        try {
+          db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:accounts.length}).catch(function(e){console.warn(e);});
+          var _h=new Date().toISOString().substring(0,13).replace('T','_');
+          db.collection('broker').doc('accounts_backup_'+_h).set({data:_data,savedAt:_ts}).catch(function(){});
+          accounts.forEach(function(a){if(!a.id)return;db.collection('users').doc(String(a.id)).set({name:a.name||'',surname:a.surname||'',email:a.email||'',login:a.login||a.id,type:a.type||'live',spreadGroup:a.spreadGroup||'standard',leverage:a.leverage||100,active:a.active!==false,created:a.created||'',regDate:a.regDate||'',phone:a.phone||'',password:a.password||'',currency:a.currency||'USD',bonus:a.bonus||0},{merge:true}).catch(function(){});});
+        }catch(e){console.warn(e);}
+      }, 2000); // 2sn debounce — stop out 1sn interval'daki flood'u önler
     }
 
     // Güvenli hesap ekleme - race condition önler
@@ -7835,15 +7841,35 @@ function updateMarginCallPanel() {
     var positions = Array.isArray(a.positions) ? a.positions : [];
     if(!positions.length) return;
 
-    // Anlık K/Z ve margin hesapla
-    var openPnl = 0, usedMargin = 0;
+    // Anlık K/Z ve margin hesapla (adCalcStats ile aynı mantık — cost=0 sorunu giderildi)
+    var openPnl = 0;
+    var _nets = {};
+    var _cfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
+    var _lev2 = parseFloat(a.leverage || 100);
     positions.forEach(function(p) {
-      var cur = adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
+      var cur = adGetPrice(p.sym, p.side==='buy'?'sell':'buy') || 0;
+      var cs  = parseFloat(p.contractSize) || 1;
+      var qty = parseFloat(p.qty) || 0;
       if(cur) {
-        var pnl = (p.side==='buy' ? cur-p.openPrice : p.openPrice-cur) * (parseFloat(p.qty)||0);
-        openPnl += pnl;
+        openPnl += (p.side==='buy' ? cur - p.openPrice : p.openPrice - cur) * qty * cs;
+        openPnl += parseFloat(p.swapTotal) || 0;
       }
-      usedMargin += parseFloat(p.cost)||0;
+      // Netleştirilmiş margin için sembol bazlı toplam
+      if(!_nets[p.sym]) _nets[p.sym] = {buy:0, sell:0};
+      _nets[p.sym][p.side] += qty;
+      _nets[p.sym]._price = adGetPrice(p.sym) || p.openPrice;
+      _nets[p.sym]._cs    = cs;
+      _nets[p.sym]._sym   = p.sym;
+    });
+    // Hedge netting ile margin hesapla (adCalcStats mantığı)
+    var usedMargin = 0;
+    Object.keys(_nets).forEach(function(sym) {
+      var n  = _nets[sym];
+      var nq = Math.abs(n.buy - n.sell);
+      var sc = _cfg2.find(function(s){ return s.sym === sym; });
+      var cs = sc ? (parseFloat(sc.contractSize) || 1) : (n._cs || 1);
+      var lv = (sc && sc.margin && sc.margin > 0) ? (100 / parseFloat(sc.margin)) : _lev2;
+      usedMargin += (nq * (n._price || 0) * cs) / lv;
     });
 
     var equity = balance + bonus + openPnl;
@@ -7881,8 +7907,15 @@ function updateMarginCallPanel() {
         var closeP = adGetPrice(toClose.sym, toClose.side==='buy'?'sell':'buy')||toClose.openPrice;
         var _cs2=parseFloat(toClose.contractSize)||1, _qty2=parseFloat(toClose.qty)||0;
         var _pnl2=(toClose.side==='buy'?closeP-toClose.openPrice:toClose.openPrice-closeP)*_qty2*_cs2+(parseFloat(toClose.swapTotal)||0);
-        // Bakiyeyi doğrudan güncelle
-        var _newBal = parseFloat(a.balance||0) + (parseFloat(toClose.cost)||0) + _pnl2;
+        // Kapanan pozisyonun kullandığı margin'i geri hesapla
+        // cost=0 olan eski pozisyonlar için anlık fiyat üzerinden hesaplıyoruz
+        var _scSO=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===toClose.sym;}):null;
+        var _lvSO=(_scSO&&_scSO.margin&&_scSO.margin>0)?(100/parseFloat(_scSO.margin)):(parseFloat(a.leverage||100));
+        var _releasedMargin=(parseFloat(toClose.cost)>0)
+          ? parseFloat(toClose.cost)                                // cost varsa onu kullan
+          : (_qty2*(closeP||toClose.openPrice)*_cs2)/_lvSO;        // yoksa anlık hesapla
+        // Bakiyeyi doğrudan güncelle (margin iadesi + K/Z)
+        var _newBal = parseFloat(a.balance||0) + _releasedMargin + _pnl2;
         a.balance = _newBal;
         // Pozisyonu listeden çıkar
         var _posIdx = positions.indexOf(toClose);
