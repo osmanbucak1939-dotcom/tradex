@@ -1371,11 +1371,16 @@ function fbSaveAccounts() {
       } catch(e){}
       if(!db) return;
       try {
-        // broker/prices: fiyatı yaz
-        var upd = {_ts: Date.now()}; upd[sym] = price;
-        db.collection('broker').doc('prices').set(upd, {merge:true})
-          .catch(function(e){ console.warn('fbSavePrices err:', e); });
-        // broker/overrides: override listesini ayrı dokümana yaz (scope bağımsız)
+        // _FX writeBuf'a ekle - throttle ile yazılacak
+        _FX.writeBuf[sym] = price;
+        if(!_FX.writeTimer) {
+          _FX.writeTimer = setTimeout(function(){
+            var buf=_FX.writeBuf; _FX.writeBuf={}; _FX.writeTimer=null;
+            if(!Object.keys(buf).length) return;
+            db.collection('broker').doc('prices').set(Object.assign({_ts:Date.now()},buf),{merge:true})
+              .catch(function(e){console.warn('[Override] FB error:',e);});
+          }, 2000);
+        }
         fbSaveOverrides(sym, price);
       } catch(e) { console.warn('fbSavePrices err:', e); }
     }
@@ -3618,10 +3623,17 @@ function adApplyOverride(sym, price) {
   updateMwRow(sym,price,prev);
   if(sym===curSym) updateOrderTicket(price);
   if(typeof updatePositions==='function') updatePositions();
-  if(typeof db!=='undefined'&&db){
-    var upd={_ts:Date.now()}; upd[sym]=price;
-    db.collection('broker').doc('prices').set(upd,{merge:true})
-      .catch(function(e){console.warn('[Override] FB error:',e);});
+  // _FX writeBuf'a ekle - throttle ile yazılacak
+  if(typeof _FX!=='undefined') {
+    _FX.writeBuf[sym] = price;
+    if(!_FX.writeTimer && typeof db!=='undefined' && db) {
+      _FX.writeTimer = setTimeout(function(){
+        var buf=_FX.writeBuf; _FX.writeBuf={}; _FX.writeTimer=null;
+        if(!Object.keys(buf).length) return;
+        db.collection('broker').doc('prices').set(Object.assign({_ts:Date.now()},buf),{merge:true})
+          .catch(function(e){console.warn('[Override] FB error:',e);});
+      }, 2000);
+    }
   }
 }
 
@@ -8694,7 +8706,7 @@ var AD_SIM={
     });
   if(!window._simTickCount) window._simTickCount=0;
   window._simTickCount++;
-  if(window._simTickCount%5===0&&typeof db!=='undefined'&&db){
+  if(window._simTickCount%30===0&&typeof db!=='undefined'&&db){
     var _pu={_ts:Date.now()};
     var _rfs={};
     if(typeof AD_TD_MAP!=='undefined') Object.keys(AD_TD_MAP).forEach(function(k){_rfs[k]=true;});
