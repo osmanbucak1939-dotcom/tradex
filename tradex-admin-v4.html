@@ -3602,6 +3602,8 @@ function adReceiveRawPrice(sym, rawMid) {
       }
     },2000);
   }
+  // Hesaplar listesi güncelle
+  if(typeof _adUpdateEquityForSym==='function') _adUpdateEquityForSym(sym);
 }
 
 // Override fiyatı uygula
@@ -3623,14 +3625,26 @@ function adApplyOverride(sym, price) {
   }
 }
 
-// Fiyat güncellemesi hesaplar tablosunu tetiklemez - sadece DOM güncellenir
-// İlk fiyatlar gelince tüm equityleri hesapla (throttle: 5sn)
-if(!window._adFirstPriceTimer) {
-  window._adFirstPriceTimer = setTimeout(function(){
-    window._adFirstPriceTimer = null;
-    adRecalcAllEquities();
-  }, 5000);
+// Fiyat gelince ilgili hesapların varlığını güncelle
+function _adUpdateEquityForSym(sym) {
+  var _secAcc = document.getElementById('sec-accounts');
+  if(!_secAcc || _secAcc.style.display==='none') return;
+  if(typeof accounts==='undefined' || !accounts.length) return;
+  var _fmt = function(n){ n=parseFloat(n||0); return (n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  accounts.forEach(function(a){
+    if(a.role && a.role!=='customer') return;
+    var _poses = (_allAccountPositions&&_allAccountPositions[a.id])||a.positions||[];
+    if(!Array.isArray(_poses)||!_poses.length) return;
+    if(!_poses.some(function(p){return p.sym===sym;})) return;
+    var st = adCalcStats(a, _poses);
+    a._liveEquity=st.equity; a._openPnl=st.openPnl; a._openCount=st.openCount;
+    document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
+      el.textContent=_fmt(st.equity);
+      el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
+    });
+  });
 }
+
 
 // Tüm hesapların varlığını hesapla ve cache'e yaz
 function adRecalcAllEquities() {
