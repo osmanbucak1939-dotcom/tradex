@@ -1608,10 +1608,20 @@ console.log('Firebase bağlandı ✓');
               var _nb = parseFloat(ud.balance)||0;
               if(acc.balance !== _nb) acc.balance = _nb;
             }
-            // bonus - users'da varsa güncelle, yoksa broker/accounts'taki değeri koru
             if(ud.bonus !== undefined) {
               var _nb2 = parseFloat(ud.bonus)||0;
               if(acc.bonus !== _nb2) acc.bonus = _nb2;
+            }
+            // Son giriş DOM güncelle
+            if(ud.lastLogin && acc.lastLogin !== ud.lastLogin) {
+              acc.lastLogin = ud.lastLogin;
+              // Tablo hücresini güncelle
+              var _secAcc = document.getElementById('sec-accounts');
+              if(_secAcc && _secAcc.style.display!=='none') {
+                document.querySelectorAll('[data-lastseen="'+acc.id+'"]').forEach(function(el){
+                  el.textContent = fmtDateShort(ud.lastLogin);
+                });
+              }
             }
           });
           // renderAccTable kaldırıldı - yanıp sönmeye neden oluyordu
@@ -5174,9 +5184,8 @@ function renderAccTable(){
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       var isOnline=(a.online===true)&&(lsMs&&(now-lsMs)<60000);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
-      // Online ise lastSeen (en son görülme), değilse lastLogin (son giriş)
-      var lastSeen = isOnline && a.lastSeen ? fmtDateShort(a.lastSeen)
-                   : a.lastLogin ? fmtDateShort(a.lastLogin)
+      // Son giriş: lastLogin önce, yoksa lastSeen
+      var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
                    : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
@@ -5204,7 +5213,7 @@ function renderAccTable(){
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||'Standard')+'</td>';
         else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;'+ellipsis+'">'+( a.email||'—')+'</td>';
         else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+regDate+'</td>';
-        else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+lastSeen+'</td>';
+        else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;" data-lastseen="'+a.id+'">'+lastSeen+'</td>';
       });
       tbodyHtml+='</tr>';
     });
