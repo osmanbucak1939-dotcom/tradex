@@ -7856,7 +7856,44 @@ function updateMarginCallPanel() {
       if(sg && sg.marginCall) mcLevel = parseFloat(sg.marginCall)||80;
     }
 
-    // Sadece %100 altı teminat seviyesini göster
+    // Stop out kontrolü
+    var stopLevel = 20;
+    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
+      var _sg2 = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+      if(_sg2 && _sg2.stopOut) stopLevel = parseFloat(_sg2.stopOut)||20;
+    }
+    var shouldStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
+    if(shouldStopOut && positions.length > 0) {
+      // En zararlı pozisyonu bul ve kapat
+      var _soKey = 'so_'+a.id;
+      if(!window._soThrottle) window._soThrottle = {};
+      if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 3000) {
+        window._soThrottle[_soKey] = Date.now();
+        var sortedPos = positions.slice().sort(function(x,y){
+          var px = adGetPrice(x.sym,x.side==='buy'?'sell':'buy')||x.openPrice;
+          var py = adGetPrice(y.sym,y.side==='buy'?'sell':'buy')||y.openPrice;
+          var cs_x=parseFloat(x.contractSize)||1, cs_y=parseFloat(y.contractSize)||1;
+          var plX=(x.side==='buy'?px-x.openPrice:x.openPrice-px)*(parseFloat(x.qty)||0)*cs_x;
+          var plY=(y.side==='buy'?py-y.openPrice:y.openPrice-py)*(parseFloat(y.qty)||0)*cs_y;
+          return plX-plY;
+        });
+        var toClose = sortedPos[0];
+        // Hesabı geçici olarak _adAccId yap, kapat, geri döndür
+        var _prevAccId = _adAccId;
+        var _prevPositions = _adPositions;
+        _adAccId = a.id;
+        _adPositions = positions;
+        var _accName = '#'+(a.login||a.id)+' '+(a.name||'');
+        showAdminToast('⚠ STOP OUT', _accName+' — '+toClose.sym+' kapatılıyor (%'+marginLevel.toFixed(2)+')', 'danger');
+        closePosition(toClose.id, 'stop_out');
+        if(_prevAccId !== a.id) {
+          _adAccId = _prevAccId;
+          _adPositions = _prevPositions;
+        }
+      }
+    }
+
+    // Sadece margin call seviyesini göster
     if(usedMargin > 0 && marginLevel > 0 && marginLevel < 100) {
       mcList.push({
         id: a.id,
