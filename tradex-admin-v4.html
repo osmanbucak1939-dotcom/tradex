@@ -7839,44 +7839,15 @@ function updateMarginCallPanel() {
   var mcList = [];
 
   customers.forEach(function(a) {
-    var balance = parseFloat(a.balance)||0;
-    var bonus   = parseFloat(a.bonus)||0;
-    var positions = Array.isArray(a.positions) ? a.positions : [];
+    var positions = Array.isArray(a.positions) ? a.positions
+      : (typeof _allAccountPositions!=='undefined' ? (_allAccountPositions[a.id]||[]) : []);
     if(!positions.length) return;
 
-    // Anlık K/Z ve margin hesapla (adCalcStats ile aynı mantık — cost=0 sorunu giderildi)
-    var openPnl = 0;
-    var _nets = {};
-    var _cfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
-    var _lev2 = parseFloat(a.leverage || 100);
-    positions.forEach(function(p) {
-      var cur = adGetPrice(p.sym, p.side==='buy'?'sell':'buy') || 0;
-      var cs  = parseFloat(p.contractSize) || 1;
-      var qty = parseFloat(p.qty) || 0;
-      if(cur) {
-        openPnl += (p.side==='buy' ? cur - p.openPrice : p.openPrice - cur) * qty * cs;
-        openPnl += parseFloat(p.swapTotal) || 0;
-      }
-      // Netleştirilmiş margin için sembol bazlı toplam
-      if(!_nets[p.sym]) _nets[p.sym] = {buy:0, sell:0};
-      _nets[p.sym][p.side] += qty;
-      _nets[p.sym]._price = adGetPrice(p.sym) || p.openPrice;
-      _nets[p.sym]._cs    = cs;
-      _nets[p.sym]._sym   = p.sym;
-    });
-    // Hedge netting ile margin hesapla (adCalcStats mantığı)
-    var usedMargin = 0;
-    Object.keys(_nets).forEach(function(sym) {
-      var n  = _nets[sym];
-      var nq = Math.abs(n.buy - n.sell);
-      var sc = _cfg2.find(function(s){ return s.sym === sym; });
-      var cs = sc ? (parseFloat(sc.contractSize) || 1) : (n._cs || 1);
-      var lv = (sc && sc.margin && sc.margin > 0) ? (100 / parseFloat(sc.margin)) : _lev2;
-      usedMargin += (nq * (n._price || 0) * cs) / lv;
-    });
-
-    var equity = balance + bonus + openPnl;
-    var marginLevel = usedMargin > 0 ? (equity / usedMargin * 100) : 0;
+    // TEK KAYNAK: adCalcStats — hesap detayı ve tüm panellerle tutarlı
+    var st = adCalcStats(a, positions);
+    var equity      = st.equity;
+    var usedMargin  = st.margin;
+    var marginLevel = st.marginLvl || 0;
 
     // Hesabın spread grubundan margin call seviyesini al
     var mcLevel = 80; // varsayılan
@@ -7910,27 +7881,42 @@ function updateMarginCallPanel() {
         var closeP = adGetPrice(toClose.sym, toClose.side==='buy'?'sell':'buy')||toClose.openPrice;
         var _cs2=parseFloat(toClose.contractSize)||1, _qty2=parseFloat(toClose.qty)||0;
         var _pnl2=(toClose.side==='buy'?closeP-toClose.openPrice:toClose.openPrice-closeP)*_qty2*_cs2+(parseFloat(toClose.swapTotal)||0);
-        // Bakiye güncelleme: açılışta her zaman cost düşüldü → kapanınca cost+pnl iade et
-        var _newBal = parseFloat(a.balance||0) + (parseFloat(toClose.cost)||0) + _pnl2;
+
+        // cost=0 olan eski pozisyonlar için anlık fiyatla margin hesapla
+        var _scSO=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===toClose.sym;}):null;
+        var _lvSO=(_scSO&&_scSO.margin&&_scSO.margin>0)?(100/parseFloat(_scSO.margin)):(parseFloat(a.leverage||100));
+        var _costSO = (parseFloat(toClose.cost)>0)
+          ? parseFloat(toClose.cost)
+          : (_qty2*(toClose.openPrice||0)*_cs2)/_lvSO;
+
+        // Bakiye güncelleme: cost iade + pnl
+        var _newBal = parseFloat(a.balance||0) + _costSO + _pnl2;
         a.balance = _newBal;
+
         // Pozisyonu listeden çıkar
         var _posIdx = positions.indexOf(toClose);
         if(_posIdx>-1) positions.splice(_posIdx,1);
         a.positions = positions;
         if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=positions;
-        // a.equity, a.margin, a._liveEquity senkronize et — tüm paneller aynı değeri görsün
-        var _soSt = (typeof adCalcStats==='function') ? adCalcStats(a, positions) : null;
-        if(_soSt){ a._liveEquity=_soSt.equity; a._openPnl=_soSt.openPnl; a._openCount=_soSt.openCount; a.equity=_soSt.equity; a.margin=_soSt.margin; }
+
+        // adCalcStats ile tüm cache'leri senkronize et — MC paneli, hesap detayı, liste aynı değeri görsün
+        var _soSt = adCalcStats(a, positions);
+        a._liveEquity=_soSt.equity; a._openPnl=_soSt.openPnl; a._openCount=_soSt.openCount;
+        a.equity=_soSt.equity; a.margin=_soSt.margin;
+
         // tradeHistory güncelle
         if(!Array.isArray(a.tradeHistory)) a.tradeHistory=[];
         a.tradeHistory.unshift(Object.assign({},toClose,{closePrice:closeP,pnl:_pnl2,closeTime:new Date().toISOString(),closeReason:'stop_out'}));
-        // Firebase yaz
+
+        // Firebase yaz — equity ve margin da gönder ki trader paneli de tutarlı olsun
         if(typeof db!=='undefined'&&db){
           db.collection('users').doc(String(a.id)).set({
-            positions:positions,
+            positions:   positions,
             tradeHistory:a.tradeHistory.slice(0,100),
-            balance:_newBal,
-            updatedAt:new Date().toISOString()
+            balance:     _newBal,
+            equity:      _soSt.equity,
+            margin:      _soSt.margin,
+            updatedAt:   new Date().toISOString()
           },{merge:true}).catch(function(e){console.warn('SO FB err:',e);});
         }
         saveAccounts();
