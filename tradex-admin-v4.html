@@ -7864,11 +7864,11 @@ function updateMarginCallPanel() {
     }
     var shouldStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
     if(shouldStopOut && positions.length > 0) {
-      // En zararlı pozisyonu bul ve kapat
       var _soKey = 'so_'+a.id;
       if(!window._soThrottle) window._soThrottle = {};
       if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 3000) {
         window._soThrottle[_soKey] = Date.now();
+        // En zararlı pozisyonu bul
         var sortedPos = positions.slice().sort(function(x,y){
           var px = adGetPrice(x.sym,x.side==='buy'?'sell':'buy')||x.openPrice;
           var py = adGetPrice(y.sym,y.side==='buy'?'sell':'buy')||y.openPrice;
@@ -7878,18 +7878,32 @@ function updateMarginCallPanel() {
           return plX-plY;
         });
         var toClose = sortedPos[0];
-        // Hesabı geçici olarak _adAccId yap, kapat, geri döndür
-        var _prevAccId = _adAccId;
-        var _prevPositions = _adPositions;
-        _adAccId = a.id;
-        _adPositions = positions;
-        var _accName = '#'+(a.login||a.id)+' '+(a.name||'');
-        showAdminToast('⚠ STOP OUT', _accName+' — '+toClose.sym+' kapatılıyor (%'+marginLevel.toFixed(2)+')', 'danger');
-        closePosition(toClose.id, 'stop_out');
-        if(_prevAccId !== a.id) {
-          _adAccId = _prevAccId;
-          _adPositions = _prevPositions;
+        var closeP = adGetPrice(toClose.sym, toClose.side==='buy'?'sell':'buy')||toClose.openPrice;
+        var _cs2=parseFloat(toClose.contractSize)||1, _qty2=parseFloat(toClose.qty)||0;
+        var _pnl2=(toClose.side==='buy'?closeP-toClose.openPrice:toClose.openPrice-closeP)*_qty2*_cs2+(parseFloat(toClose.swapTotal)||0);
+        // Bakiyeyi doğrudan güncelle
+        var _newBal = parseFloat(a.balance||0) + (parseFloat(toClose.cost)||0) + _pnl2;
+        a.balance = _newBal;
+        // Pozisyonu listeden çıkar
+        var _posIdx = positions.indexOf(toClose);
+        if(_posIdx>-1) positions.splice(_posIdx,1);
+        a.positions = positions;
+        if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=positions;
+        // tradeHistory güncelle
+        if(!Array.isArray(a.tradeHistory)) a.tradeHistory=[];
+        a.tradeHistory.unshift(Object.assign({},toClose,{closePrice:closeP,pnl:_pnl2,closeTime:new Date().toISOString(),closeReason:'stop_out'}));
+        // Firebase yaz
+        if(typeof db!=='undefined'&&db){
+          db.collection('users').doc(String(a.id)).set({
+            positions:positions,
+            tradeHistory:a.tradeHistory.slice(0,100),
+            balance:_newBal,
+            updatedAt:new Date().toISOString()
+          },{merge:true}).catch(function(e){console.warn('SO FB err:',e);});
         }
+        saveAccounts();
+        var _accName='#'+(a.login||a.id)+' '+(a.name||'');
+        showAdminToast('⚠ STOP OUT',_accName+' — '+toClose.sym+' '+((_pnl2>=0?'+':'')+adFmtMoney(_pnl2)),'danger');
       }
     }
 
