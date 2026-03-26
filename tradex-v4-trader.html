@@ -1064,10 +1064,10 @@ function _authSuccess(user) {
   // Firebase'den kullanıcı verisini yükle
   fbLoadUserData(user.id, function(data) {
     if(data) {
-      try { if(data.positions) positions = JSON.parse(data.positions); } catch(e){}
-      try { if(data.tradeHistory) tradeHistory = JSON.parse(data.tradeHistory); } catch(e){}
-      try { if(data.portfolio) portfolio = JSON.parse(data.portfolio); } catch(e){}
-      try { if(data.alarms) alarms = JSON.parse(data.alarms); } catch(e){}
+      try { if(data.positions) positions = Array.isArray(data.positions)?data.positions:JSON.parse(data.positions||'[]'); } catch(e){}
+      try { if(data.tradeHistory) tradeHistory = Array.isArray(data.tradeHistory)?data.tradeHistory:JSON.parse(data.tradeHistory||'[]'); } catch(e){}
+      try { if(data.portfolio) portfolio = Array.isArray(data.portfolio)?data.portfolio:JSON.parse(data.portfolio||'[]'); } catch(e){}
+      try { if(data.alarms) alarms = Array.isArray(data.alarms)?data.alarms:JSON.parse(data.alarms||'[]'); } catch(e){}
       // finlog'u users/{id}'den al (doğru kaynak)
       if(Array.isArray(data.finlog)) finlog = data.finlog;
       // Balance: önce users/{id}'deki manager balance'ını kontrol et
@@ -1239,13 +1239,8 @@ function _authSuccess(user) {
         }
       } catch(e){}
     }).catch(function(){});
-    // users koleksiyonuna da yaz (hızlı erişim için)
+    // users koleksiyonuna yaz - 30sn'de bir
     db.collection('users').doc(String(_cu.id)).set({lastSeen:now, online:true},{merge:true}).catch(function(){});
-    // broker/accounts'a da yaz (admin tablosunu günceller)
-    if(typeof accounts!=='undefined') {
-      var _hbAcc = accounts ? accounts.find(function(a){return String(a.id)===String(_cu.id);}) : null;
-      if(_hbAcc) { _hbAcc.lastSeen=now; _hbAcc.online=true; }
-    }
   }
 
   // Hemen bir kez ve sonra her 30 saniyede
@@ -1256,7 +1251,7 @@ function _authSuccess(user) {
   }
   _txSendHeartbeat();
   if(window._heartbeatTimer) clearInterval(window._heartbeatTimer);
-  window._heartbeatTimer = setInterval(_txSendHeartbeat, 5000);
+  window._heartbeatTimer = setInterval(_txSendHeartbeat, 30000);
 
   // Sekme kapanınca offline yap
   window.addEventListener('beforeunload', function() {
@@ -4699,7 +4694,7 @@ function startLiveFeed() {
         } catch(e){}
       }
     }).catch(function(){});
-  }, 10000);
+  }, 60000);
 
   // payMethods Firebase'den yükle
   if(typeof db !== 'undefined' && db) {
