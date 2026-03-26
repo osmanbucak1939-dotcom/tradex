@@ -3130,6 +3130,7 @@ function closePosition(id, reason='') {
 
   // Hesabın balance'ını güncelle (admin: _adAcc, trader: global balance)
   var _adAcc = (_adAccId&&typeof accounts!=='undefined') ? accounts.find(function(a){return String(a.id)===String(_adAccId);}) : null;
+  // Bakiye güncelleme: açılışta cost düşüldü → kapanınca cost+pnl iade et
   if(_adAcc) {
     _adAcc.balance = parseFloat(_adAcc.balance||0) + (parseFloat(pos.cost)||0) + pnl;
     balance = _adAcc.balance; // senkronize et
@@ -7907,15 +7908,8 @@ function updateMarginCallPanel() {
         var closeP = adGetPrice(toClose.sym, toClose.side==='buy'?'sell':'buy')||toClose.openPrice;
         var _cs2=parseFloat(toClose.contractSize)||1, _qty2=parseFloat(toClose.qty)||0;
         var _pnl2=(toClose.side==='buy'?closeP-toClose.openPrice:toClose.openPrice-closeP)*_qty2*_cs2+(parseFloat(toClose.swapTotal)||0);
-        // Kapanan pozisyonun kullandığı margin'i geri hesapla
-        // cost=0 olan eski pozisyonlar için anlık fiyat üzerinden hesaplıyoruz
-        var _scSO=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===toClose.sym;}):null;
-        var _lvSO=(_scSO&&_scSO.margin&&_scSO.margin>0)?(100/parseFloat(_scSO.margin)):(parseFloat(a.leverage||100));
-        var _releasedMargin=(parseFloat(toClose.cost)>0)
-          ? parseFloat(toClose.cost)                                // cost varsa onu kullan
-          : (_qty2*(closeP||toClose.openPrice)*_cs2)/_lvSO;        // yoksa anlık hesapla
-        // Bakiyeyi doğrudan güncelle (margin iadesi + K/Z)
-        var _newBal = parseFloat(a.balance||0) + _releasedMargin + _pnl2;
+        // Bakiye güncelleme: açılışta her zaman cost düşüldü → kapanınca cost+pnl iade et
+        var _newBal = parseFloat(a.balance||0) + (parseFloat(toClose.cost)||0) + _pnl2;
         a.balance = _newBal;
         // Pozisyonu listeden çıkar
         var _posIdx = positions.indexOf(toClose);
@@ -9298,7 +9292,7 @@ function adClosePos(btn){
   var qty = parseFloat(pos.qty)||0;
   var pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs
             + (parseFloat(pos.swapTotal)||0);
-  // Bakiyeye geri ekle (cost + kâr/zarar)
+  // Bakiyeye geri ekle: açılışta cost düşüldü → kapanınca cost+pnl iade et
   a.balance = (a.balance||0) + (pos.cost||0) + pnl;
   // Geçmişe ekle
   _adHistory.unshift(Object.assign({}, pos, {
@@ -9429,11 +9423,13 @@ function adOpenTrade(btn){
   if(cost > ((a.balance||0)+(a.bonus||0))){
     showAdminToast('Yetersiz Teminat','$'+adFp(cost)+' teminat gerekli','error'); return;
   }
+  // Açılışta bakiyeyi düş (trader mantığıyla aynı)
+  a.balance = (parseFloat(a.balance)||0) - cost;
   _adPositions.push({
     id:Date.now(), sym:sym, label:label, side:side, qty:qty,
     contractSize:cs, openPrice:price, sl:sl, tp:tp,
     time:new Date().toISOString(), openDate:new Date().toISOString(),
-    cost:cost, openDevice:'Manager', swapTotal:0
+    cost:cost, swapTotal:0
   });
   a.positions = _adPositions;
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
