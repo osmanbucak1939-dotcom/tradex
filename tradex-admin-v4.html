@@ -3149,7 +3149,12 @@ function closePosition(id, reason='') {
   tradeHistory.unshift(Object.assign({}, pos, {closePrice:closePrice, pnl:pnl, swapTotal:_swapC, closeTime:_closeTime, closeReason:reason||'manuel'}));
   if(tradeHistory.length > 50) tradeHistory.pop();
 
-  saveAccounts();
+  // Admin context'inde accounts dolu olduğunda kaydet; trader context'inde save() kullan
+  if(typeof accounts!=='undefined' && Array.isArray(accounts) && accounts.length > 0) {
+    saveAccounts();
+  } else if(typeof save==='function') {
+    save(); // trader tarafı localStorage kayıt
+  }
 
   // Firebase users/{id}'ye yaz — trader anında görsün
   if(typeof db!=='undefined' && db && _adAccId) {
@@ -3164,7 +3169,8 @@ function closePosition(id, reason='') {
 
   renderPositions();
   renderHistory();
-  updateAccount();
+  // updateAccount burada çağrılmıyor — çağıran (updatePositions/manuel) zaten çağırır
+  // Aksi halde closePosition → updateAccount → closePosition döngüsü oluşur
 
   if(reason) {
     var _tAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
@@ -3254,44 +3260,8 @@ function updateAccount() {
   sb('sbMarginLvl', marginLvl ? '%'+marginLvl.toFixed(2) : '—');
   sbc('sbMarginLvl', mlCls);
 
-  // ── STOP OUT & EQUITy KONTROLÜ ──
-  if(positions.length === 0) return;
-
-  // Aktif hesabın stop out seviyesini al (spread grubundan)
-  var stopOutLevel=20, marginCallLevel=100;
-  try {
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
-       typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
-      var _soAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
-      if(_soAcc){var _sg=spreadGroups.find(function(g){return g.id===(_soAcc.spreadGroup||'standard');});if(_sg){stopOutLevel=parseFloat(_sg.stopOut)||20;marginCallLevel=parseFloat(_sg.marginCall)||100;}
-      }
-    }
-  } catch(e) {}
-
-  // Equity sıfırın altına düştü veya stop out seviyesine geldi
-  var triggerStopOut = false;
-  if(equity <= 0) triggerStopOut = true;
-  if(marginLvl !== null && marginLvl <= stopOutLevel) triggerStopOut = true;
-
-  if(triggerStopOut && _posArr.length > 0) {
-    var sortedPos = _posArr.slice().sort(function(a, b) {
-      var pa = adGetPrice(a.sym, a.side==='buy'?'sell':'buy') || a.openPrice;
-      var pb = adGetPrice(b.sym, b.side==='buy'?'sell':'buy') || b.openPrice;
-      var cs_a = parseFloat(a.contractSize)||1, cs_b = parseFloat(b.contractSize)||1;
-      var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * (parseFloat(a.qty)||0) * cs_a;
-      var plB = (b.side==='buy' ? pb-b.openPrice : b.openPrice-pb) * (parseFloat(b.qty)||0) * cs_b;
-      return plA - plB; // en negatif (en büyük zarar) önce
-    });
-
-    // En zararlı pozisyonu kapat
-    var toClose = sortedPos[0];
-    // _adAccId ile hesabı bul, yoksa tüm accounts'tan ara
-    var _soAccId = _adAccId || (typeof _currentAcc !== 'undefined' ? _currentAcc : null);
-    var _soAcc = _soAccId ? accounts.find(function(a){ return String(a.id)===String(_soAccId); }) : null;
-    var _soName = _soAcc ? ('#'+(_soAcc.login||_soAcc.id)+' '+(_soAcc.name||'')) : '';
-    showToast('⚠ STOP OUT', (_soName?_soName+' — ':'')+toClose.sym + ' kapatıldı · Teminat: %' + (marginLvl ? marginLvl.toFixed(2) : '0'));
-    setTimeout(function(){ closePosition(toClose.id, 'stop_out'); }, 100);
-  }
+  // Stop out yalnızca updateMarginCallPanel (admin, 1sn interval) tarafından yönetilir.
+  // updateAccount() burada stop out tetiklememeli — sonsuz döngü oluşur.
 }
 
 function toggleAlarmForm() {
@@ -7866,8 +7836,14 @@ function updateMarginCallPanel() {
     if(shouldStopOut && positions.length > 0) {
       var _soKey = 'so_'+a.id;
       if(!window._soThrottle) window._soThrottle = {};
-      if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 3000) {
+      if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 5000) {
         window._soThrottle[_soKey] = Date.now();
+        // Pozisyon hâlâ listede mi kontrol et (başka bir mekanizma kapatmış olabilir)
+        if(!positions.find(function(p){ return p.id===toClose.id; }) &&
+           !(_adPositions&&_adPositions.find&&_adPositions.find(function(p){ return p.id===toClose.id; }))) {
+          window._soThrottle[_soKey] = 0; // sıfırla, bir sonraki döngüde tekrar kontrol etsin
+          return; // zaten kapatılmış
+        }
         // En zararlı pozisyonu bul
         var sortedPos = positions.slice().sort(function(x,y){
           var px = adGetPrice(x.sym,x.side==='buy'?'sell':'buy')||x.openPrice;
