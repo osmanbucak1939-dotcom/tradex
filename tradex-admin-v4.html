@@ -7837,6 +7837,8 @@ function updateMarginCallPanel() {
   var mcBody = document.getElementById('mcBody');
   var mcCount = document.getElementById('mcCount');
   if(!mcBody) return;
+  // accounts henüz yüklenmemişse çık
+  if(typeof accounts === 'undefined' || !Array.isArray(accounts) || !accounts.length) return;
 
   var customers = accounts.filter(function(a){ return (!a.role||a.role==='customer') && a.active; });
   var mcList = [];
@@ -7872,9 +7874,10 @@ function updateMarginCallPanel() {
       if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 5000) {
         window._soThrottle[_soKey] = Date.now();
         // Pozisyon hâlâ listede mi kontrol et (başka bir mekanizma kapatmış olabilir)
-        if(!positions.find(function(p){ return p.id===toClose.id; }) &&
-           !(_adPositions&&_adPositions.find&&_adPositions.find(function(p){ return p.id===toClose.id; }))) {
-          window._soThrottle[_soKey] = 0; // sıfırla, bir sonraki döngüde tekrar kontrol etsin
+        var _posStillOpen = positions.find(function(p){ return p.id===toClose.id; }) ||
+           (_adPositions&&Array.isArray(_adPositions)&&_adPositions.find(function(p){ return p.id===toClose.id; }));
+        if(!_posStillOpen) {
+          window._soThrottle[_soKey] = 0;
           return; // zaten kapatılmış
         }
         // En zararlı pozisyonu bul
