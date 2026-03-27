@@ -1265,6 +1265,7 @@ function initAuth(){
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAfBaM-Oqa4L9dYNCsl6KBhzA-yVPPjmyA",
@@ -7700,9 +7701,28 @@ function loginSuccess(staff){
   if(u)u.textContent=staff.name;
   if(r)r.textContent=(ROLES[staff.role]||{}).label||staff.role;
   applyRoleUI();
-  loadInitialData();
-  // Gerçek zamanlı feed başlat
-  if(typeof startLiveFeed === 'function') startLiveFeed();
+  // Firebase Auth — Firestore rules için request.auth != null gerekiyor
+  // Admin paneli custom login kullandığından arka planda anonim giriş yapıyoruz
+  var _fbAuthDone = false;
+  function _afterAuth(){
+    if(_fbAuthDone) return;
+    _fbAuthDone = true;
+    loadInitialData();
+    if(typeof startLiveFeed === 'function') startLiveFeed();
+  }
+  try {
+    var _auth = firebase.auth();
+    if(_auth.currentUser) {
+      _afterAuth();
+    } else {
+      _auth.signInAnonymously()
+        .then(function(){ _afterAuth(); })
+        .catch(function(e){ console.warn('[Auth] Anonim giriş hatası:', e.message); _afterAuth(); });
+    }
+  } catch(e) {
+    console.warn('[Auth] Firebase Auth yok:', e.message);
+    _afterAuth();
+  }
 }
 function adminLogout(){
   _currentStaff=null;
