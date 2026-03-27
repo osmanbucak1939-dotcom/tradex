@@ -1651,6 +1651,24 @@ console.log('Firebase bağlandı ✓');
             var a=accounts.find(function(x){return String(x.id)===String(window._adDetailId);});
             if(a) dot.style.background=a.online?'#26a69a':'#444';
           }
+          // Online dot'ları renderAccTable olmadan güncelle (yanıp sönme yok)
+          var _now2 = Date.now();
+          snap.forEach(function(udoc){
+            var acc2 = accounts.find(function(a){ return String(a.id)===udoc.id; });
+            if(!acc2) return;
+            var lsMs2 = acc2.lastSeen ? new Date(acc2.lastSeen).getTime() : 0;
+            var isOn2 = (acc2.online===true) && (lsMs2 ? (_now2-lsMs2)<120000 : true);
+            // Login numarası border rengini güncelle
+            var loginEl = document.querySelector('tr[data-id="'+acc2.id+'"] td:first-child');
+            if(loginEl) loginEl.style.borderLeftColor = isOn2 ? '#26a69a' : '#2a2a2a';
+            // Online dot hücresini güncelle
+            var onlineCell = document.querySelector('tr[data-id="'+acc2.id+'"] td[data-online-id="'+acc2.id+'"]');
+            if(onlineCell) {
+              onlineCell.innerHTML = isOn2
+                ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
+                : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>';
+            }
+          });
         },function(err){console.warn('users onSnapshot err:',err);});
       }
       function _stopUsersSnap() {
@@ -5175,7 +5193,8 @@ function renderAccTable(){
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
-      var isOnline=(a.online===true)&&(lsMs&&(now-lsMs)<60000);
+      // lastSeen varsa 60sn kontrolü, yoksa sadece a.online flag'ine bak
+      var isOnline=(a.online===true)&&(lsMs?(now-lsMs)<120000:true);
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
       // Son giriş: lastLogin önce, yoksa lastSeen
       var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
@@ -5188,7 +5207,7 @@ function renderAccTable(){
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
-        if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;">'+(isOnline
+        if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
           :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
         else if(cid==='balance') tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;">$'+bal+'</td>';
