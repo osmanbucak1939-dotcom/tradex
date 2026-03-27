@@ -1344,15 +1344,27 @@ function fbSaveAccounts() {
 
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
-      if(!db){callback([]);return;}
+      // localStorage fallback — Firebase permissions hatası olursa bunu kullan
+      function _lsLoad() {
+        try {
+          var ls = localStorage.getItem('tx_accounts');
+          var d = ls ? JSON.parse(ls) : [];
+          if(d && d.length) { console.warn('[fbLoadAccounts] Firebase izin hatası, localStorage kullanılıyor'); callback(d); return true; }
+        } catch(e) {}
+        return false;
+      }
+      if(!db){ _lsLoad() || callback([]); return; }
       db.collection('broker').doc('accounts').get()
         .then(function(doc){
           if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(d);return;}}catch(e){}}
           var hours=[];for(var i=0;i<24;i++){var dt=new Date(Date.now()-i*3600000);hours.push(dt.toISOString().substring(0,13).replace('T','_'));}
-          var tryH=function(idx){if(idx>=hours.length){callback([]);return;}
+          var tryH=function(idx){if(idx>=hours.length){ _lsLoad() || callback([]); return;}
             db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(dd);db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
           tryH(0);
-        }).catch(function(e){console.warn(e);callback([]);});
+        }).catch(function(e){
+          console.warn('[fbLoadAccounts] Firebase hatası:', e.message||e);
+          _lsLoad() || callback([]);
+        });
     }
 
     // Müşteri verilerini Firebase'e kaydet (pozisyonlar, geçmiş)
@@ -1541,6 +1553,7 @@ console.log('Firebase bağlandı ✓');
         if(!doc.exists)return;
         try{
           var newAccs=JSON.parse(doc.data().data||'[]');
+          if(!newAccs||!newAccs.length){ console.warn('[onSnapshot] Boş accounts geldi, yoksayıldı'); return; }
           // Cache'leri koru
           newAccs.forEach(function(na){
             var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
