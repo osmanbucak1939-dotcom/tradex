@@ -1064,7 +1064,7 @@ function _authSuccess(user) {
   // Firebase'den kullanıcı verisini yükle
   fbLoadUserData(user.id, function(data) {
     if(data) {
-      try { if(data.positions) positions = Array.isArray(data.positions)?data.positions:JSON.parse(data.positions||'[]'); } catch(e){}
+      try { if(data.positions !== undefined) positions = Array.isArray(data.positions)?data.positions:JSON.parse(data.positions||'[]'); } catch(e){}
       try { if(data.tradeHistory) tradeHistory = Array.isArray(data.tradeHistory)?data.tradeHistory:JSON.parse(data.tradeHistory||'[]'); } catch(e){}
       try { if(data.portfolio) portfolio = Array.isArray(data.portfolio)?data.portfolio:JSON.parse(data.portfolio||'[]'); } catch(e){}
       try { if(data.alarms) alarms = Array.isArray(data.alarms)?data.alarms:JSON.parse(data.alarms||'[]'); } catch(e){}
@@ -1118,8 +1118,8 @@ function _authSuccess(user) {
           var remoteUpdatedAt = d.updatedAt || '';
           if(remoteUpdatedAt && remoteUpdatedAt !== window._lastSyncAt) {
             window._lastSyncAt = remoteUpdatedAt;
-            try { if(d.positions) positions = JSON.parse(d.positions||'[]'); } catch(e){}
-            try { if(d.tradeHistory) tradeHistory = JSON.parse(d.tradeHistory||'[]'); } catch(e){}
+            try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
+            try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
             // balance'ı users/{id}'den alma — broker/accounts kaynaklı olmalı
             if(Array.isArray(d.finlog)) finlog = d.finlog;
             renderPositions(); renderHistory(); updateAccount();
@@ -1158,8 +1158,8 @@ function _authSuccess(user) {
           }
           if(d.leverage)        _cu.leverage = d.leverage;
           if(d.marginLevelPct)  _cu.marginLevelPct = d.marginLevelPct;
-          try { if(d.positions !== undefined) positions = JSON.parse(d.positions||'[]'); } catch(e){}
-          try { if(d.tradeHistory !== undefined) tradeHistory = JSON.parse(d.tradeHistory||'[]'); } catch(e){}
+          try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
+          try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
           // Manager deposit/withdraw onayladıysa balance'ı al
           if(d.balance !== undefined && d._balanceSource === 'manager') {
             balance = parseFloat(d.balance)||0;
