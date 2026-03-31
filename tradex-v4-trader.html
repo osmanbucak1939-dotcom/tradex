@@ -5000,6 +5000,7 @@ function addSymbolMgr() { saveSymbolMgr(); }
 function getGroupSpread(sym) {
   // Hesabın grubundan sembol spread'ini al
   if(!_cu || !(_cu.spreadGroup || _cu.group)) return null;
+  if(!spreadGroups || !Array.isArray(spreadGroups)) return null;
   var sg = spreadGroups.find(function(g){ return g.id === (_cu.spreadGroup || _cu.group); });
   if(!sg || !sg.spreads) return null;
   var v = sg.spreads[sym];
