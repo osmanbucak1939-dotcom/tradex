@@ -727,8 +727,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:rgba(15,15,15,.9);
   border:1px solid rgba(240,185,11,.25);
   border-radius:50%;
-  display:none; /* masaüstünde gizli — mobil CSS override eder */
-  align-items:center; justify-content:center;
+  display:none; align-items:center; justify-content:center;
   cursor:pointer; backdrop-filter:blur(8px);
   transition:all .2s; box-shadow:0 2px 12px rgba(0,0,0,.5);
 }
@@ -1891,7 +1890,7 @@ function initAuth(){
           <span class="qt-price" id="qtAsk">—</span>
         </button>
       </div>
-      <button class="qt-toggle" id="qtToggle" onclick="toggleQuickTrade()" title="Hızlı Al/Sat">
+      <button class="qt-toggle" id="qtToggle" onclick="toggleQuickTrade()" title="Hızlı Al/Sat" style="display:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M13 2L4.5 13.5H11.5L11 22L19.5 10.5H12.5L13 2Z" fill="#f0b90b" stroke="#f0b90b" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>
@@ -6538,14 +6537,11 @@ function updateQuickTrade(price, spread) {
 }
 
 function toggleQuickTrade() {
-  var w = document.getElementById('quickTrade');
-  var t = document.getElementById('qtToggle');
-  if(!w) return;
-  var isHidden = (w.style.display === 'none' || w.style.display === '');
-  w.style.cssText = isHidden
-    ? 'display:flex !important'   // aç
-    : 'display:none';             // kapat
-  // toggle buton mobilde her zaman görünür kalır
+  const w = document.getElementById('quickTrade');
+  const t = document.getElementById('qtToggle');
+  const hidden = w.style.display === 'none';
+  w.style.display = hidden ? 'flex' : 'none';
+  t.style.display = hidden ? 'none' : 'flex';
 }
 
 function tickMockPrices() {  }
@@ -8063,8 +8059,7 @@ function adChangePassword() {
   .resize-handle-y { display: none !important; }
   #rightPanel      { display: none !important; }
   /* ind-toolbar mobilde göster - chart-active'de */
-  #quickTrade      { display: none; } /* !important kaldırıldı — toggle ile yönetilir */
-  #qtToggle        { display: flex !important; } /* mobilde her zaman görünür */
+  #quickTrade      { display: none !important; }
   .bp-tabs         { display: none !important; }
   .bp-content      { display: none !important; }
   .tb-sym-list     { display: none !important; }
