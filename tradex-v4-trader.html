@@ -6454,30 +6454,27 @@ function _qtGetMinLot() {
 /* Sembol değişince lot sıfırla */
 function qtInitForSym() {
   var _minL = _qtGetMinLot();
+  // Lot başlangıç değeri: minLot ile 0.01 arasından büyük olanı
+  var _startLot = Math.max(_minL, 0.01);
+  qtLot = _startLot;
 
-  // QT_LOTS'u ASLA mutate etme — semboller arası geçişte karışıklık önlenir
-  // Sadece QT_LOTS index'ini ayarla
+  // QT_LOTS index
   qtLotIdx = 0;
   for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
-    if(Math.abs(QT_LOTS[_qi] - _minL) < 0.0001) { qtLotIdx = _qi; break; }
-    if(QT_LOTS[_qi] > _minL) { qtLotIdx = _qi; break; }
+    if(QT_LOTS[_qi] >= _startLot - 0.0001) { qtLotIdx = _qi; break; }
   }
-  qtLot = _minL;
 
   var el = document.getElementById('qtLotVal');
-  if(el) { el.min=_minL; el.step=_minL; el.value=_minL; }
+  if(el) { el.min=_minL; el.step=_minL; el.value=_startLot; }
 
-  // Preset butonları: minLot × 1, × 10, × 100
-  // Her sembol değişiminde butonlar doğru değere reset edilir
-  var presets = [_minL, _minL*10, _minL*100];
+  // Preset butonları: her zaman sabit 0.01 / 0.10 / 1.00
+  var FIXED_PRESETS = [0.01, 0.10, 1.00];
   var _qb = document.querySelectorAll('.qt-preset');
-  for(var _pi=0; _pi<_qb.length && _pi<presets.length; _pi++) {
-    var pv = parseFloat(presets[_pi].toFixed(4));
-    _qb[_pi].textContent = pv >= 1 ? pv.toFixed(pv%1===0?0:2)
-                         : pv >= 0.1 ? pv.toFixed(2)
-                         : pv.toFixed(3);
+  for(var _pi=0; _pi<_qb.length && _pi<FIXED_PRESETS.length; _pi++) {
+    var pv = FIXED_PRESETS[_pi];
+    _qb[_pi].textContent = pv === 1 ? '1' : pv === 0.1 ? '0.10' : '0.01';
     _qb[_pi].onclick = (function(v){ return function(){ qtSetLot(v,this); }; })(pv);
-    _qb[_pi].classList.toggle('active', _pi === 0); // ilk preset aktif
+    _qb[_pi].classList.toggle('active', pv === _startLot);
   }
 }
 function qtOrder(side) {
