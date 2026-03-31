@@ -722,14 +722,21 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* Gizle/göster toggle */
 .qt-toggle {
-  position:absolute; top:8px; left:8px; z-index:49;
-  background:rgba(22,22,22,.85); border:1px solid var(--border2);
-  border-radius:3px; padding:3px 7px;
-  font-family:var(--mono); font-size:10px; color:var(--muted);
-  cursor:pointer; backdrop-filter:blur(4px);
-  transition:all .15s; display:none;
+  position:absolute; top:10px; right:10px; z-index:49;
+  width:36px; height:36px;
+  background:rgba(15,15,15,.9);
+  border:1px solid rgba(240,185,11,.25);
+  border-radius:50%;
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer; backdrop-filter:blur(8px);
+  transition:all .2s; box-shadow:0 2px 12px rgba(0,0,0,.5);
 }
-.qt-toggle:hover { color:var(--accent); border-color:var(--accent); }
+.qt-toggle:hover {
+  border-color:var(--accent);
+  box-shadow:0 0 14px rgba(240,185,11,.3);
+  background:rgba(240,185,11,.08);
+}
+.qt-toggle svg { display:block; }
 
 /* ══════════════════════════════════════════
    KAYIT / GİRİŞ OVERLAY
@@ -1062,13 +1069,27 @@ function _authSuccess(user) {
   _cu = user;
   try { localStorage.setItem('tx_current_user', JSON.stringify(user)); } catch(e){}
   // Firebase Auth — Firestore rules için request.auth != null gerekiyor
-  // Trader kendi şifre sistemiyle giriş yaptığından arka planda anonim auth yapıyoruz
+  // signInAnonymously tamamlandıktan sonra startLiveFeed yeniden başlatılır
+  function _afterFirebaseAuth() {
+    // Firebase snapshot'larını auth sonrası başlat
+    if(typeof startFirebaseSnapshots === 'function') {
+      try { startFirebaseSnapshots(); } catch(e) { console.warn('[startFirebaseSnapshots]', e); }
+    }
+  }
   try {
     var _tAuth = firebase.auth();
-    if(!_tAuth.currentUser) {
-      _tAuth.signInAnonymously().catch(function(e){ console.warn('[Trader Auth]', e.message); });
+    if(_tAuth.currentUser) {
+      _afterFirebaseAuth(); // zaten auth varsa hemen başlat
+    } else {
+      _tAuth.signInAnonymously()
+        .then(function(){ _afterFirebaseAuth(); })
+        .catch(function(e){ console.warn('[Trader Auth]', e.message); _afterFirebaseAuth(); });
     }
-  } catch(e) { console.warn('[Trader Auth] SDK yok:', e.message); }
+  } catch(e) {
+    console.warn('[Trader Auth] SDK yok:', e.message);
+    // Auth yoksa yine de dene
+    _afterFirebaseAuth();
+  }
   // Firebase'den kullanıcı verisini yükle
   fbLoadUserData(user.id, function(data) {
     if(data) {
@@ -1869,7 +1890,11 @@ function initAuth(){
           <span class="qt-price" id="qtAsk">—</span>
         </button>
       </div>
-      <button class="qt-toggle" id="qtToggle" onclick="toggleQuickTrade()" title="Hızlı Al/Sat">⚡ Hızlı</button>
+      <button class="qt-toggle" id="qtToggle" onclick="toggleQuickTrade()" title="Hızlı Al/Sat" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L4.5 13.5H11.5L11 22L19.5 10.5H12.5L13 2Z" fill="#f0b90b" stroke="#f0b90b" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
 
   </div>
@@ -4560,10 +4585,12 @@ function setApiDot(s, label) {
   try { localStorage.setItem('_tdFeedStatus', JSON.stringify({s:s, label:label, t:Date.now()})); } catch(e){}
 }
 
-function startLiveFeed() {
-  // Firebase'den güncel sembol listesini çek ve uygula
-  if(typeof db !== 'undefined' && db) {
-    db.collection('broker').doc('symbols').onSnapshot(function(doc) {
+function startFirebaseSnapshots() {
+  // Firebase snapshot'ları — sadece auth tamamlandıktan sonra çağrılır
+  if(typeof db === 'undefined' || !db) return;
+  if(window._fbSnapshotsStarted) return; // tekrar bağlanma
+  window._fbSnapshotsStarted = true;
+  db.collection('broker').doc('symbols').onSnapshot(function(doc) {
       if(doc.exists && doc.data() && doc.data().data) {
         try {
           var fbSyms = JSON.parse(doc.data().data);
@@ -4669,8 +4696,9 @@ function startLiveFeed() {
         }
       } catch(e){ console.warn('accounts snap:', e); }
     }, function(e){ console.warn('accounts snap err:',e); });
-  }
+}
 
+function startLiveFeed() {
   var keys = Object.keys(SIM_PRICES);
   for(var i=0; i<keys.length; i++) {
     var sym = keys[i]; var cfg = SIM_PRICES[sym];
@@ -6513,7 +6541,7 @@ function toggleQuickTrade() {
   const t = document.getElementById('qtToggle');
   const hidden = w.style.display === 'none';
   w.style.display = hidden ? 'flex' : 'none';
-  t.style.display = hidden ? 'none' : 'block';
+  t.style.display = hidden ? 'none' : 'flex'; // flex: SVG ikonu ortalar
 }
 
 function tickMockPrices() {  }
@@ -6731,7 +6759,8 @@ var _origTickMock = tickMockPrices;
 applySymConfig();
 if(document.getElementById('mwBody')) renderMarketWatch();
 initMwPrices();
-startLiveFeed();  // fiyatları başlat ve renderMarketWatch içinde çağrılıyor
+startLiveFeed();  // WS bağlantıları — auth gerekmez
+// Firebase snapshot'ları _authSuccess → signInAnonymously tamamlandıktan sonra başlar
 try { initAuth(); } catch(e) { console.error('initAuth:', e); }
 
   window._mainInit = _mainInit;
