@@ -6386,61 +6386,60 @@ function lpSwitch(tab, el) {
 }
 
 function qtLotSet(val) {
-  var _minL = _qtGetMinLot();
-  if(!val || val <= 0) val = _minL;
-  if(val < _minL) val = _minL;
-  // Adım sayısına göre decimal belirle
-  var _dec = _minL < 0.1 ? 2 : _minL < 1 ? 2 : 1;
-  val = parseFloat(val.toFixed(_dec));
+  if(!val || val <= 0) val = 0.01;
+  val = parseFloat(parseFloat(val).toFixed(4));
   qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 0;
-  var el = document.getElementById('qtLotVal');
-  if(el) {
-    el.min  = _minL;
-    el.step = _minL;
-    el.value = val; // sayı olarak ata — browser formatlamaz
+  qtLotIdx = 0;
+  for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
+    if(QT_LOTS[_qi] >= val - 0.0001) { qtLotIdx = _qi; break; }
   }
+  var el = document.getElementById('qtLotVal');
+  if(el) el.value = val;
+  // Preset aktif vurgula
   var _qb = document.querySelectorAll('.qt-preset');
-  for(var _qi=0; _qi<_qb.length; _qi++){
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === val);
+  for(var _qi=0; _qi<_qb.length; _qi++) {
+    _qb[_qi].classList.toggle('active', Math.abs(parseFloat(_qb[_qi].textContent) - val) < 0.0001);
   }
 }
 
 function qtLotStep(dir) {
-  var _minL = _qtGetMinLot();
   qtLotIdx = Math.max(0, Math.min(QT_LOTS.length - 1, qtLotIdx + dir));
-  // Minimum lot altına düşme
-  while(qtLotIdx > 0 && QT_LOTS[qtLotIdx] < _minL) qtLotIdx++;
   qtLot = QT_LOTS[qtLotIdx];
-  var _el_qtLotVal=document.getElementById('qtLotVal');
-  if(_el_qtLotVal) { _el_qtLotVal.min=_minL; _el_qtLotVal.step=_minL; _el_qtLotVal.value=qtLot; }
+  var _el_qtLotVal = document.getElementById('qtLotVal');
+  if(_el_qtLotVal) _el_qtLotVal.value = qtLot;
+  // Preset aktif vurgula
   var _qb = document.querySelectorAll('.qt-preset');
   for(var _qi=0; _qi<_qb.length; _qi++) {
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === qtLot);
+    _qb[_qi].classList.toggle('active', Math.abs(parseFloat(_qb[_qi].textContent) - qtLot) < 0.0001);
   }
 }
 
 function qtSetLot(val, btn) {
-  var _minL = _qtGetMinLot();
-  if(!val || val < _minL) val = _minL;
+  if(!val || val <= 0) val = 0.01;
   val = parseFloat(parseFloat(val).toFixed(4));
   qtLot = val;
-  // QT_LOTS index — yakın değeri bul
+  // QT_LOTS index
   qtLotIdx = 0;
   for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
-    if(QT_LOTS[_qi] >= val) { qtLotIdx = _qi; break; }
+    if(QT_LOTS[_qi] >= val - 0.0001) { qtLotIdx = _qi; break; }
   }
-  var _el_qtLotVal=document.getElementById('qtLotVal');
-  if(_el_qtLotVal) { _el_qtLotVal.min=_minL; _el_qtLotVal.step=_minL; _el_qtLotVal.value=val; }
+  // Input güncelle — min/step sembolden bağımsız göster
+  var _el_qtLotVal = document.getElementById('qtLotVal');
+  if(_el_qtLotVal) { _el_qtLotVal.value = val; }
   // Aktif preset vurgula
   var _qsb = document.querySelectorAll('.qt-preset');
   for(var _qsi=0; _qsi<_qsb.length; _qsi++) {
-    _qsb[_qsi].classList.toggle('active', Math.abs(parseFloat(_qsb[_qsi].textContent)-val)<0.0001);
+    _qsb[_qsi].classList.remove('active');
   }
-  if(btn) { 
-    for(var _qsi=0; _qsi<_qsb.length; _qsi++) _qsb[_qsi].classList.remove('active');
-    btn.classList.add('active'); 
+  if(btn) {
+    btn.classList.add('active');
+  } else {
+    // btn yoksa text eşleşmesine göre aktifle
+    for(var _qsi=0; _qsi<_qsb.length; _qsi++) {
+      if(Math.abs(parseFloat(_qsb[_qsi].textContent) - val) < 0.0001) {
+        _qsb[_qsi].classList.add('active'); break;
+      }
+    }
   }
 }
 
