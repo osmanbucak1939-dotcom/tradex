@@ -1825,6 +1825,15 @@ function initAuth(){
           <div class="ind-popup-row"><span class="ind-popup-label">MACD Hızlı</span><input class="ind-popup-input" id="cfg_macd_fast" type="number" value="12" min="2"></div>
           <div class="ind-popup-row"><span class="ind-popup-label">MACD Yavaş</span><input class="ind-popup-input" id="cfg_macd_slow" type="number" value="26" min="2"></div>
           <div class="ind-popup-row"><span class="ind-popup-label">MACD Sinyal</span><input class="ind-popup-input" id="cfg_macd_sig" type="number" value="9" min="2"></div>
+          <div class="ind-popup-row" style="margin-top:10px;border-top:1px solid #2a2a2a;padding-top:10px;">
+            <span class="ind-popup-label">Al/Sat Seviyeleri</span>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="cfg_show_pos_lines" checked
+                style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;"
+                onchange="togglePositionLines(this.checked)">
+              <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Göster</span>
+            </label>
+          </div>
           <div style="margin-top:12px;display:flex;gap:8px">
             <button class="mgr-btn primary" style="flex:1;font-size:11px;padding:6px" onclick="applyIndSettings()">Uygula</button>
             <button class="mgr-btn secondary" style="font-size:11px;padding:6px" onclick="toggleIndPopup()">Kapat</button>
@@ -2863,7 +2872,11 @@ var _lwBbUp    = null;   // BB upper
 var _lwBbMid   = null;   // BB middle
 var _lwBbLow   = null;   // BB lower
 
-var _lwPosLines = {};    // {posId: {entry,sl,tp} priceLine refs}
+var _lwPosLines = {};
+// Al/sat seviyeleri göster ayarı — localStorage'dan yükle
+window._showPosLines = (function(){
+  try { var v = localStorage.getItem('tx_show_pos_lines'); return v === null ? true : v === '1'; } catch(e){ return true; }
+})();    // {posId: {entry,sl,tp} priceLine refs}
 var _lwDrawLines = [];   // Çizim araçları
 
 var _klineData  = [];    // {time, open, high, low, close, volume}
@@ -3279,9 +3292,18 @@ function lwDrawSubcharts(candles) {
 }
 
 /* ── Pozisyon / SL / TP çizgileri ──────────────── */
+function togglePositionLines(show) {
+  window._showPosLines = show;
+  try { localStorage.setItem('tx_show_pos_lines', show ? '1' : '0'); } catch(e) {}
+  // Checkbox'ı güncelle (popup açıksa)
+  var cb = document.getElementById('cfg_show_pos_lines');
+  if(cb) cb.checked = show;
+  lwDrawPositionLines();
+}
+
 function lwDrawPositionLines() {
   if(!_lwSeries) return;
-  // Mevcut çizgileri temizle
+  // Mevcut çizgileri her zaman temizle
   Object.keys(_lwPosLines).forEach(function(id){
     var pl = _lwPosLines[id];
     try{ if(pl.entry) _lwSeries.removePriceLine(pl.entry); }catch(e){}
@@ -3289,6 +3311,9 @@ function lwDrawPositionLines() {
     try{ if(pl.tp)    _lwSeries.removePriceLine(pl.tp);    }catch(e){}
   });
   _lwPosLines = {};
+
+  // Gizle seçeneği aktifse çizgileri çizmeden çık
+  if(window._showPosLines === false) return;
 
   if(typeof positions === 'undefined') return;
   positions.forEach(function(pos) {
@@ -3501,7 +3526,14 @@ function toggleIndPopup() {
   var popup=document.getElementById('indPopup');
   var btn=document.querySelector('.ind-settings-btn');
   if(popup&&btn){ var r=btn.getBoundingClientRect(); popup.style.top=(r.bottom+4)+'px'; popup.style.right=(window.innerWidth-r.right)+'px'; }
-  if(popup) popup.classList.toggle('open');
+  if(popup) {
+    popup.classList.toggle('open');
+    // Açılırken checkbox'ı mevcut ayara göre set et
+    if(popup.classList.contains('open')) {
+      var cb = document.getElementById('cfg_show_pos_lines');
+      if(cb) cb.checked = (window._showPosLines !== false);
+    }
+  }
 }
 document.addEventListener('click',function(e){
   var p=document.getElementById('indPopup');
