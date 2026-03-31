@@ -6422,15 +6422,26 @@ function qtLotStep(dir) {
 }
 
 function qtSetLot(val, btn) {
-  qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 0;
   var _minL = _qtGetMinLot();
+  if(!val || val < _minL) val = _minL;
+  val = parseFloat(parseFloat(val).toFixed(4));
+  qtLot = val;
+  // QT_LOTS index — yakın değeri bul
+  qtLotIdx = 0;
+  for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
+    if(QT_LOTS[_qi] >= val) { qtLotIdx = _qi; break; }
+  }
   var _el_qtLotVal=document.getElementById('qtLotVal');
   if(_el_qtLotVal) { _el_qtLotVal.min=_minL; _el_qtLotVal.step=_minL; _el_qtLotVal.value=val; }
+  // Aktif preset vurgula
   var _qsb = document.querySelectorAll('.qt-preset');
-  for(var _qsi=0; _qsi<_qsb.length; _qsi++) _qsb[_qsi].classList.remove('active');
-  if(btn) btn.classList.add('active');
+  for(var _qsi=0; _qsi<_qsb.length; _qsi++) {
+    _qsb[_qsi].classList.toggle('active', Math.abs(parseFloat(_qsb[_qsi].textContent)-val)<0.0001);
+  }
+  if(btn) { 
+    for(var _qsi=0; _qsi<_qsb.length; _qsi++) _qsb[_qsi].classList.remove('active');
+    btn.classList.add('active'); 
+  }
 }
 
 
@@ -6443,27 +6454,30 @@ function _qtGetMinLot() {
 /* Sembol değişince lot sıfırla */
 function qtInitForSym() {
   var _minL = _qtGetMinLot();
-  // QT_LOTS içinde minLot yoksa başa ekle
-  if(QT_LOTS[0] > _minL) QT_LOTS.unshift(_minL);
-  else if(QT_LOTS.indexOf(_minL) < 0) {
-    // Doğru yere ekle
-    for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
-      if(QT_LOTS[_qi] > _minL) { QT_LOTS.splice(_qi,0,_minL); break; }
-    }
+
+  // QT_LOTS'u ASLA mutate etme — semboller arası geçişte karışıklık önlenir
+  // Sadece QT_LOTS index'ini ayarla
+  qtLotIdx = 0;
+  for(var _qi=0; _qi<QT_LOTS.length; _qi++) {
+    if(Math.abs(QT_LOTS[_qi] - _minL) < 0.0001) { qtLotIdx = _qi; break; }
+    if(QT_LOTS[_qi] > _minL) { qtLotIdx = _qi; break; }
   }
-  qtLotIdx = QT_LOTS.indexOf(_minL);
-  if(qtLotIdx < 0) qtLotIdx = 0;
   qtLot = _minL;
+
   var el = document.getElementById('qtLotVal');
   if(el) { el.min=_minL; el.step=_minL; el.value=_minL; }
-  // Preset butonlarını güncelle
+
+  // Preset butonları: minLot × 1, × 10, × 100
+  // Her sembol değişiminde butonlar doğru değere reset edilir
   var presets = [_minL, _minL*10, _minL*100];
   var _qb = document.querySelectorAll('.qt-preset');
   for(var _pi=0; _pi<_qb.length && _pi<presets.length; _pi++) {
-    var pv = presets[_pi];
-    _qb[_pi].textContent = pv < 0.1 ? pv.toFixed(2) : pv < 1 ? pv.toFixed(2) : pv.toFixed(pv%1===0?0:1);
+    var pv = parseFloat(presets[_pi].toFixed(4));
+    _qb[_pi].textContent = pv >= 1 ? pv.toFixed(pv%1===0?0:2)
+                         : pv >= 0.1 ? pv.toFixed(2)
+                         : pv.toFixed(3);
     _qb[_pi].onclick = (function(v){ return function(){ qtSetLot(v,this); }; })(pv);
-    _qb[_pi].classList.toggle('active', pv === _minL);
+    _qb[_pi].classList.toggle('active', _pi === 0); // ilk preset aktif
   }
 }
 function qtOrder(side) {
