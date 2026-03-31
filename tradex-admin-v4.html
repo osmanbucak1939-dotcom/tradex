@@ -2430,12 +2430,8 @@ if(!Array.isArray(portfolio))  portfolio = [];
 if(!Array.isArray(alarms))    alarms = [];
 var triggered = new Set();
 var chart, cs, wsC, wsT;
-var posCounter = 1;
-if(positions.length) {
-  var maxId = 0;
-  for(var _i=0; _i<positions.length; _i++) { if(positions[_i].id > maxId) maxId = positions[_i].id; }
-  posCounter = maxId + 1;
-}
+// posCounter kaldırıldı — ID üretimi Date.now() ile yapılıyor
+var posCounter = Date.now();
 
 var fp = (p, d=2) => p === undefined ? '—' : (p > 10 ? p.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : p.toFixed(p<0.01?5:d));
 var save = () => {
@@ -3083,7 +3079,7 @@ function placeOrder(side) {
 
   balance -= netCost;
 
-  const pos = { id:posCounter++, sym:curSym, label:(function(){ var _sf=null; for(var _si=0;_si<SYMS.length;_si++){if(SYMS[_si].sym===curSym){_sf=SYMS[_si];break;}} return _sf?_sf.label:curSym; })(), side, qty, openPrice:execPrice, sl, tp, time:new Date().toISOString(), cost:netCost, hedge:(netQty < qty), device:detectDevice() };
+  const pos = { id:Date.now(), sym:curSym, label:(function(){ var _sf=null; for(var _si=0;_si<SYMS.length;_si++){if(SYMS[_si].sym===curSym){_sf=SYMS[_si];break;}} return _sf?_sf.label:curSym; })(), side, qty, openPrice:execPrice, sl, tp, time:new Date().toISOString(), cost:netCost, hedge:(netQty < qty), device:detectDevice() };
   positions.push(pos);
   save();
   renderPositions();
@@ -3143,7 +3139,8 @@ function renderPositions() {
 function closePosition(id, reason='') {
   if(!reason && typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
   var _cArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
-  const idx=_cArr.findIndex(p=>p.id===id);
+  // ID tip güvencesi: number veya string olabilir
+  const idx=_cArr.findIndex(p=>String(p.id)===String(id));
   if(idx===-1)return;
   const pos=_cArr[idx];
 
@@ -4963,7 +4960,7 @@ function adManualTrade() {
   if(!op){ showToast('Hata','Açılış fiyatı girin!'); return; }
   if(typeof positions==='undefined') window.positions=[];
   var sc=symConfig.find(function(s){ return s.sym===sym; })||{};
-  positions.push({id:posCounter++,accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,manual:true});
+  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,manual:true});
   if(typeof save==='function') save();
   if(typeof renderPositions==='function') renderPositions();
   showToast('İşlem Açıldı ✓',lot+' lot '+sym);
