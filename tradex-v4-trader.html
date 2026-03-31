@@ -3298,20 +3298,20 @@ function lwDrawPositionLines() {
     var _entryColor = pos.side==='buy' ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)';
     lines.entry = _lwSeries.createPriceLine({
       price: pos.openPrice, color:_entryColor, lineWidth:1, lineStyle:2,
-      axisLabelVisible:true, title: (pos.side==='buy'?'▲':'▼')+' #'+pos.id
+      axisLabelVisible:true, title: (pos.side==='buy'?'▲ AL':'▼ SAT')
     });
     // Stop Loss
     if(pos.sl && pos.sl > 0) {
       lines.sl = _lwSeries.createPriceLine({
         price:pos.sl, color:'rgba(239,83,80,0.5)', lineWidth:1, lineStyle:1,
-        axisLabelVisible:true, title:'SL #'+pos.id
+        axisLabelVisible:true, title:'SL'
       });
     }
     // Take Profit
     if(pos.tp && pos.tp > 0) {
       lines.tp = _lwSeries.createPriceLine({
         price:pos.tp, color:'rgba(38,166,154,0.5)', lineWidth:1, lineStyle:1,
-        axisLabelVisible:true, title:'TP #'+pos.id
+        axisLabelVisible:true, title:'TP'
       });
     }
     _lwPosLines[pos.id] = lines;
