@@ -7898,8 +7898,9 @@ function listBackups() {
     var html = '<div style="display:grid;grid-template-columns:1fr auto;gap:4px;">';
     backups.slice(0,20).forEach(function(b){
       var label = b.id.replace('backup_daily_','📅 ').replace('backup_weekly_','📆 ').replace('backup_hourly_','🕐 ');
+      var cleanId = b.id.replace('backup_daily_','').replace('backup_weekly_','').replace('backup_hourly_','');
       html += '<div style="color:#ccc;">'+label+'</div>'
-        + '<button onclick="restoreFromBackup(''+b.id.replace('backup_daily_','').replace('backup_weekly_','').replace('backup_hourly_','')+'')" '
+        + '<button data-bid="'+cleanId+'" onclick="restoreFromBackup(this.dataset.bid)" '
         + 'style="background:#333;border:1px solid #555;border-radius:3px;padding:2px 10px;color:#f0b90b;font-family:var(--mono);font-size:10px;cursor:pointer;">Geri Yükle</button>';
     });
     html += '</div>';
