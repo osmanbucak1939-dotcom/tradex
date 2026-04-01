@@ -1302,7 +1302,20 @@ function fbSaveAccounts() {
           db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:accounts.length}).catch(function(e){console.warn(e);});
           var _h=new Date().toISOString().substring(0,13).replace('T','_');
           db.collection('broker').doc('accounts_backup_'+_h).set({data:_data,savedAt:_ts}).catch(function(){});
-          accounts.forEach(function(a){if(!a.id)return;db.collection('users').doc(String(a.id)).set({name:a.name||'',surname:a.surname||'',email:a.email||'',login:a.login||a.id,type:a.type||'live',spreadGroup:a.spreadGroup||'standard',leverage:a.leverage||100,active:a.active!==false,created:a.created||'',regDate:a.regDate||'',phone:a.phone||'',password:a.password||'',currency:a.currency||'USD',bonus:a.bonus||0},{merge:true}).catch(function(){});});
+          accounts.forEach(function(a){
+            if(!a.id)return;
+            var _ud = {
+              name:a.name||'', surname:a.surname||'', email:a.email||'',
+              login:a.login||a.id, type:a.type||'live',
+              spreadGroup:a.spreadGroup||'standard', leverage:a.leverage||100,
+              active:a.active!==false, created:a.created||'', regDate:a.regDate||'',
+              phone:a.phone||'', password:a.password||'',
+              currency:a.currency||'USD', bonus:a.bonus||0
+            };
+            // finlog varsa dahil et — kaybolmasın
+            if(Array.isArray(a.finlog) && a.finlog.length) _ud.finlog = a.finlog;
+            db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
+          });
         }catch(e){console.warn(e);}
       }, 2000); // 2sn debounce — stop out 1sn interval'daki flood'u önler
     }
@@ -4839,11 +4852,28 @@ function adEditFinlog(idx) {
 function fbSyncUserFinance(a) {
   if(!a || !a.id) return;
   if(typeof db === 'undefined' || !db) return;
-  db.collection('users').doc(String(a.id)).set({
-    balance: a.balance||0,
-    bonus: a.bonus||0,
-    finlog: Array.isArray(a.finlog) ? a.finlog : []
-  }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
+  function _doSync() {
+    db.collection('users').doc(String(a.id)).set({
+      balance:  a.balance||0,
+      bonus:    a.bonus||0,
+      finlog:   Array.isArray(a.finlog) ? a.finlog : [],
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
+  }
+  // Auth yoksa bekle — permissions hatası önle
+  var _auth = (typeof firebase!=='undefined') ? firebase.auth() : null;
+  if(_auth && !_auth.currentUser) {
+    var _waited = 0;
+    var _wInt = setInterval(function(){
+      _waited += 200;
+      if(_auth.currentUser || _waited >= 3000) {
+        clearInterval(_wInt);
+        _doSync();
+      }
+    }, 200);
+  } else {
+    _doSync();
+  }
 }
 function adSaveFinlog() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
