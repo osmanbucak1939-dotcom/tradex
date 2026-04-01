@@ -2495,15 +2495,15 @@ var save = () => {
   localStorage.setItem('tx_hist', JSON.stringify(tradeHistory));
   localStorage.setItem('tx_pf', JSON.stringify(portfolio));
   localStorage.setItem('tx_al', JSON.stringify(alarms));
-  // Firebase'e kaydet (giriş yapmışsa)
+  // Firebase'e kaydet (giriş yapmışsa) — positions/tradeHistory ARRAY olarak kaydet
   if(typeof _cu !== 'undefined' && _cu && _cu.id) {
     fbSaveUserData(_cu.id, {
-      positions: JSON.stringify(positions),
-      tradeHistory: JSON.stringify(tradeHistory),
-      portfolio: JSON.stringify(portfolio),
-      alarms: JSON.stringify(alarms),
-      balance: typeof balance !== 'undefined' ? balance : 0,
-      updatedAt: new Date().toISOString()
+      positions:    Array.isArray(positions) ? positions : [],
+      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory : [],
+      portfolio:    JSON.stringify(portfolio),
+      alarms:       JSON.stringify(alarms),
+      balance:      typeof balance !== 'undefined' ? balance : 0,
+      updatedAt:    new Date().toISOString()
     });
   }
 };
