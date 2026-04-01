@@ -1436,6 +1436,7 @@ function fbSaveAccounts() {
 
     // Spread gruplarını Firebase'e kaydet
     function fbSaveSpreadGroups() {
+      try{localStorage.setItem('tx_spreadgroups',JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]));} catch(e){}
       if(!db) return;
       try {
         db.collection('broker').doc('spreadGroups').set({ data: JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]) })
@@ -1548,8 +1549,11 @@ function parseFinlogDate(input) {
     }
 
 console.log('Firebase bağlandı ✓');
-    // broker/accounts onSnapshot - hesap tablosu anlık güncellenir
-    if(typeof db!=='undefined'&&db){
+    // broker/accounts onSnapshot — auth sonrası startAdminSnapshots() ile başlatılır
+    window._adminSnapshotsStarted = false;
+    window.startAdminSnapshots = function() {
+      if(window._adminSnapshotsStarted || typeof db==='undefined' || !db) return;
+      window._adminSnapshotsStarted = true;
       db.collection('broker').doc('accounts').onSnapshot(function(doc){
         if(!doc.exists)return;
         try{
@@ -1563,15 +1567,12 @@ console.log('Firebase bağlandı ✓');
               if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
               if(old._openCount!==undefined)   na._openCount=old._openCount;
-              // Online/lastSeen cache'den koru (users snapshot daha güncel olabilir)
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
           window.accounts=newAccs;
           if(typeof accounts!=='undefined')accounts=newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
-          // renderAccTable yerine sadece bakiye/online DOM güncelleme yap
-          // (renderAccTable çağrısı yanıp sönmeye neden olur)
         }catch(e){console.warn('accounts onSnapshot err:',e);}
       },function(err){console.warn('accounts onSnapshot error:',err);});
 
@@ -1722,6 +1723,7 @@ console.log('Firebase bağlandı ✓');
     <div style="width:1px;height:20px;background:#222;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
     <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit">🏢 Broker Bilgileri</button>
+    <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit">🛡 Backup</button>
     <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
     <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
@@ -2160,6 +2162,47 @@ console.log('Firebase bağlandı ✓');
 
     <!-- ÖDEME YÖNTEMLERİ -->
     <!-- BROKER BİLGİLERİ -->
+      <!-- BACKUP YÖNETİMİ -->
+      <div id="sec-backup" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px;">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;color:var(--accent);">🛡 VERİ BACKUP YÖNETİMİ</div>
+        <div style="max-width:680px;display:flex;flex-direction:column;gap:14px;">
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:16px;">
+            <div style="font-family:var(--mono);font-size:10px;color:#888;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Manuel Backup</div>
+            <button onclick="_txFullBackup();_txLocalBackup();showAdminToast('Backup','Tüm veriler yedeklendi','success');"
+              style="background:var(--buy);border:none;border-radius:4px;padding:9px 20px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;margin-right:8px;">
+              💾 Şimdi Backup Al
+            </button>
+            <span style="font-family:var(--mono);font-size:10px;color:#555;">Otomatik: 1 saatte bir Firebase, 5 dakikada bir localStorage</span>
+          </div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:16px;">
+            <div style="font-family:var(--mono);font-size:10px;color:#888;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup'tan Geri Yükle</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input id="backup_date_input" type="date"
+                style="background:#111;border:1px solid #444;border-radius:4px;padding:7px 10px;color:#ccc;font-family:var(--mono);font-size:12px;"
+                onfocus="if(!this.value)this.value=new Date().toISOString().slice(0,10)">
+              <button onclick="restoreFromBackup(document.getElementById('backup_date_input').value||null)"
+                style="background:#ef5350;border:none;border-radius:4px;padding:9px 16px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;">
+                ⚠ Seçili Günden Geri Yükle
+              </button>
+              <button onclick="listBackups()"
+                style="background:#333;border:1px solid #555;border-radius:4px;padding:9px 14px;color:#ccc;font-family:var(--mono);font-size:12px;cursor:pointer;">
+                📋 Mevcut Backup'ları Listele
+              </button>
+            </div>
+            <div id="backup_list" style="margin-top:14px;font-family:var(--mono);font-size:11px;color:#888;"></div>
+          </div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:16px;">
+            <div style="font-family:var(--mono);font-size:10px;color:#888;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;color:#aaa;">
+              <div>✅ Hesaplar</div><div>✅ Spread Grupları</div>
+              <div>✅ Semboller</div><div>✅ Ödeme Yöntemleri</div>
+              <div>✅ Yatırım/Çekim</div><div>✅ Personel (staff)</div>
+              <div>✅ Kullanıcı pozisyonları</div><div>✅ Ayarlar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     <div class="admin-section" id="sec-brokerinfo" style="display:none;flex:1;overflow-y:auto;padding:16px;">
       <div class="mgr-section-title">BROKER BİLGİLERİ</div>
       <div style="max-width:600px">
@@ -3930,7 +3973,15 @@ function saveAccounts(){
   fbSaveAccounts();
 }
 
-function saveSettingsData(){ localStorage.setItem('tx_settings', JSON.stringify(settings)); }
+function saveSettingsData(){
+  localStorage.setItem('tx_settings', JSON.stringify(settings));
+  if(typeof db!=='undefined'&&db&&settings) {
+    db.collection('broker').doc('settings').set({
+      data: JSON.stringify(settings),
+      updatedAt: new Date().toISOString()
+    }).catch(function(e){console.warn('saveSettings FB err:',e);});
+  }
+}
 
 function toggleManager() {
   const o = document.getElementById('mgrOverlay');
@@ -5443,7 +5494,15 @@ function clearPortfolio() {
   portfolio = []; save(); renderPortMgr(); renderPortfolio();
 }
 
-function savePayMethods() { localStorage.setItem('tx_paymethods', JSON.stringify(payMethods)); }
+function savePayMethods() {
+  localStorage.setItem('tx_paymethods', JSON.stringify(payMethods));
+  if(typeof db!=='undefined'&&db&&payMethods&&payMethods.length) {
+    db.collection('broker').doc('payMethods').set({
+      data: JSON.stringify(payMethods),
+      updatedAt: new Date().toISOString()
+    }).catch(function(e){console.warn('savePayMethods FB err:',e);});
+  }
+}
 
 function saveRequests() {
   localStorage.setItem('tx_wreqs', JSON.stringify(withdrawRequests));
@@ -7705,6 +7764,149 @@ function adminLogin(){
     if(s){loginSuccess(s);}else{if(errEl)errEl.style.display='block';}
   });
 }
+
+// ══════════════════════════════════════════════════════════
+// KAPSAMLI BACKUP SİSTEMİ — Tüm kritik veriler korunur
+// ══════════════════════════════════════════════════════════
+function _txFullBackup() {
+  if(typeof db === 'undefined' || !db) return;
+  var now     = new Date();
+  var dateStr = now.toISOString().slice(0,10);                   // 2026-03-27
+  var hourStr = now.toISOString().slice(0,13).replace('T','_'); // 2026-03-27_14
+  var weekStr = 'week_' + dateStr.slice(0,7);                   // week_2026-03
+
+  var payload = {
+    savedAt:     now.toISOString(),
+    version:     4,
+    accounts:    JSON.stringify(typeof accounts!=='undefined'?accounts:[]),
+    spreadGroups:JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]),
+    symbols:     JSON.stringify(typeof symConfig!=='undefined'?symConfig:[]),
+    payMethods:  JSON.stringify(typeof payMethods!=='undefined'&&payMethods?payMethods:[]),
+    settings:    JSON.stringify(typeof settings!=='undefined'?settings:{}),
+    requests: JSON.stringify({
+      withdraw: typeof withdrawRequests!=='undefined'?withdrawRequests:[],
+      deposit:  typeof depositRequests!=='undefined'?depositRequests:[]
+    })
+  };
+
+  // Saatlik backup (broker/backup_hourly/YYYY-MM-DD_HH)
+  db.collection('broker').doc('backup_hourly_'+hourStr)
+    .set(payload).catch(function(e){console.warn('[Backup hourly]',e.message);});
+
+  // Günlük backup (sadece günün ilk saatinde üzerine yaz)
+  db.collection('broker').doc('backup_daily_'+dateStr)
+    .set(payload).catch(function(e){console.warn('[Backup daily]',e.message);});
+
+  // Haftalık backup
+  db.collection('broker').doc('backup_weekly_'+weekStr)
+    .set(payload).catch(function(e){console.warn('[Backup weekly]',e.message);});
+
+  // Staff ayrı yedekle
+  if(typeof _staffList!=='undefined'&&_staffList&&_staffList.length) {
+    db.collection('broker').doc('backup_staff_'+dateStr)
+      .set({data:JSON.stringify(_staffList),savedAt:now.toISOString()})
+      .catch(function(e){console.warn('[Backup staff]',e.message);});
+  }
+
+  // users koleksiyonunu yedekle (pozisyonlar, bakiye, geçmiş)
+  if(typeof accounts!=='undefined'&&accounts&&accounts.length) {
+    accounts.forEach(function(a){
+      if(!a.id) return;
+      db.collection('users').doc(String(a.id)).get().then(function(doc){
+        if(!doc.exists) return;
+        db.collection('backup_users').doc('u_'+a.id+'_'+dateStr)
+          .set(Object.assign({_savedAt:now.toISOString()},doc.data()))
+          .catch(function(){});
+      }).catch(function(){});
+    });
+  }
+
+  console.log('[Backup] Tamamlandı:', hourStr);
+}
+
+// localStorage tam yedek — tüm kritik anahtarlar
+function _txLocalBackup() {
+  var snap = {
+    _ts:          Date.now(),
+    tx_accounts:  localStorage.getItem('tx_accounts'),
+    tx_staff:     localStorage.getItem('tx_staff'),
+    tx_paymethods:localStorage.getItem('tx_paymethods'),
+    tx_settings:  localStorage.getItem('tx_settings'),
+    tx_wreqs:     localStorage.getItem('tx_wreqs'),
+    tx_dreqs:     localStorage.getItem('tx_dreqs'),
+    tx_syms:      localStorage.getItem('tx_syms'),
+    tx_spreadgroups: localStorage.getItem('tx_spreadgroups')
+  };
+  try { localStorage.setItem('tx_fullbackup', JSON.stringify(snap)); } catch(e){}
+}
+
+// Backup zamanlayıcıları — _afterAuth'tan sonra başlatılır
+function startBackupSystem() {
+  // İlk backup hemen
+  setTimeout(_txFullBackup, 5000);
+  setTimeout(_txLocalBackup, 2000);
+  // Saatte bir Firebase backup
+  setInterval(_txFullBackup, 60 * 60 * 1000);
+  // 5 dakikada bir localStorage snapshot
+  setInterval(_txLocalBackup, 5 * 60 * 1000);
+  console.log('[Backup] Sistem başlatıldı');
+}
+
+// Backup'tan geri yükle
+function restoreFromBackup(dateStr) {
+  if(!db) { alert('Firebase bağlı değil'); return; }
+  var key = 'backup_daily_' + (dateStr || new Date().toISOString().slice(0,10));
+  db.collection('broker').doc(key).get().then(function(doc){
+    if(!doc.exists){ alert('Backup bulunamadı: ' + key); return; }
+    var d = doc.data();
+    if(!confirm('UYARI: ' + key + ' backup\'ından geri yüklensin mi? Mevcut veriler üzerine yazılacak!')) return;
+    var accs = JSON.parse(d.accounts||'[]');
+    if(accs.length) {
+      db.collection('broker').doc('accounts').set({data:d.accounts,updatedAt:new Date().toISOString()})
+        .then(function(){ alert('Hesaplar geri yüklendi: ' + accs.length + ' hesap'); location.reload(); });
+    }
+    var sgs = JSON.parse(d.spreadGroups||'[]');
+    if(sgs.length) db.collection('broker').doc('spreadGroups').set({data:d.spreadGroups});
+    var syms = JSON.parse(d.symbols||'[]');
+    if(syms.length) db.collection('broker').doc('symbols').set({data:d.symbols});
+    var pms = JSON.parse(d.payMethods||'[]');
+    if(pms.length) db.collection('broker').doc('payMethods').set({data:d.payMethods});
+    var reqs = JSON.parse(d.requests||'{}');
+    if(reqs.withdraw||reqs.deposit) db.collection('broker').doc('requests').set({
+      withdraw:JSON.stringify(reqs.withdraw||[]),
+      deposit: JSON.stringify(reqs.deposit||[])
+    });
+    showAdminToast('Geri Yüklendi','Backup başarıyla uygulandı','success');
+  }).catch(function(e){ alert('Backup yüklenemedi: '+e.message); });
+}
+// ══════════════════════════════════════════════════════════
+
+function listBackups() {
+  if(!db) { showAdminToast('Hata','Firebase bağlı değil','error'); return; }
+  var el = document.getElementById('backup_list');
+  if(el) el.innerHTML = '<div style="color:#888">Yükleniyor...</div>';
+  db.collection('broker').get().then(function(snap){
+    var backups = [];
+    snap.forEach(function(doc){
+      if(doc.id.startsWith('backup_daily_')||doc.id.startsWith('backup_weekly_')||doc.id.startsWith('backup_hourly_')) {
+        var d = doc.data();
+        backups.push({id:doc.id, savedAt:d.savedAt||'—'});
+      }
+    });
+    backups.sort(function(a,b){ return b.savedAt.localeCompare(a.savedAt); });
+    if(!backups.length) { if(el) el.innerHTML = '<div style="color:#888">Backup bulunamadı</div>'; return; }
+    var html = '<div style="display:grid;grid-template-columns:1fr auto;gap:4px;">';
+    backups.slice(0,20).forEach(function(b){
+      var label = b.id.replace('backup_daily_','📅 ').replace('backup_weekly_','📆 ').replace('backup_hourly_','🕐 ');
+      html += '<div style="color:#ccc;">'+label+'</div>'
+        + '<button onclick="restoreFromBackup(''+b.id.replace('backup_daily_','').replace('backup_weekly_','').replace('backup_hourly_','')+'')" '
+        + 'style="background:#333;border:1px solid #555;border-radius:3px;padding:2px 10px;color:#f0b90b;font-family:var(--mono);font-size:10px;cursor:pointer;">Geri Yükle</button>';
+    });
+    html += '</div>';
+    if(el) el.innerHTML = html;
+  }).catch(function(e){ if(el) el.innerHTML = '<div style="color:#ef5350">'+e.message+'</div>'; });
+}
+
 function loginSuccess(staff){
   _currentStaff=staff;
   try{localStorage.setItem('tx_admin_user',JSON.stringify(staff));}catch(e){}
@@ -7722,12 +7924,16 @@ function loginSuccess(staff){
   function _afterAuth(){
     if(_fbAuthDone) return;
     _fbAuthDone = true;
+    // Auth tamamlandı — Firebase snapshot'larını başlat
+    if(typeof window.startAdminSnapshots === 'function') window.startAdminSnapshots();
     loadInitialData();
     if(typeof startLiveFeed === 'function') startLiveFeed();
-    // users onSnapshot her zaman aktif olsun — trader↔admin senkronizasyonu için
+    // Backup sistemini başlat
+    if(typeof startBackupSystem === 'function') startBackupSystem();
+    // users onSnapshot her zaman aktif olsun
     setTimeout(function(){
       if(typeof _startUsersSnap === 'function') _startUsersSnap();
-    }, 2000); // loadInitialData tamamlandıktan sonra başlat
+    }, 2000);
   }
   try {
     var _auth = firebase.auth();
@@ -8469,8 +8675,51 @@ function renderSymSection(){
   cnt.innerHTML = html;
 }
 
-function fbLoadStaff(cb){if(!window.db){cb([]);return;}db.collection('staff').get().then(function(snap){var list=[];snap.forEach(function(doc){list.push(Object.assign({id:doc.id},doc.data()));});_staffList=list;if(cb)cb(list);}).catch(function(){cb([]);});}
-function fbSaveStaff(list){if(!window.db)return;var batch=db.batch();list.forEach(function(s){batch.set(db.collection('staff').doc(s.id),s);});batch.commit();}
+function fbLoadStaff(cb){
+  if(!window.db){cb([]);return;}
+  // Auth yoksa bekle — permissions hatası önle
+  var _auth = (typeof firebase!=='undefined') ? firebase.auth() : null;
+  if(_auth && !_auth.currentUser) {
+    // Auth tamamlanana kadar bekle (max 3sn)
+    var _wait = 0;
+    var _wInt = setInterval(function(){
+      _wait += 200;
+      if(_auth.currentUser || _wait >= 3000) {
+        clearInterval(_wInt);
+        _doLoadStaff(cb);
+      }
+    }, 200);
+    return;
+  }
+  _doLoadStaff(cb);
+}
+function _doLoadStaff(cb){
+  window.db.collection('staff').get()
+    .then(function(snap){
+      var list=[];
+      snap.forEach(function(doc){list.push(Object.assign({id:doc.id},doc.data()));});
+      _staffList=list;
+      // localStorage'a yedekle
+      try{localStorage.setItem('tx_staff',JSON.stringify(list));}catch(e){}
+      if(cb)cb(list);
+    })
+    .catch(function(e){
+      console.warn('[fbLoadStaff]',e.message);
+      // Hata durumunda localStorage'dan yükle
+      try{
+        var ls=JSON.parse(localStorage.getItem('tx_staff')||'[]');
+        _staffList=ls; if(cb)cb(ls);
+      }catch(ex){cb([]);}
+    });
+}
+function fbSaveStaff(list){
+  // localStorage yedek — her zaman
+  try{localStorage.setItem('tx_staff',JSON.stringify(list));}catch(e){}
+  if(!window.db)return;
+  var batch=db.batch();
+  list.forEach(function(s){batch.set(db.collection('staff').doc(String(s.id)),s);});
+  batch.commit().catch(function(e){console.warn('[fbSaveStaff]',e.message);});
+}
 function loadStaffTab(){fbLoadStaff(function(list){_staffList=list||[];renderStaffTable();});}
 function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
