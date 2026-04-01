@@ -7757,12 +7757,38 @@ function adminLogin(){
   var pass=(document.getElementById('al_pass')||{}).value||'';
   var errEl=document.getElementById('al_error');
   if(!email||!pass){if(errEl)errEl.style.display='block';return;}
+
+  // 1) Super admin kontrolü
   var sa=SUPER_ADMINS.find(function(a){return a.email===email.trim()&&a.password===pass.trim();});
   if(sa){loginSuccess(sa);return;}
-  fbLoadStaff(function(list){
+
+  // 2) Önce localStorage'daki staff listesinden dene (auth gerekmez)
+  function _tryMatch(list){
     var s=list&&list.find(function(x){return x.email===email.trim()&&x.password===pass.trim()&&x.active;});
-    if(s){loginSuccess(s);}else{if(errEl)errEl.style.display='block';}
-  });
+    if(s){loginSuccess(s);return true;}
+    return false;
+  }
+
+  try {
+    var lsList = JSON.parse(localStorage.getItem('tx_staff')||'[]');
+    if(lsList.length && _tryMatch(lsList)) return;
+  } catch(e){}
+
+  // 3) localStorage'da bulunamadı — Firebase'den anonim auth ile dene
+  var _auth = (typeof firebase!=='undefined') ? firebase.auth() : null;
+  function _loadFromFB(){
+    fbLoadStaff(function(list){
+      if(!_tryMatch(list)){if(errEl)errEl.style.display='block';}
+    });
+  }
+
+  if(_auth && !_auth.currentUser) {
+    _auth.signInAnonymously()
+      .then(function(){ _loadFromFB(); })
+      .catch(function(){ _loadFromFB(); }); // auth başarısız olsa da dene
+  } else {
+    _loadFromFB();
+  }
 }
 
 // ══════════════════════════════════════════════════════════
