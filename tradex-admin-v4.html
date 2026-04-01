@@ -9085,6 +9085,7 @@ var AD_SIM={
     if(secAcc&&secAcc.style.display!=='none'){
       // Önce aktif hesabın pozisyonlarını senkronize et
       if(_adAccId && _adPositions) _allAccountPositions[_adAccId]=_adPositions;
+      if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
       accounts.forEach(function(a){
         if(a.role&&a.role!=='customer')return;
         // TEK KAYNAK: _allAccountPositions
