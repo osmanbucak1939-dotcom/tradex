@@ -3061,8 +3061,8 @@ function lwLoadKlines(sym, interval, cb) {
                    'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'].indexOf(sym) > -1;
 
   if(!isCrypto) {
-    // Gerçek feed bekleniyor
-    cb([]);
+    // Forex/emtia/endeks — Twelvedata REST klines
+    lwLoadTwelvedataKlines(sym, interval, cb);
     return;
   }
 
@@ -3101,46 +3101,54 @@ function lwLoadKlines(sym, interval, cb) {
     });
 }
 
-/* ── Simüle kline üretici (forex/emtia/endeks) ──── */
-function lwGenSimKlines(sym, interval, cb) {
-  var dec   = _lwDecFor(sym);
-  // Base fiyat: Firebase gerçek fiyatı > admin override > mwPrices > SIM_PRICES
-  var base = (typeof prices!=='undefined' && prices[sym] && prices[sym].price > 0) ? prices[sym].price
-           : (window._adminOverrides&&window._adminOverrides[sym]) ? window._adminOverrides[sym]
-           : (mwPrices&&mwPrices[sym]&&mwPrices[sym].price > 0) ? mwPrices[sym].price
-           : (SIM_PRICES&&SIM_PRICES[sym]) ? SIM_PRICES[sym].p : 100;
-  var periodSecs = {'1m':60,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400}[interval]||14400;
-  var count = 300;
-  // Son mum zamanını interval'e hizala — X ekseni düzenli aralıklı olsun
-  var now   = Math.floor(Date.now()/1000);
-  now = Math.floor(now / periodSecs) * periodSecs;
-  // Volatilite sembol tipine göre
-  var vol   = sym.indexOf('JPY')>-1?0.0006 : sym.indexOf('XAU')>-1?0.0008 : sym.indexOf('USD')>-1&&sym.length<=8?0.0004 : 0.001;
-  var candles = [];
-  var p = base;
-  for(var i=count-1; i>=0; i--) {
-    var t   = now - i*periodSecs;
-    // Mean-reversion: fiyat base'den uzaklaştıkça geri çeker
-    var drift = (base - p) / base * 0.05;
-    var chg = (Math.random()-0.5) * vol + drift;
-    var o   = +p.toFixed(dec);
-    var c   = +(p*(1+chg)).toFixed(dec);
-    var h   = +(Math.max(o,c)*(1+Math.random()*vol*0.5)).toFixed(dec);
-    var l   = +(Math.min(o,c)*(1-Math.random()*vol*0.5)).toFixed(dec);
-    var v   = Math.round(base*(50+Math.random()*100));
-    candles.push({time:t, open:o, high:h, low:l, close:c, volume:v});
-    p = parseFloat(c);
-  }
-  // Son mum: close = live fiyat
-  var last = candles[candles.length-1];
-  last.close = +base.toFixed(dec);
-  last.high  = +Math.max(last.open,last.close).toFixed(dec);
-  last.low   = +Math.min(last.open,last.close).toFixed(dec);
-  candles.sort(function(a,b){return a.time-b.time;});
-  var uniq=[]; var lastT=-1;
-  candles.forEach(function(c){if(c.time!==lastT){uniq.push(c);lastT=c.time;}});
-  _klineData = uniq;
-  if(cb) cb(uniq);
+/* ── Twelvedata REST klines (forex/emtia/endeks) ── */
+function lwLoadTwelvedataKlines(sym, interval, cb) {
+  var tdSym = (typeof TX_TD_MAP !== 'undefined' && TX_TD_MAP[sym]) ? TX_TD_MAP[sym] : null;
+  if(!tdSym) { cb([]); return; }
+
+  // Twelvedata interval formatı
+  var TD_INT = {'1m':'1min','5m':'5min','15m':'15min','30m':'30min','1h':'1h','4h':'4h','1d':'1day'};
+  var tdInt = TD_INT[interval] || '4h';
+
+  var apiKey = (typeof _txTdKey !== 'undefined') ? _txTdKey : '';
+  if(!apiKey) { cb([]); return; }
+
+  var url = 'https://api.twelvedata.com/time_series'
+    + '?symbol=' + encodeURIComponent(tdSym)
+    + '&interval=' + tdInt
+    + '&outputsize=300'
+    + '&order=ASC'
+    + '&apikey=' + apiKey;
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if(!data || data.status === 'error' || !Array.isArray(data.values)) {
+        console.warn('[TD Klines]', sym, data && data.message);
+        cb([]);
+        return;
+      }
+      var candles = data.values.map(function(v) {
+        return {
+          time:   Math.floor(new Date(v.datetime).getTime() / 1000),
+          open:   parseFloat(v.open),
+          high:   parseFloat(v.high),
+          low:    parseFloat(v.low),
+          close:  parseFloat(v.close),
+          volume: parseFloat(v.volume) || 0
+        };
+      });
+      candles.sort(function(a,b){ return a.time - b.time; });
+      // Duplicate temizle
+      var uniq = [], lastT = -1;
+      candles.forEach(function(c){ if(c.time !== lastT){ uniq.push(c); lastT = c.time; } });
+      _klineData = uniq;
+      cb(uniq);
+    })
+    .catch(function(e) {
+      console.warn('[TD Klines] fetch err:', e);
+      cb([]);
+    });
 }
 
 /* ── Ana yükleme: sembol + interval ─────────────── */
@@ -3157,6 +3165,24 @@ function startCandleWs(sym, interval) {
   }
 
   lwLoadKlines(sym, interval, function(candles) {
+    if(!candles || !candles.length) {
+      // Twelvedata API bağlı değil veya veri gelmedi
+      if(lbl) lbl.textContent = sym + ' — grafik verisi yok';
+      // Grafik alanına bilgi mesajı göster
+      var wrap = document.getElementById('lwChart');
+      if(wrap && !wrap.querySelector('.no-chart-msg')) {
+        var msg = document.createElement('div');
+        msg.className = 'no-chart-msg';
+        msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;';
+        msg.innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:#555;">Grafik verisi bekleniyor</div>'
+          + '<div style="font-family:var(--mono);font-size:10px;color:#444;">Twelvedata API bağlantısı gerekli</div>';
+        wrap.appendChild(msg);
+      }
+      return;
+    }
+    // Bilgi mesajını kaldır
+    var oldMsg = document.querySelector('#lwChart .no-chart-msg');
+    if(oldMsg) oldMsg.remove();
     lwRenderCandles(candles, sym);
     if(lbl) lbl.textContent = sym;
     window._lwLiveTimer = setInterval(function(){ lwTickUpdate(); }, 1000);
