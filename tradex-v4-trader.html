@@ -7248,25 +7248,29 @@ var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
                   'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _txFfPairs = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,XAUUSD,XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
+var _txFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,XAUUSD';
+var _txFfPairs2 = 'XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
 var _txFfTimer = null;
 function txStartTwelvedataWs() {
-  // FastForex REST polling — WebSocket yerine
+  // FastForex REST polling — max 10 sembol per request
   if(_txFfTimer) { clearInterval(_txFfTimer); _txFfTimer=null; }
+  function _applyQuotes(data) {
+    if(!data||!data.quotes) return;
+    window._txTdConnected = true;
+    Object.keys(data.quotes).forEach(function(sym){
+      var q = data.quotes[sym];
+      if(!q) return;
+      var mid = (parseFloat(q.bid)+parseFloat(q.ask))/2;
+      if(sym && mid>0) txApplyPrice(sym, mid);
+    });
+  }
   function _ffPoll() {
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs+'&api_key='+_txFfKey)
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if(!data||!data.quotes) return;
-        window._txTdConnected = true;
-        Object.keys(data.quotes).forEach(function(sym){
-          var q = data.quotes[sym];
-          if(!q) return;
-          var mid = (parseFloat(q.bid)+parseFloat(q.ask))/2;
-          if(sym && mid>0) txApplyPrice(sym, mid);
-        });
-      })
-      .catch(function(e){ console.warn('[FastForex]', e.message); window._txTdConnected=false; });
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs1+'&api_key='+_txFfKey)
+      .then(function(r){ return r.json(); }).then(_applyQuotes)
+      .catch(function(e){ console.warn('[FastForex1]', e.message); window._txTdConnected=false; });
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs2+'&api_key='+_txFfKey)
+      .then(function(r){ return r.json(); }).then(_applyQuotes)
+      .catch(function(e){ console.warn('[FastForex2]', e.message); });
   }
   _ffPoll();
   _txFfTimer = setInterval(_ffPoll, 2000);
