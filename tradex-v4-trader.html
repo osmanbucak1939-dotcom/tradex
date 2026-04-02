@@ -7006,6 +7006,33 @@ function txApplyPrice(sym, rawMid) {
   else if(typeof updatePositions === 'function') updatePositions();
   if(typeof buildTicker === 'function') buildTicker();
   if(typeof mTick==='function') mTick();
+
+  // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
+  var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
+  _synthCfg.forEach(function(s) {
+    if(s.priceSource !== sym || s.sym === sym) return;
+    var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
+    var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
+    var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
+    var _sh    = _ss / 2;
+    var _sBid  = _sp - _sh;
+    var _sAsk  = _sp + _sh;
+    var _sPrev = (prices[s.sym] && prices[s.sym].price) ? prices[s.sym].price : _sp;
+    var _sChg  = (window._fbChg && window._fbChg[s.sym] !== undefined) ? window._fbChg[s.sym]
+               : (prices[s.sym] && prices[s.sym].chg !== undefined) ? prices[s.sym].chg : 0;
+    // Fiyat nesnelerini güncelle
+    prices[s.sym]    = { mid:_sp, price:_sp, bid:_sBid, ask:_sAsk, chg:_sChg, prev:_sPrev };
+    mwPrices[s.sym]  = prices[s.sym];
+    if(SIM_PRICES && SIM_PRICES[s.sym]) SIM_PRICES[s.sym].p = _sp;
+    // UI
+    if(typeof updateMwRow === 'function') updateMwRow(s.sym, _sBid, _sPrev);
+    if(s.sym === curSym) {
+      if(typeof lwTickUpdate === 'function') lwTickUpdate();
+      if(typeof updateOrderTicket === 'function') updateOrderTicket(_sBid);
+      if(typeof updateTopSym === 'function') updateTopSym(s.sym, _sBid, _sChg);
+    }
+    if(typeof checkAlarms === 'function') checkAlarms(s.sym, _sBid);
+  });
 }
 
 // ── Firebase prices dinle ─────────────────────────────────────
