@@ -6353,7 +6353,9 @@ function updateUI(sym, price, chg) {
     if(s.priceSource === sym && s.sym !== sym) {
       // Override varsa o fiyatı kullan, yoksa formül — her durumda güncelle
       var _synthFactor = parseFloat(s.priceFactor)||1;
-      var _synthOffset = parseFloat(s.priceOffset)||0;
+      var _synthOffset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                         ? window._synthOffsets[s.sym]
+                         : (parseFloat(s.priceOffset)||0);
       var _sp = price * _synthFactor + _synthOffset;
       var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
       if(mwPrices && mwPrices[s.sym]) {
@@ -7068,7 +7070,9 @@ function txApplyPrice(sym, rawMid) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Override varsa o fiyatı kullan, yoksa formül — her durumda güncellemeye devam et
     var _factor = parseFloat(s.priceFactor)||1;
-    var _offset = parseFloat(s.priceOffset)||0; // symConfig'den gelir, admin günceller
+    var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                  ? window._synthOffsets[s.sym]
+                  : (parseFloat(s.priceOffset)||0);
     var _sp = rawMid * _factor + _offset;
     var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
@@ -7146,6 +7150,20 @@ function txListenPricesChg() {
 }
 
 // ── Firebase overrides dinle ──────────────────────────────────
+function txListenSynthOffsets() {
+  if(typeof db === 'undefined' || !db) return;
+  db.collection('broker').doc('synthOffsets').onSnapshot(function(doc){
+    if(!window._synthOffsets) window._synthOffsets = {};
+    if(doc.exists) {
+      var data = doc.data() || {};
+      Object.keys(data).forEach(function(k){
+        if(k === '_ts') return;
+        window._synthOffsets[k] = parseFloat(data[k])||0;
+      });
+    }
+  }, function(e){ console.warn('[synthOffsets]', e.message); });
+}
+
 function txListenOverrides() {
   if(typeof db === 'undefined' || !db) return;
   if(_txOverUnsub) { try{_txOverUnsub();}catch(e){} }
@@ -7289,6 +7307,7 @@ function startRealFeed() {
   // Firebase - chg badge ve backup
   txListenPricesChg();
   txListenOverrides();
+  txListenSynthOffsets();
   txLoadBrokerInfo();
   // Firebase prices backup olarak dinle
   txListenPrices();
