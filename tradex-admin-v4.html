@@ -3887,7 +3887,7 @@ function adStartTwelvedataFeed() {
   // FastForex REST polling — WebSocket yerine
   if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
   function _ffPoll() {
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfPairs+'&api_key='+_adFfKey)
+    fetch('https://api.fastforex.io/fx/quote?pairs='+encodeURIComponent(_adFfPairs)+'&api_key='+_adFfKey)
       .then(function(r){ return r.json(); })
       .then(function(data){
         if(!data||!data.quotes) return;
@@ -8458,6 +8458,7 @@ setInterval(updateMarginCallPanel, 1000);
 // ─────────────────────────────────────────────────
 
 function loadAllPositionsAndUpdate() {
+  if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
   var c2 = accounts.filter(function(a){ return !a.role || a.role==='customer'; });
   if(!c2.length) { updateReports(); return; }
 
