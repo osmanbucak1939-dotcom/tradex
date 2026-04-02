@@ -7118,6 +7118,23 @@ function txListenOverrides() {
       });
     }
 
+    // Override interval — aktif override'lar için grafik canlı kalsın
+    if(window._txOverrideInterval) { clearInterval(window._txOverrideInterval); window._txOverrideInterval=null; }
+    if(Object.keys(_txAdminOverrides).length > 0) {
+      window._txOverrideInterval = setInterval(function(){
+        Object.keys(_txAdminOverrides).forEach(function(sym){
+          var price = _txAdminOverrides[sym];
+          if(!price || price<=0) return;
+          // prices ve mwPrices güncel tut
+          if(prices[sym]) { prices[sym].price=price; prices[sym].bid=price; prices[sym].ask=price; }
+          if(mwPrices[sym]) { mwPrices[sym].price=price; }
+          // Grafik güncelle
+          if(sym===curSym && typeof lwTickUpdate==='function') lwTickUpdate();
+          if(typeof updatePositions==='function') updatePositions();
+        });
+      }, 1000);
+    }
+
     // Kaldırılan override'lar: bir sonraki prices tick'i doğru fiyatı getirir
     Object.keys(prevOv).forEach(function(sym){
       if(!_txAdminOverrides[sym]) {
