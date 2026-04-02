@@ -3119,7 +3119,7 @@ function lwLoadKlines(sym, interval, cb) {
       return;
     }
     // Forex/emtia/endeks — Twelvedata REST klines
-    lwLoadTwelvedataKlines(sym, interval, cb);
+    lwLoadFastForexKlines(sym, interval, cb);
     return;
   }
 
@@ -3158,45 +3158,50 @@ function lwLoadKlines(sym, interval, cb) {
     });
 }
 
-/* ── Twelvedata REST klines (forex/emtia/endeks) ── */
-function lwLoadTwelvedataKlines(sym, interval, cb) {
-  var tdSym = (typeof TX_TD_MAP !== 'undefined' && TX_TD_MAP[sym]) ? TX_TD_MAP[sym] : null;
-  if(!tdSym) { cb([]); return; }
+/* ── FastForex OHLC klines (forex/emtia/endeks) ── */
+var _FF_KEY = '81e05712b4-8c68c7d36a-tcvv6a';
+// FastForex sembol map — TX_TD_MAP ile aynı format
+var FF_SYM_MAP = {
+  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
+  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
+  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
+  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',
+  'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
+  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD'
+};
+function lwLoadFastForexKlines(sym, interval, cb) {
+  var ffSym = FF_SYM_MAP[sym] || (typeof TX_TD_MAP!=='undefined'&&TX_TD_MAP[sym] ? TX_TD_MAP[sym] : null);
+  if(!ffSym) { cb([]); return; }
 
-  // Twelvedata interval formatı
-  var TD_INT = {'1m':'1min','5m':'5min','15m':'15min','30m':'30min','1h':'1h','4h':'4h','1d':'1day'};
-  var tdInt = TD_INT[interval] || '4h';
+  // FastForex interval: 1m,5m,15m,30m,1h,4h,1d
+  var FF_INT = {'1m':'1m','5m':'5m','15m':'15m','30m':'30m','1h':'1h','4h':'4h','1d':'1d'};
+  var ffInt = FF_INT[interval] || '4h';
 
-  var apiKey = (typeof _txTdKey !== 'undefined') ? _txTdKey : '';
-  if(!apiKey) { cb([]); return; }
+  var url = 'https://api.fastforex.io/fx/ohlc/time-series'
+    + '?pairs=' + encodeURIComponent(ffSym)
+    + '&interval=' + ffInt
+    + '&outputsize=300';
 
-  var url = 'https://api.twelvedata.com/time_series'
-    + '?symbol=' + encodeURIComponent(tdSym)
-    + '&interval=' + tdInt
-    + '&outputsize=300'
-    + '&order=ASC'
-    + '&apikey=' + apiKey;
-
-  fetch(url)
+  fetch(url, { headers: { 'X-API-Key': _FF_KEY } })
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if(!data || data.status === 'error' || !Array.isArray(data.values)) {
-        console.warn('[TD Klines]', sym, data && data.message);
+      // FastForex response: {data: {"EUR/USD": [{datetime, open, high, low, close}, ...]}}
+      if(!data || !data.data || !data.data[ffSym] || !Array.isArray(data.data[ffSym])) {
+        console.warn('[FF Klines]', sym, data && data.message);
         cb([]);
         return;
       }
-      var candles = data.values.map(function(v) {
+      var candles = data.data[ffSym].map(function(v) {
         return {
           time:   Math.floor(new Date(v.datetime).getTime() / 1000),
           open:   parseFloat(v.open),
           high:   parseFloat(v.high),
           low:    parseFloat(v.low),
           close:  parseFloat(v.close),
-          volume: parseFloat(v.volume) || 0
+          volume: 0
         };
       });
       candles.sort(function(a,b){ return a.time - b.time; });
-      // Duplicate temizle
       var uniq = [], lastT = -1;
       candles.forEach(function(c){ if(c.time !== lastT){ uniq.push(c); lastT = c.time; } });
       _klineData = uniq;
@@ -7242,36 +7247,51 @@ Object.keys(TX_TD_MAP).forEach(function(k){ TX_TD_REV[TX_TD_MAP[k]] = k; });
 var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
                   'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
+var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
 function txStartTwelvedataWs() {
+  // FastForex WebSocket — Twelvedata yerine
   if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
-  _txTdWs = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey='+_txTdKey);
+  _txTdWs = new WebSocket('wss://fastforex.wsdx.io');
   window._txTdWs = _txTdWs;
+
   _txTdWs.onopen = function() {
-    var syms = Object.values(TX_TD_MAP);
-    if(typeof symConfig!=='undefined'&&symConfig) {
-      symConfig.forEach(function(s){
-        if(s.tdSymbol&&!TX_TD_REV[s.tdSymbol]){
-          TX_TD_REV[s.tdSymbol]=s.sym; syms.push(s.tdSymbol);
-        }
-      });
-    }
-    _txTdWs.send(JSON.stringify({action:'subscribe',params:{symbols:syms.join(',')}}));
-    console.log('[WS] Twelvedata bağlandı');
+    // Auth gönder
+    _txTdWs.send(JSON.stringify({op:'auth', key:_txFfKey}));
   };
+
   _txTdWs.onmessage = function(e) {
     try {
-      var d=JSON.parse(e.data);
-      if(d.event==='heartbeat'||d.event==='subscribe-status') return;
-      if(d.event!=='price') return;
-      var sym=TX_TD_REV[d.symbol]||d.symbol.replace('/','');
-      var price=parseFloat(d.price);
-      if(sym&&price>0) { window._txTdConnected=true; txApplyPrice(sym,price); }
-    } catch(err){}
+      var d = JSON.parse(e.data);
+      // Auth cevabı → subscribe
+      if(d.op === 'auth' && d.status === 200) {
+        // Tüm forex sembollerini subscribe et (EURUSD formatında)
+        var pairs = Object.keys(TX_TD_MAP); // EURUSD, GBPUSD vb.
+        // symConfig'den ekstra semboller
+        if(typeof symConfig!=='undefined'&&symConfig) {
+          symConfig.forEach(function(s){
+            if(s.priceSource && pairs.indexOf(s.priceSource)<0 && !s.priceSource.endsWith('USDT')) {
+              pairs.push(s.priceSource);
+            }
+          });
+        }
+        _txTdWs.send(JSON.stringify({op:'subscribe', stream:'fx', pairs:pairs}));
+        window._txTdConnected = true;
+        console.log('[FastForex WS] Bağlandı');
+        return;
+      }
+      // Fiyat: {op:'price', pair:'EURUSD', bid:1.0832, ask:1.0834}
+      if(d.op === 'price' && d.pair && d.bid) {
+        var sym = d.pair; // EURUSD formatında — direkt kullan
+        var mid = (parseFloat(d.bid) + parseFloat(d.ask)) / 2;
+        if(sym && mid > 0) { window._txTdConnected=true; txApplyPrice(sym, mid); }
+      }
+    } catch(err) {}
   };
-  _txTdWs.onerror = function(){ console.warn('[WS] TD hata'); };
-  _txTdWs.onclose = function(){
-    _txTdWs=null;
-    if(_txFeedActive) setTimeout(txStartTwelvedataWs,5000);
+
+  _txTdWs.onerror = function() { console.warn('[FastForex WS] Hata'); };
+  _txTdWs.onclose = function() {
+    _txTdWs = null; window._txTdConnected = false;
+    if(_txFeedActive) setTimeout(txStartTwelvedataWs, 5000);
   };
 }
 
