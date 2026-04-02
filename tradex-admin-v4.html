@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TradeX Terminal</title>
+<title>Commerz Terminal Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1706,7 +1706,7 @@ console.log('Firebase bağlandı ✓');
 
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
   <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:40px;width:360px;">
-    <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">TRADEX</div>
+    <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">COMMERZ TERMINAL</div>
     <div style="color:#999999;font-size:11px;margin-bottom:28px;">ADMIN PANEL</div>
     <div style="margin-bottom:14px;"><label style="display:block;font-size:10px;color:#aaaaaa;margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <div style="margin-bottom:20px;"><label style="display:block;font-size:10px;color:#aaaaaa;margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
@@ -1716,7 +1716,7 @@ console.log('Firebase bağlandı ✓');
 </div>
 <div id="adminApp" style="display:none;flex-direction:column;height:100vh;min-width:0;background:var(--bg);">
   <div style="background:#111;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
-    <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">TRADEX</span>
+    <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">COMMERZ TERMINAL</span>
     <span style="color:#d4d4d4;margin:0 10px;">|</span>
     <span style="font-size:11px;color:#999999;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
@@ -2222,11 +2222,11 @@ console.log('Firebase bağlandı ✓');
         <div class="mgr-row cols2" style="margin-bottom:12px">
           <div class="mgr-field">
             <label class="mgr-label">Broker Adı</label>
-            <input class="mgr-input" id="bi_name" type="text" placeholder="TradeX Broker">
+            <input class="mgr-input" id="bi_name" type="text" placeholder="Commerz Terminal Broker">
           </div>
           <div class="mgr-field">
             <label class="mgr-label">Şirket Tam Adı</label>
-            <input class="mgr-input" id="bi_company" type="text" placeholder="TradeX Ltd.">
+            <input class="mgr-input" id="bi_company" type="text" placeholder="Commerz Terminal Ltd.">
           </div>
         </div>
         <div class="mgr-row cols2" style="margin-bottom:12px">
@@ -3378,7 +3378,7 @@ function checkAlarms(sym, price) {
     if (hit) {
       triggered.add(a.id); a.active=false; save(); renderAlarms();
       showToast(`🔔 ${s} ALARM!`, `$${fp(price)} → hedef $${a.target}`);
-      if (Notification.permission==='granted') new Notification(`TradeX: ${s}`,{body:`$${fp(price)}`});
+      if (Notification.permission==='granted') new Notification(`Commerz Terminal: ${s}`,{body:`$${fp(price)}`});
     }
   });
 }
@@ -5431,7 +5431,7 @@ function loadSettingsForm() {
 function saveSettings() {
   settings.startBalance = parseFloat(document.getElementById('st_balance').value) || 10000;
   settings.leverage = parseInt(document.getElementById('st_leverage').value) || 20;
-  settings.title = document.getElementById('st_title').value || 'TradeX Terminal';
+  settings.title = document.getElementById('st_title').value || 'Commerz Terminal';
   settings.currency = document.getElementById('st_currency').value;
   settings.ticker = document.getElementById('st_ticker').checked;
   settings.anim = document.getElementById('st_anim').checked;
@@ -6313,8 +6313,8 @@ settings = JSON.parse(localStorage.getItem('tx_settings') || '{"startBalance":10
 payMethods = JSON.parse(localStorage.getItem('tx_paymethods') || 'null');
 if (!payMethods) {
   payMethods = [
-    { id:'pm1', type:'bank', name:'Ziraat Bankası', icon:'🏦', currency:'TRY', bankName:'Ziraat Bankası A.Ş.', holder:'TradeX Yatırım Ltd.', iban:'TR33 0001 0017 4508 0018 2639 45', min:500, ref:'', note:'Açıklama kısmına hesap numaranızı yazınız.', active:true },
-    { id:'pm2', type:'bank', name:'Garanti BBVA', icon:'🏦', currency:'TRY', bankName:'Garanti BBVA', holder:'TradeX Yatırım Ltd.', iban:'TR06 0006 2000 1470 0006 2993 12', min:500, ref:'', note:'EFT/Havale ile 7/24 yatırım yapabilirsiniz.', active:true },
+    { id:'pm1', type:'bank', name:'Ziraat Bankası', icon:'🏦', currency:'TRY', bankName:'Ziraat Bankası A.Ş.', holder:'Commerz Terminal Yatırım Ltd.', iban:'TR33 0001 0017 4508 0018 2639 45', min:500, ref:'', note:'Açıklama kısmına hesap numaranızı yazınız.', active:true },
+    { id:'pm2', type:'bank', name:'Garanti BBVA', icon:'🏦', currency:'TRY', bankName:'Garanti BBVA', holder:'Commerz Terminal Yatırım Ltd.', iban:'TR06 0006 2000 1470 0006 2993 12', min:500, ref:'', note:'EFT/Havale ile 7/24 yatırım yapabilirsiniz.', active:true },
     { id:'pm3', type:'crypto', name:'USDT TRC20', icon:'₮', currency:'USDT', network:'TRC20', wallet:'TRx8bLQK9mNvJzGfHRp2WXkYqASD45mnZp', min:50, note:'Sadece TRC20 ağından gönderiniz. Farklı ağdan gelen transferler kaybolur.', active:true },
     { id:'pm4', type:'crypto', name:'Bitcoin', icon:'₿', currency:'BTC', network:'BTC', wallet:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', min:0.001, note:'Onay süresi yaklaşık 30-60 dakikadır.', active:true },
   ];
