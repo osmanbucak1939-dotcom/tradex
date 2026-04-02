@@ -1035,6 +1035,13 @@ function applyDailySwap() {
       pos.swapSell = (_sg&&_sg.swaps&&_sg.swaps[pos.sym]!==undefined) ? _sg.swaps[pos.sym].sell : (_sc ? (_sc.swapSell||0) : 0);
       pos.swapTotal = pos.swapTotal || 0;
     }
+    // swapBuy/swapSell yoksa (admin'den açılan pozisyon) spreadGroup'tan doldur
+    if(!pos.swapBuy && !pos.swapSell) {
+      var _sc2 = symConfig ? symConfig.find(function(s){return s.sym===pos.sym;}) : null;
+      var _sg2 = spreadGroups ? spreadGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
+      pos.swapBuy  = (_sg2&&_sg2.swaps&&_sg2.swaps[pos.sym]!==undefined) ? _sg2.swaps[pos.sym].buy  : (_sc2?(_sc2.swapBuy||0):0);
+      pos.swapSell = (_sg2&&_sg2.swaps&&_sg2.swaps[pos.sym]!==undefined) ? _sg2.swaps[pos.sym].sell : (_sc2?(_sc2.swapSell||0):0);
+    }
     var swapRate = pos.side === 'buy' ? (pos.swapBuy || 0) : (pos.swapSell || 0);
     if(swapRate === 0) return;
     var swapAmount = swapRate * pos.qty;
