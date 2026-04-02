@@ -5721,7 +5721,7 @@ function renderPayMethodList() {
         '<td style="font-weight:700">'+m.name+'</td>' +
         '<td style="color:var(--muted)">'+(m.type==='bank'?'Banka':'Kripto')+'</td>' +
         '<td>'+m.currency+'</td>' +
-        '<td style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+(m.type==='bank'?(m.iban||'—').slice(0,20)+'...':(m.wallet||'—').slice(0,16)+'...')+'</td>' +
+        '<td style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+(m.type==='bank'?(m.bankName?'<span style="color:var(--text)">'+m.bankName+'</span><br>':'')+((m.iban||'—').slice(0,20)+'...'):(m.network?'<span style="color:var(--text)">'+m.network+'</span><br>':'')+((m.wallet||'—').slice(0,16)+'...'))+'</td>' +
         '<td style="white-space:nowrap">' +
           '<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px;margin-right:3px" onclick="editPayMethod('+i+')">✎</button>' +
           '<button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="delPayMethod('+i+')">✕</button>' +
