@@ -5236,6 +5236,7 @@ function renderAccCards() { renderAccTable(); }
 function renderAccTable(){
   var container=document.getElementById('accTableContainer');
   if(!container)return;
+  if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
 
   var all=accounts.filter(function(a){
     if(a.role && a.role!=='customer') return false;
