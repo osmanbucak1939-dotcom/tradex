@@ -3731,26 +3731,6 @@ function adApplyOverride(sym, price) {
   updateMwRow(sym,price,prev);
   if(sym===curSym) updateOrderTicket(price);
   if(typeof updatePositions==='function') updatePositions();
-
-  // Override aktifken grafik canlı kalsın — interval ile sürekli güncelle
-  if(!window._adOverrideIntervals) window._adOverrideIntervals = {};
-  if(window._adOverrideIntervals[sym]) clearInterval(window._adOverrideIntervals[sym]);
-  window._adOverrideIntervals[sym] = setInterval(function(){
-    if(!_pcOverrides || !_pcOverrides[sym]) {
-      clearInterval(window._adOverrideIntervals[sym]);
-      delete window._adOverrideIntervals[sym];
-      return;
-    }
-    var _ov = _pcOverrides[sym];
-    _FX.prices[sym] = {mid:_ov,bid:_ov,ask:_ov,spread:0,chg:0,ts:Date.now()};
-    _adPrices[sym]=_ov; prices[sym]={price:_ov,bid:_ov,ask:_ov,chg:0};
-    mwPrices[sym]={price:_ov,prev:_ov,chg:0};
-    updateMwRow(sym,_ov,_ov);
-    if(sym===curSym){
-      if(typeof updateOrderTicket==='function') updateOrderTicket(_ov);
-      if(typeof updatePositions==='function') updatePositions();
-    }
-  }, 1000);
   // _FX writeBuf'a ekle - throttle ile yazılacak
   if(typeof _FX!=='undefined') {
     _FX.writeBuf[sym] = price;
@@ -3904,10 +3884,35 @@ function adListenOverrides() {
       });
     }
     window._pcOverrides = _pcOverrides;
+
+    // Merkezi override interval — tüm aktif override'lar için tek interval
+    if(window._adMasterOverrideInterval) {
+      clearInterval(window._adMasterOverrideInterval);
+      window._adMasterOverrideInterval = null;
+    }
+    if(Object.keys(_pcOverrides).length > 0) {
+      window._adMasterOverrideInterval = setInterval(function(){
+        var _ov = _pcOverrides || {};
+        Object.keys(_ov).forEach(function(sym){
+          var price = _ov[sym];
+          if(!price||price<=0) return;
+          _FX.prices[sym] = {mid:price,bid:price,ask:price,spread:0,chg:0,ts:Date.now()};
+          _adPrices[sym] = price;
+          prices[sym]    = {price:price,bid:price,ask:price,chg:0};
+          mwPrices[sym]  = {price:price,prev:price,chg:0};
+          if(AD_SIM&&AD_SIM[sym]) AD_SIM[sym].p = price;
+          updateMwRow(sym, price, price);
+          if(sym===curSym) {
+            if(typeof updateOrderTicket==='function') updateOrderTicket(price);
+          }
+        });
+        if(typeof updatePositions==='function') updatePositions();
+      }, 1000);
+    }
+
     // Silinen override'lar için feed'i serbest bırak
     prevKeys.forEach(function(sym){
       if(!_pcOverrides[sym]) {
-        // Bu sembol override'dan çıktı — _FX.prices'tan temizle ki feed yeniden başlasın
         delete _FX.prices[sym];
       }
     });
@@ -7542,10 +7547,10 @@ function pcReset() {
   var sym = sel.value;
   delete _pcOverrides[sym];
   window._pcOverrides = _pcOverrides;
-  // Override interval'ı temizle
-  if(window._adOverrideIntervals && window._adOverrideIntervals[sym]) {
-    clearInterval(window._adOverrideIntervals[sym]);
-    delete window._adOverrideIntervals[sym];
+  // Override kalmadıysa master interval'ı durdur
+  if(Object.keys(_pcOverrides).length === 0 && window._adMasterOverrideInterval) {
+    clearInterval(window._adMasterOverrideInterval);
+    window._adMasterOverrideInterval = null;
   }
   if(SIM_PRICES[sym]) {
     var orig = SIM_PRICES[sym]._orig || SIM_PRICES[sym].p;
