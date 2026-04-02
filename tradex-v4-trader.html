@@ -1242,7 +1242,7 @@ function _authSuccess(user) {
 
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
 
-  function _txSetOffline() {
+  window._txSetOffline = function _txSetOffline() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     var _now = new Date().toISOString();
     // users koleksiyonu
@@ -1517,15 +1517,42 @@ function initAuth(){
 
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
-      if(!db) { callback([]); return; }
-      db.collection('broker').doc('accounts').get()
-        .then(function(doc) {
-          if(doc.exists) {
-            try { callback(JSON.parse(doc.data().data||'[]')); }
+      if(!db) {
+        // localStorage fallback
+        try { var ls=JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(ls.length){callback(ls);return;} } catch(e){}
+        callback([]); return;
+      }
+      function _doLoad() {
+        db.collection('broker').doc('accounts').get()
+          .then(function(doc) {
+            if(doc.exists) {
+              try {
+                var d = JSON.parse(doc.data().data||'[]');
+                if(d.length) { localStorage.setItem('tx_accounts',JSON.stringify(d)); callback(d); return; }
+              } catch(e) {}
+            }
+            // Firebase boş geldi — localStorage fallback
+            try { var ls=JSON.parse(localStorage.getItem('tx_accounts')||'[]'); callback(ls); }
             catch(e) { callback([]); }
-          } else { callback([]); }
-        })
-        .catch(function(e){ console.warn('fbLoadAccounts error:', e); callback([]); });
+          })
+          .catch(function(e){
+            console.warn('fbLoadAccounts error:', e.message);
+            // Permissions hatası — localStorage'dan yükle
+            try { var ls=JSON.parse(localStorage.getItem('tx_accounts')||'[]'); callback(ls); }
+            catch(ex) { callback([]); }
+          });
+      }
+      // Auth yoksa önce anonim giriş yap
+      try {
+        var _auth = firebase.auth();
+        if(_auth.currentUser) {
+          _doLoad();
+        } else {
+          _auth.signInAnonymously()
+            .then(function(){ _doLoad(); })
+            .catch(function(){ _doLoad(); }); // auth başarısız olsa da dene
+        }
+      } catch(e) { _doLoad(); }
     }
 
     // Müşteri verilerini Firebase'e kaydet (pozisyonlar, geçmiş)
