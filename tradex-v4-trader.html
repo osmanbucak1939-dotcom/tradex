@@ -6353,9 +6353,9 @@ function updateUI(sym, price, chg) {
     if(s.priceSource === sym && s.sym !== sym) {
       // Override varsa o fiyatı kullan, yoksa formül — her durumda güncelle
       var _synthFactor = parseFloat(s.priceFactor)||1; var _synthOffset = parseFloat(s.priceOffset)||0;
-      var _sp = (window._txAdminOverrides && window._txAdminOverrides[s.sym])
-                ? window._txAdminOverrides[s.sym]
-                : price * _synthFactor + _synthOffset;
+      var _dynOff2 = (window._txAdminOffsets && window._txAdminOffsets[s.sym] !== undefined)
+                     ? window._txAdminOffsets[s.sym] : _synthOffset;
+      var _sp = price * _synthFactor + _dynOff2;
       var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
       if(mwPrices && mwPrices[s.sym]) {
         mwPrices[s.sym].prev  = _prev;
@@ -7069,9 +7069,9 @@ function txApplyPrice(sym, rawMid) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Override varsa o fiyatı kullan, yoksa formül — her durumda güncellemeye devam et
     var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
-    var _sp = (window._txAdminOverrides && window._txAdminOverrides[s.sym])
-              ? window._txAdminOverrides[s.sym]
-              : rawMid * _factor + _offset;
+    var _dynOff = (window._txAdminOffsets && window._txAdminOffsets[s.sym] !== undefined)
+                  ? window._txAdminOffsets[s.sym] : _offset;
+    var _sp = rawMid * _factor + _dynOff;
     var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
     var _sh    = _ss / 2;
@@ -7156,18 +7156,24 @@ function txListenOverrides() {
 
     if(doc.exists) {
       var data = doc.data() || {};
+      if(!window._txAdminOffsets) window._txAdminOffsets = {};
       Object.keys(data).forEach(function(sym){
         if(sym.charAt(0) === '_') return;
         if(!/^[A-Z0-9]{2,12}X?$/.test(sym)) return;
-        var price = parseFloat(data[sym]);
-        if(price > 0) {
-          _txAdminOverrides[sym] = price;
-          // Override fiyatını anında uygula
-          prices[sym]   = { price:price, bid:price, ask:price, chg:0 };
-          mwPrices[sym] = { price:price, prev:(mwPrices[sym]?mwPrices[sym].price:price), chg:0 };
-          if(typeof updateMwRow==='function') updateMwRow(sym, price, price);
-          if(sym===curSym && typeof lwTickUpdate==='function') lwTickUpdate();
-          if(typeof updatePositions==='function') updatePositions();
+        var val = data[sym];
+        // Offset mi yoksa mutlak fiyat mı?
+        if(val && typeof val === 'object' && val.type === 'offset') {
+          window._txAdminOffsets[sym] = parseFloat(val.value)||0;
+        } else {
+          var price = parseFloat(val);
+          if(price > 0) {
+            _txAdminOverrides[sym] = price;
+            prices[sym]   = { price:price, bid:price, ask:price, chg:0 };
+            mwPrices[sym] = { price:price, prev:(mwPrices[sym]?mwPrices[sym].price:price), chg:0 };
+            if(typeof updateMwRow==='function') updateMwRow(sym, price, price);
+            if(sym===curSym && typeof lwTickUpdate==='function') lwTickUpdate();
+            if(typeof updatePositions==='function') updatePositions();
+          }
         }
       });
     }
