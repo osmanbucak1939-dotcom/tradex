@@ -3609,7 +3609,9 @@ function adReceiveRawPrice(sym, rawMid) {
     _synthOnly.forEach(function(s) {
       if(s.priceSource !== sym || s.sym === sym) return;
       var _factor = parseFloat(s.priceFactor)||1;
-      var _offset = parseFloat(s.priceOffset)||0;
+      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                    ? window._synthOffsets[s.sym]
+                    : (parseFloat(s.priceOffset)||0);
       var _sp = rawMid * _factor + _offset;
       var _ss = _adGetSpread(s.sym), _sh = _ss/2;
       var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
@@ -3729,7 +3731,10 @@ function adReceiveRawPrice(sym, rawMid) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
     var _factor = parseFloat(s.priceFactor)||1;
-    var _offset = parseFloat(s.priceOffset)||0; // symConfig'den gelir
+    // _synthOffsets öncelikli, yoksa symConfig.priceOffset
+    var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                  ? window._synthOffsets[s.sym]
+                  : (parseFloat(s.priceOffset)||0);
     var _sp = rawMid * _factor + _offset;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
@@ -7468,13 +7473,14 @@ function pcSetPrice() {
     var _srcPrice = _adPrices[_sc.priceSource] || 0;
     var _factor   = parseFloat(_sc.priceFactor)||1;
     var _newOffset = val - _srcPrice * _factor;
-    // symConfig'i güncelle — normal sentetik akış bunu kullanır
-    symConfig[_scIdx].priceOffset = _newOffset;
-    // localStorage'a kaydet
-    try{localStorage.setItem('tx_syms',JSON.stringify(symConfig));}catch(e){}
-    // Firebase'e kaydet
+    // _synthOffsets: symConfig'den bağımsız, Firebase snapshot'larından etkilenmez
+    if(!window._synthOffsets) window._synthOffsets = {};
+    window._synthOffsets[sym] = _newOffset;
+    // Firebase'e de kaydet (trader okusun)
     if(typeof db!=='undefined'&&db){
-      db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true}).catch(function(){});
+      db.collection('broker').doc('synthOffsets').set(
+        Object.assign({_ts:Date.now()}, window._synthOffsets), {merge:false}
+      ).catch(function(){});
     }
     // Hemen uygula
     var _sp = _srcPrice * _factor + _newOffset;
@@ -7604,6 +7610,13 @@ function pcReset() {
   window._pcOverrides = _pcOverrides;
   // Offset da temizle
   if(window._pcOffsets) delete window._pcOffsets[sym];
+  if(window._synthOffsets) delete window._synthOffsets[sym];
+  // Firebase synthOffsets'tan da sil
+  if(typeof db!=='undefined'&&db&&window._synthOffsets){
+    db.collection('broker').doc('synthOffsets').set(
+      Object.assign({_ts:Date.now()}, window._synthOffsets), {merge:false}
+    ).catch(function(){});
+  }
   // Firebase'den de temizle
   if(typeof db!=='undefined'&&db) {
     db.collection('broker').doc('overrides').update({[sym]: firebase.firestore.FieldValue.delete()}).catch(function(){});
