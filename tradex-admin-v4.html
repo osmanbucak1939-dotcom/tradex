@@ -3692,6 +3692,8 @@ function adReceiveRawPrice(sym, rawMid) {
   var _synthCfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg2.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
+    // Sentetik sembolün kendi override'ı varsa feed'den güncelleme — override korunur
+    if(_pcOverrides && _pcOverrides[s.sym]) return;
     var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
