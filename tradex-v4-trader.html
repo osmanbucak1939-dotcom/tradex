@@ -3574,9 +3574,9 @@ function lwTickUpdate() {
     if(_lw) _lw.timeScale().scrollToRealTime();
   } else {
     // Mevcut mumu güncelle — fiyat aşırı sapıyorsa (override geçişi) mumu sıfırla
-    var _priceDiff = Math.abs(price - last.open) / (last.open || 1);
-    if(_priceDiff > 0.5) {
-      // %50'den fazla sapma — override geçişi, mumu temizle
+    // Fiyat mevcut mumdan %5'ten fazla sapıyorsa mumu sıfırla (override geçişi)
+    var _priceDiff = Math.abs(price - last.close) / (last.close || 1);
+    if(_priceDiff > 0.05) {
       last.open  = +price.toFixed(dec);
       last.high  = +price.toFixed(dec);
       last.low   = +price.toFixed(dec);
@@ -7107,13 +7107,15 @@ function txListenPrices() {
       if(sym.charAt(0) === '_') return; // _ts, _overrides gibi meta key'leri atla
       var price = parseFloat(pd[sym]);
       if(!price || price <= 0) return;
-      // Admin override'ı varsa bu fiyatı kullan (override Firebase'den geliyor)
+      // Sentetik semboller Firebase prices'tan okunmaz — txApplyPrice ile kendi hesaplar
+      var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
+      if(_isSynth) return;
       // WebSocket bağlıysa Firebase fiyatını yoksay
       var _bnOk = window._txBnConnected && window._txBnWs && window._txBnWs.readyState===1;
       var _tdOk = window._txTdConnected && window._txTdWs && window._txTdWs.readyState===1;
       var _isCrypto = sym.endsWith('USDT') || sym.endsWith('BTC');
-      if(_isCrypto && _bnOk) return; // Kripto: BN WS aktif
-      if(!_isCrypto && _tdOk) return; // Forex: TD WS canlı fiyat aktif
+      if(_isCrypto && _bnOk) return;
+      if(!_isCrypto && _tdOk) return;
       txApplyPrice(sym, price);
     });
   }, function(e){ console.warn('[Trader] prices snap err:', e); });
