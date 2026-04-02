@@ -19,13 +19,13 @@ html { touch-action: manipulation; }
 html { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }
 body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-behavior: none; -webkit-overscroll-behavior: none; }
 :root {
-  --bg:       #1a1a1a;
-  --panel:    #222222;
-  --panel2:   #2a2a2a;
-  --border:   #333333;
-  --border2:  #3d3d3d;
-  --text:     #d4d4d4;
-  --muted:    #777777;
+  --bg:       #141414;
+  --panel:    #1e1e1e;
+  --panel2:   #252525;
+  --border:   #2e2e2e;
+  --border2:  #3a3a3a;
+  --text:     #e2e2e2;
+  --muted:    #a0a0a0;
   --buy:      #26a69a;
   --buy-dim:  #1a3d3a;
   --sell:     #ef5350;
@@ -154,7 +154,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* ── TICKER STRIP ── */
 .ticker-strip {
-  background:#1e1e1e; border-bottom:1px solid var(--border);
+  background:#1a1a1a; border-bottom:1px solid var(--border);
   height:24px; overflow:hidden; flex-shrink:0;
 }
 .ticker-inner { display:flex; gap:32px; animation:ticker 35s linear infinite; white-space:nowrap; width:max-content; height:100%; align-items:center; padding:0 16px; }
@@ -317,7 +317,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mgr-overlay.open { display:flex; }
 
 .mgr-panel {
-  background:#1e1e1e; border:1px solid var(--border2);
+  background:#1a1a1a; border:1px solid var(--border2);
   width:900px; max-width:96vw; height:80vh; max-height:700px;
   display:flex; flex-direction:column; border-radius:4px;
   box-shadow:0 24px 64px rgba(0,0,0,.8);
@@ -422,7 +422,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ── İNDİKATÖR TOOLBAR ── */
 .ind-toolbar {
   display:flex; align-items:center; gap:0;
-  background:#1e1e1e; border-bottom:1px solid var(--border);
+  background:#1a1a1a; border-bottom:1px solid var(--border);
   height:28px; flex-shrink:0; overflow-x:auto;
 }
 .ind-toolbar::-webkit-scrollbar { height:0; }
@@ -489,7 +489,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .wallet-overlay.open { display:flex; }
 .wallet-panel {
-  background:#1e1e1e; border:1px solid var(--border2);
+  background:#1a1a1a; border:1px solid var(--border2);
   width:480px; max-width:96vw; max-height:90vh;
   border-radius:4px; box-shadow:0 24px 64px rgba(0,0,0,.8);
   display:flex; flex-direction:column; overflow:hidden;
@@ -590,7 +590,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:flex; align-items:center; justify-content:space-between;
   padding:5px 8px 3px; cursor:pointer; user-select:none;
   border-bottom:1px solid var(--border);
-  position:sticky; top:0; z-index:5; background:#1e1e1e;
+  position:sticky; top:0; z-index:5; background:#1a1a1a;
 }
 .mw-group-title { font-family:var(--mono); font-size:9px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
 .mw-group-arrow { color:var(--muted); transition:transform .2s; display:inline-flex; align-items:center; }
@@ -616,7 +616,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Desktop'ta chg badge gizle */
 #mwBody .mw-chg { display: none !important; }
-.mw-sym-full { font-family:var(--mono); font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mw-sym-full { font-family:var(--mono); font-size:9px; color:#a0a0a0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; transition: color .3s; }
 .mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
@@ -631,7 +631,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   grid-template-columns:24px 1fr 58px 58px 36px;
   padding:3px 8px;
   border-bottom:1px solid var(--border);
-  background:#1a1a1a;
+  background:#181818;
   flex-shrink:0;
 }
 .mw-col-hdr { font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; }
@@ -752,7 +752,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .auth-overlay.open { display:flex; }
 .auth-panel {
   width:420px; max-width:96vw;
-  background:#1a1a1a; border:1px solid #333;
+  background:#181818; border:1px solid #333;
   border-radius:4px; overflow:hidden;
   box-shadow:0 32px 80px rgba(0,0,0,.9);
 }
@@ -792,13 +792,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   letter-spacing:.8px; margin-bottom:5px; display:block;
 }
 .auth-input {
-  width:100%; background:#111; border:1px solid #333;
+  width:100%; background:#181818; border:1px solid #333;
   border-radius:2px; padding:10px 12px;
   color:var(--text); font-family:var(--mono); font-size:12px;
   outline:none; transition:border-color .15s;
 }
 .auth-input:focus { border-color:var(--accent); }
-.auth-input::placeholder { color:#444; }
+.auth-input::placeholder { color:#777; }
 .auth-row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
 .auth-btn {
@@ -813,8 +813,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .auth-divider {
   display:flex; align-items:center; gap:12px; margin:16px 0;
 }
-.auth-divider-line { flex:1; height:1px; background:#2a2a2a; }
-.auth-divider-text { font-family:var(--mono); font-size:10px; color:#444; }
+.auth-divider-line { flex:1; height:1px; background:#222; }
+.auth-divider-text { font-family:var(--mono); font-size:10px; color:#777; }
 
 .auth-note {
   font-family:var(--mono); font-size:10px; color:var(--muted);
@@ -865,7 +865,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .acc-type-opt {
   border:1px solid #333; border-radius:2px; padding:10px;
   cursor:pointer; transition:all .2s; text-align:center;
-  background:#111;
+  background:#181818;
 }
 .acc-type-opt:hover { border-color:var(--accent); }
 .acc-type-opt.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
@@ -882,7 +882,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .apikey-modal.open { display:flex; }
 .apikey-box {
-  background:#1a1a1a; border:1px solid #333;
+  background:#181818; border:1px solid #333;
   border-radius:4px; padding:28px 32px; width:400px; max-width:94vw;
   box-shadow:0 24px 60px rgba(0,0,0,.8);
 }
@@ -895,13 +895,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   margin-bottom:20px; line-height:1.7;
 }
 .apikey-input {
-  width:100%; background:#111; border:1px solid #333;
+  width:100%; background:#181818; border:1px solid #333;
   border-radius:2px; padding:10px 12px; color:var(--text);
   font-family:var(--mono); font-size:12px; outline:none;
   transition:border-color .15s; margin-bottom:10px;
 }
 .apikey-input:focus { border-color:var(--accent); }
-.apikey-input::placeholder { color:#444; }
+.apikey-input::placeholder { color:#777; }
 .apikey-btns { display:flex; gap:8px; margin-top:4px; }
 .apikey-btn {
   flex:1; padding:10px; border:none; border-radius:2px;
@@ -910,7 +910,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .apikey-btn.primary { background:var(--accent); color:#1a1a1a; }
 .apikey-btn.primary:hover { filter:brightness(1.1); }
-.apikey-btn.secondary { background:#222; border:1px solid #333; color:var(--muted); }
+.apikey-btn.secondary { background:#1a1a1a; border:1px solid #333; color:var(--muted); }
 .apikey-link {
   font-family:var(--mono); font-size:10px; color:var(--muted);
   text-align:center; margin-top:12px; line-height:1.8;
@@ -948,7 +948,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }
 .ad-input { background:var(--input); border:1px solid var(--border); color:var(--text); padding:7px 10px; font-family:var(--mono); font-size:12px; width:100%; border-radius:3px; box-sizing:border-box; }
 .ad-label { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:.5px; }
-.ad-card { background:#111; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
+.ad-card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
 .ad-stat-val { font-size:16px; font-weight:700; font-family:var(--mono); }
 .ad-stat-lbl { font-size:10px; color:var(--muted); margin-bottom:4px; font-family:var(--mono); }
 .ad-section-title { font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px; border-bottom:1px solid #222; padding-bottom:6px; }
@@ -956,15 +956,15 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ad-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
 .ad-btn { padding:8px 16px; border-radius:4px; font-family:var(--mono); font-size:11px; cursor:pointer; font-weight:700; }
 .ad-btn-primary  { background:var(--accent); color:#000; border:none; }
-.ad-btn-secondary{ background:#2a2a2a; color:var(--text); border:1px solid #444; }
+.ad-btn-secondary{ background:#222; color:var(--text); border:1px solid #444; }
 .ad-btn-danger   { background:transparent; color:#ef5350; border:1px solid #ef5350; }
 .ad-btn-success  { background:transparent; color:#26a69a; border:1px solid #26a69a; }
 
-.ct-type-btn { background:transparent; border:none; color:#aaaaaa; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
-.ct-type-btn.active { color:#fff; background:#1a1a1a; }
+.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
+.ct-type-btn.active { color:#fff; background:#181818; }
 .ct-type-btn:hover { color:#aaa; }
-.draw-tool-btn { background:transparent; border:none; color:#aaaaaa; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
-.draw-tool-btn.active { color:#f0b90b; background:#1a1a1a; }
+.draw-tool-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
+.draw-tool-btn.active { color:#f0b90b; background:#181818; }
 .draw-tool-btn:hover { color:#aaa; }
 
 
@@ -1673,7 +1673,7 @@ function initAuth(){
         <div class="tb-user-name" id="tbUserName">—</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div class="tb-user-type" id="tbUserType">Demo</div>
-          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:#999999;letter-spacing:.5px"></div>
+          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:#b0b0b0;letter-spacing:.5px"></div>
         </div>
       </div>
       <!-- Dropdown -->
@@ -1724,7 +1724,7 @@ function initAuth(){
           <input id="otSymSearch" type="text" placeholder="Sembol ara..."
             style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box"
             oninput="otSymFilter(this.value)" onfocus="otSymFilter(this.value)" autocomplete="off">
-          <div id="otSymList" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a1a;border:1px solid var(--border2);border-top:none;border-radius:0 0 3px 3px;max-height:180px;overflow-y:auto;z-index:500"></div>
+          <div id="otSymList" style="display:none;position:absolute;top:100%;left:0;right:0;background:#181818;border:1px solid var(--border2);border-top:none;border-radius:0 0 3px 3px;max-height:180px;overflow-y:auto;z-index:500"></div>
         </div>
         <div class="ot-sym" id="otSym">BTC/USDT</div>
         <div class="ot-price-row">
@@ -1953,7 +1953,7 @@ function initAuth(){
       </div>
 
       <!-- ACCOUNT STATUS BAR -->
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:#1e1e1e;overflow-x:auto">
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:#1a1a1a;overflow-x:auto">
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">BAKİYE</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbBalance">$10,000.00</span>
@@ -1990,13 +1990,13 @@ function initAuth(){
           <table class="orders-table">
             <thead><tr>
   <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#26a69a;font-size:9px;">↓</span></th>
-  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Yön</th>
-  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:#444;font-size:9px;">⇅</span></th>
-  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th>
   <th>Swap</th>
-  <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Kapat</th>
 </tr></thead>
             <tbody id="posBody"><tr><td colspan="11" class="empty-msg">Açık pozisyon yok</td></tr></tbody>
@@ -2007,13 +2007,13 @@ function initAuth(){
           <table class="orders-table">
             <thead><tr>
   <th onclick="sortHist('time')" style="cursor:pointer;user-select:none">Zaman <span id="hsort-time" style="color:#26a69a;font-size:9px;">↓</span></th>
-  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none">Sembol <span id="hsort-sym" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none">Sembol <span id="hsort-sym" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Yön</th>
-  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none">Miktar <span id="hsort-qty" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none">Miktar <span id="hsort-qty" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Açılış</th><th>Kapanış</th>
-  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none">K/Z $ <span id="hsort-pnl" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none">K/Z $ <span id="hsort-pnl" style="color:#777;font-size:9px;">⇅</span></th>
   <th>Swap</th>
-  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none">Sebep <span id="hsort-reason" style="color:#444;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none">Sebep <span id="hsort-reason" style="color:#777;font-size:9px;">⇅</span></th>
 </tr></thead>
             <tbody id="histBody"><tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr></tbody>
           </table>
@@ -2031,7 +2031,7 @@ function initAuth(){
 
         <!-- FİNANS GEÇMİŞİ -->
         <div class="bp-section" id="bp-finans" style="padding:0;">
-          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#999999;padding:16px;">Yükleniyor...</div>
+          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#b0b0b0;padding:16px;">Yükleniyor...</div>
         </div>
       </div>
     </div>
@@ -2044,15 +2044,15 @@ function initAuth(){
      KAYIT / GİRİŞ OVERLAY
 ══════════════════════════════════════════ -->
 <div id="authOverlay" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-<div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;width:380px;max-width:95vw;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.9)">
+<div style="background:#181818;border:1px solid #333;border-radius:4px;width:380px;max-width:95vw;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.9)">
   
   <!-- Tabs -->
   <div style="padding:24px 28px 0">
     <div style="font-family:monospace;font-size:18px;font-weight:700;color:#f0b90b;letter-spacing:3px;text-align:center;margin-bottom:4px">COMMERZ TERMINAL</div>
-    <div style="font-family:monospace;font-size:10px;color:#aaaaaa;text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
+    <div style="font-family:monospace;font-size:10px;color:#c0c0c0;text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2a2a2a">
       <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer">GİRİŞ YAP</div>
-      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#999999;border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
+      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#b0b0b0;border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
     </div>
   </div>
 
@@ -2060,16 +2060,16 @@ function initAuth(){
   <div id="sec-login" style="padding:20px 28px 24px">
     <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">LOGIN NO / E-POSTA</div>
-      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">LOGIN NO / E-POSTA</div>
+      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">ŞİFRE</div>
-      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">ŞİFRE</div>
+      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">GİRİŞ YAP</button>
-    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:#1e1e1e;color:#888;border:1px solid #333;border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
-    <div style="font-family:monospace;font-size:10px;color:#999999;text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
+    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:#1a1a1a;color:#a0a0a0;border:1px solid #333;border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
+    <div style="font-family:monospace;font-size:10px;color:#b0b0b0;text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
   </div>
 
   <!-- Kayıt -->
@@ -2078,30 +2078,30 @@ function initAuth(){
     <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">AD</div>
-        <input id="inp-name" placeholder="Adınız" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">AD</div>
+        <input id="inp-name" placeholder="Adınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">SOYAD</div>
-        <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">SOYAD</div>
+        <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">TELEFON</div>
-      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">TELEFON</div>
+      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">E-POSTA</div>
-      <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">E-POSTA</div>
+      <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">ŞİFRE</div>
-        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">ŞİFRE</div>
+        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#aaaaaa;margin-bottom:4px">TEKRAR</div>
-        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:#111;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">TEKRAR</div>
+        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
@@ -2109,13 +2109,13 @@ function initAuth(){
         <div style="font-size:16px">🎮</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">DEMO</div>
         <div style="font-family:monospace;font-size:9px;color:#aaaaaa">$10,000 sanal</div>
       </div>
-      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #333;background:#111;border-radius:2px;padding:10px;text-align:center;cursor:pointer">
+      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #333;background:#181818;border-radius:2px;padding:10px;text-align:center;cursor:pointer">
         <div style="font-size:16px">💼</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">GERÇEK</div>
         <div style="font-family:monospace;font-size:9px;color:#aaaaaa">Canlı hesap</div>
       </div>
     </div>
     <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">HESAP OLUŞTUR</button>
-    <div style="font-family:monospace;font-size:10px;color:#999999;text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
+    <div style="font-family:monospace;font-size:10px;color:#b0b0b0;text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
   </div>
 
 </div>
@@ -2196,7 +2196,7 @@ function initAuth(){
     <!-- İŞLEM GEÇMİŞİ -->
     <div class="wallet-section" id="ws-history" style="overflow-y:auto;max-height:400px;">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;">FİNANS GEÇMİŞİ</div>
-      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:#999999;">Yükleniyor...</div>
+      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:#b0b0b0;">Yükleniyor...</div>
     </div>
 
   </div>
@@ -3208,8 +3208,8 @@ function startCandleWs(sym, interval) {
         var msg = document.createElement('div');
         msg.className = 'no-chart-msg';
         msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;';
-        msg.innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:#555;">Grafik verisi bekleniyor</div>'
-          + '<div style="font-family:var(--mono);font-size:10px;color:#444;">Twelvedata API bağlantısı gerekli</div>';
+        msg.innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:#a8a8a8;">Grafik verisi bekleniyor</div>'
+          + '<div style="font-family:var(--mono);font-size:10px;color:#777;">Twelvedata API bağlantısı gerekli</div>';
         wrap.appendChild(msg);
       }
       return;
@@ -4334,7 +4334,7 @@ function renderHistory() {
   }
 
   var _reasonMap = {
-    'manuel':   '<span style="color:#888;font-size:10px">Manuel</span>',
+    'manuel':   '<span style="color:#a0a0a0;font-size:10px">Manuel</span>',
     'stop_out': '<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>',
     'sl':       '<span style="color:#ef5350;font-size:10px">Stop Loss</span>',
     'tp':       '<span style="color:#26a69a;font-size:10px">Take Profit</span>',
@@ -4359,7 +4359,7 @@ function renderHistory() {
     var cls  = pnl >= 0 ? 'up' : 'down';
     var pnlColor = pnl >= 0 ? '#26a69a' : '#ef5350';
     var r    = h.closeReason || 'manuel';
-    var rl   = _reasonMap[r] || ('<span style="color:#888;font-size:10px">' + r + '</span>');
+    var rl   = _reasonMap[r] || ('<span style="color:#a0a0a0;font-size:10px">' + r + '</span>');
     var pnlStyle = _histSortCol === 'pnl' ? 'font-weight:700;' : '';
     return '<tr>'
       + '<td style="color:' + (_histSortCol==='time'?'#aaa':'var(--muted)') + ';font-size:10px;white-space:nowrap">' + (h.closeTime ? fmtDate(h.closeTime) : '—') + '</td>'
@@ -4566,7 +4566,7 @@ function _renderBpFinansTable(el) {
   var rows = '';
   var log = (typeof finlog !== 'undefined' && Array.isArray(finlog)) ? finlog : [];
   if(!log.length) {
-    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#444;font-size:11px;">Henüz finansal işlem yok</td></tr>';
+    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#777;font-size:11px;">Henüz finansal işlem yok</td></tr>';
   } else {
     var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
     sorted.forEach(function(l) {
@@ -4574,19 +4574,19 @@ function _renderBpFinansTable(el) {
       var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : (l.type==='swap' ? (rawAmt>=0?'+':'-') : '-');
       var color = cl[l.type]||'#888';
       rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-        + '<td style="padding:6px 12px;color:#999999;font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+        + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:11px;">' + (tp[l.type]||l.type) + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:12px;text-align:right;">' + sign + '$' + Math.abs(rawAmt).toFixed(2) + '</td>'
-        + '<td style="padding:6px 12px;color:#999999;font-size:10px;">' + (l.note||'—') + '</td>'
+        + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (l.note||'—') + '</td>'
         + '</tr>';
     });
   }
   el.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
-    + '<thead><tr style="background:#111;position:sticky;top:0;z-index:1;">'
-    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
-    + '<th style="padding:7px 12px;text-align:right;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#999999;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
+    + '<thead><tr style="background:#181818;position:sticky;top:0;z-index:1;">'
+    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
+    + '<th style="padding:7px 12px;text-align:right;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
@@ -5334,11 +5334,11 @@ function adRenderTab(tab) {
       '<div style="margin-top:20px;">' +
         '<div class="ad-section-title">İşlem Geçmişi</div>' +
         '<table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;">' +
-        '<thead><tr style="background:#111;">' +
-          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Tarih</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Tip</th>' +
-          '<th style="padding:6px 10px;text-align:right;color:#aaaaaa;border-bottom:1px solid #222;">Miktar</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#aaaaaa;border-bottom:1px solid #222;">Not</th>' +
+        '<thead><tr style="background:#181818;">' +
+          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Tarih</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Tip</th>' +
+          '<th style="padding:6px 10px;text-align:right;color:#c0c0c0;border-bottom:1px solid #222;">Miktar</th>' +
+          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Not</th>' +
         '</tr></thead>' +
         '<tbody>' +
         (finlog.length ? finlog.map(function(l){
@@ -5346,12 +5346,12 @@ function adRenderTab(tab) {
           var cl = {deposit:"#26a69a",withdraw:"#ef5350",bonus_in:"#f5c518",bonus_out:"#f5a623"};
           var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
           return '<tr style="border-bottom:1px solid #1a1a1a;">'
-            +'<td style="padding:5px 10px;color:#aaaaaa;">'+fmtDate(l.date)+'</td>'
+            +'<td style="padding:5px 10px;color:#c0c0c0;">'+fmtDate(l.date)+'</td>'
             +'<td style="padding:5px 10px;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+(tp[l.type]||l.type)+'</td>'
             +'<td style="padding:5px 10px;text-align:right;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+ sign +'$'+ parseFloat(l.amount||0).toFixed(2) +'</td>'
-            +'<td style="padding:5px 10px;color:#999999;">'+( l.note||'—')+'</td>'
+            +'<td style="padding:5px 10px;color:#b0b0b0;">'+( l.note||'—')+'</td>'
             +'</tr>';
-        }).join('') : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#444;">Kayıt yok</td></tr>') +
+        }).join('') : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#777;">Kayıt yok</td></tr>') +
         '</tbody></table></div>';
 
   } else if(tab === 'trades') {
@@ -5361,7 +5361,7 @@ function adRenderTab(tab) {
         '<span style="font-family:var(--mono);font-size:12px;font-weight:700;">Açık Pozisyonlar</span>' +
         '<button class="ad-btn ad-btn-success" onclick="document.getElementById(\'adMTF\').style.display=\'block\'">+ Manuel İşlem Aç</button>' +
       '</div>' +
-      '<div id="adMTF" style="display:none;background:#111;border:1px solid #333;border-radius:6px;padding:14px;margin-bottom:14px;">' +
+      '<div id="adMTF" style="display:none;background:#181818;border:1px solid #333;border-radius:6px;padding:14px;margin-bottom:14px;">' +
         '<div class="ad-section-title" style="margin-top:0;">Manuel İşlem</div>' +
         '<div class="ad-grid3" style="margin-bottom:10px;">' +
           '<div><label class="ad-label">Sembol</label><select class="ad-input" id="ad_tsym">'+symopts+'</select></div>' +
@@ -5923,27 +5923,27 @@ function renderWalletHistory() {
     var cl = {deposit:'#26a69a',withdraw:'#ef5350',bonus_in:'#f5c518',bonus_out:'#f5a623'};
     var rows = '';
     if(!log || !log.length) {
-      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#444;font-family:var(--mono);font-size:11px;">Henüz işlem yok</td></tr>';
+      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#777;font-family:var(--mono);font-size:11px;">Henüz işlem yok</td></tr>';
     } else {
       var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
       sorted.forEach(function(l) {
         var sign  = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
         var color = cl[l.type]||'#888';
         rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#aaaaaa;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#c0c0c0;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:'+color+';font-weight:700;">' + (tp[l.type]||l.type) + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:12px;color:'+color+';font-weight:700;text-align:right;">' + sign + '$' + parseFloat(l.amount||0).toFixed(2) + '</td>'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#999999;">' + (l.note||'—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#b0b0b0;">' + (l.note||'—') + '</td>'
           + '</tr>';
       });
     }
     el.innerHTML = '<div style="padding:4px 0;">'
       + '<table style="width:100%;border-collapse:collapse;">'
-      + '<thead><tr style="background:#111;">'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">TARİH</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">TİP</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#aaaaaa;text-align:left;border-bottom:1px solid #222;">NOT</th>'
+      + '<thead><tr style="background:#181818;">'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">TARİH</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">TİP</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">NOT</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -5951,7 +5951,7 @@ function renderWalletHistory() {
 
   // Taze veri Firebase'den çek
   if(_cu && _cu.id && typeof fbLoadUserData === 'function') {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#999999;font-size:11px;">Yükleniyor...</div>';
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#b0b0b0;font-size:11px;">Yükleniyor...</div>';
     fbLoadUserData(_cu.id, function(data) {
       if(data && Array.isArray(data.finlog)) finlog = data.finlog;
       _doRender(finlog || []);
@@ -7188,12 +7188,12 @@ function _txRenderBrokerInfo(d) {
     } else if(f.link) {
       valHtml = '<a href="'+f.link+val+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
     } else if(f.small) {
-      valHtml = '<span style="color:#999999;font-size:9px;line-height:1.4">'+val+'</span>';
+      valHtml = '<span style="color:#b0b0b0;font-size:9px;line-height:1.4">'+val+'</span>';
     } else {
       valHtml = '<span style="color:#ccc">'+val+'</span>';
     }
     return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a;gap:8px">'
-      +'<div style="font-family:monospace;font-size:10px;color:#999999;flex-shrink:0">'+f.label+'</div>'
+      +'<div style="font-family:monospace;font-size:10px;color:#b0b0b0;flex-shrink:0">'+f.label+'</div>'
       +'<div style="font-family:monospace;font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
       +'</div>';
   }).join('');
@@ -7496,7 +7496,7 @@ function sgRender() {
   if(!_syms.length && typeof symConfig !== 'undefined' && symConfig) { _syms = symConfig; }
 
   if(!_syms.length) {
-    tb.innerHTML = '<tr><td colspan="6" style="color:#888;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Yükleniyor...</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Yükleniyor...</td></tr>';
     setTimeout(sgRender, 300);
     return;
   }
@@ -7513,14 +7513,14 @@ function sgRender() {
     var star = gs!=='' || swb!=='' || sws!=='';
     html += '<tr style="'+(star?'background:rgba(240,185,11,0.04)':'')+'">'
       +'<td style="font-family:monospace;font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
-      +'<td style="font-size:11px;color:#aaaaaa;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
-      +'<td style="font-family:monospace;color:#aaaaaa;">'+ds+'</td>'
+      +'<td style="font-size:11px;color:#c0c0c0;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
+      +'<td style="font-family:monospace;color:#c0c0c0;">'+ds+'</td>'
       +'<td><input class="mgr-input" id="sgs_'+s.sym+'" type="number" step="any" value="'+gs+'" placeholder="'+ds+'" style="width:120px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgb_'+s.sym+'" type="number" step="any" value="'+swb+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgsl_'+s.sym+'" type="number" step="any" value="'+sws+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'</tr>';
   }
-  tb.innerHTML = html || '<tr><td colspan="6" style="color:#888;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Aktif sembol yok</td></tr>';
+  tb.innerHTML = html || '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Aktif sembol yok</td></tr>';
 }
 
 
@@ -7833,7 +7833,7 @@ function pcRenderOverrides() {
   for(var i=0; i<keys.length; i++) {
     var sym = keys[i];
     var p   = _pcOverrides[sym];
-    html += '<div style="background:#1a1a1a;border:1px solid var(--accent);border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;">'
+    html += '<div style="background:#181818;border:1px solid var(--accent);border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;">'
       +'<span style="color:var(--accent);font-weight:700;">'+sym+'</span>'
       +'<span>'+p+'</span>'
       +'<button onclick="delete _pcOverrides[\''+sym+'\']; pcRenderOverrides();" style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:14px;line-height:1;">×</button>'
@@ -7893,7 +7893,7 @@ function symSearchFilter(q){
   dd.innerHTML='';
   if(!filtered.length){
     var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#999999;font-family:monospace;font-size:11px;';
+    empty.style.cssText='padding:16px;text-align:center;color:#b0b0b0;font-family:monospace;font-size:11px;';
     empty.textContent='Sembol bulunamadi';
     dd.appendChild(empty);
     dd.style.display='block'; return;
@@ -7907,9 +7907,9 @@ function symSearchFilter(q){
     var chgCol=p?(p.chg>=0?'#26a69a':'#ef5350'):'#888';
     var row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#d4d4d4;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#999999;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
+    row.innerHTML='<div><span style="font-weight:700;color:#e2e2e2;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#b0b0b0;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
       +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="color:#888;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
+      +'<span style="color:#a0a0a0;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
       +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
       +'<span class="sym-pin-star" style="color:'+(isPinned?'#f0b90b':'#444')+';font-size:16px;cursor:pointer;">&#9733;</span>'
       +'</div>';
@@ -8008,15 +8008,15 @@ function adChangePassword() {
     </div>
     <div style="margin-bottom:12px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">MEVCUT ŞİFRE</div>
-      <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:#111;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
+      <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">YENİ ŞİFRE</div>
-      <input id="pwNew" type="password" placeholder="••••••••" style="width:100%;background:#111;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
+      <input id="pwNew" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:20px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">YENİ ŞİFRE (TEKRAR)</div>
-      <input id="pwConfirm" type="password" placeholder="••••••••" style="width:100%;background:#111;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
+      <input id="pwConfirm" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div id="pwError" style="display:none;color:var(--sell);font-size:11px;font-family:var(--mono);margin-bottom:10px"></div>
     <button onclick="submitPwChange()" style="width:100%;padding:11px;background:var(--accent);color:#1a1a1a;border:none;border-radius:3px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">ŞİFREYİ GÜNCELLE</button>
@@ -8033,13 +8033,13 @@ function adChangePassword() {
 "></div>
 
 <div id="accDetailOverlay" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
-  <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;width:1200px;max-width:98vw;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="background:#181818;border:1px solid #333;border-radius:8px;width:1200px;max-width:98vw;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #2a2a2a;flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:12px;">
         <span id="adOnlineDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;"></span>
         <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);" id="adAccId">—</span>
         <span style="font-size:14px;font-weight:700;" id="adName">—</span>
-        <span style="font-family:var(--mono);font-size:10px;background:#2a2a2a;padding:2px 8px;border-radius:3px;color:#aaa;" id="adType">—</span>
+        <span style="font-family:var(--mono);font-size:10px;background:#222;padding:2px 8px;border-radius:3px;color:#aaa;" id="adType">—</span>
         <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;" id="adStatus">—</span>
       </div>
       <button onclick="closeAccDetail()" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;line-height:1;">✕</button>
@@ -8400,7 +8400,7 @@ function adChangePassword() {
     font-family: monospace;
     font-size: 8px;
     font-weight: 700;
-    color: #888;
+    color: #a0a0a0;
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 20px;
@@ -8464,7 +8464,7 @@ function adChangePassword() {
     gap: 3px;
   }
   .m-side:active { background: #111; }
-  .m-slbl { font-family: monospace; font-size: 9px; color: #888; letter-spacing: 1px; }
+  .m-slbl { font-family: monospace; font-size: 9px; color: #a0a0a0; letter-spacing: 1px; }
   .m-sprc { font-family: monospace; font-size: 28px; font-weight: 700; }
   .m-side.sell .m-sprc { color: #ef5350; }
   .m-side.buy  .m-sprc { color: #26a69a; }
@@ -8497,13 +8497,13 @@ function adChangePassword() {
   .m-pr {
     padding: 5px 13px; border-radius: 20px;
     border: 1px solid #2a2a2a; background: #111;
-    color: #888; font-family: monospace; font-size: 11px;
+    color: #a0a0a0; font-family: monospace; font-size: 11px;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .m-pr.on { border-color: #26a69a; color: #26a69a; background: #0a1a16; }
   .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
-  .m-il { font-family: monospace; font-size: 9px; color: #888; letter-spacing: .5px; }
+  .m-il { font-family: monospace; font-size: 9px; color: #a0a0a0; letter-spacing: .5px; }
   .m-in {
     background: #111; border: 1px solid #2a2a2a;
     border-radius: 6px; color: #ddd;
@@ -8536,7 +8536,7 @@ function adChangePassword() {
   .m-tab {
     flex: 1; padding: 10px; text-align: center;
     font-family: monospace; font-size: 11px; font-weight: 700;
-    color: #888; background: none; border: none;
+    color: #a0a0a0; background: none; border: none;
     border-bottom: 2px solid transparent; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -8606,7 +8606,7 @@ function adChangePassword() {
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
   <div style="padding:10px 12px;flex-shrink:0;position:relative">
-    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:#111;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
+    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:#181818;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
     <span style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center"><svg style="width:15px;height:15px;opacity:.5;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
   </div>
   <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid #1a1a1a;">
@@ -8624,7 +8624,7 @@ function adChangePassword() {
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
     <input id="mOtSymSearch" type="text" placeholder="Sembol ara..."
-      style="width:100%;padding:9px 14px;background:#111;border:1px solid #1e1e1e;border-radius:8px;color:#ddd;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
+      style="width:100%;padding:9px 14px;background:#181818;border:1px solid #1e1e1e;border-radius:8px;color:#ddd;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
       oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
     <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:#141414;border:1px solid #2a2a2a;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
   </div>
@@ -8641,7 +8641,7 @@ function adChangePassword() {
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:#aaaaaa;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="font-family:monospace;font-size:9px;color:#c0c0c0;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -8658,7 +8658,7 @@ function adChangePassword() {
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:#aaaaaa;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div style="font-family:monospace;font-size:9px;color:#c0c0c0;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -8686,7 +8686,7 @@ function adChangePassword() {
   position:fixed;
   bottom:62px; left:0; right:0;
   height:52px;
-  background:#111;
+  background:#181818;
   border-top:1px solid #1a1a1a;
   z-index:7500;
   display:none;
@@ -8700,20 +8700,20 @@ function adChangePassword() {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#aaaaaa;letter-spacing:.5px;pointer-events:none">SAT</span>
+    <span style="font-size:9px;color:#c0c0c0;letter-spacing:.5px;pointer-events:none">SAT</span>
     <span id="mqBid" style="pointer-events:none">—</span>
   </button>
   <div style="
     width:110px; flex-shrink:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:2px; background:#0a0a0a;
+    gap:2px; background:#151515;
     border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a;
   ">
-    <div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:.5px">LOT</div>
+    <div style="font-family:monospace;font-size:8px;color:#a0a0a0;letter-spacing:.5px">LOT</div>
     <div style="display:flex;align-items:center;gap:6px">
-      <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
-      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc;min-width:34px;text-align:center;display:inline-block">0.01</span>
-      <button onclick="mQLA(1)" style="width:26px;height:26px;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
+      <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:#a0a0a0;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
+      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ddd;min-width:34px;text-align:center;display:inline-block">0.01</span>
+      <button onclick="mQLA(1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:#a0a0a0;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
     </div>
   </div>
   <button onclick="mQOrd('buy')" style="
@@ -8723,7 +8723,7 @@ function adChangePassword() {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#aaaaaa;letter-spacing:.5px;pointer-events:none">AL</span>
+    <span style="font-size:9px;color:#c0c0c0;letter-spacing:.5px;pointer-events:none">AL</span>
     <span id="mqAsk" style="pointer-events:none">—</span>
   </button>
 </div>
@@ -8731,7 +8731,7 @@ function adChangePassword() {
 <div id="mPanPos" class="m-pan">
   <!-- Açık K/Z büyük -->
   <div style="padding:18px 16px 12px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:10px;color:#888;letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div style="font-family:monospace;font-size:10px;color:#a0a0a0;letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
     <div id="mPSPnl" style="font-family:monospace;font-size:28px;font-weight:700;color:#26a69a">—</div>
   </div>
 
@@ -8781,7 +8781,7 @@ function adChangePassword() {
 
   <!-- Açık K/Z - büyük göster -->
   <div style="padding:10px 16px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:9px;color:#888;letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div style="font-family:monospace;font-size:9px;color:#a0a0a0;letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
     <div id="mSPnl" style="font-family:monospace;font-size:22px;font-weight:700;color:#26a69a">—</div>
   </div>
 
@@ -9693,36 +9693,36 @@ function adChangePassword() {
 
 <!-- MOBİL POZİSYON DETAY MODAL -->
 <div id="mPosModal" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)mPosModalClose()">
-  <div style="width:100%;background:#111;border-radius:12px 12px 0 0;border-top:1px solid #222;max-height:65vh;display:flex;flex-direction:column;margin-bottom:62px">
+  <div style="width:100%;background:#181818;border-radius:12px 12px 0 0;border-top:1px solid #222;max-height:65vh;display:flex;flex-direction:column;margin-bottom:62px">
     <!-- Header kompakt -->
     <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
       <div style="flex:1">
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:#e0e0e0" id="mPMSym">—</div>
-        <div style="font-family:monospace;font-size:9px;color:#aaaaaa;margin-top:1px" id="mPMType">—</div>
+        <div style="font-family:monospace;font-size:9px;color:#c0c0c0;margin-top:1px" id="mPMType">—</div>
       </div>
       <div style="text-align:right;margin-right:12px">
         <div style="font-family:monospace;font-size:16px;font-weight:700" id="mPMPnl">—</div>
         <div style="font-family:monospace;font-size:9px;color:#aaaaaa" id="mPMCur">—</div>
       </div>
-      <button onclick="mPosModalClose()" style="background:#1a1a1a;border:none;color:#aaaaaa;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
+      <button onclick="mPosModalClose()" style="background:#181818;border:none;color:#c0c0c0;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
     </div>
     <!-- Detaylar kompakt -->
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#1a1a1a;margin:8px;border-radius:6px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#181818;margin:8px;border-radius:6px;overflow:hidden">
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Açılış</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Açılış</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMOpen">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCurPrice">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Lot</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Lot</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMLot">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Swap</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Swap</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMSwap">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
@@ -9734,11 +9734,11 @@ function adChangePassword() {
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#26a69a" id="mPMTP">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Teminat</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Teminat</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCost">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#999999;margin-bottom:2px">Saat</div>
+          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Saat</div>
           <div style="font-family:monospace;font-size:9px;font-weight:700;color:#ccc" id="mPMTime">—</div>
         </div>
       </div>
