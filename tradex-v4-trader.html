@@ -6295,8 +6295,38 @@ function updateUI(sym, price, chg) {
     mwPrices[sym].chg   = chg;
     updateMwRow(sym, price, mwPrices[sym].prev);
   }
+  if(typeof prices !== 'undefined' && prices[sym]) {
+    prices[sym].price = price;
+    prices[sym].bid   = price;
+    prices[sym].ask   = price;
+    prices[sym].chg   = chg;
+  }
   updateTopSym(sym, price, chg);
   checkPendingOrders(sym, price);
+
+  // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
+  var _sc = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
+  _sc.forEach(function(s) {
+    if(s.priceSource === sym && s.sym !== sym) {
+      var _sp = s.priceFactor ? price * parseFloat(s.priceFactor) : price;
+      var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
+      if(mwPrices && mwPrices[s.sym]) {
+        mwPrices[s.sym].prev  = _prev;
+        mwPrices[s.sym].price = _sp;
+        mwPrices[s.sym].chg   = chg;
+      } else if(mwPrices) {
+        mwPrices[s.sym] = {price:_sp, prev:_prev, chg:chg};
+      }
+      if(prices && prices[s.sym]) {
+        prices[s.sym].price = _sp;
+        prices[s.sym].bid   = _sp;
+        prices[s.sym].ask   = _sp;
+        prices[s.sym].chg   = chg;
+      }
+      updateMwRow(s.sym, _sp, _prev);
+      checkPendingOrders(s.sym, _sp);
+    }
+  });
 }
 
 function updateMwRow(sym, price, prev) {
