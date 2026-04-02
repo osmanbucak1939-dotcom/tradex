@@ -3586,7 +3586,7 @@ function adGetPrice(sym, side) {
 // ── Ham fiyat işleme — tek giriş noktası ─────────────────────
 function adReceiveRawPrice(sym, rawMid) {
   if(!sym || !rawMid || rawMid<=0) return;
-  if(_pcOverrides && _pcOverrides[sym]) return; // override aktifse feed'i engelle
+  if(window._pcOverrides && window._pcOverrides[sym]) return; // override aktifse feed'i engelle
   var spread = _adGetSpread(sym);
   var half   = spread/2;
   var bid    = rawMid - half;
@@ -3693,7 +3693,7 @@ function adReceiveRawPrice(sym, rawMid) {
   _synthCfg2.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Sentetik sembolün kendi override'ı varsa feed'den güncelleme — override korunur
-    if(_pcOverrides && _pcOverrides[s.sym]) return;
+    if(window._pcOverrides && window._pcOverrides[s.sym]) return;
     var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
@@ -3866,24 +3866,22 @@ function adStartRealFeed() {
 function adListenOverrides() {
   if(typeof db==='undefined'||!db) return;
   db.collection('broker').doc('overrides').onSnapshot(function(doc){
-    // Her snapshot'ta _pcOverrides'ı sıfırdan kur (silinmiş override'lar temizlensin)
-    var prevKeys = Object.keys(_pcOverrides);
-    _pcOverrides = {};
+    // window._pcOverrides üzerinde çalış — referans kaybolmasın
+    var prevKeys = Object.keys(window._pcOverrides||{});
+    window._pcOverrides = {};
+    _pcOverrides = window._pcOverrides; // aynı referans
     if(doc.exists) {
       var data = doc.data() || {};
       Object.keys(data).forEach(function(sym){
-        // _ts, _overrides gibi meta key'leri atla — sadece gerçek semboller
         if(sym.charAt(0)==='_') return;
-        // Sembol formatı kontrol: harf/rakam içermeli, makul uzunlukta
         if(!/^[A-Z0-9]{2,12}X?$/.test(sym)) return;
         var price = parseFloat(data[sym]);
         if(price > 0) {
-          _pcOverrides[sym] = price;
+          window._pcOverrides[sym] = price;
           adApplyOverride(sym, price);
         }
       });
     }
-    window._pcOverrides = _pcOverrides;
 
     // Merkezi override interval — tüm aktif override'lar için tek interval
     if(window._adMasterOverrideInterval) {
@@ -3892,7 +3890,9 @@ function adListenOverrides() {
     }
     if(Object.keys(_pcOverrides).length > 0) {
       window._adMasterOverrideInterval = setInterval(function(){
-        var _ov = _pcOverrides || {};
+        // window._pcOverrides kullan — closure eski referansı tutmasın
+        var _ov = window._pcOverrides || {};
+        if(!Object.keys(_ov).length) return;
         Object.keys(_ov).forEach(function(sym){
           var price = _ov[sym];
           if(!price||price<=0) return;
@@ -7431,7 +7431,7 @@ function pcSetPrice() {
   if(!sym || !val || val <= 0) { showAdminToast && showAdminToast('Hata', 'Geçerli fiyat girin!', 'danger'); return; }
   // SADECE bu sembolü güncelle
   _adPrices[sym] = val;
-  _pcOverrides[sym] = val;
+  window._pcOverrides[sym] = val;
   window._pcOverrides = _pcOverrides;
   if(AD_SIM[sym]) AD_SIM[sym].p = val;
   if(typeof mwPrices!=='undefined') {
@@ -7448,7 +7448,7 @@ function pcSetPrice() {
 
 function pcApplyPrice(sym, price) {
   if(!sym || !price || price <= 0) return;
-  _pcOverrides[sym] = price;
+  window._pcOverrides[sym] = price;
   var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : price;
   var baseP = (SIM_PRICES && SIM_PRICES[sym]) ? SIM_PRICES[sym].p : price;
   var chg = baseP ? (price - baseP) / baseP * 100 : 0;
@@ -7526,7 +7526,7 @@ function pcMove(pct) {
   var newP = parseFloat((cur*(1+pct/100)).toFixed(dec));
   // SADECE bu sembolü güncelle - priceSource'a dokunma
   _adPrices[sym] = newP;
-  _pcOverrides[sym] = newP;
+  window._pcOverrides[sym] = newP;
   window._pcOverrides = _pcOverrides;
   if(AD_SIM[sym]) AD_SIM[sym].p = newP;
   // Market Watch güncelle
@@ -7589,7 +7589,7 @@ function pcGradual() {
     step++;
     var newP = parseFloat((start + stepSize * step).toFixed(_dec));
     // Override güncelle
-    _pcOverrides[sym] = newP;
+    window._pcOverrides[sym] = newP;
     window._pcOverrides = _pcOverrides;
     _adPrices[sym] = newP;
     if(AD_SIM[sym]) AD_SIM[sym].p = newP;
