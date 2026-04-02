@@ -3691,8 +3691,9 @@ function adReceiveRawPrice(sym, rawMid) {
       });
     }
   }
-  // Firebase'e toplu yaz
-  _FX.writeBuf[sym] = rawMid;
+  // Firebase'e toplu yaz — sentetik semboller yazılmaz (trader kendi hesaplar)
+  var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
+  if(!_isSynth) _FX.writeBuf[sym] = rawMid;
   if(!_FX.writeTimer) {
     _FX.writeTimer = setTimeout(function(){
       if(typeof db==='undefined'||!db){_FX.writeBuf={};_FX.writeTimer=null;return;}
