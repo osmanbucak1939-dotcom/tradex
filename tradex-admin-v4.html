@@ -7480,32 +7480,48 @@ function pcSetPrice() {
   if(!sym || !val || val <= 0) { showAdminToast && showAdminToast('Hata', 'Geçerli fiyat girin!', 'danger'); return; }
 
   // Sentetik sembol mü? (priceSource var)
-  var _sc = (typeof symConfig!=='undefined'&&symConfig) ? symConfig.find(function(s){return s.sym===sym;}) : null;
-  if(_sc && _sc.priceSource) {
-    // Sentetik: hedef fiyat - kaynak fiyat = offset olarak kaydet
-    var _srcPrice = _adPrices[_sc.priceSource] || 0;
-    var _offset = val - _srcPrice * (parseFloat(_sc.priceFactor)||1);
-    if(!window._pcOffsets) window._pcOffsets = {};
-    window._pcOffsets[sym] = _offset;
-    // Firebase'e offset olarak kaydet
-    if(typeof db!=='undefined'&&db) {
-      db.collection('broker').doc('overrides').set({[sym]: {type:'offset', value:_offset}}, {merge:true}).catch(function(){});
+  var _scIdx = -1;
+  var _sc = null;
+  if(typeof symConfig!=='undefined'&&symConfig) {
+    for(var _i=0;_i<symConfig.length;_i++){
+      if(symConfig[_i].sym===sym){_sc=symConfig[_i];_scIdx=_i;break;}
     }
-    showAdminToast && showAdminToast('Offset Ayarlandı ✓', sym + ' hedef: ' + val + ' (offset: ' + (_offset>0?'+':'')+_offset.toFixed(2) + ')', 'success');
+  }
+
+  if(_sc && _sc.priceSource) {
+    // Sentetik: hedef fiyat = kaynak × factor + offset → offset = hedef - kaynak × factor
+    var _srcPrice = _adPrices[_sc.priceSource] || 0;
+    var _factor   = parseFloat(_sc.priceFactor)||1;
+    var _newOffset = val - _srcPrice * _factor;
+    // symConfig'i güncelle — normal sentetik akış bunu kullanır
+    symConfig[_scIdx].priceOffset = _newOffset;
+    // localStorage'a kaydet
+    try{localStorage.setItem('tx_syms',JSON.stringify(symConfig));}catch(e){}
+    // Firebase'e kaydet
+    if(typeof db!=='undefined'&&db){
+      db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true}).catch(function(){});
+    }
+    // Hemen uygula
+    var _sp = _srcPrice * _factor + _newOffset;
+    var _ss = _adGetSpread(sym), _sh=_ss/2;
+    var _prev = (_FX.prices[sym]&&_FX.prices[sym].mid)||_sp;
+    var _obj = {mid:_sp,price:_sp,bid:_sp-_sh,ask:_sp+_sh,spread:_ss,chg:0,prev:_prev,ts:Date.now()};
+    _FX.prices[sym]=_obj; prices[sym]=_obj; mwPrices[sym]=_obj; _adPrices[sym]=_sp;
+    if(AD_SIM&&AD_SIM[sym]) AD_SIM[sym].p=_sp;
+    if(typeof updateMwRow==='function') updateMwRow(sym,_sp-_sh,_prev);
+    showAdminToast && showAdminToast('Offset Ayarlandı ✓', sym+' → '+val.toFixed(2)+' (offset: '+(_newOffset>=0?'+':'')+_newOffset.toFixed(2)+')', 'success');
   } else {
-    // Normal sembol: mutlak fiyat
+    // Normal sembol: mutlak fiyat override
     _adPrices[sym] = val;
     window._pcOverrides[sym] = val;
     if(AD_SIM[sym]) AD_SIM[sym].p = val;
-    if(typeof mwPrices!=='undefined') {
-      var prev = mwPrices[sym] ? mwPrices[sym].price : val;
-      mwPrices[sym] = {price:val, prev:prev, chg:(val-prev)/prev*100};
-    }
-    if(typeof updateMwRow==='function') updateMwRow(sym, val, prev||val);
-    fbSavePrices(sym, val);
-    showAdminToast && showAdminToast('Fiyat Ayarlandı ✓', sym + ' → ' + val, 'success');
+    var prev2 = (mwPrices[sym]&&mwPrices[sym].price)||val;
+    if(typeof mwPrices!=='undefined') mwPrices[sym]={price:val,prev:prev2,chg:(val-prev2)/(prev2||1)*100};
+    if(typeof updateMwRow==='function') updateMwRow(sym,val,prev2);
+    fbSavePrices(sym,val);
+    showAdminToast && showAdminToast('Fiyat Ayarlandı ✓', sym+' → '+val, 'success');
   }
-  inp.value = '';
+  inp.value='';
   pcRefresh();
   pcRenderOverrides();
 }
@@ -7687,23 +7703,35 @@ function pcStopGradual() {
 function pcRenderOverrides() {
   var el = document.getElementById('pc_override_list');
   if(!el) return;
-  var keys = Object.keys(_pcOverrides).filter(function(k){
+  var keys = Object.keys(_pcOverrides||{}).filter(function(k){
     return k.charAt(0)!=='_' && /^[A-Z0-9]{2,12}X?$/.test(k);
   });
-  if(!keys.length) {
+  // Offset'li sentetik sembolleri de göster
+  var offKeys = [];
+  if(typeof symConfig!=='undefined'&&symConfig){
+    symConfig.forEach(function(s){
+      if(s.priceSource && s.priceOffset!==undefined && s.priceOffset!==0 && keys.indexOf(s.sym)<0){
+        offKeys.push(s.sym);
+      }
+    });
+  }
+  var allKeys = keys.concat(offKeys);
+  if(!allKeys.length) {
     el.innerHTML = '<span style="color:#b0b0b0;font-size:11px;">Henüz override yok</span>';
     return;
   }
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
-  for(var i=0; i<keys.length; i++) {
-    var sym = keys[i];
-    var p   = _pcOverrides[sym];
-    html += '<div style="background:#181818;border:1px solid #f0b90b55;border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;">'
-      +'<span style="color:#f0b90b;font-weight:700;">'+sym+'</span>'
+  allKeys.forEach(function(sym){
+    var isOffset = offKeys.indexOf(sym)>=0;
+    var p = isOffset
+      ? ((_adPrices[sym]||0).toFixed(2)+' <span style="opacity:.6;font-size:9px;">(offset)</span>')
+      : _pcOverrides[sym];
+    html += '<div style="background:#181818;border:1px solid '+(isOffset?'#26a69a55':'#f0b90b55')+';border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;">'
+      +'<span style="color:'+(isOffset?'#26a69a':'#f0b90b')+';font-weight:700;">'+sym+'</span>'
       +'<span style="color:#e2e2e2;">'+p+'</span>'
       +'<button onclick="pcClearOverride(this.dataset.sym)" data-sym="'+sym+'" style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:14px;line-height:1;padding:0;" title="Sıfırla">×</button>'
       +'</div>';
-  }
+  });
   html += '</div>';
   el.innerHTML = html;
 }
@@ -7711,7 +7739,19 @@ function pcRenderOverrides() {
 function pcClearOverride(sym) {
   delete _pcOverrides[sym];
   window._pcOverrides = _pcOverrides;
-  if(typeof _FX!=='undefined') delete _FX.prices[sym];
+  if(window._pcOffsets) delete window._pcOffsets[sym];
+  // Sentetik sembol ise priceOffset'i sıfırla
+  if(typeof symConfig!=='undefined'&&symConfig){
+    var _idx = -1;
+    for(var _i=0;_i<symConfig.length;_i++){if(symConfig[_i].sym===sym){_idx=_i;break;}}
+    if(_idx>=0 && symConfig[_idx].priceSource){
+      symConfig[_idx].priceOffset = 0;
+      try{localStorage.setItem('tx_syms',JSON.stringify(symConfig));}catch(e){}
+      if(typeof db!=='undefined'&&db){
+        db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true}).catch(function(){});
+      }
+    }
+  }
   if(typeof fbClearOverride==='function') fbClearOverride(sym);
   pcRenderOverrides();
   if(typeof showAdminToast==='function') showAdminToast('Override Sıfırlandı', sym+' — gerçek piyasa fiyatı devam ediyor', 'info');
