@@ -6341,10 +6341,11 @@ function updateUI(sym, price, chg) {
   var _sc = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _sc.forEach(function(s) {
     if(s.priceSource === sym && s.sym !== sym) {
-      // Override varsa feed'den güncelleme yapma
-      if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
-      if(window._pcOverrides && window._pcOverrides[s.sym]) return;
-      var _synthFactor = parseFloat(s.priceFactor)||1; var _synthOffset = parseFloat(s.priceOffset)||0; var _sp = price * _synthFactor + _synthOffset;
+      // Override varsa o fiyatı kullan, yoksa formül — her durumda güncelle
+      var _synthFactor = parseFloat(s.priceFactor)||1; var _synthOffset = parseFloat(s.priceOffset)||0;
+      var _sp = (window._txAdminOverrides && window._txAdminOverrides[s.sym])
+                ? window._txAdminOverrides[s.sym]
+                : price * _synthFactor + _synthOffset;
       var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
       if(mwPrices && mwPrices[s.sym]) {
         mwPrices[s.sym].prev  = _prev;
@@ -7047,10 +7048,11 @@ function txApplyPrice(sym, rawMid) {
   var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
-    // Sentetik sembolün override'ı varsa feed'den güncelleme yapma
-    if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
-    if(window._pcOverrides && window._pcOverrides[s.sym]) return;
-    var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0; var _sp = rawMid * _factor + _offset;
+    // Override varsa o fiyatı kullan, yoksa formül — her durumda güncellemeye devam et
+    var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
+    var _sp = (window._txAdminOverrides && window._txAdminOverrides[s.sym])
+              ? window._txAdminOverrides[s.sym]
+              : rawMid * _factor + _offset;
     var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
     var _sh    = _ss / 2;
