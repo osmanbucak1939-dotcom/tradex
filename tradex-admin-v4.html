@@ -9748,11 +9748,16 @@ function adOpenTrade(btn){
   }
   // Açılışta bakiyeyi düş (trader mantığıyla aynı)
   a.balance = (parseFloat(a.balance)||0) - cost;
+  // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
+  var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
+  var _swapSg = (typeof spreadGroups!=='undefined'&&spreadGroups)?spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
+  var _swBuy  = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].buy  :(_swapSc?(_swapSc.swapBuy||0):0);
+  var _swSell = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].sell :(_swapSc?(_swapSc.swapSell||0):0);
   _adPositions.push({
     id:Date.now(), sym:sym, label:label, side:side, qty:qty,
     contractSize:cs, openPrice:price, sl:sl, tp:tp,
     time:new Date().toISOString(), openDate:new Date().toISOString(),
-    cost:cost, swapTotal:0
+    cost:cost, swapTotal:0, swapBuy:_swBuy, swapSell:_swSell
   });
   a.positions = _adPositions;
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
