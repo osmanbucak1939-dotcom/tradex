@@ -3881,38 +3881,29 @@ function adStartBinanceFeed() {
 
 // ── Twelvedata WebSocket ──────────────────────────────────────
 var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
+var _adFfPairs = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,XAUUSD,XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
+var _adFfTimer = null;
 function adStartTwelvedataFeed() {
-  // FastForex WebSocket — Twelvedata yerine
-  if(_adTdWs){try{_adTdWs.close();}catch(e){}}
-  _adTdWs = new WebSocket('wss://fastforex.wsdx.io');
-  _adTdWs.onopen = function() {
-    // 1) Auth
-    _adTdWs.send(JSON.stringify({op:'auth', key:_adFfKey}));
-  };
-  _adTdWs.onmessage = function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      // Auth cevabı gelince subscribe et
-      if(d.op === 'auth' && d.status === 200) {
-        var pairs = Object.keys(AD_TD_MAP); // EURUSD, GBPUSD vb.
-        _adTdWs.send(JSON.stringify({op:'subscribe', stream:'fx', pairs:pairs}));
+  // FastForex REST polling — WebSocket yerine
+  if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
+  function _ffPoll() {
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfPairs+'&api_key='+_adFfKey)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(!data||!data.quotes) return;
         _adTdOk = true;
-        console.log('[FastForex WS] Bağlandı, subscribe edildi');
-        return;
-      }
-      // Fiyat mesajı: {op:'price', pair:'EURUSD', bid:1.0832, ask:1.0834, ...}
-      if(d.op === 'price' && d.pair && d.bid) {
-        var sym = d.pair; // Zaten EURUSD formatında
-        var mid = (parseFloat(d.bid) + parseFloat(d.ask)) / 2;
-        if(sym && mid > 0) adReceiveRawPrice(sym, mid);
-      }
-    } catch(er) {}
-  };
-  _adTdWs.onerror = function() { _adTdOk = false; };
-  _adTdWs.onclose = function() {
-    _adTdOk = false;
-    if(_adFeedOn) setTimeout(adStartTwelvedataFeed, 8000);
-  };
+        Object.keys(data.quotes).forEach(function(sym){
+          var q = data.quotes[sym];
+          if(!q) return;
+          var mid = (parseFloat(q.bid)+parseFloat(q.ask))/2;
+          if(sym && mid>0) adReceiveRawPrice(sym, mid);
+        });
+      })
+      .catch(function(e){ console.warn('[FastForex]', e.message); _adTdOk=false; });
+  }
+  _ffPoll(); // hemen bir kez çağır
+  _adFfTimer = setInterval(_ffPoll, 2000); // her 2 saniyede
+  _adTdOk = true;
 }
 
 // ── Feed başlat ───────────────────────────────────────────────
