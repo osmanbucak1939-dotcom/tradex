@@ -3095,6 +3095,29 @@ function lwLoadKlines(sym, interval, cb) {
                    'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'].indexOf(sym) > -1;
 
   if(!isCrypto) {
+    // Sentetik sembol mü? priceSource varsa kaynak sembolün verisini dönüştür
+    var _sc = (typeof symConfig !== 'undefined' && symConfig) ? symConfig.find(function(s){ return s.sym===sym; }) : null;
+    if(_sc && _sc.priceSource) {
+      var _srcSym = _sc.priceSource;
+      var _factor = parseFloat(_sc.priceFactor)||1;
+      var _offset = parseFloat(_sc.priceOffset)||0;
+      // Kaynak sembolün kline verisini çek, fiyatları dönüştür
+      lwLoadKlines(_srcSym, interval, function(srcCandles) {
+        if(!srcCandles || !srcCandles.length) { cb([]); return; }
+        var converted = srcCandles.map(function(c) {
+          return {
+            time:   c.time,
+            open:   +(c.open  * _factor + _offset).toFixed(_sc.decimals||2),
+            high:   +(c.high  * _factor + _offset).toFixed(_sc.decimals||2),
+            low:    +(c.low   * _factor + _offset).toFixed(_sc.decimals||2),
+            close:  +(c.close * _factor + _offset).toFixed(_sc.decimals||2),
+            volume: c.volume
+          };
+        });
+        cb(converted);
+      });
+      return;
+    }
     // Forex/emtia/endeks — Twelvedata REST klines
     lwLoadTwelvedataKlines(sym, interval, cb);
     return;
@@ -6321,7 +6344,7 @@ function updateUI(sym, price, chg) {
       // Override varsa feed'den güncelleme yapma
       if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
       if(window._pcOverrides && window._pcOverrides[s.sym]) return;
-      var _sp = s.priceFactor ? price * parseFloat(s.priceFactor) : price;
+      var _synthFactor = parseFloat(s.priceFactor)||1; var _synthOffset = parseFloat(s.priceOffset)||0; var _sp = price * _synthFactor + _synthOffset;
       var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
       if(mwPrices && mwPrices[s.sym]) {
         mwPrices[s.sym].prev  = _prev;
@@ -7027,7 +7050,7 @@ function txApplyPrice(sym, rawMid) {
     // Sentetik sembolün override'ı varsa feed'den güncelleme yapma
     if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
     if(window._pcOverrides && window._pcOverrides[s.sym]) return;
-    var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
+    var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0; var _sp = rawMid * _factor + _offset;
     var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
     var _sh    = _ss / 2;
