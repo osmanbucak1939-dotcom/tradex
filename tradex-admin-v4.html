@@ -7420,9 +7420,36 @@ function pcApplyPrice(sym, price) {
   if(typeof pcRenderOverrides === 'function') pcRenderOverrides();
   if(typeof pcRefresh === 'function') pcRefresh();
   fbSavePrices(sym, price);
+  // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
   var _syms2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _syms2.forEach(function(s) {
-    if(s.priceSource === sym && s.sym !== sym) { _adPrices[s.sym] = price; }
+    if(s.priceSource === sym && s.sym !== sym) {
+      // priceFactor varsa uygula
+      var _synthPrice = s.priceFactor ? price * parseFloat(s.priceFactor) : price;
+      var _synthPrev  = (prices[s.sym] && prices[s.sym].price) ? prices[s.sym].price : _synthPrice;
+      var _synthSpread = _adGetSpread(s.sym);
+      var _synthChg   = window._adDayOpen && window._adDayOpen[s.sym]
+        ? (_synthPrice - window._adDayOpen[s.sym]) / window._adDayOpen[s.sym] * 100 : 0;
+      if(!window._adDayOpen) window._adDayOpen = {};
+      if(!window._adDayOpen[s.sym]) window._adDayOpen[s.sym] = _synthPrice;
+
+      var _synthObj = {
+        mid: _synthPrice, price: _synthPrice,
+        bid: _synthPrice - _synthSpread/2,
+        ask: _synthPrice + _synthSpread/2,
+        spread: _synthSpread, chg: _synthChg, prev: _synthPrev, ts: Date.now()
+      };
+      _adPrices[s.sym]    = _synthPrice;
+      _FX.prices[s.sym]   = _synthObj;
+      _FX.raw[s.sym]      = _synthPrice;
+      prices[s.sym]       = _synthObj;
+      mwPrices[s.sym]     = _synthObj;
+      if(AD_SIM && AD_SIM[s.sym])      AD_SIM[s.sym].p      = _synthPrice;
+      if(SIM_PRICES && SIM_PRICES[s.sym]) SIM_PRICES[s.sym].p = _synthPrice;
+      // UI güncelle
+      if(typeof updateMwRow === 'function') updateMwRow(s.sym, _synthObj.bid, _synthPrev);
+      if(s.sym === curSym && typeof updateOrderTicket === 'function') updateOrderTicket(_synthObj.bid);
+    }
   });
 }
 
