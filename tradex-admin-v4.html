@@ -3609,9 +3609,9 @@ function adReceiveRawPrice(sym, rawMid) {
     _synthOnly.forEach(function(s) {
       if(s.priceSource !== sym || s.sym === sym) return;
       var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
-      var _sp = (window._pcOverrides && window._pcOverrides[s.sym])
-                ? window._pcOverrides[s.sym]
-                : rawMid * _factor + _offset;
+      var _dynOffset2 = (window._pcOffsets && window._pcOffsets[s.sym] !== undefined)
+                        ? window._pcOffsets[s.sym] : _offset;
+      var _sp = rawMid * _factor + _dynOffset2;
       var _ss = _adGetSpread(s.sym), _sh = _ss/2;
       var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
       var _sObj = {mid:_sp,price:_sp,bid:_sp-_sh,ask:_sp+_sh,spread:_ss,chg:0,prev:_sPrev,ts:Date.now()};
@@ -3729,9 +3729,10 @@ function adReceiveRawPrice(sym, rawMid) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
     var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
-    var _sp = (window._pcOverrides && window._pcOverrides[s.sym])
-              ? window._pcOverrides[s.sym]          // override sabit fiyat
-              : rawMid * _factor + _offset;           // normal sentetik formül
+    // _pcOffsets: admin'in set ettiği offset (hedef fiyat - kaynak fiyat)
+    var _dynOffset = (window._pcOffsets && window._pcOffsets[s.sym] !== undefined)
+                     ? window._pcOffsets[s.sym] : _offset;
+    var _sp = rawMid * _factor + _dynOffset;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -3907,15 +3908,22 @@ function adListenOverrides() {
     var prevKeys = Object.keys(window._pcOverrides||{});
     window._pcOverrides = {};
     _pcOverrides = window._pcOverrides; // aynı referans
+    if(!window._pcOffsets) window._pcOffsets = {};
     if(doc.exists) {
       var data = doc.data() || {};
       Object.keys(data).forEach(function(sym){
         if(sym.charAt(0)==='_') return;
         if(!/^[A-Z0-9]{2,12}X?$/.test(sym)) return;
-        var price = parseFloat(data[sym]);
-        if(price > 0) {
-          window._pcOverrides[sym] = price;
-          adApplyOverride(sym, price);
+        var val = data[sym];
+        // Offset tipi mi yoksa mutlak fiyat mı?
+        if(val && typeof val === 'object' && val.type === 'offset') {
+          window._pcOffsets[sym] = parseFloat(val.value)||0;
+        } else {
+          var price = parseFloat(val);
+          if(price > 0) {
+            window._pcOverrides[sym] = price;
+            adApplyOverride(sym, price);
+          }
         }
       });
     }
@@ -7470,21 +7478,36 @@ function pcSetPrice() {
   var sym = sel.value;
   var val = parseFloat(inp.value);
   if(!sym || !val || val <= 0) { showAdminToast && showAdminToast('Hata', 'Geçerli fiyat girin!', 'danger'); return; }
-  // SADECE bu sembolü güncelle
-  _adPrices[sym] = val;
-  window._pcOverrides[sym] = val;
-  window._pcOverrides = _pcOverrides;
-  if(AD_SIM[sym]) AD_SIM[sym].p = val;
-  if(typeof mwPrices!=='undefined') {
-    var prev = mwPrices[sym] ? mwPrices[sym].price : val;
-    mwPrices[sym] = {price:val, prev:prev, chg:(val-prev)/prev*100};
+
+  // Sentetik sembol mü? (priceSource var)
+  var _sc = (typeof symConfig!=='undefined'&&symConfig) ? symConfig.find(function(s){return s.sym===sym;}) : null;
+  if(_sc && _sc.priceSource) {
+    // Sentetik: hedef fiyat - kaynak fiyat = offset olarak kaydet
+    var _srcPrice = _adPrices[_sc.priceSource] || 0;
+    var _offset = val - _srcPrice * (parseFloat(_sc.priceFactor)||1);
+    if(!window._pcOffsets) window._pcOffsets = {};
+    window._pcOffsets[sym] = _offset;
+    // Firebase'e offset olarak kaydet
+    if(typeof db!=='undefined'&&db) {
+      db.collection('broker').doc('overrides').set({[sym]: {type:'offset', value:_offset}}, {merge:true}).catch(function(){});
+    }
+    showAdminToast && showAdminToast('Offset Ayarlandı ✓', sym + ' hedef: ' + val + ' (offset: ' + (_offset>0?'+':'')+_offset.toFixed(2) + ')', 'success');
+  } else {
+    // Normal sembol: mutlak fiyat
+    _adPrices[sym] = val;
+    window._pcOverrides[sym] = val;
+    if(AD_SIM[sym]) AD_SIM[sym].p = val;
+    if(typeof mwPrices!=='undefined') {
+      var prev = mwPrices[sym] ? mwPrices[sym].price : val;
+      mwPrices[sym] = {price:val, prev:prev, chg:(val-prev)/prev*100};
+    }
+    if(typeof updateMwRow==='function') updateMwRow(sym, val, prev||val);
+    fbSavePrices(sym, val);
+    showAdminToast && showAdminToast('Fiyat Ayarlandı ✓', sym + ' → ' + val, 'success');
   }
-  if(typeof updateMwRow==='function') updateMwRow(sym, val, prev||val);
   inp.value = '';
   pcRefresh();
   pcRenderOverrides();
-  fbSavePrices(sym, val);
-  showAdminToast && showAdminToast('Fiyat Ayarlandı ✓', sym + ' → ' + val, 'success');
 }
 
 function pcApplyPrice(sym, price) {
@@ -7588,6 +7611,12 @@ function pcReset() {
   var sym = sel.value;
   delete _pcOverrides[sym];
   window._pcOverrides = _pcOverrides;
+  // Offset da temizle
+  if(window._pcOffsets) delete window._pcOffsets[sym];
+  // Firebase'den de temizle
+  if(typeof db!=='undefined'&&db) {
+    db.collection('broker').doc('overrides').update({[sym]: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  }
   // Override kalmadıysa master interval'ı durdur
   if(Object.keys(_pcOverrides).length === 0 && window._adMasterOverrideInterval) {
     clearInterval(window._adMasterOverrideInterval);
