@@ -6308,6 +6308,9 @@ function updateUI(sym, price, chg) {
   var _sc = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _sc.forEach(function(s) {
     if(s.priceSource === sym && s.sym !== sym) {
+      // Override varsa feed'den güncelleme yapma
+      if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
+      if(window._pcOverrides && window._pcOverrides[s.sym]) return;
       var _sp = s.priceFactor ? price * parseFloat(s.priceFactor) : price;
       var _prev = (mwPrices && mwPrices[s.sym]) ? mwPrices[s.sym].price : _sp;
       if(mwPrices && mwPrices[s.sym]) {
@@ -7011,6 +7014,9 @@ function txApplyPrice(sym, rawMid) {
   var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
+    // Sentetik sembolün override'ı varsa feed'den güncelleme yapma
+    if(window._txAdminOverrides && window._txAdminOverrides[s.sym]) return;
+    if(window._pcOverrides && window._pcOverrides[s.sym]) return;
     var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
     var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
