@@ -3189,7 +3189,13 @@ function lwLoadTwelvedataKlines(sym, interval, cb) {
 function startCandleWs(sym, interval) {
   var lbl = document.getElementById('ctSym');
   if(lbl) lbl.textContent = sym + ' ⟳';
+  // Timer ve eski veriyi temizle — sembol değişince eski grafik kalmasın
   if(window._lwLiveTimer) { clearInterval(window._lwLiveTimer); window._lwLiveTimer=null; }
+  _klineData = [];
+  if(_lwSeries) { try { _lwSeries.setData([]); } catch(e){} }
+  // Eski "veri yok" mesajını kaldır
+  var _oldMsg = document.querySelector('#lwChart .no-chart-msg');
+  if(_oldMsg) _oldMsg.remove();
 
   // LW henüz yüklü değilse: isteği kaydet, CDN gelince otomatik başlar
   if(typeof LightweightCharts === 'undefined') {
@@ -3200,11 +3206,15 @@ function startCandleWs(sym, interval) {
 
   lwLoadKlines(sym, interval, function(candles) {
     if(!candles || !candles.length) {
-      // Twelvedata API bağlı değil veya veri gelmedi
+      // Veri yok — önce grafiği ve eski veriyi temizle
+      _klineData = [];
+      if(_lwSeries) { try { _lwSeries.setData([]); } catch(e){} }
       if(lbl) lbl.textContent = sym + ' — grafik verisi yok';
       // Grafik alanına bilgi mesajı göster
       var wrap = document.getElementById('lwChart');
-      if(wrap && !wrap.querySelector('.no-chart-msg')) {
+      var oldMsg2 = wrap ? wrap.querySelector('.no-chart-msg') : null;
+      if(oldMsg2) oldMsg2.remove();
+      if(wrap) {
         var msg = document.createElement('div');
         msg.className = 'no-chart-msg';
         msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;';
