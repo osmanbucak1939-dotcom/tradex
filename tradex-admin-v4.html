@@ -3687,6 +3687,34 @@ function adReceiveRawPrice(sym, rawMid) {
      document.getElementById('accDetailOverlay').style.display!=='none') {
     if(typeof updateAccount==='function') updateAccount();
   }
+
+  // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
+  var _synthCfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
+  _synthCfg2.forEach(function(s) {
+    if(s.priceSource !== sym || s.sym === sym) return;
+    var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
+    var _ss    = _adGetSpread(s.sym);
+    var _sh    = _ss / 2;
+    var _sBid  = _sp - _sh;
+    var _sAsk  = _sp + _sh;
+    var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
+    var _sDayOpen = window._adDayOpen && window._adDayOpen[s.sym];
+    var _sChg  = _sDayOpen ? (_sp - _sDayOpen) / _sDayOpen * 100 : 0;
+    if(!window._adDayOpen) window._adDayOpen = {};
+    if(!window._adDayOpen[s.sym]) window._adDayOpen[s.sym] = _sp;
+    var _sObj  = { mid:_sp, price:_sp, bid:_sBid, ask:_sAsk, spread:_ss, chg:_sChg, prev:_sPrev, ts:Date.now() };
+    _FX.prices[s.sym] = _sObj;
+    _FX.raw[s.sym]    = _sp;
+    prices[s.sym]     = _sObj;
+    mwPrices[s.sym]   = _sObj;
+    _adPrices[s.sym]  = _sp;
+    if(AD_SIM && AD_SIM[s.sym])      AD_SIM[s.sym].p      = _sp;
+    if(SIM_PRICES && SIM_PRICES[s.sym]) SIM_PRICES[s.sym].p = _sp;
+    if(typeof updateMwRow === 'function') updateMwRow(s.sym, _sBid, _sPrev);
+    if(s.sym === curSym) {
+      if(typeof updateOrderTicket === 'function') updateOrderTicket(_sBid);
+    }
+  });
 }
 
 // Override fiyatı uygula
