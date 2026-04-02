@@ -7248,51 +7248,29 @@ var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
                   'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
+var _txFfPairs = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,XAUUSD,XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
+var _txFfTimer = null;
 function txStartTwelvedataWs() {
-  // FastForex WebSocket — Twelvedata yerine
-  if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
-  _txTdWs = new WebSocket('wss://fastforex.wsdx.io');
-  window._txTdWs = _txTdWs;
-
-  _txTdWs.onopen = function() {
-    // Auth gönder
-    _txTdWs.send(JSON.stringify({op:'auth', key:_txFfKey}));
-  };
-
-  _txTdWs.onmessage = function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      // Auth cevabı → subscribe
-      if(d.op === 'auth' && d.status === 200) {
-        // Tüm forex sembollerini subscribe et (EURUSD formatında)
-        var pairs = Object.keys(TX_TD_MAP); // EURUSD, GBPUSD vb.
-        // symConfig'den ekstra semboller
-        if(typeof symConfig!=='undefined'&&symConfig) {
-          symConfig.forEach(function(s){
-            if(s.priceSource && pairs.indexOf(s.priceSource)<0 && !s.priceSource.endsWith('USDT')) {
-              pairs.push(s.priceSource);
-            }
-          });
-        }
-        _txTdWs.send(JSON.stringify({op:'subscribe', stream:'fx', pairs:pairs}));
+  // FastForex REST polling — WebSocket yerine
+  if(_txFfTimer) { clearInterval(_txFfTimer); _txFfTimer=null; }
+  function _ffPoll() {
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs+'&api_key='+_txFfKey)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(!data||!data.quotes) return;
         window._txTdConnected = true;
-        console.log('[FastForex WS] Bağlandı');
-        return;
-      }
-      // Fiyat: {op:'price', pair:'EURUSD', bid:1.0832, ask:1.0834}
-      if(d.op === 'price' && d.pair && d.bid) {
-        var sym = d.pair; // EURUSD formatında — direkt kullan
-        var mid = (parseFloat(d.bid) + parseFloat(d.ask)) / 2;
-        if(sym && mid > 0) { window._txTdConnected=true; txApplyPrice(sym, mid); }
-      }
-    } catch(err) {}
-  };
-
-  _txTdWs.onerror = function() { console.warn('[FastForex WS] Hata'); };
-  _txTdWs.onclose = function() {
-    _txTdWs = null; window._txTdConnected = false;
-    if(_txFeedActive) setTimeout(txStartTwelvedataWs, 5000);
-  };
+        Object.keys(data.quotes).forEach(function(sym){
+          var q = data.quotes[sym];
+          if(!q) return;
+          var mid = (parseFloat(q.bid)+parseFloat(q.ask))/2;
+          if(sym && mid>0) txApplyPrice(sym, mid);
+        });
+      })
+      .catch(function(e){ console.warn('[FastForex]', e.message); window._txTdConnected=false; });
+  }
+  _ffPoll();
+  _txFfTimer = setInterval(_ffPoll, 2000);
+  window._txTdConnected = true;
 }
 
 function txStartBinanceWs() {
