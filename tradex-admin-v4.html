@@ -8235,6 +8235,7 @@ function adminNav(sec,btn){
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
   if(sec==='accounts'){
+    if(typeof accounts==='undefined'||!Array.isArray(accounts)){renderAccTable();return;}
     // Tüm hesapları cache'e yükle
     accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
       if(typeof _allAccountPositions!=='undefined' && Array.isArray(a.positions) && a.positions.length) {
@@ -8250,6 +8251,7 @@ function adminNav(sec,btn){
     renderAccTable();
     // Sonra users koleksiyonundan güncel balance ve positions çek
     if(typeof db!=='undefined'&&db){
+      if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
       var _c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
       var _pend=_c2.length;
       if(!_pend){return;}
