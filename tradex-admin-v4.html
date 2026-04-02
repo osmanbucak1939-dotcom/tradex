@@ -2075,6 +2075,18 @@ console.log('Firebase bağlandı ✓');
               </select>
               <span style="font-family:var(--mono);font-size:9px;color:#b0b0b0;margin-top:2px;display:block;">Ba&#351;ka sembol&#252;n fiyat&#305;n&#305; kullanmak i&#231;in se&#231;in</span>
             </div>
+            <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">FİYAT OFSETI (+/-)</label>
+                <input class="mgr-input" id="ns_priceOffset" type="number" step="any" value="0" style="width:100%;" placeholder="örn: -57000">
+                <span style="font-family:var(--mono);font-size:9px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına eklenecek sabit değer</span>
+              </div>
+              <div>
+                <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">FİYAT FAKTÖRÜ (×)</label>
+                <input class="mgr-input" id="ns_priceFactor" type="number" step="any" value="1" style="width:100%;" placeholder="örn: 0.001">
+                <span style="font-family:var(--mono);font-size:9px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına uygulanacak çarpan</span>
+              </div>
+            </div>
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
             <button class="mgr-btn" onclick="closeAddSymModal()">İptal</button>
@@ -3694,7 +3706,7 @@ function adReceiveRawPrice(sym, rawMid) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Sentetik sembolün kendi override'ı varsa feed'den güncelleme — override korunur
     if(window._pcOverrides && window._pcOverrides[s.sym]) return;
-    var _sp    = s.priceFactor ? rawMid * parseFloat(s.priceFactor) : rawMid;
+    var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0; var _sp = rawMid * _factor + _offset;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -4178,11 +4190,13 @@ function saveSymbolMgr() {
 
   if(!sym || !label || !sh) { showToast('Hata', 'Sembol, etiket ve kisa ad zorunlu!'); return; }
 
-  var priceSource = (document.getElementById('ns_priceSource')||{}).value || '';
+  var priceSource  = (document.getElementById('ns_priceSource')||{}).value || '';
+  var priceOffset  = parseFloat((document.getElementById('ns_priceOffset')||{value:0}).value) || 0;
+  var priceFactor  = parseFloat((document.getElementById('ns_priceFactor')||{value:1}).value) || 1;
   var obj = {sym:sym, label:label, s:sh, spread:spread, spreadType:spreadType, spreadVariance:spreadVariance,
              swapBuy:swapBuy, swapSell:swapSell, color:color, minLot:minLot,
              active:true, contractSize:contractSize, margin:margin, decimals:decimals, category:category,
-             priceSource:priceSource};
+             priceSource:priceSource, priceOffset:priceOffset, priceFactor:priceFactor};
 
   if(editIdx >= 0) {
     obj.active = symConfig[editIdx].active;
@@ -4328,6 +4342,8 @@ function editSymForm(i) {
   document.getElementById('ns_margin').value       = s.margin || 1;
   document.getElementById('ns_decimals').value     = s.decimals || 5;
   document.getElementById('ns_category').value     = s.category || 'crypto';
+  var _po = document.getElementById('ns_priceOffset'); if(_po) _po.value = s.priceOffset || 0;
+  var _pf = document.getElementById('ns_priceFactor'); if(_pf) _pf.value = s.priceFactor || 1;
   var _ps = document.getElementById('ns_priceSource');
   if(_ps) _ps.value = s.priceSource || '';
   // Modal title güncelle
@@ -7480,7 +7496,7 @@ function pcApplyPrice(sym, price) {
   _syms2.forEach(function(s) {
     if(s.priceSource === sym && s.sym !== sym) {
       // priceFactor varsa uygula
-      var _synthPrice = s.priceFactor ? price * parseFloat(s.priceFactor) : price;
+      var _factor2 = parseFloat(s.priceFactor)||1; var _offset2 = parseFloat(s.priceOffset)||0; var _synthPrice = price * _factor2 + _offset2;
       var _synthPrev  = (prices[s.sym] && prices[s.sym].price) ? prices[s.sym].price : _synthPrice;
       var _synthSpread = _adGetSpread(s.sym);
       var _synthChg   = window._adDayOpen && window._adDayOpen[s.sym]
