@@ -3880,20 +3880,39 @@ function adStartBinanceFeed() {
 }
 
 // ── Twelvedata WebSocket ──────────────────────────────────────
+var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
 function adStartTwelvedataFeed() {
+  // FastForex WebSocket — Twelvedata yerine
   if(_adTdWs){try{_adTdWs.close();}catch(e){}}
-  _adTdWs=new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey='+_adTdKey);
-  _adTdWs.onopen=function(){
-    _adTdOk=true;
-    _adTdWs.send(JSON.stringify({action:'subscribe',params:{symbols:Object.values(AD_TD_MAP).join(',')}}));
+  _adTdWs = new WebSocket('wss://fastforex.wsdx.io');
+  _adTdWs.onopen = function() {
+    // 1) Auth
+    _adTdWs.send(JSON.stringify({op:'auth', key:_adFfKey}));
   };
-  _adTdWs.onmessage=function(e){
-    try{var d=JSON.parse(e.data);
-      if(d.symbol&&d.price){var sym=AD_TD_REV[d.symbol]||d.symbol;if(sym)adReceiveRawPrice(sym,parseFloat(d.price));}
-    }catch(er){}
+  _adTdWs.onmessage = function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      // Auth cevabı gelince subscribe et
+      if(d.op === 'auth' && d.status === 200) {
+        var pairs = Object.keys(AD_TD_MAP); // EURUSD, GBPUSD vb.
+        _adTdWs.send(JSON.stringify({op:'subscribe', stream:'fx', pairs:pairs}));
+        _adTdOk = true;
+        console.log('[FastForex WS] Bağlandı, subscribe edildi');
+        return;
+      }
+      // Fiyat mesajı: {op:'price', pair:'EURUSD', bid:1.0832, ask:1.0834, ...}
+      if(d.op === 'price' && d.pair && d.bid) {
+        var sym = d.pair; // Zaten EURUSD formatında
+        var mid = (parseFloat(d.bid) + parseFloat(d.ask)) / 2;
+        if(sym && mid > 0) adReceiveRawPrice(sym, mid);
+      }
+    } catch(er) {}
   };
-  _adTdWs.onerror=function(){_adTdOk=false;};
-  _adTdWs.onclose=function(){_adTdOk=false;if(_adFeedOn)setTimeout(adStartTwelvedataFeed,8000);};
+  _adTdWs.onerror = function() { _adTdOk = false; };
+  _adTdWs.onclose = function() {
+    _adTdOk = false;
+    if(_adFeedOn) setTimeout(adStartTwelvedataFeed, 8000);
+  };
 }
 
 // ── Feed başlat ───────────────────────────────────────────────
