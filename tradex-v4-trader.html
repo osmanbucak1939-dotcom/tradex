@@ -3557,25 +3557,35 @@ function lwTickUpdate() {
 
   if(nowBarTime > last.time) {
     // Yeni interval başladı — yeni mum aç
+    // open: mevcut fiyattan başla (override sonrası büyük fark olabilir)
+    var _openPrice = +price.toFixed(dec);
     var newBar = {
       time:  nowBarTime,
-      open:  +last.close.toFixed(dec), // önceki mumun kapanışından aç
-      high:  +price.toFixed(dec),
-      low:   +price.toFixed(dec),
-      close: +price.toFixed(dec),
+      open:  _openPrice,
+      high:  _openPrice,
+      low:   _openPrice,
+      close: _openPrice,
       volume: 0
     };
     _klineData.push(newBar);
     if(_klineData.length > 600) _klineData.shift();
     _lwSeries.update(newBar);
     lwDrawOverlays(_klineData);
-    // Yeni mum açılınca sağ kenara getir
     if(_lw) _lw.timeScale().scrollToRealTime();
   } else {
-    // Mevcut mumu güncelle
-    last.close = +price.toFixed(dec);
-    if(price > last.high) last.high = +price.toFixed(dec);
-    if(price < last.low)  last.low  = +price.toFixed(dec);
+    // Mevcut mumu güncelle — fiyat aşırı sapıyorsa (override geçişi) mumu sıfırla
+    var _priceDiff = Math.abs(price - last.open) / (last.open || 1);
+    if(_priceDiff > 0.5) {
+      // %50'den fazla sapma — override geçişi, mumu temizle
+      last.open  = +price.toFixed(dec);
+      last.high  = +price.toFixed(dec);
+      last.low   = +price.toFixed(dec);
+      last.close = +price.toFixed(dec);
+    } else {
+      last.close = +price.toFixed(dec);
+      if(price > last.high) last.high = +price.toFixed(dec);
+      if(price < last.low)  last.low  = +price.toFixed(dec);
+    }
     // Fiyat görünür aralığın dışına çıktıysa otomatik ölçekle
     if(_lw) {
       try {
@@ -7025,6 +7035,15 @@ function txApplyPrice(sym, rawMid) {
     if(sym === curSym) {
       startCandleWs(sym, curInt);
       return;
+    }
+    // Sentetik semboller: bu sembol kaynak olarak kullanılıyorsa ve curSym sentetik ise grafik başlat
+    if(typeof symConfig !== 'undefined' && symConfig) {
+      var _synthTarget = symConfig.find(function(s){ return s.priceSource===sym && s.sym===curSym; });
+      if(_synthTarget && !window._txPriceInit[curSym]) {
+        window._txPriceInit[curSym] = true;
+        startCandleWs(curSym, curInt);
+        return;
+      }
     }
   }
 
