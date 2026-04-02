@@ -3608,10 +3608,9 @@ function adReceiveRawPrice(sym, rawMid) {
     // Sentetik bağlı semboller var — sadece onları güncelle
     _synthOnly.forEach(function(s) {
       if(s.priceSource !== sym || s.sym === sym) return;
-      var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
-      var _dynOffset2 = (window._pcOffsets && window._pcOffsets[s.sym] !== undefined)
-                        ? window._pcOffsets[s.sym] : _offset;
-      var _sp = rawMid * _factor + _dynOffset2;
+      var _factor = parseFloat(s.priceFactor)||1;
+      var _offset = parseFloat(s.priceOffset)||0;
+      var _sp = rawMid * _factor + _offset;
       var _ss = _adGetSpread(s.sym), _sh = _ss/2;
       var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
       var _sObj = {mid:_sp,price:_sp,bid:_sp-_sh,ask:_sp+_sh,spread:_ss,chg:0,prev:_sPrev,ts:Date.now()};
@@ -3729,11 +3728,9 @@ function adReceiveRawPrice(sym, rawMid) {
   _synthCfg2.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
-    var _factor = parseFloat(s.priceFactor)||1; var _offset = parseFloat(s.priceOffset)||0;
-    // _pcOffsets: admin'in set ettiği offset (hedef fiyat - kaynak fiyat)
-    var _dynOffset = (window._pcOffsets && window._pcOffsets[s.sym] !== undefined)
-                     ? window._pcOffsets[s.sym] : _offset;
-    var _sp = rawMid * _factor + _dynOffset;
+    var _factor = parseFloat(s.priceFactor)||1;
+    var _offset = parseFloat(s.priceOffset)||0; // symConfig'den gelir
+    var _sp = rawMid * _factor + _offset;
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -3929,32 +3926,9 @@ function adListenOverrides() {
       });
     }
 
-    // Merkezi override interval — tüm aktif override'lar için tek interval
-    if(window._adMasterOverrideInterval) {
-      clearInterval(window._adMasterOverrideInterval);
-      window._adMasterOverrideInterval = null;
-    }
-    if(Object.keys(_pcOverrides).length > 0) {
-      window._adMasterOverrideInterval = setInterval(function(){
-        // window._pcOverrides kullan — closure eski referansı tutmasın
-        var _ov = window._pcOverrides || {};
-        if(!Object.keys(_ov).length) return;
-        Object.keys(_ov).forEach(function(sym){
-          var price = _ov[sym];
-          if(!price||price<=0) return;
-          _FX.prices[sym] = {mid:price,bid:price,ask:price,spread:0,chg:0,ts:Date.now()};
-          _adPrices[sym] = price;
-          prices[sym]    = {price:price,bid:price,ask:price,chg:0};
-          mwPrices[sym]  = {price:price,prev:price,chg:0};
-          if(AD_SIM&&AD_SIM[sym]) AD_SIM[sym].p = price;
-          updateMwRow(sym, price, price);
-          if(sym===curSym) {
-            if(typeof updateOrderTicket==='function') updateOrderTicket(price);
-          }
-        });
-        if(typeof updatePositions==='function') updatePositions();
-      }, 1000);
-    }
+    // Master override interval kaldırıldı
+    // Sentetik semboller: symConfig.priceOffset ile adReceiveRawPrice'da hesaplanır
+    // Normal override: adApplyOverride zaten anlık uygular
 
     // Silinen override'lar için feed'i serbest bırak
     prevKeys.forEach(function(sym){
