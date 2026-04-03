@@ -3915,8 +3915,7 @@ function adStartTwelvedataFeed() {
 // ── Feed başlat ───────────────────────────────────────────────
 function adStartRealFeed() {
   _adFeedOn=true;
-  adStartBinanceFeed();
-  adStartTwelvedataFeed();
+  adStartTwelvedataFeed(); // FastForex: forex + kripto polling
   adListenOverrides();
 }
 
@@ -3977,20 +3976,41 @@ var MARKET_GROUPS = [
       {sym:'AVAXUSDT', name:'AVAX/USDT', full:'Avalanche',      icon:'△',  spread:0.005,  decimals:3},
       {sym:'DOTUSDT',  name:'DOT/USDT',  full:'Polkadot',       icon:'●',  spread:0.003,  decimals:3},
       {sym:'LINKUSDT', name:'LINK/USDT', full:'Chainlink',      icon:'⬡',  spread:0.005,  decimals:3},
+      {sym:'CAKEUSDT', name:'CAKE/USDT', full:'PancakeSwap',    icon:'🥞', spread:0.001,  decimals:4},
+      {sym:'CELOUSDT', name:'CELO/USDT', full:'Celo',           icon:'🌱', spread:0.0005, decimals:4},
+      {sym:'CHZUSDT',  name:'CHZ/USDT',  full:'Chiliz',         icon:'⚽', spread:0.0001, decimals:5},
+      {sym:'COMPUSDT', name:'COMP/USDT', full:'Compound',       icon:'🏦', spread:0.01,   decimals:3},
+      {sym:'CROUSDT',  name:'CRO/USDT',  full:'Cronos',         icon:'🔷', spread:0.0001, decimals:5},
     ]
   },
   {
     id:'forex', label:'PARİTELER (FOREX)', open:true,
     items:[
-      {sym:'EURUSD',  name:'EUR/USD',   full:'Euro / Dolar',   icon:'€',  spread:0.0001, decimals:4, mockPrice:1.0862},
-      {sym:'GBPUSD',  name:'GBP/USD',   full:'Sterlin / Dolar',icon:'£',  spread:0.0002, decimals:4, mockPrice:1.2714},
-      {sym:'USDJPY',  name:'USD/JPY',   full:'Dolar / Yen',    icon:'¥',  spread:0.01,   decimals:2, mockPrice:149.82},
-      {sym:'USDCHF',  name:'USD/CHF',   full:'Dolar / Frank',  icon:'₣',  spread:0.0002, decimals:4, mockPrice:0.8921},
-      {sym:'AUDUSD',  name:'AUD/USD',   full:'Avustralya / Dolar',icon:'A',spread:0.0002,decimals:4, mockPrice:0.6534},
-      {sym:'USDCAD',  name:'USD/CAD',   full:'Dolar / Kanada', icon:'C',  spread:0.0002, decimals:4, mockPrice:1.3621},
-      {sym:'NZDUSD',  name:'NZD/USD',   full:'Yeni Zelanda / Dolar',icon:'N',spread:0.0003,decimals:4,mockPrice:0.6012},
-      {sym:'USDTRY',   name:'USD/TRY',   full:'Dolar / Türk Lirası',  icon:'₺',spread:0.05,  decimals:4,mockPrice:32.85},
-      {sym:'EURTRY',   name:'EUR/TRY',   full:'Euro / Türk Lirası',   icon:'₺',spread:0.08,  decimals:4,mockPrice:35.62},
+      {sym:'EURUSD',  name:'EUR/USD',   full:'Euro / Dolar',          icon:'€', spread:0.0001,decimals:5},
+      {sym:'GBPUSD',  name:'GBP/USD',   full:'Sterlin / Dolar',       icon:'£', spread:0.0002,decimals:5},
+      {sym:'USDJPY',  name:'USD/JPY',   full:'Dolar / Yen',           icon:'¥', spread:0.01,  decimals:3},
+      {sym:'USDCHF',  name:'USD/CHF',   full:'Dolar / Frank',         icon:'₣', spread:0.0002,decimals:5},
+      {sym:'AUDUSD',  name:'AUD/USD',   full:'Avustralya / Dolar',    icon:'A', spread:0.0002,decimals:5},
+      {sym:'USDCAD',  name:'USD/CAD',   full:'Dolar / Kanada',        icon:'C', spread:0.0002,decimals:5},
+      {sym:'NZDUSD',  name:'NZD/USD',   full:'Yeni Zelanda / Dolar',  icon:'N', spread:0.0003,decimals:5},
+      {sym:'USDTRY',  name:'USD/TRY',   full:'Dolar / Türk Lirası',   icon:'₺',spread:0.05,  decimals:4},
+      {sym:'EURTRY',  name:'EUR/TRY',   full:'Euro / Türk Lirası',    icon:'₺',spread:0.08,  decimals:4},
+      {sym:'EURCAD',  name:'EUR/CAD',   full:'Euro / Kanada',         icon:'€', spread:0.0004,decimals:5},
+      {sym:'EURGBP',  name:'EUR/GBP',   full:'Euro / Sterlin',        icon:'€', spread:0.0002,decimals:5},
+      {sym:'EURJPY',  name:'EUR/JPY',   full:'Euro / Yen',            icon:'€', spread:0.02,  decimals:3},
+      {sym:'GBPJPY',  name:'GBP/JPY',   full:'Sterlin / Yen',         icon:'£', spread:0.03,  decimals:3},
+      {sym:'GBPAUD',  name:'GBP/AUD',   full:'Sterlin / Avustralya',  icon:'£', spread:0.0005,decimals:5},
+      {sym:'AUDCAD',  name:'AUD/CAD',   full:'Avustralya / Kanada',   icon:'A', spread:0.0004,decimals:5},
+      {sym:'USDMXN',  name:'USD/MXN',   full:'Dolar / Meksika Pesosu',icon:'$', spread:0.005, decimals:4},
+      {sym:'USDZAR',  name:'USD/ZAR',   full:'Dolar / Güney Afrika',  icon:'R', spread:0.005, decimals:4},
+      {sym:'USDSGD',  name:'USD/SGD',   full:'Dolar / Singapur',      icon:'S', spread:0.0003,decimals:5},
+      {sym:'USDHKD',  name:'USD/HKD',   full:'Dolar / Hong Kong',     icon:'H', spread:0.0003,decimals:5},
+      {sym:'USDPLN',  name:'USD/PLN',   full:'Dolar / Polonya',       icon:'P', spread:0.0005,decimals:5},
+      {sym:'USDSEK',  name:'USD/SEK',   full:'Dolar / İsveç Kronası', icon:'S', spread:0.005, decimals:4},
+      {sym:'USDNOK',  name:'USD/NOK',   full:'Dolar / Norveç Kronası',icon:'N', spread:0.005, decimals:4},
+      {sym:'GBPCHF',  name:'GBP/CHF',   full:'Sterlin / Frank',       icon:'£', spread:0.0004,decimals:5},
+      {sym:'AUDNZD',  name:'AUD/NZD',   full:'Avustralya / Yeni Zelanda',icon:'A',spread:0.0004,decimals:5},
+      {sym:'CADCHF',  name:'CAD/CHF',   full:'Kanada / Frank',        icon:'C', spread:0.0004,decimals:5},
     ]
   },
   {
@@ -10116,3 +10136,4 @@ function adSubTab(btn){
     {sym:'GBPCHF',label:'GBP/CHF',s:'GBP',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
     {sym:'AUDNZD',label:'AUD/NZD',s:'AUD',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ffcc00',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
     {sym:'CADCHF',label:'CAD/CHF',s:'CAD',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ff0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+
