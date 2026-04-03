@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TradeX Admin</title>
+<title>Commerz Terminal Admin</title>
 <style>
 * { margin:0; padding:0; }
 iframe { width:100vw; height:100vh; border:none; display:block; }
 </style>
 </head>
 <body>
-<iframe src="/tradex-admin-v4.html" allowfullscreen></iframe>
+<script>
+var v = Date.now();
+document.write('<iframe src="/tradex-admin-v4.html?v=' + v + '" allowfullscreen></iframe>');
+</script>
 </body>
 </html>
