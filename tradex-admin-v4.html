@@ -7285,30 +7285,27 @@ function adFeedCheckConnections() {
     })
     .catch(function(){ adFeedSetDot('td', false, 'Bağlantı hatası'); });
 
-  // Binance test
+  // FF Kripto test
   adFeedSetDot('bn', false, 'Bağlanıyor...');
-  try {
-    if(_adBnWsTest) { try{_adBnWsTest.close();}catch(e){} }
-    _adBnWsTest = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@miniTicker');
-    var _bnTimer = setTimeout(function(){ adFeedSetDot('bn', false, 'Zaman aşımı'); }, 10000);
-    _adBnWsTest.onopen = function(){ /* bekle mesaj gelsin */ };
-    _adBnWsTest.onmessage = function(e){
-      clearTimeout(_bnTimer);
-      adFeedSetDot('bn', true, 'Bağlı ✓');
-      try{_adBnWsTest.close();}catch(ex){}
-    };
-    _adBnWsTest.onerror = function(){ clearTimeout(_bnTimer); adFeedSetDot('bn', false, 'Bağlantı hatası'); };
-  } catch(e){ adFeedSetDot('bn', false, 'WS hatası'); }
+  fetch('https://api.fastforex.io/crypto/fetch-prices?pairs=BTC%2FUSDT&api_key=' + _adFfKey)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.prices && d.prices['BTC/USDT']) {
+        adFeedSetDot('bn', true, 'Bağlı ✓');
+        _adBnOk = true;
+      } else {
+        adFeedSetDot('bn', false, 'Veri yok');
+      }
+    })
+    .catch(function(){ adFeedSetDot('bn', false, 'Bağlantı hatası'); });
 }
 
 var TD_SYM_MAP_AD = {
   'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
-  'XAUUSD':'XAU/USD', 'XAGUSD':'XAG/USD',
-  'SPX500X':'SPX',     'NAS100X':'NDX',
-  'DJ30X':'DJI',       'FTSE100X':'FTSE',   'DAX40X':'DAX',
-  'USOIL':'WTI/USD', 'BRTUSD':'BRENT/USD'
+  'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
+  'GBPJPY':'GBP/JPY',  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD'
 };
 var BN_SYMS_AD = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'];
 
