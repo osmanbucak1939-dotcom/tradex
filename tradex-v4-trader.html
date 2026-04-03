@@ -7279,8 +7279,53 @@ function txStartTwelvedataWs() {
   window._txTdConnected = true;
 }
 
-var _txCryptoPairs = 'BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT,XRP/USDT,ADA/USDT,DOGE/USDT,AVAX/USDT,DOT/USDT,LINK/USDT';
-var _txCryptoTimer = null;
+var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
+var _txFfCrypto = 'BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT,XRP/USDT,CAKE/USDT,CELO/USDT,CHZ/USDT,COMP/USDT,CRO/USDT';
+var _txFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
+var _txFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
+var _txFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
+var _txFfTimer = null;
+function txStartTwelvedataWs() {
+  if(_txFfTimer) { clearInterval(_txFfTimer); _txFfTimer=null; }
+  function _applyFx(data) {
+    if(!data||!data.quotes) return;
+    window._txTdConnected = true;
+    Object.keys(data.quotes).forEach(function(sym){
+      var q=data.quotes[sym]; if(!q) return;
+      var mid=(parseFloat(q.bid)+parseFloat(q.ask))/2;
+      if(sym&&mid>0) txApplyPrice(sym,mid);
+    });
+  }
+  function _applyCrypto(data) {
+    if(!data||!data.prices) return;
+    window._txBnConnected = true;
+    Object.keys(data.prices).forEach(function(pair){
+      var sym=pair.replace('/','');
+      var price=parseFloat(data.prices[pair]);
+      if(sym&&price>0) txApplyPrice(sym,price);
+    });
+  }
+  function _ffPoll() {
+    fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txFfCrypto)+'&api_key='+_txFfKey)
+      .then(function(r){return r.json();}).then(_applyCrypto)
+      .catch(function(e){console.warn('[FF Crypto]',e.message);window._txBnConnected=false;});
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex1+'&api_key='+_txFfKey)
+      .then(function(r){return r.json();}).then(_applyFx)
+      .catch(function(e){console.warn('[FF FX1]',e.message);window._txTdConnected=false;});
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex2+'&api_key='+_txFfKey)
+      .then(function(r){return r.json();}).then(_applyFx)
+      .catch(function(e){console.warn('[FF FX2]',e.message);});
+    if(_txFfForex3) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex3+'&api_key='+_txFfKey)
+        .then(function(r){return r.json();}).then(_applyFx)
+        .catch(function(e){console.warn('[FF FX3]',e.message);});
+    }
+  }
+  _ffPoll();
+  _txFfTimer = setInterval(_ffPoll, 10000);
+  window._txTdConnected = true; window._txBnConnected = true;
+}
+
 function txStartBinanceWs() {
   // FastForex kripto polling — Binance WS yerine
   if(_txCryptoTimer) { clearInterval(_txCryptoTimer); _txCryptoTimer=null; }
@@ -9936,4 +9981,24 @@ function adChangePassword() {
 
 
 </body>
-</html>
+</html>    {sym:'CAKEUSDT',label:'CAKE/USDT',s:'CAKE',spread:0.001,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#d1884f',minLot:1,active:true,contractSize:1,margin:1,decimals:4,category:'crypto'},
+    {sym:'CELOUSDT',label:'CELO/USDT',s:'CELO',spread:0.0005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#35d07f',minLot:1,active:true,contractSize:1,margin:1,decimals:4,category:'crypto'},
+    {sym:'CHZUSDT',label:'CHZ/USDT',s:'CHZ',spread:0.0001,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#cd0124',minLot:10,active:true,contractSize:1,margin:1,decimals:5,category:'crypto'},
+    {sym:'COMPUSDT',label:'COMP/USDT',s:'COMP',spread:0.01,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#00d395',minLot:0.1,active:true,contractSize:1,margin:1,decimals:3,category:'crypto'},
+    {sym:'CROUSDT',label:'CRO/USDT',s:'CRO',spread:0.0001,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#002d74',minLot:10,active:true,contractSize:1,margin:1,decimals:5,category:'crypto'},
+    {sym:'EURCAD',label:'EUR/CAD',s:'EUR',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'EURGBP',label:'EUR/GBP',s:'EUR',spread:0.0002,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'EURJPY',label:'EUR/JPY',s:'EUR',spread:0.02,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:3,category:'forex'},
+    {sym:'GBPJPY',label:'GBP/JPY',s:'GBP',spread:0.03,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:3,category:'forex'},
+    {sym:'GBPAUD',label:'GBP/AUD',s:'GBP',spread:0.0005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'AUDCAD',label:'AUD/CAD',s:'AUD',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ffcc00',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDMXN',label:'USD/MXN',s:'USD',spread:0.005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#006847',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDZAR',label:'USD/ZAR',s:'USD',spread:0.005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#007a4d',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDSGD',label:'USD/SGD',s:'USD',spread:0.0003,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ef3340',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDHKD',label:'USD/HKD',s:'USD',spread:0.0003,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#de2010',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDPLN',label:'USD/PLN',s:'USD',spread:0.0005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#dc143c',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDSEK',label:'USD/SEK',s:'USD',spread:0.005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#006aa7',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDNOK',label:'USD/NOK',s:'USD',spread:0.005,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ef2b2d',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'GBPCHF',label:'GBP/CHF',s:'GBP',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'AUDNZD',label:'AUD/NZD',s:'AUD',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ffcc00',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'CADCHF',label:'CAD/CHF',s:'CAD',spread:0.0004,spreadType:'fixed',spreadVariance:0,swapBuy:0,swapSell:0,color:'#ff0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
