@@ -7248,8 +7248,8 @@ var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
                   'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _txFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
-var _txFfPairs2 = 'EURGBP,EURJPY,GBPJPY,XAGUSD,XAUUSD';
+var _txFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY';
+var _txFfPairs2 = ''; // Kullanılmıyor
 var _txFfTimer = null;
 function txStartTwelvedataWs() {
   // FastForex REST polling — max 10 sembol per request
@@ -7268,9 +7268,11 @@ function txStartTwelvedataWs() {
     fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs1+'&api_key='+_txFfKey)
       .then(function(r){ return r.json(); }).then(_applyQuotes)
       .catch(function(e){ console.warn('[FastForex1]', e.message); window._txTdConnected=false; });
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs2+'&api_key='+_txFfKey)
-      .then(function(r){ return r.json(); }).then(_applyQuotes)
-      .catch(function(e){ console.warn('[FastForex2]', e.message); });
+    if(_txFfPairs2) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfPairs2+'&api_key='+_txFfKey)
+        .then(function(r){ return r.json(); }).then(_applyQuotes)
+        .catch(function(e){ console.warn('[FastForex2]', e.message); });
+    }
   }
   _ffPoll();
   _txFfTimer = setInterval(_ffPoll, 2000);
