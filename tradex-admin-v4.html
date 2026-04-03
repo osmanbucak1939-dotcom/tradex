@@ -2169,7 +2169,7 @@ console.log('Firebase bağlandı ✓');
           <div id="adFeedDotBN" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
-              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">BİNANCE</div>
+              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">FF KRİPTO</div>
               <span id="adFeedLblBN" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
@@ -3865,24 +3865,35 @@ function adCalcStats(account, positions) {
 }
 
 // ── Binance WebSocket ─────────────────────────────────────────
+var _adCryptoPairs = 'BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT,XRP/USDT,ADA/USDT,DOGE/USDT,AVAX/USDT,DOT/USDT,LINK/USDT';
+var _adCryptoTimer = null;
 function adStartBinanceFeed() {
-  if(_adBnWs){try{_adBnWs.close();}catch(e){}}
-  var streams=AD_BN_SYMS.map(function(s){return s+'@miniTicker';}).join('/');
-  _adBnWs=new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
-  _adBnWs.onopen=function(){_adBnOk=true;};
-  _adBnWs.onmessage=function(e){
-    try{var d=JSON.parse(e.data),t=d.data||d;
-      if(t.s&&t.c) adReceiveRawPrice(t.s.toUpperCase(),parseFloat(t.c));
-    }catch(er){}
-  };
-  _adBnWs.onerror=function(){_adBnOk=false;};
-  _adBnWs.onclose=function(){_adBnOk=false;if(_adFeedOn)setTimeout(adStartBinanceFeed,5000);};
+  // FastForex kripto polling — Binance WS yerine
+  if(_adCryptoTimer) { clearInterval(_adCryptoTimer); _adCryptoTimer=null; }
+  function _applyCrypto(data) {
+    if(!data||!data.prices) return;
+    _adBnOk = true;
+    Object.keys(data.prices).forEach(function(pair){
+      // BTC/USDT → BTCUSDT
+      var sym = pair.replace('/','');
+      var price = parseFloat(data.prices[pair]);
+      if(sym && price>0) adReceiveRawPrice(sym, price);
+    });
+  }
+  function _cryptoPoll() {
+    fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_adCryptoPairs)+'&api_key='+_adFfKey)
+      .then(function(r){ return r.json(); }).then(_applyCrypto)
+      .catch(function(e){ console.warn('[FF Crypto]', e.message); _adBnOk=false; });
+  }
+  _cryptoPoll();
+  _adCryptoTimer = setInterval(_cryptoPoll, 2000);
+  _adBnOk = true;
 }
 
 // ── Twelvedata WebSocket ──────────────────────────────────────
 var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,USDTRY';
-var _adFfPairs2 = 'XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
+var _adFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
+var _adFfPairs2 = 'EURGBP,EURJPY,GBPJPY,XAGUSD,XAUUSD';
 var _adFfTimer = null;
 function adStartTwelvedataFeed() {
   // FastForex REST polling — max 10 sembol per request
