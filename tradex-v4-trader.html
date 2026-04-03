@@ -7248,8 +7248,8 @@ var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
                   'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _txFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,USDTRY';
-var _txFfPairs2 = 'XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
+var _txFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
+var _txFfPairs2 = 'EURGBP,EURJPY,GBPJPY,XAGUSD,XAUUSD';
 var _txFfTimer = null;
 function txStartTwelvedataWs() {
   // FastForex REST polling — max 10 sembol per request
@@ -7277,26 +7277,28 @@ function txStartTwelvedataWs() {
   window._txTdConnected = true;
 }
 
+var _txCryptoPairs = 'BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT,XRP/USDT,ADA/USDT,DOGE/USDT,AVAX/USDT,DOT/USDT,LINK/USDT';
+var _txCryptoTimer = null;
 function txStartBinanceWs() {
-  if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
-  var streams=TX_BN_SYMS.map(function(s){return s+'@miniTicker';}).join('/');
-  _txBnWs = new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
-  window._txBnWs = _txBnWs;
-  _txBnWs.onopen = function(){ console.log('[WS] Binance bağlandı'); };
-  _txBnWs.onmessage = function(e) {
-    try {
-      var d=JSON.parse(e.data),t=d.data||d;
-      if(t.s&&t.c) {
-        window._txBnConnected = true; // İlk mesaj gelince aktif say
-        txApplyPrice(t.s.toUpperCase(),parseFloat(t.c));
-      }
-    } catch(err){}
-  };
-  _txBnWs.onerror = function(){ console.warn('[WS] BN hata'); };
-  _txBnWs.onclose = function(){
-    _txBnWs=null; window._txBnConnected=false;
-    if(_txFeedActive) setTimeout(txStartBinanceWs,5000);
-  };
+  // FastForex kripto polling — Binance WS yerine
+  if(_txCryptoTimer) { clearInterval(_txCryptoTimer); _txCryptoTimer=null; }
+  function _applyCrypto(data) {
+    if(!data||!data.prices) return;
+    window._txBnConnected = true;
+    Object.keys(data.prices).forEach(function(pair){
+      var sym = pair.replace('/','');
+      var price = parseFloat(data.prices[pair]);
+      if(sym && price>0) txApplyPrice(sym, price);
+    });
+  }
+  function _cryptoPoll() {
+    fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txCryptoPairs)+'&api_key='+_txFfKey)
+      .then(function(r){ return r.json(); }).then(_applyCrypto)
+      .catch(function(e){ console.warn('[FF Crypto]', e.message); window._txBnConnected=false; });
+  }
+  _cryptoPoll();
+  _txCryptoTimer = setInterval(_cryptoPoll, 2000);
+  window._txBnConnected = true;
 }
 // ─────────────────────────────────────────────────────────────
 
