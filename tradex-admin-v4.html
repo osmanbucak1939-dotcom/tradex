@@ -2162,7 +2162,7 @@ console.log('Firebase bağlandı ✓');
           <div id="adFeedDotTD" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
-              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">TWELVEDATA</div>
+              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">FASTFOREX</div>
               <span id="adFeedLblTD" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
@@ -3881,7 +3881,7 @@ function adStartBinanceFeed() {
 
 // ── Twelvedata WebSocket ──────────────────────────────────────
 var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,XAUUSD';
+var _adFfPairs1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,USDTRY';
 var _adFfPairs2 = 'XAGUSD,EURCAD,EURGBP,EURJPY,GBPJPY';
 var _adFfTimer = null;
 function adStartTwelvedataFeed() {
@@ -7260,31 +7260,19 @@ function adFeedSetDot(side, connected, label) {
 }
 
 function adFeedCheckConnections() {
-  // Twelvedata test
+  // FastForex REST test
   adFeedSetDot('td', false, 'Bağlanıyor...');
-  try {
-    if(_adTdWsTest) { try{_adTdWsTest.close();}catch(e){} }
-    _adTdWsTest = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey=6be463dd71664cc0b5db780dd0a189ab');
-    var _tdTimer = setTimeout(function(){ adFeedSetDot('td', false, 'Zaman aşımı'); }, 10000);
-    _adTdWsTest.onopen = function(){
-      _adTdWsTest.send(JSON.stringify({action:'subscribe', params:{symbols:'EUR/USD'}}));
-    };
-    _adTdWsTest.onmessage = function(e){
-      try {
-        var d = JSON.parse(e.data);
-        if(d.event==='subscribe-status') {
-          clearTimeout(_tdTimer);
-          if(d.status==='ok') {
-            adFeedSetDot('td', true, 'Bağlı ✓');
-          } else {
-            adFeedSetDot('td', false, d.message||'Hata');
-          }
-          try{_adTdWsTest.close();}catch(ex){}
-        }
-      } catch(ex){}
-    };
-    _adTdWsTest.onerror = function(){ clearTimeout(_tdTimer); adFeedSetDot('td', false, 'Bağlantı hatası'); };
-  } catch(e){ adFeedSetDot('td', false, 'WS hatası'); }
+  fetch('https://api.fastforex.io/fx/quote?pairs=EURUSD&api_key=' + _adFfKey)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.quotes && d.quotes['EURUSD']) {
+        adFeedSetDot('td', true, 'Bağlı ✓');
+        _adTdOk = true;
+      } else {
+        adFeedSetDot('td', false, 'Veri yok');
+      }
+    })
+    .catch(function(){ adFeedSetDot('td', false, 'Bağlantı hatası'); });
 
   // Binance test
   adFeedSetDot('bn', false, 'Bağlanıyor...');
@@ -7315,7 +7303,7 @@ var BN_SYMS_AD = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','D
 
 function adFeedGetSource(sym) {
   if(BN_SYMS_AD.indexOf(sym)>=0) return {src:'Binance', col:'#26a69a'};
-  if(TD_SYM_MAP_AD[sym]) return {src:'Twelvedata', col:'#8888ff'};
+  if(TD_SYM_MAP_AD[sym]) return {src:'FastForex', col:'#8888ff'};
   return {src:'Simülasyon', col:'#f0b90b'};
 }
 
@@ -7333,7 +7321,7 @@ function adFeedRenderSymTable() {
     return;
   }
 
-  var groups = {Binance:[], Twelvedata:[], 'Simülasyon':[]};
+  var groups = {Binance:[], FastForex:[], 'Simülasyon':[]};
   allSyms.forEach(function(it){
     var info = adFeedGetSource(it.sym);
     groups[info.src].push({sym:it.sym, name:it.name||it.sym, col:info.col, spread:it.spread||0, decimals:it.decimals||2});
@@ -7345,7 +7333,7 @@ function adFeedRenderSymTable() {
     Object.keys(groups).forEach(function(grpName){
       var items = groups[grpName];
       if(!items.length) return;
-      var col = grpName==='Binance'?'#26a69a':grpName==='Twelvedata'?'#8888ff':'#f0b90b';
+      var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
       html += '<div style="grid-column:1/-1;font-family:monospace;font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
               '● '+grpName.toUpperCase()+' ('+items.length+' sembol)</div>';
       items.forEach(function(it){
@@ -7365,12 +7353,12 @@ function adFeedRenderSymTable() {
   if(!el2) return;
   var html2 = '';
   // Önce TD + Binance, sonra Sim
-  ['Binance','Twelvedata','Simülasyon'].forEach(function(grpName){
+  ['Binance','FastForex','Simülasyon'].forEach(function(grpName){
     var items = groups[grpName];
     if(!items.length) return;
-    var col = grpName==='Binance'?'#26a69a':grpName==='Twelvedata'?'#8888ff':'#f0b90b';
-    var srcLabel = grpName==='Binance'?'BN':grpName==='Twelvedata'?'TD':'SİM';
-    var srcDesc  = grpName==='Binance'?'Binance Gerçek Zamanlı':grpName==='Twelvedata'?'Twelvedata Gerçek Zamanlı':'Simülasyon';
+    var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
+    var srcLabel = grpName==='Binance'?'BN':grpName==='FastForex'?'FF':'SİM';
+    var srcDesc  = grpName==='Binance'?'Binance Gerçek Zamanlı':grpName==='FastForex'?'FastForex REST Polling':'Simülasyon';
     html2 += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:4px;">'+
              '<span style="font-family:monospace;font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
              '</div>';
