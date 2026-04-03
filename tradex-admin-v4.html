@@ -7313,7 +7313,7 @@ var TD_SYM_MAP_AD = {
 var BN_SYMS_AD = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'];
 
 function adFeedGetSource(sym) {
-  if(BN_SYMS_AD.indexOf(sym)>=0) return {src:'Binance', col:'#26a69a'};
+  if(BN_SYMS_AD.indexOf(sym)>=0) return {src:'FF Kripto', col:'#26a69a'};
   if(TD_SYM_MAP_AD[sym]) return {src:'FastForex', col:'#8888ff'};
   return {src:'Simülasyon', col:'#f0b90b'};
 }
@@ -7332,7 +7332,7 @@ function adFeedRenderSymTable() {
     return;
   }
 
-  var groups = {Binance:[], FastForex:[], 'Simülasyon':[]};
+  var groups = {'FF Kripto':[], FastForex:[], 'Simülasyon':[]};
   allSyms.forEach(function(it){
     var info = adFeedGetSource(it.sym);
     groups[info.src].push({sym:it.sym, name:it.name||it.sym, col:info.col, spread:it.spread||0, decimals:it.decimals||2});
@@ -7344,7 +7344,7 @@ function adFeedRenderSymTable() {
     Object.keys(groups).forEach(function(grpName){
       var items = groups[grpName];
       if(!items.length) return;
-      var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
+      var col = grpName==='FF Kripto'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
       html += '<div style="grid-column:1/-1;font-family:monospace;font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
               '● '+grpName.toUpperCase()+' ('+items.length+' sembol)</div>';
       items.forEach(function(it){
@@ -7364,12 +7364,12 @@ function adFeedRenderSymTable() {
   if(!el2) return;
   var html2 = '';
   // Önce TD + Binance, sonra Sim
-  ['Binance','FastForex','Simülasyon'].forEach(function(grpName){
+  ['FF Kripto','FastForex','Simülasyon'].forEach(function(grpName){
     var items = groups[grpName];
     if(!items.length) return;
     var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
-    var srcLabel = grpName==='Binance'?'BN':grpName==='FastForex'?'FF':'SİM';
-    var srcDesc  = grpName==='Binance'?'Binance Gerçek Zamanlı':grpName==='FastForex'?'FastForex REST Polling':'Simülasyon';
+    var srcLabel = grpName==='FF Kripto'?'FF-K':grpName==='FastForex'?'FF':'SİM';
+    var srcDesc  = grpName==='FF Kripto'?'FastForex Kripto Polling':grpName==='FastForex'?'FastForex REST Polling':'Simülasyon';
     html2 += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:4px;">'+
              '<span style="font-family:monospace;font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
              '</div>';
