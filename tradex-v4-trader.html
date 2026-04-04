@@ -3167,7 +3167,11 @@ var FF_SYM_MAP = {
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',
   'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
-  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD'
+  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD',
+  'GBPCHF':'GBP/CHF',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
+  'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
+  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK',
+  'USDNOK':'USD/NOK'
 };
 function lwLoadFastForexKlines(sym, interval, cb) {
   var ffSym = FF_SYM_MAP[sym] || (typeof TX_TD_MAP!=='undefined'&&TX_TD_MAP[sym] ? TX_TD_MAP[sym] : null);
@@ -3180,9 +3184,10 @@ function lwLoadFastForexKlines(sym, interval, cb) {
   var url = 'https://api.fastforex.io/fx/ohlc/time-series'
     + '?pairs=' + encodeURIComponent(ffSym)
     + '&interval=' + ffInt
-    + '&outputsize=300';
+    + '&outputsize=300'
+    + '&api_key=' + _FF_KEY;
 
-  fetch(url, { headers: { 'X-API-Key': _FF_KEY } })
+  fetch(url)
     .then(function(r){ return r.json(); })
     .then(function(data) {
       // FastForex response: {data: {"EUR/USD": [{datetime, open, high, low, close}, ...]}}
@@ -7332,21 +7337,23 @@ function txStartTwelvedataWs() {
     });
   }
   function _ffPoll() {
+    var _fxOpen = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
     fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txFfCrypto)+'&api_key='+_txFfKey)
       .then(function(r){return r.json();}).then(_applyCrypto)
       .catch(function(e){console.warn('[FF Crypto]',e.message);window._txBnConnected=false;});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex1+'&api_key='+_txFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF FX1]',e.message);window._txTdConnected=false;});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex2+'&api_key='+_txFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF FX2]',e.message);});
-    if(_txFfForex3) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex3+'&api_key='+_txFfKey)
+        if(_fxOpen) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex1+'&api_key='+_txFfKey)
         .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX3]',e.message);});
+        .catch(function(e){console.warn('[FF FX1]',e.message);window._txTdConnected=false;});
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex2+'&api_key='+_txFfKey)
+        .then(function(r){return r.json();}).then(_applyFx)
+        .catch(function(e){console.warn('[FF FX2]',e.message);});
+      if(_txFfForex3) {
+        fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex3+'&api_key='+_txFfKey)
+          .then(function(r){return r.json();}).then(_applyFx)
+          .catch(function(e){console.warn('[FF FX3]',e.message);});
+      }
     }
-  }
   _ffPoll();
   _txFfTimer = setInterval(_ffPoll, 10000);
   window._txTdConnected = true; window._txBnConnected = true;
