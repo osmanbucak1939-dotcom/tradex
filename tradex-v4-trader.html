@@ -7354,6 +7354,7 @@ function txStartTwelvedataWs() {
           .catch(function(e){console.warn('[FF FX3]',e.message);});
       }
     }
+  }
   _ffPoll();
   _txFfTimer = setInterval(_ffPoll, 10000);
   window._txTdConnected = true; window._txBnConnected = true;
