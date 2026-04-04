@@ -3917,6 +3917,7 @@ function adStartRealFeed() {
   _adFeedOn=true;
   adStartTwelvedataFeed(); // FastForex: forex + kripto polling
   adListenOverrides();
+  if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
 }
 
 function adListenOverrides() {
@@ -10115,4 +10116,90 @@ function adSubTab(btn){
 
 </script>
 
+
+<script>
+
+// ── Piyasa Saatleri Modülü (GMT+3) ──────────────────────────────
+var _marketHours = {
+  // Forex/Emtia: Pazartesi 00:00 - Cuma 23:59 GMT+3
+  // Kripto: 7/24 açık
+  forexOpen: function() {
+    var now = new Date();
+    // GMT+3'e çevir
+    var gmt3 = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+    var day = gmt3.getUTCDay(); // 0=Pazar, 1=Pazartesi, ..., 5=Cuma, 6=Cumartesi
+    var hour = gmt3.getUTCHours();
+    var min  = gmt3.getUTCMinutes();
+
+    // Cumartesi: tüm gün kapalı
+    if(day === 6) return false;
+    // Pazar: tüm gün kapalı
+    if(day === 0) return false;
+    // Cuma: 23:59'dan sonra kapalı (pratikte Cuma 00:00-23:59 arası açık)
+    if(day === 5 && hour === 23 && min >= 59) return false;
+
+    return true;
+  },
+  cryptoOpen: function() {
+    return true; // Kripto 7/24 açık
+  },
+  isOpen: function(sym) {
+    var isCrypto = sym && sym.endsWith('USDT');
+    return isCrypto ? _marketHours.cryptoOpen() : _marketHours.forexOpen();
+  },
+  statusText: function() {
+    if(_marketHours.forexOpen()) return null;
+    var now = new Date();
+    var gmt3 = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+    var day = gmt3.getUTCDay();
+    if(day === 6 || day === 0) return 'HAFTA SONU - PİYASA KAPALI';
+    return 'PİYASA KAPALI';
+  }
+};
+
+// Piyasa durumu kontrolü - her dakika çalışır
+var _marketStatusInterval = null;
+function startMarketStatusChecker() {
+  if(_marketStatusInterval) clearInterval(_marketStatusInterval);
+  _checkMarketStatus();
+  _marketStatusInterval = setInterval(_checkMarketStatus, 60000);
+}
+
+function _checkMarketStatus() {
+  var forexOpen = _marketHours.forexOpen();
+  var statusText = _marketHours.statusText();
+
+  // Market watch satırlarını güncelle
+  if(typeof MARKET_GROUPS !== 'undefined') {
+    MARKET_GROUPS.forEach(function(g) {
+      g.items && g.items.forEach(function(it) {
+        var isCrypto = it.sym && it.sym.endsWith('USDT');
+        var isOpen = isCrypto ? true : forexOpen;
+        var row = document.querySelector('[data-sym="' + it.sym + '"]');
+        if(!row) return;
+        if(isOpen) {
+          row.style.opacity = '1';
+          // KAPALI etiketini kaldır
+          var badge = row.querySelector('.market-closed-badge');
+          if(badge) badge.remove();
+        } else {
+          row.style.opacity = '0.5';
+          // KAPALI etiketi ekle
+          if(!row.querySelector('.market-closed-badge')) {
+            var badge = document.createElement('span');
+            badge.className = 'market-closed-badge';
+            badge.style.cssText = 'font-size:9px;background:#ef5350;color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:monospace;';
+            badge.textContent = 'KAPALI';
+            row.appendChild(badge);
+          }
+        }
+      });
+    });
+  }
+
+
+}
+// ── Piyasa Saatleri Modülü Sonu ─────────────────────────────────
+
+</script>
 </body>
