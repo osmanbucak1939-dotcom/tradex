@@ -3892,19 +3892,23 @@ function adStartTwelvedataFeed() {
     });
   }
   function _ffPoll() {
+    // Forex kapalıysa sadece kripto poll et
+    var _fxOpen = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
     fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_adFfCrypto)+'&api_key='+_adFfKey)
       .then(function(r){return r.json();}).then(_applyCrypto)
       .catch(function(e){console.warn('[FF Crypto]',e.message);_adBnOk=false;});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF FX1]',e.message);_adTdOk=false;});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF FX2]',e.message);});
-    if(_adFfForex3) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
+    if(_fxOpen) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
         .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX3]',e.message);});
+        .catch(function(e){console.warn('[FF FX1]',e.message);_adTdOk=false;});
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
+        .then(function(r){return r.json();}).then(_applyFx)
+        .catch(function(e){console.warn('[FF FX2]',e.message);});
+      if(_adFfForex3) {
+        fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
+          .then(function(r){return r.json();}).then(_applyFx)
+          .catch(function(e){console.warn('[FF FX3]',e.message);});
+      }
     }
   }
   _ffPoll();
