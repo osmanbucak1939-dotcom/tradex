@@ -3160,49 +3160,51 @@ function lwLoadKlines(sym, interval, cb) {
 
 /* ── FastForex OHLC klines (forex/emtia/endeks) ── */
 var _FF_KEY = '81e05712b4-8c68c7d36a-tcvv6a';
-// FastForex sembol map — TX_TD_MAP ile aynı format
 var FF_SYM_MAP = {
-  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
-  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
-  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
-  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',
-  'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
-  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD',
-  'GBPCHF':'GBP/CHF',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
-  'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
-  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK',
-  'USDNOK':'USD/NOK'
+  'EURUSD':'EURUSD',  'GBPUSD':'GBPUSD',  'USDJPY':'USDJPY',
+  'USDCHF':'USDCHF',  'AUDUSD':'AUDUSD',  'USDCAD':'USDCAD',
+  'NZDUSD':'NZDUSD',  'USDTRY':'USDTRY',  'EURTRY':'EURTRY',
+  'XAUUSD':'XAUUSD',  'XAGUSD':'XAGUSD',
+  'EURCAD':'EURCAD',  'EURGBP':'EURGBP',  'EURJPY':'EURJPY',
+  'GBPJPY':'GBPJPY',  'GBPAUD':'GBPAUD',  'AUDCAD':'AUDCAD',
+  'GBPCHF':'GBPCHF',  'AUDNZD':'AUDNZD',  'CADCHF':'CADCHF',
+  'USDMXN':'USDMXN',  'USDZAR':'USDZAR',  'USDSGD':'USDSGD',
+  'USDHKD':'USDHKD',  'USDPLN':'USDPLN',  'USDSEK':'USDSEK',
+  'USDNOK':'USDNOK'
 };
 function lwLoadFastForexKlines(sym, interval, cb) {
-  var ffSym = FF_SYM_MAP[sym] || (typeof TX_TD_MAP!=='undefined'&&TX_TD_MAP[sym] ? TX_TD_MAP[sym] : null);
+  var ffSym = FF_SYM_MAP[sym] || null;
   if(!ffSym) { cb([]); return; }
 
-  // FastForex interval: 1m,5m,15m,30m,1h,4h,1d
-  var FF_INT = {'1m':'1m','5m':'5m','15m':'15m','30m':'30m','1h':'1h','4h':'4h','1d':'1d'};
-  var ffInt = FF_INT[interval] || '4h';
+  // FastForex sadece 3 interval destekliyor: PT1M, PT1H, P1D
+  var FF_INT = {
+    '1m':'PT1M',  '5m':'PT1M',  '15m':'PT1H', '30m':'PT1H',
+    '1h':'PT1H',  '4h':'PT1H',  '1d':'P1D'
+  };
+  var ffInt = FF_INT[(interval||'4h').toLowerCase()] || 'PT1H';
 
   var url = 'https://api.fastforex.io/fx/ohlc/time-series'
-    + '?pairs=' + encodeURIComponent(ffSym)
+    + '?pair=' + ffSym
     + '&interval=' + ffInt
-    + '&outputsize=300'
+    + '&limit=300'
     + '&api_key=' + _FF_KEY;
 
   fetch(url)
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      // FastForex response: {data: {"EUR/USD": [{datetime, open, high, low, close}, ...]}}
-      if(!data || !data.data || !data.data[ffSym] || !Array.isArray(data.data[ffSym])) {
-        console.warn('[FF Klines]', sym, data && data.message);
+      // FastForex response: {results: [{dtm, o, h, l, c}, ...]}
+      if(!data || !data.results || !Array.isArray(data.results)) {
+        console.warn('[FF Klines]', sym, data && data.error);
         cb([]);
         return;
       }
-      var candles = data.data[ffSym].map(function(v) {
+      var candles = data.results.map(function(v) {
         return {
-          time:   Math.floor(new Date(v.datetime).getTime() / 1000),
-          open:   parseFloat(v.open),
-          high:   parseFloat(v.high),
-          low:    parseFloat(v.low),
-          close:  parseFloat(v.close),
+          time:   Math.floor(new Date(v.dtm).getTime() / 1000),
+          open:   parseFloat(v.o),
+          high:   parseFloat(v.h),
+          low:    parseFloat(v.l),
+          close:  parseFloat(v.c),
           volume: 0
         };
       });
