@@ -2941,6 +2941,7 @@ window._showPosLines = (function(){
 var _lwDrawLines = [];   // Çizim araçları
 
 var _klineData  = [];    // {time, open, high, low, close, volume}
+var _lwUserScrolled = false; // Kullanıcı scroll yaptıysa auto-scroll durdur
 var _klineLoading = false;
 var _klineAbort  = null;
 
@@ -3020,6 +3021,11 @@ function initChart() {
           + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
       },
     },
+  });
+
+  // Kullanıcı scroll/zoom yapınca auto-scroll durdur
+  _lw.timeScale().subscribeVisibleTimeRangeChange(function() {
+    _lwUserScrolled = true;
   });
 
   _lwSeries = _lw.addCandlestickSeries({
@@ -3581,7 +3587,7 @@ function lwTickUpdate() {
     if(_klineData.length > 600) _klineData.shift();
     _lwSeries.update(newBar);
     lwDrawOverlays(_klineData);
-    if(_lw) _lw.timeScale().scrollToRealTime();
+    if(_lw && !_lwUserScrolled) _lw.timeScale().scrollToRealTime();
   } else {
     // Mevcut mumu güncelle — fiyat aşırı sapıyorsa (override geçişi) mumu sıfırla
     // Fiyat mevcut mumdan %5'ten fazla sapıyorsa mumu sıfırla (override geçişi)
@@ -3602,7 +3608,7 @@ function lwTickUpdate() {
         var visRange = _lw.timeScale().getVisibleRange();
         if(visRange) {
           var lastBar = _klineData[_klineData.length-1];
-          if(lastBar && lastBar.time >= visRange.from) {
+          if(lastBar && lastBar.time >= visRange.from && !_lwUserScrolled) {
             _lw.priceScale('right').applyOptions({autoScale: true});
           }
         }
@@ -6570,6 +6576,7 @@ function mwSelect(sym, groupId) {
   var it = MW_MAP[sym];
   if(!it) return;
 
+  _lwUserScrolled = false; // Yeni sembol seçilince auto-scroll aktif et
   curSym = sym;
 
   var rows = document.querySelectorAll('.mw-row');
