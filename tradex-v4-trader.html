@@ -3337,9 +3337,10 @@ function lwRenderCandles(candles, sym) {
   // SL/TP/Pozisyon çizgileri
   lwDrawPositionLines();
 
-  // Son mumu sağ kenara getir
+  // Son mumu sağ kenara getir ve fiyat aralığını otomatik ayarla
   _lw.timeScale().scrollToRealTime();
   _lw.timeScale().applyOptions({rightOffset: 10});
+  _lw.priceScale('right').applyOptions({autoScale: true});
 
   // OHLC göster
   var last = candles[candles.length-1];
@@ -3635,8 +3636,18 @@ function lwTickUpdate() {
         var visRange = _lw.timeScale().getVisibleRange();
         if(visRange) {
           var lastBar = _klineData[_klineData.length-1];
-          if(lastBar && lastBar.time >= visRange.from && !_lwUserScrolled) {
-            _lw.priceScale('right').applyOptions({autoScale: true});
+          if(lastBar && lastBar.time >= visRange.from) {
+            // Görünür fiyat aralığını kontrol et
+            var priceRange = _lw.priceScale('right').getVisiblePriceRange();
+            if(priceRange) {
+              var margin = (priceRange.maxValue - priceRange.minValue) * 0.1;
+              if(price < priceRange.minValue + margin || price > priceRange.maxValue - margin) {
+                // Fiyat ekran kenarına yakın veya dışında — yeniden ölçekle
+                _lw.priceScale('right').applyOptions({autoScale: true});
+              }
+            } else if(!_lwUserScrolled) {
+              _lw.priceScale('right').applyOptions({autoScale: true});
+            }
           }
         }
       } catch(e){}
