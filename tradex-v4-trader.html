@@ -3206,12 +3206,9 @@ function lwLoadFastForexKlines(sym, interval, cb) {
   for(var i = 0; i < batches; i++) {
     (function(endTs) {
       var endDate = new Date(endTs).toISOString().slice(0,10);
-      var startTs = endTs - (batchSize * msPerCandle);
-      var startDate = new Date(startTs).toISOString().slice(0,10);
       var url = 'https://api.fastforex.io/fx/ohlc/time-series'
         + '?pair=' + ffSym
         + '&interval=' + ffInt
-        + '&start=' + startDate
         + '&end=' + endDate
         + '&limit=100'
         + '&api_key=' + _FF_KEY;
