@@ -3181,47 +3181,77 @@ function lwLoadFastForexKlines(sym, interval, cb) {
   var ffSym = FF_SYM_MAP[sym] || null;
   if(!ffSym) { cb([]); return; }
 
-  // FastForex sadece 3 interval destekliyor: PT1M, PT1H, P1D
+  // FastForex sadece 3 interval: PT1M, PT1H, P1D (max 100 per request)
+  // 4h/30m/15m/5m → PT1H ile yaklaşık
   var FF_INT = {
     '1m':'PT1M',  '5m':'PT1M',  '15m':'PT1H', '30m':'PT1H',
-    '1h':'PT1H',  '4h':'PT1H',  '1d':'P1D'
+    '1h':'PT1H',  '4h':'P1D',   '1d':'P1D'
   };
-  var ffInt = FF_INT[(interval||'4h').toLowerCase()] || 'PT1H';
+  var ffInt = FF_INT[(interval||'4h').toLowerCase()] || 'P1D';
 
-  var url = 'https://api.fastforex.io/fx/ohlc/time-series'
-    + '?pair=' + ffSym
-    + '&interval=' + ffInt
-    + '&api_key=' + _FF_KEY;
+  // Birden fazla istek atarak 300 mum topla (3 × 100)
+  var allCandles = [];
+  var now = new Date();
+  var requests = [];
 
-  fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      // FastForex response: {results: [{dtm, o, h, l, c}, ...]}
-      if(!data || !data.results || !Array.isArray(data.results)) {
-        console.warn('[FF Klines]', sym, data && data.error);
-        cb([]);
-        return;
-      }
-      var candles = data.results.map(function(v) {
-        return {
-          time:   Math.floor(new Date(v.dtm).getTime() / 1000),
-          open:   parseFloat(v.o),
-          high:   parseFloat(v.h),
-          low:    parseFloat(v.l),
-          close:  parseFloat(v.c),
-          volume: 0
-        };
-      });
-      candles.sort(function(a,b){ return a.time - b.time; });
-      var uniq = [], lastT = -1;
-      candles.forEach(function(c){ if(c.time !== lastT){ uniq.push(c); lastT = c.time; } });
-      _klineData = uniq;
-      cb(uniq);
-    })
-    .catch(function(e) {
-      console.warn('[TD Klines] fetch err:', e);
-      cb([]);
-    });
+  // Her istek için end tarihi hesapla (100'er mum geriye git)
+  var msPerCandle = ffInt === 'PT1M' ? 60000 : ffInt === 'PT1H' ? 3600000 : 86400000;
+  var batchSize = 100;
+  var totalCandles = 300;
+  var batches = Math.ceil(totalCandles / batchSize);
+
+  var pending = batches;
+  var endTime = now.getTime();
+
+  for(var i = 0; i < batches; i++) {
+    (function(endTs) {
+      var endDate = new Date(endTs).toISOString().slice(0,10);
+      var startTs = endTs - (batchSize * msPerCandle);
+      var startDate = new Date(startTs).toISOString().slice(0,10);
+      var url = 'https://api.fastforex.io/fx/ohlc/time-series'
+        + '?pair=' + ffSym
+        + '&interval=' + ffInt
+        + '&start=' + startDate
+        + '&end=' + endDate
+        + '&limit=100'
+        + '&api_key=' + _FF_KEY;
+
+      fetch(url)
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if(data && data.results && Array.isArray(data.results)) {
+            data.results.forEach(function(v) {
+              allCandles.push({
+                time:   Math.floor(new Date(v.dtm).getTime() / 1000),
+                open:   parseFloat(v.o),
+                high:   parseFloat(v.h),
+                low:    parseFloat(v.l),
+                close:  parseFloat(v.c),
+                volume: 0
+              });
+            });
+          }
+          pending--;
+          if(pending === 0) {
+            allCandles.sort(function(a,b){ return a.time - b.time; });
+            var uniq = [], lastT = -1;
+            allCandles.forEach(function(c){ if(c.time !== lastT){ uniq.push(c); lastT = c.time; } });
+            _klineData = uniq;
+            cb(uniq);
+          }
+        })
+        .catch(function(e) {
+          console.warn('[FF Klines]', e.message);
+          pending--;
+          if(pending === 0) {
+            allCandles.sort(function(a,b){ return a.time - b.time; });
+            _klineData = allCandles;
+            cb(allCandles);
+          }
+        });
+    })(endTime);
+    endTime -= batchSize * msPerCandle;
+  }
 }
 
 /* ── Ana yükleme: sembol + interval ─────────────── */
