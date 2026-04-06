@@ -3091,8 +3091,7 @@ function lwLoadKlines(sym, interval, cb) {
 
   // Binance sembolleri: crypto direkt, forex/emtia için fallback
   var bnSym = sym; // BTCUSDT, ETHUSDT vb.
-  var isCrypto = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT',
-                   'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'].indexOf(sym) > -1;
+  var isCrypto = sym && sym.endsWith('USDT');
 
   if(!isCrypto) {
     // Sentetik sembol mü? priceSource varsa kaynak sembolün verisini dönüştür
@@ -3186,7 +3185,6 @@ function lwLoadFastForexKlines(sym, interval, cb) {
   var url = 'https://api.fastforex.io/fx/ohlc/time-series'
     + '?pair=' + ffSym
     + '&interval=' + ffInt
-    + '&limit=300'
     + '&api_key=' + _FF_KEY;
 
   fetch(url)
