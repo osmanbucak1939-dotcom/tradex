@@ -6369,6 +6369,7 @@ if (!symConfig) {
 } else {
   // localStorage'dan yüklendi - eksik default sembolleri merge et
   var _defaults = [
+    // Kripto
     {sym:'BTCUSDT',label:'BTC/USDT',s:'BTC',spread:0.1,color:'#f5c518',minLot:0.001,active:true,contractSize:1,margin:1,decimals:2,category:'crypto'},
     {sym:'ETHUSDT',label:'ETH/USDT',s:'ETH',spread:0.05,color:'#64a0ff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'crypto'},
     {sym:'SOLUSDT',label:'SOL/USDT',s:'SOL',spread:0.01,color:'#a078ff',minLot:0.1,active:true,contractSize:1,margin:1,decimals:2,category:'crypto'},
@@ -6379,6 +6380,12 @@ if (!symConfig) {
     {sym:'AVAXUSDT',label:'AVAX/USDT',s:'AVAX',spread:0.01,color:'#e84142',minLot:0.1,active:true,contractSize:1,margin:1,decimals:2,category:'crypto'},
     {sym:'DOTUSDT',label:'DOT/USDT',s:'DOT',spread:0.01,color:'#e6007a',minLot:0.1,active:true,contractSize:1,margin:1,decimals:3,category:'crypto'},
     {sym:'LINKUSDT',label:'LINK/USDT',s:'LINK',spread:0.01,color:'#2a5ada',minLot:0.1,active:true,contractSize:1,margin:1,decimals:3,category:'crypto'},
+    {sym:'CAKEUSDT',label:'CAKE/USDT',s:'CAKE',spread:0.001,color:'#d1884f',minLot:1,active:true,contractSize:1,margin:1,decimals:4,category:'crypto'},
+    {sym:'CELOUSDT',label:'CELO/USDT',s:'CELO',spread:0.0005,color:'#35d07f',minLot:1,active:true,contractSize:1,margin:1,decimals:4,category:'crypto'},
+    {sym:'CHZUSDT',label:'CHZ/USDT',s:'CHZ',spread:0.0001,color:'#cd0124',minLot:10,active:true,contractSize:1,margin:1,decimals:5,category:'crypto'},
+    {sym:'COMPUSDT',label:'COMP/USDT',s:'COMP',spread:0.01,color:'#00d395',minLot:0.1,active:true,contractSize:1,margin:1,decimals:3,category:'crypto'},
+    {sym:'CROUSDT',label:'CRO/USDT',s:'CRO',spread:0.0001,color:'#002d74',minLot:10,active:true,contractSize:1,margin:1,decimals:5,category:'crypto'},
+    // Forex
     {sym:'EURUSD',label:'EUR/USD',s:'EUR',spread:0.0002,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
     {sym:'GBPUSD',label:'GBP/USD',s:'GBP',spread:0.0003,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
     {sym:'USDJPY',label:'USD/JPY',s:'JPY',spread:0.02,color:'#ff6600',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:3,category:'forex'},
@@ -6388,6 +6395,23 @@ if (!symConfig) {
     {sym:'NZDUSD',label:'NZD/USD',s:'NZD',spread:0.0002,color:'#009900',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
     {sym:'USDTRY',label:'USD/TRY',s:'TRY',spread:0.05,color:'#ff9900',minLot:0.01,active:true,contractSize:100000,margin:5,decimals:4,category:'forex'},
     {sym:'EURTRY',label:'EUR/TRY',s:'ETRY',spread:0.08,color:'#cc3300',minLot:0.01,active:true,contractSize:100000,margin:5,decimals:4,category:'forex'},
+    {sym:'EURCAD',label:'EUR/CAD',s:'EUR',spread:0.0004,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'EURGBP',label:'EUR/GBP',s:'EUR',spread:0.0002,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'EURJPY',label:'EUR/JPY',s:'EUR',spread:0.02,color:'#3399ff',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:3,category:'forex'},
+    {sym:'GBPJPY',label:'GBP/JPY',s:'GBP',spread:0.03,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:3,category:'forex'},
+    {sym:'GBPAUD',label:'GBP/AUD',s:'GBP',spread:0.0005,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'AUDCAD',label:'AUD/CAD',s:'AUD',spread:0.0004,color:'#ffcc00',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDMXN',label:'USD/MXN',s:'USD',spread:0.005,color:'#006847',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDZAR',label:'USD/ZAR',s:'USD',spread:0.005,color:'#007a4d',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDSGD',label:'USD/SGD',s:'USD',spread:0.0003,color:'#ef3340',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDHKD',label:'USD/HKD',s:'USD',spread:0.0003,color:'#de2010',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDPLN',label:'USD/PLN',s:'USD',spread:0.0005,color:'#dc143c',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'USDSEK',label:'USD/SEK',s:'USD',spread:0.005,color:'#006aa7',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'USDNOK',label:'USD/NOK',s:'USD',spread:0.005,color:'#ef2b2d',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:4,category:'forex'},
+    {sym:'GBPCHF',label:'GBP/CHF',s:'GBP',spread:0.0004,color:'#cc0000',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'AUDNZD',label:'AUD/NZD',s:'AUD',spread:0.0004,color:'#ffcc00',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    {sym:'CADCHF',label:'CAD/CHF',s:'CAD',spread:0.0004,color:'#ff3300',minLot:0.01,active:true,contractSize:100000,margin:2,decimals:5,category:'forex'},
+    // Emtia
     {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
     {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
     {sym:'USOIL',label:'US OIL',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'}
