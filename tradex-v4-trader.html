@@ -3077,28 +3077,33 @@ function _lwDecFor(sym) {
 }
 
 function _lwPriceFormat(sym) {
-  // Önce SIM_PRICES'tan decimals al (symConfig yüklenmemişse bile çalışır)
-  var simDec = SIM_PRICES && SIM_PRICES[sym] ? SIM_PRICES[sym].d : null;
-  var cfgDec = null;
+  // Mevcut fiyatı al
+  var price = (mwPrices&&mwPrices[sym]&&mwPrices[sym].price) ? mwPrices[sym].price
+            : (prices&&prices[sym]&&prices[sym].price) ? prices[sym].price
+            : (SIM_PRICES&&SIM_PRICES[sym]) ? SIM_PRICES[sym].p : 0;
+
+  // Fiyata göre precision belirle — LightweightCharts'ın kaldırabileceği kadar
+  var dec;
+  if(price > 10000)     dec = 0;
+  else if(price > 1000) dec = 1;
+  else if(price > 100)  dec = 2;
+  else if(price > 10)   dec = 3;
+  else if(price > 1)    dec = 4;
+  else                  dec = 5;
+
+  // symConfig'den decimals varsa kullan ama fiyata göre kap
   try {
     var cfg = (typeof symConfig!=='undefined'&&symConfig) ? symConfig.find(function(s){return s.sym===sym;}) : null;
-    if(cfg) cfgDec = cfg.decimals;
+    if(cfg && cfg.decimals !== undefined) {
+      // symConfig decimals'ı kullan ama fiyatla uyumsuzsa düzelt
+      var cfgDec = parseInt(cfg.decimals);
+      var maxDec = price > 10 ? 3 : price > 1 ? 5 : 5;
+      dec = Math.min(cfgDec, maxDec);
+    }
   } catch(e){}
-  var dec = cfgDec !== null ? cfgDec : (simDec !== null ? simDec : null);
 
-  // Mevcut fiyattan dec belirle (fallback)
-  if(dec === null) {
-    var price = (mwPrices&&mwPrices[sym]&&mwPrices[sym].price) ? mwPrices[sym].price
-              : (SIM_PRICES&&SIM_PRICES[sym]) ? SIM_PRICES[sym].p : 0;
-    if(price > 10000) dec = 0;
-    else if(price > 100) dec = 2;
-    else if(price > 1)   dec = 4;
-    else                 dec = 5;
-  }
-
-  var minMove = Math.pow(10, -dec);
-  // minMove sıfır veya çok küçük olmasın
-  if(!isFinite(minMove) || minMove <= 0) minMove = 0.01;
+  var minMove = parseFloat(Math.pow(10, -dec).toFixed(dec));
+  if(!isFinite(minMove) || minMove <= 0) minMove = 0.0001;
   return {type:'price', precision:dec, minMove:minMove};
 }
 
@@ -3353,6 +3358,14 @@ function lwRenderCandles(candles, sym) {
   _lw.timeScale().scrollToRealTime();
   _lw.timeScale().applyOptions({rightOffset: 10});
   _lw.priceScale('right').applyOptions({autoScale: true});
+  // setTimeout ile zorla yeniden ölçekle — seri render sonrası
+  setTimeout(function() {
+    if(_lw) {
+      _lw.priceScale('right').applyOptions({autoScale: true});
+      _lw.timeScale().fitContent();
+      _lwUserScrolled = false;
+    }
+  }, 100);
 
   // OHLC göster
   var last = candles[candles.length-1];
