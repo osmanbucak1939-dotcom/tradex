@@ -1,18 +1,26 @@
 {
-  "name": "TradeX",
-  "short_name": "TradeX",
-  "start_url": "/tradex/tradex-v4-trader.html",
-  "scope": "/tradex/",
+  "name": "Commerz Terminal",
+  "short_name": "Commerz",
+  "description": "Commerz Terminal - Professional Trading Platform",
+  "start_url": "/trader",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
-  "orientation": "portrait-primary",
+  "theme_color": "#1565c0",
+  "orientation": "any",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["finance", "business"],
+  "lang": "tr"
 }
