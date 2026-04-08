@@ -6465,23 +6465,22 @@ if (!symConfig) {
     {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
     {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
     {sym:'USOIL',label:'US OIL',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
-
-    // Emtia (Yahoo Finance)
-    {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
-    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
-    {sym:'WTIUSD',label:'WTI/USD',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
-    {sym:'BRTUSD',label:'BRT/USD',s:'BOIL',spread:0.05,color:'#654321',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
+    {sym:'BRTUSD',label:'BRENT OIL',s:'BRENT',spread:0.05,color:'#654321',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
     // Endeks (Yahoo Finance)
-    {sym:'NASUSD',label:'NASDAQ',s:'NAS',spread:5,color:'#4169e1',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
-    {sym:'DJUSD',label:'DOW JONES',s:'DJI',spread:10,color:'#1e90ff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
-    {sym:'SPXUSD',label:'S&P 500',s:'SPX',spread:5,color:'#00bfff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
-    {sym:'DAXUSD',label:'DAX 40',s:'DAX',spread:5,color:'#32cd32',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'SPX500X',label:'S&P 500',s:'SPX',spread:0.5,color:'#00bfff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'NAS100X',label:'NASDAQ',s:'NAS',spread:0.8,color:'#4169e1',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'DJ30X',label:'DOW 30',s:'DJI',spread:1.0,color:'#1e90ff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'DAX40X',label:'DAX 40',s:'DAX',spread:0.8,color:'#32cd32',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'FTSE100X',label:'FTSE 100',s:'FTSE',spread:0.5,color:'#cf142b',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
   ];
   var _existing = {};
   for(var _i=0; _i<symConfig.length; _i++) _existing[symConfig[_i].sym] = true;
   for(var _j=0; _j<_defaults.length; _j++) {
     if(!_existing[_defaults[_j].sym]) symConfig.push(_defaults[_j]);
   }
+  // Eski/çift sembolleri temizle
+  var _obsolete = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
+  symConfig = symConfig.filter(function(s){ return _obsolete.indexOf(s.sym) === -1; });
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
 }
 window._symConfig = symConfig;
