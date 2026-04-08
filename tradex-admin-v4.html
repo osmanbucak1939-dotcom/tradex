@@ -3937,6 +3937,41 @@ function adStartRealFeed() {
   adStartTwelvedataFeed(); // FastForex: forex + kripto polling
   adListenOverrides();
   if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  if(typeof startYahooFeed==='function') startYahooFeed();
+}
+
+// ── Yahoo Finance Feed (emtia + endeks) ───────────────────────
+var _adYahooTimer = null;
+var YAHOO_SYMS = {
+  'GC=F':  'XAUUSD',
+  'SI=F':  'XAGUSD',
+  'CL=F':  'USOIL',
+  'BZ=F':  'BRTUSD',
+  '^IXIC': 'NAS100X',
+  '^DJI':  'DJ30X',
+  '^GDAXI':'DAX40X',
+  '^GSPC': 'SPX500X'
+};
+
+function startYahooFeed() {
+  if(_adYahooTimer) { clearInterval(_adYahooTimer); _adYahooTimer=null; }
+  function _yahooPoll() {
+    Object.keys(YAHOO_SYMS).forEach(function(ticker) {
+      var sym = YAHOO_SYMS[ticker];
+      fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker))
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          try {
+            var price = data.chart.result[0].meta.regularMarketPrice;
+            if(sym && price > 0) adReceiveRawPrice(sym, price);
+          } catch(e) { console.warn('[Yahoo]', ticker, e.message); }
+        })
+        .catch(function(e){ console.warn('[Yahoo]', ticker, e.message); });
+    });
+  }
+  _yahooPool();
+  _adYahooTimer = setInterval(_yahooPool, 15000);
+  function _yahooPool() { _yahooPool = _yahooPoll; _yahooPoll(); }
 }
 
 function adListenOverrides() {
@@ -6429,7 +6464,18 @@ if (!symConfig) {
     // Emtia
     {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
     {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
-    {sym:'USOIL',label:'US OIL',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'}
+    {sym:'USOIL',label:'US OIL',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
+
+    // Emtia (Yahoo Finance)
+    {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
+    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
+    {sym:'WTIUSD',label:'WTI/USD',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
+    {sym:'BRTUSD',label:'BRT/USD',s:'BOIL',spread:0.05,color:'#654321',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
+    // Endeks (Yahoo Finance)
+    {sym:'NASUSD',label:'NASDAQ',s:'NAS',spread:5,color:'#4169e1',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'DJUSD',label:'DOW JONES',s:'DJI',spread:10,color:'#1e90ff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'SPXUSD',label:'S&P 500',s:'SPX',spread:5,color:'#00bfff',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
+    {sym:'DAXUSD',label:'DAX 40',s:'DAX',spread:5,color:'#32cd32',minLot:0.01,active:true,contractSize:1,margin:1,decimals:2,category:'index'},
   ];
   var _existing = {};
   for(var _i=0; _i<symConfig.length; _i++) _existing[symConfig[_i].sym] = true;
@@ -10243,6 +10289,51 @@ function _checkMarketStatus() {
 
 }
 // ── Piyasa Saatleri Modülü Sonu ─────────────────────────────────
+
+</script>
+
+<script>
+
+// ── Yahoo Finance Polling (Emtia + Endeks) ───────────────────
+var _yfSymMap = {
+  'XAUUSD': 'GC=F',    // Altın
+  'XAGUSD': 'SI=F',    // Gümüş
+  'WTIUSD': 'CL=F',    // WTI Ham Petrol
+  'BRTUSD': 'BZ=F',    // Brent Ham Petrol
+  'NASUSD': '^IXIC',   // NASDAQ
+  'DJUSD':  '^DJI',    // Dow Jones
+  'SPXUSD': '^GSPC',   // S&P 500
+  'DAXUSD': '^GDAXI',  // DAX
+};
+
+var _yfTimer = null;
+
+function _yfFetch(sym, yfTicker) {
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yfTicker) + '?interval=1m&range=1d';
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      try {
+        var price = data.chart.result[0].meta.regularMarketPrice;
+        if(price && price > 0) {
+          adReceiveRawPrice(sym, parseFloat(price));
+        }
+      } catch(e) {}
+    })
+    .catch(function(e){ console.warn('[YF]', sym, e.message); });
+}
+
+function startYahooFeed() {
+  if(_yfTimer) clearInterval(_yfTimer);
+  function _pollAll() {
+    Object.keys(_yfSymMap).forEach(function(sym) {
+      _yfFetch(sym, _yfSymMap[sym]);
+    });
+  }
+  _pollAll();
+  _yfTimer = setInterval(_pollAll, 15000); // 15 saniyede bir
+}
+// ── Yahoo Finance Sonu ───────────────────────────────────────
 
 </script>
 </body>
