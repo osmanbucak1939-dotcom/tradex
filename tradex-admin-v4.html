@@ -3958,7 +3958,7 @@ function startYahooFeed() {
   function _yahooPoll() {
     Object.keys(YAHOO_SYMS).forEach(function(ticker) {
       var sym = YAHOO_SYMS[ticker];
-      fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker))
+      fetch('https://yahoo-proxy.osmanbucak1939.workers.dev?ticker=' + encodeURIComponent(ticker))
         .then(function(r){ return r.json(); })
         .then(function(data) {
           try {
@@ -10308,7 +10308,7 @@ var _yfSymMap = {
 var _yfTimer = null;
 
 function _yfFetch(sym, yfTicker) {
-  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yfTicker) + '?interval=1m&range=1d';
+  var url = 'https://yahoo-proxy.osmanbucak1939.workers.dev?ticker=' + encodeURIComponent(yfTicker) + '&interval=1m&range=1d';
   fetch(url)
     .then(function(r){ return r.json(); })
     .then(function(data) {
