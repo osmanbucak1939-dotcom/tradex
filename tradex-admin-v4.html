@@ -1621,7 +1621,8 @@ console.log('Firebase bağlandı ✓');
               acc.lastSeen = ud.lastSeen;
               acc._onlineFromUsers = true;
               var ms = new Date(ud.lastSeen).getTime();
-              acc.online = !!(ud.online) || (Date.now()-ms < 60000);
+              // online field'ı false ise kesinlikle offline, true ise lastSeen 2dk kontrolü
+              acc.online = !!(ud.online) && (Date.now()-ms < 120000);
             }
             // Pozisyon değişimlerini güncelle
             if(ud.positions !== undefined) {
