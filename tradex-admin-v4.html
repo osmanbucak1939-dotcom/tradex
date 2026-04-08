@@ -1686,7 +1686,7 @@ console.log('Firebase bağlandı ✓');
             var acc2 = accounts.find(function(a){ return String(a.id)===udoc.id; });
             if(!acc2) return;
             var lsMs2 = acc2.lastSeen ? new Date(acc2.lastSeen).getTime() : 0;
-            var isOn2 = (acc2.online===true) && (lsMs2 ? (_now2-lsMs2)<120000 : true);
+            var isOn2 = (acc2.online===true) && lsMs2 > 0 && (_now2-lsMs2)<120000;
             // Login numarası border rengini güncelle
             var loginEl = document.querySelector('tr[data-id="'+acc2.id+'"] td:first-child');
             if(loginEl) loginEl.style.borderLeftColor = isOn2 ? '#26a69a' : '#2a2a2a';
@@ -5329,7 +5329,7 @@ function renderAccTable(){
     if(fStatus==='active'&&!a.active)return false;
     if(fStatus==='passive'&&a.active)return false;
     if(fSg&&(a.spreadGroup||'standard')!==fSg)return false;
-    if(fOnline){var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;var on=(a.online===true)&&(ms&&(now-ms)<60000);if(fOnline==='online'&&!on)return false;if(fOnline==='offline'&&on)return false;}
+    if(fOnline){var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;var on=(a.online===true)&&ms&&(now-ms)<300000;if(fOnline==='online'&&!on)return false;if(fOnline==='offline'&&on)return false;}
     return true;
   });
 
@@ -5447,8 +5447,8 @@ function renderAccTable(){
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
-      // lastSeen varsa 60sn kontrolü, yoksa sadece a.online flag'ine bak
-      var isOnline=(a.online===true)&&(lsMs?(now-lsMs)<120000:true);
+      // 2 dakika içinde lastSeen varsa online say
+      var isOnline=(a.online===true) && lsMs > 0 && (now-lsMs)<120000;
       var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
       // Son giriş: lastLogin önce, yoksa lastSeen
       var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
