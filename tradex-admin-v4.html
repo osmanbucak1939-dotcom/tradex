@@ -3731,7 +3731,7 @@ function adReceiveRawPrice(sym, rawMid) {
             .catch(function(e){console.warn('[Feed] chg write error:',e);});
         }
       }
-    },2000);
+    },500);
   }
   // Hesaplar listesi güncelle
   if(typeof _adUpdateEquityForSym==='function') _adUpdateEquityForSym(sym);
@@ -3882,7 +3882,7 @@ function adCalcStats(account, positions) {
 
 // ── Binance WebSocket ─────────────────────────────────────────
 var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adBnCryptoSyms = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT','CROUSDT'];
+var _adBnCryptoSyms = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
 var _adFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
 var _adFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
 var _adFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
@@ -3894,7 +3894,7 @@ function adStartTwelvedataFeed() {
 
   // Kripto: Binance ticker - tek tek çek (CORS sorunu nedeniyle)
   var _adBnIdx = 0;
-  function _doBnPoll() {
+  window._doBnPoll = function _doBnPoll() {
     // Her çağrıda 3 sembol çek (15 sembol / 5 = 3sn'de hepsi tamamlanır)
     var batch = _adBnCryptoSyms.slice(_adBnIdx, _adBnIdx + 3);
     _adBnIdx = (_adBnIdx + 3) % _adBnCryptoSyms.length;
@@ -3907,7 +3907,7 @@ function adStartTwelvedataFeed() {
         })
         .catch(function(e){console.warn('[BN]',sym,e.message);_adBnOk=false;});
     });
-  }
+  };
   _doBnPoll();
   _adBnTimer = setInterval(_doBnPoll, 1000);
 
