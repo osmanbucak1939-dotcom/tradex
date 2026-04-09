@@ -7447,9 +7447,9 @@ function txStartBinanceWs() {
 function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
-  // Fiyatlar admin'den Firebase üzerinden gelir - trader kendi poll etmez
-  // txStartTwelvedataWs(); // Devre dışı - admin → Firebase → trader
-  // Firebase
+  // Kripto: Binance ticker direkt (hızlı, ücretsiz)
+  txStartCryptoPoll();
+  // Forex: admin → Firebase → trader
   txListenPricesChg();
   txListenOverrides();
   txListenSynthOffsets();
@@ -7457,6 +7457,28 @@ function startRealFeed() {
   txListenPrices();
   if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
   if(typeof startYahooFeed==='function') startYahooFeed();
+}
+
+// Kripto fiyatları Binance'dan direkt çek (2sn)
+var _txCryptoPollTimer = null;
+var _txCryptoSyms = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT','CROUSDT'];
+function txStartCryptoPoll() {
+  if(_txCryptoPollTimer) { clearInterval(_txCryptoPollTimer); _txCryptoPollTimer=null; }
+  function _doCryptoPoll() {
+    var syms = JSON.stringify(_txCryptoSyms.map(function(s){ return '\"'+s+'\"'; }).join(','));
+    fetch('https://api.binance.com/api/v3/ticker/price?symbols=[' + _txCryptoSyms.map(function(s){return '%22'+s+'%22';}).join(',') + ']')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if(!Array.isArray(data)) return;
+        data.forEach(function(item) {
+          var price = parseFloat(item.price);
+          if(item.symbol && price > 0) txApplyPrice(item.symbol, price);
+        });
+      })
+      .catch(function(e){ console.warn('[Binance ticker]', e.message); });
+  }
+  _doCryptoPoll();
+  _txCryptoPollTimer = setInterval(_doCryptoPoll, 2000);
 }
 
 function txLoadBrokerInfo() {
