@@ -10176,49 +10176,6 @@ if('serviceWorker' in navigator) {
 }
 </script>
 
-<script>
-
-// ── Yahoo Finance Polling (Emtia + Endeks) ───────────────────
-var _yfSymMap = {
-  'XAUUSD': 'GC=F',    // Altın
-  'XAGUSD': 'SI=F',    // Gümüş
-  'WTIUSD': 'CL=F',    // WTI Ham Petrol
-  'BRTUSD': 'BZ=F',    // Brent Ham Petrol
-  'NASUSD': '^IXIC',   // NASDAQ
-  'DJUSD':  '^DJI',    // Dow Jones
-  'SPXUSD': '^GSPC',   // S&P 500
-  'DAXUSD': '^GDAXI',  // DAX
-};
-
-var _yfTimer = null;
-
-function _yfFetch(sym, yfTicker) {
-  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yfTicker) + '?interval=1m&range=1d';
-  fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      try {
-        var price = data.chart.result[0].meta.regularMarketPrice;
-        if(price && price > 0) {
-          txApplyPrice(sym, parseFloat(price));
-        }
-      } catch(e) {}
-    })
-    .catch(function(e){ console.warn('[YF]', sym, e.message); });
-}
-
-function startYahooFeed() {
-  if(_yfTimer) clearInterval(_yfTimer);
-  function _pollAll() {
-    Object.keys(_yfSymMap).forEach(function(sym) {
-      _yfFetch(sym, _yfSymMap[sym]);
-    });
-  }
-  _pollAll();
-  _yfTimer = setInterval(_pollAll, 15000); // 15 saniyede bir
-}
-// ── Yahoo Finance Sonu ───────────────────────────────────────
-
 </script>
 </body>
 </html>
