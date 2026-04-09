@@ -7243,12 +7243,6 @@ function txListenPrices() {
       // Sentetik semboller Firebase prices'tan okunmaz — txApplyPrice ile kendi hesaplar
       var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
       if(_isSynth) return;
-      // WebSocket bağlıysa Firebase fiyatını yoksay
-      var _bnOk = window._txBnConnected && window._txBnWs && window._txBnWs.readyState===1;
-      var _tdOk = window._txTdConnected && window._txTdWs && window._txTdWs.readyState===1;
-      var _isCrypto = sym.endsWith('USDT') || sym.endsWith('BTC');
-      if(_isCrypto && _bnOk) return;
-      if(!_isCrypto && _tdOk) return;
       txApplyPrice(sym, price);
     });
   }, function(e){ console.warn('[Trader] prices snap err:', e); });
@@ -7399,12 +7393,16 @@ function txStartTwelvedataWs() {
       if(sym&&price>0) txApplyPrice(sym,price);
     });
   }
+  var _fxPollCount = 0;
   function _ffPoll() {
+    _fxPollCount++;
     var _fxOpen = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
+    // Kripto her 2 saniyede
     fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txFfCrypto)+'&api_key='+_txFfKey)
       .then(function(r){return r.json();}).then(_applyCrypto)
       .catch(function(e){console.warn('[FF Crypto]',e.message);window._txBnConnected=false;});
-        if(_fxOpen) {
+    // Forex her 10 saniyede (5 döngüde bir)
+    if(_fxOpen && _fxPollCount % 5 === 0) {
       fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex1+'&api_key='+_txFfKey)
         .then(function(r){return r.json();}).then(_applyFx)
         .catch(function(e){console.warn('[FF FX1]',e.message);window._txTdConnected=false;});
@@ -7419,7 +7417,7 @@ function txStartTwelvedataWs() {
     }
   }
   _ffPoll();
-  _txFfTimer = setInterval(_ffPoll, 10000);
+  _txFfTimer = setInterval(_ffPoll, 2000);
   window._txTdConnected = true; window._txBnConnected = true;
 }
 
@@ -7449,8 +7447,8 @@ function txStartBinanceWs() {
 function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
-  // FastForex: forex + kripto polling
-  txStartTwelvedataWs();
+  // Fiyatlar admin'den Firebase üzerinden gelir - trader kendi poll etmez
+  // txStartTwelvedataWs(); // Devre dışı - admin → Firebase → trader
   // Firebase
   txListenPricesChg();
   txListenOverrides();
