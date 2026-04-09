@@ -7234,6 +7234,7 @@ function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} }
 
   _txPriceUnsub = db.collection('broker').doc('prices').onSnapshot(function(doc){
+    if(typeof window._txSnapAlive === 'function') window._txSnapAlive();
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
     Object.keys(pd).forEach(function(sym){
@@ -7448,14 +7449,25 @@ function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
   // Tek kaynak: Admin → Firebase broker/prices → Trader
-  // Tüm fiyatlar (kripto + forex) Firebase üzerinden gelir
   txListenPricesChg();
   txListenOverrides();
   txListenSynthOffsets();
   txLoadBrokerInfo();
   txListenPrices();
   if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
-  if(typeof startYahooFeed==='function') startYahooFeed();
+
+  // Watchdog: Firebase listener kopunca yeniden başlat
+  var _lastSnap = Date.now();
+  var _origListen = txListenPrices;
+  // onSnapshot her geldiğinde zamanı güncelle
+  window._txSnapAlive = function() { _lastSnap = Date.now(); };
+  setInterval(function() {
+    if(Date.now() - _lastSnap > 15000) {
+      console.warn('[Watchdog] Firebase listener koptu, yeniden bağlanıyor...');
+      _lastSnap = Date.now();
+      txListenPrices();
+    }
+  }, 5000);
 }
 
 // Artık kullanılmıyor - admin Firebase'e yazar, trader dinler
