@@ -3892,23 +3892,24 @@ function adStartTwelvedataFeed() {
   if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
   if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
 
-  // Kripto: Binance ticker (gerçek zamanlı, ücretsiz)
+  // Kripto: Binance ticker - tek tek çek (CORS sorunu nedeniyle)
+  var _adBnIdx = 0;
   function _doBnPoll() {
-    var symsParam = _adBnCryptoSyms.map(function(s){return '%22'+s+'%22';}).join(',');
-    fetch('https://api.binance.com/api/v3/ticker/price?symbols=['+symsParam+']')
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(!Array.isArray(data)) return;
-        _adBnOk = true;
-        data.forEach(function(item){
-          var price = parseFloat(item.price);
-          if(item.symbol && price>0) adReceiveRawPrice(item.symbol, price);
-        });
-      })
-      .catch(function(e){console.warn('[BN Crypto]',e.message);_adBnOk=false;});
+    // Her çağrıda 3 sembol çek (15 sembol / 5 = 3sn'de hepsi tamamlanır)
+    var batch = _adBnCryptoSyms.slice(_adBnIdx, _adBnIdx + 3);
+    _adBnIdx = (_adBnIdx + 3) % _adBnCryptoSyms.length;
+    batch.forEach(function(sym) {
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var price = parseFloat(d.price);
+          if(d.symbol && price>0) { _adBnOk=true; adReceiveRawPrice(d.symbol, price); }
+        })
+        .catch(function(e){console.warn('[BN]',sym,e.message);_adBnOk=false;});
+    });
   }
   _doBnPoll();
-  _adBnTimer = setInterval(_doBnPoll, 2000);
+  _adBnTimer = setInterval(_doBnPoll, 1000);
 
   // Forex: FastForex (her 10sn)
   function _applyFx(data) {
