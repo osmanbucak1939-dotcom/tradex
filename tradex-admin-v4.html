@@ -1426,7 +1426,7 @@ function fbSaveAccounts() {
             if(!Object.keys(buf).length) return;
             db.collection('broker').doc('prices').set(Object.assign({_ts:Date.now()},buf),{merge:true})
               .catch(function(e){console.warn('[Override] FB error:',e);});
-          }, 2000);
+          }, 500);
         }
         fbSaveOverrides(sym, price);
       } catch(e) { console.warn('fbSavePrices err:', e); }
@@ -3797,7 +3797,7 @@ function adApplyOverride(sym, price) {
         if(!Object.keys(buf).length) return;
         db.collection('broker').doc('prices').set(Object.assign({_ts:Date.now()},buf),{merge:true})
           .catch(function(e){console.warn('[Override] FB error:',e);});
-      }, 2000);
+      }, 5000);
     }
   }
 }
