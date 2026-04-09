@@ -3892,13 +3892,17 @@ function adStartTwelvedataFeed() {
   if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
   if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
 
-  // Kripto: Binance ticker - tek tek çek (CORS sorunu nedeniyle)
+  // Kripto: Binance ticker - BTC her zaman, diğerleri rotate
   var _adBnIdx = 0;
+  var _adBnOthers = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
   window._doBnPoll = function _doBnPoll() {
-    // Her çağrıda 3 sembol çek (15 sembol / 5 = 3sn'de hepsi tamamlanır)
-    var batch = _adBnCryptoSyms.slice(_adBnIdx, _adBnIdx + 3);
-    _adBnIdx = (_adBnIdx + 3) % _adBnCryptoSyms.length;
-    batch.forEach(function(sym) {
+    // BTC her zaman
+    var toFetch = ['BTCUSDT'];
+    // Diğerlerinden 2 tane rotate
+    toFetch.push(_adBnOthers[_adBnIdx % _adBnOthers.length]);
+    toFetch.push(_adBnOthers[(_adBnIdx+1) % _adBnOthers.length]);
+    _adBnIdx = (_adBnIdx + 2) % _adBnOthers.length;
+    toFetch.forEach(function(sym) {
       fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
         .then(function(r){return r.json();})
         .then(function(d){
