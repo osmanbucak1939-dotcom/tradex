@@ -7368,71 +7368,64 @@ function txListenPrices() {
   if(typeof db === 'undefined' || !db) return;
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} }
 
-  var _knownSyms = null;
-  function _getKnown() {
-    if(_knownSyms) return _knownSyms;
-    _knownSyms = {};
-    if(typeof symConfig !== 'undefined' && symConfig) {
-      symConfig.forEach(function(s){ _knownSyms[s.sym] = true; });
+  var _ffKey    = '81e05712b4-8c68c7d36a-tcvv6a';
+  var _bnSyms   = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
+  var _ffForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
+  var _ffForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
+  var _ffForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
+  var _bnIdx    = 0;
+  var _ffTimer  = null;
+  var _bnTimer  = null;
+
+  // Binance kripto (1sn)
+  function _bnPoll() {
+    var batch = ['BTCUSDT'];
+    for(var i=0; i<4; i++) {
+      var s = _bnSyms[(_bnIdx+i) % _bnSyms.length];
+      if(s !== 'BTCUSDT') batch.push(s);
     }
-    return _knownSyms;
+    _bnIdx = (_bnIdx+4) % _bnSyms.length;
+    batch.forEach(function(sym) {
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol='+sym)
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var p = parseFloat(d.price);
+          if(d.symbol && p>0) txApplyPrice(d.symbol, p);
+        })
+        .catch(function(){});
+    });
   }
+  _bnPoll();
+  _bnTimer = setInterval(_bnPoll, 1000);
 
-  var _timer = setInterval(function() {
-    db.collection('broker').doc('prices').get({source:'server'})
-      .then(function(doc) {
-        if(!doc.exists) return;
-        var pd = doc.data(); if(!pd) return;
-        var known = _getKnown();
-        Object.keys(pd).forEach(function(sym) {
-          if(sym.charAt(0) === '_') return;
-          if(Object.keys(known).length > 0 && !known[sym]) return;
-          var rawMid = parseFloat(pd[sym]);
-          if(!rawMid || rawMid <= 0) return;
-          var isSynth = (typeof symConfig!=='undefined'&&symConfig) &&
-                        symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
-          if(isSynth) return;
+  // FastForex forex (3sn)
+  function _applyFx(data) {
+    if(!data||!data.quotes) return;
+    Object.keys(data.quotes).forEach(function(sym){
+      var q=data.quotes[sym]; if(!q) return;
+      var mid=(parseFloat(q.bid)+parseFloat(q.ask))/2;
+      if(sym&&mid>0) txApplyPrice(sym,mid);
+    });
+  }
+  function _ffPoll() {
+    var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
+    if(!open) return;
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex1+'&api_key='+_ffKey)
+      .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex2+'&api_key='+_ffKey)
+      .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
+    if(_ffForex3) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex3+'&api_key='+_ffKey)
+        .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
+    }
+  }
+  _ffPoll();
+  _ffTimer = setInterval(_ffPoll, 3000);
 
-          // Spread hesapla
-          var spread = 0;
-          if(typeof symConfig !== 'undefined' && symConfig) {
-            var sc = symConfig.find(function(s){ return s.sym===sym; });
-            if(sc) spread = parseFloat(sc.spread)||0;
-          }
-          var half = spread/2;
-          var bid  = rawMid - half;
-          var ask  = rawMid + half;
-          var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
-          var chg  = (window._fbChg && window._fbChg[sym] !== undefined) ? window._fbChg[sym] : (prices[sym] ? prices[sym].chg||0 : 0);
-
-          // prices güncelle
-          prices[sym]   = {mid:rawMid, price:rawMid, bid:bid, ask:ask, chg:chg, prev:prev};
-          mwPrices[sym] = prices[sym];
-
-          // Direkt DOM güncelle
-          if(typeof updateMwRow === 'function') updateMwRow(sym, bid, prev);
-          if(sym === curSym) {
-            if(typeof lwTickUpdate === 'function') lwTickUpdate();
-            if(typeof updateOrderTicket === 'function') updateOrderTicket(bid);
-            if(typeof updateTopSym === 'function') updateTopSym(sym, bid, chg);
-            if(typeof updateQuickTrade === 'function') updateQuickTrade(rawMid, spread);
-          }
-          if(typeof checkAlarms === 'function') checkAlarms(sym, bid);
-          if(typeof mTick === 'function') mTick();
-        });
-
-        // Pozisyonları toplu güncelle (her poll'da bir kez)
-        if(typeof txTickPositions === 'function' && positions && positions.length) {
-          txTickPositions();
-        } else if(typeof updatePositions === 'function') {
-          updatePositions();
-        }
-        if(typeof buildTicker === 'function') buildTicker();
-      })
-      .catch(function(e){ console.warn('[prices poll]', e.message); });
-  }, 1000);
-
-  _txPriceUnsub = function() { clearInterval(_timer); };
+  _txPriceUnsub = function() {
+    clearInterval(_bnTimer);
+    clearInterval(_ffTimer);
+  };
 }
 
 function startRealFeed() {
