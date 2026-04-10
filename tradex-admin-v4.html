@@ -1595,9 +1595,11 @@ console.log('Firebase bağlandı ✓');
       function _startUsersSnap() {
         if(window._usersSnapUnsub) return; // zaten aktif
         window._usersSnapUnsub = db.collection('users').onSnapshot(function(snap){
+          if(!window._usersSnapData) window._usersSnapData = {};
           snap.forEach(function(udoc){
             var ud = udoc.data();
             if(!ud) return;
+            window._usersSnapData[udoc.id] = ud; // cache'le
             var acc = accounts.find(function(a){ return String(a.id)===udoc.id; });
             if(!acc) return;
             if(ud.lastLogin) {
@@ -9486,6 +9488,17 @@ var AD_SIM={
           }
         });
         accounts=fbAccs;
+        // users koleksiyonundaki güncel lastLogin/lastSeen/online değerlerini koru
+        if(window._usersSnapData) {
+          accounts.forEach(function(a) {
+            var ud = window._usersSnapData[String(a.id)];
+            if(ud) {
+              if(ud.lastLogin) a.lastLogin = ud.lastLogin;
+              if(ud.lastSeen) a.lastSeen = ud.lastSeen;
+              if(ud.online !== undefined) a.online = ud.online;
+            }
+          });
+        }
         try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
       }
       renderAccTable();
