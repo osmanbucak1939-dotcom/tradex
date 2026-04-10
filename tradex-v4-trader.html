@@ -1495,7 +1495,7 @@ function initAuth(){
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
-    db.settings({ ignoreUndefinedProperties: true, experimentalForceLongPolling: true, merge: true });
+    db.settings({ ignoreUndefinedProperties: true });
 
     // ── FIREBASE YARDIMCI FONKSİYONLAR ──
     var _fbReady = false;
@@ -7186,15 +7186,20 @@ function txApplyPrice(sym, rawMid) {
     if(typeof lwTickUpdate === 'function') lwTickUpdate();
     if(typeof updateOrderTicket === 'function') updateOrderTicket(bid);
     if(typeof updateTopSym === 'function') updateTopSym(sym, bid, chg);
-    if(typeof updateQuickTrade === 'function') {
-      updateQuickTrade(rawMid, spread);
-    }
+    if(typeof updateQuickTrade === 'function') updateQuickTrade(rawMid, spread);
   }
   if(typeof checkAlarms === 'function') checkAlarms(sym, bid);
-  if(typeof txTickPositions === 'function' && positions && positions.length) txTickPositions();
-  else if(typeof updatePositions === 'function') updatePositions();
-  if(typeof buildTicker === 'function') buildTicker();
-  if(typeof mTick==='function') mTick();
+
+  // Ağır UI güncellemelerini throttle et (max 2/sn)
+  if(!window._txHeavyTimer) {
+    window._txHeavyTimer = setTimeout(function(){
+      window._txHeavyTimer = null;
+      if(typeof txTickPositions === 'function' && positions && positions.length) txTickPositions();
+      else if(typeof updatePositions === 'function') updatePositions();
+      if(typeof buildTicker === 'function') buildTicker();
+      if(typeof mTick==='function') mTick();
+    }, 500);
+  }
 
   // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
   var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
