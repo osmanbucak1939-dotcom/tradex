@@ -3708,31 +3708,9 @@ function adReceiveRawPrice(sym, rawMid) {
       });
     }
   }
-  // Firebase'e toplu yaz — sentetik semboller yazılmaz (trader kendi hesaplar)
+  // Firebase'e yaz — sentetik semboller yazılmaz
   var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
-  if(!_isSynth) _FX.writeBuf[sym] = rawMid;
-  if(!_FX.writeTimer) {
-    _FX.writeTimer = setTimeout(function(){
-      if(typeof db==='undefined'||!db){_FX.writeBuf={};_FX.writeTimer=null;return;}
-      var buf=_FX.writeBuf; _FX.writeBuf={}; _FX.writeTimer=null;
-      if(!Object.keys(buf).length) return;
-      var upd=Object.assign({_ts:Date.now()},buf);
-      db.collection('broker').doc('prices').set(upd,{merge:true})
-        .catch(function(e){console.warn('[Feed] FB write error:',e);});
-      // pricesChg - günlük % değişim trader için
-      if(window._adDayOpen) {
-        var chgUpd={_ts:Date.now()};
-        Object.keys(buf).forEach(function(sym){
-          var dayO=window._adDayOpen[sym];
-          if(dayO) chgUpd[sym]=(parseFloat(buf[sym])-dayO)/dayO*100;
-        });
-        if(Object.keys(chgUpd).length>1) {
-          db.collection('broker').doc('pricesChg').set(chgUpd,{merge:true})
-            .catch(function(e){console.warn('[Feed] chg write error:',e);});
-        }
-      }
-    },200);
-  }
+  if(!_isSynth) _adFbWrite(sym, rawMid);
   // Hesaplar listesi güncelle
   if(typeof _adUpdateEquityForSym==='function') _adUpdateEquityForSym(sym);
   // Stop out kontrolü - hesap detayı açıksa
@@ -3881,75 +3859,104 @@ function adCalcStats(account, positions) {
 }
 
 // ── Binance WebSocket ─────────────────────────────────────────
-var _adFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adBnCryptoSyms = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
+// ── FEED KONFİGÜRASYONU ─────────────────────────────────────
+var _adFfKey    = '81e05712b4-8c68c7d36a-tcvv6a';
 var _adFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
 var _adFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
 var _adFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
-var _adFfTimer = null;
-var _adBnTimer = null;
-function adStartTwelvedataFeed() {
-  if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
-  if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
+var _adBnSyms   = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
 
-  // Kripto: Binance ticker - BTC her zaman, diğerleri rotate
-  var _adBnIdx = 0;
-  var _adBnOthers = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
-  window._doBnPoll = function _doBnPoll() {
-    // BTC her zaman, diğerlerinden 4 tane rotate
-    var toFetch = ['BTCUSDT'];
-    for(var i=0; i<4; i++) {
-      toFetch.push(_adBnOthers[(_adBnIdx+i) % _adBnOthers.length]);
-    }
-    _adBnIdx = (_adBnIdx + 4) % _adBnOthers.length;
-    toFetch.forEach(function(sym) {
-      fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
-        .then(function(r){return r.json();})
-        .then(function(d){
-          var price = parseFloat(d.price);
-          if(d.symbol && price>0) { _adBnOk=true; adReceiveRawPrice(d.symbol, price); }
-        })
-        .catch(function(e){console.warn('[BN]',sym,e.message);_adBnOk=false;});
-    });
-  };
-  _doBnPoll();
-  _adBnTimer = setInterval(_doBnPoll, 1000);
+var _adFfTimer  = null;
+var _adBnTimer  = null;
+var _adBnIdx    = 0;
 
-  // Forex: FastForex (her 10sn)
-  function _applyFx(data) {
-    if(!data||!data.quotes) return;
-    _adTdOk = true;
-    Object.keys(data.quotes).forEach(function(sym){
-      var q=data.quotes[sym]; if(!q) return;
-      var mid=(parseFloat(q.bid)+parseFloat(q.ask))/2;
-      if(sym&&mid>0) adReceiveRawPrice(sym,mid);
-    });
+// ── FIREBASE YAZICI ──────────────────────────────────────────
+// adReceiveRawPrice her çağrıldığında writeBuf'a ekler
+// 200ms sonra toplu yazar
+if(!window._adWriteBuf)   window._adWriteBuf   = {};
+if(!window._adWriteTimer) window._adWriteTimer = null;
+
+function _adFbWrite(sym, price) {
+  window._adWriteBuf[sym] = price;
+  if(!window._adWriteTimer) {
+    window._adWriteTimer = setTimeout(function() {
+      if(typeof db === 'undefined' || !db) { window._adWriteBuf={}; window._adWriteTimer=null; return; }
+      var buf = window._adWriteBuf;
+      window._adWriteBuf  = {};
+      window._adWriteTimer = null;
+      if(!Object.keys(buf).length) return;
+      buf._ts = Date.now();
+      db.collection('broker').doc('prices').set(buf, {merge:true})
+        .catch(function(e){ console.warn('[FB write]', e.message); });
+    }, 200);
   }
-  function _ffPoll() {
-    var _fxOpen = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
-    if(_fxOpen) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX1]',e.message);_adTdOk=false;});
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX2]',e.message);});
-      if(_adFfForex3) {
-        fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
-          .then(function(r){return r.json();}).then(_applyFx)
-          .catch(function(e){console.warn('[FF FX3]',e.message);});
-      }
-    }
-  }
-  _ffPoll();
-  _adFfTimer = setInterval(_ffPoll, 3000);
-  _adTdOk = true; _adBnOk = true;
 }
 
-// ── Feed başlat ───────────────────────────────────────────────
+// ── BİNANCE KRİPTO POLLING (1sn) ────────────────────────────
+function _adStartBinance() {
+  if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
+  function _poll() {
+    // BTC her zaman + 4 sembol rotate
+    var batch = ['BTCUSDT'];
+    for(var i=0; i<4; i++) {
+      var s = _adBnSyms[(_adBnIdx+i) % _adBnSyms.length];
+      if(s !== 'BTCUSDT') batch.push(s);
+    }
+    _adBnIdx = (_adBnIdx + 4) % _adBnSyms.length;
+    batch.forEach(function(sym) {
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
+        .then(function(r){ return r.json(); })
+        .then(function(d) {
+          var p = parseFloat(d.price);
+          if(d.symbol && p > 0) adReceiveRawPrice(d.symbol, p);
+        })
+        .catch(function(e){ console.warn('[BN]', sym, e.message); });
+    });
+  }
+  _poll();
+  _adBnTimer = setInterval(_poll, 1000);
+}
+
+// ── FASTFOREX FOREX POLLING (3sn) ───────────────────────────
+function _adStartForex() {
+  if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
+  function _applyFx(data) {
+    if(!data || !data.quotes) return;
+    Object.keys(data.quotes).forEach(function(sym) {
+      var q = data.quotes[sym]; if(!q) return;
+      var mid = (parseFloat(q.bid) + parseFloat(q.ask)) / 2;
+      if(sym && mid > 0) adReceiveRawPrice(sym, mid);
+    });
+  }
+  function _poll() {
+    var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
+    if(!open) return;
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
+      .then(function(r){return r.json();}).then(_applyFx)
+      .catch(function(e){console.warn('[FF1]',e.message);});
+    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
+      .then(function(r){return r.json();}).then(_applyFx)
+      .catch(function(e){console.warn('[FF2]',e.message);});
+    if(_adFfForex3) {
+      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
+        .then(function(r){return r.json();}).then(_applyFx)
+        .catch(function(e){console.warn('[FF3]',e.message);});
+    }
+  }
+  _poll();
+  _adFfTimer = setInterval(_poll, 3000);
+}
+
+function adStartTwelvedataFeed() {
+  _adStartBinance();
+  _adStartForex();
+  _adTdOk = true;
+  _adBnOk = true;
+}
+
 function adStartRealFeed() {
-  _adFeedOn=true;
-  adStartTwelvedataFeed(); // FastForex: forex + kripto polling
+  _adFeedOn = true;
+  adStartTwelvedataFeed();
   adListenOverrides();
   if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
 }
