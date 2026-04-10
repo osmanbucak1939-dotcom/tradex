@@ -3894,37 +3894,44 @@ function _adFbWrite(sym, price) {
 
 // ── BİNANCE KRİPTO POLLING (1sn) ────────────────────────────
 function _adStartBinance() {
-  if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
+  if(window._adBnTimerClear) { window._adBnTimerClear(); }
+
+  var _bnSyms = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
+  var _streams = ['btcusdt'].concat(_bnSyms.map(function(s){return s.toLowerCase();}));
+  var _streamUrl = 'wss://stream.binance.com:9443/stream?streams=' + _streams.map(function(s){return s+'@bookTicker';}).join('/');
   
-  // BTC ayrı timer - her 500ms bookTicker (anlık bid/ask)
-  var _btcTimer = setInterval(function() {
-    fetch('https://api.binance.com/api/v3/ticker/bookTicker?symbol=BTCUSDT')
-      .then(function(r){ return r.json(); })
-      .then(function(d) {
-        var mid = (parseFloat(d.bidPrice) + parseFloat(d.askPrice)) / 2;
-        if(mid > 0) adReceiveRawPrice('BTCUSDT', mid);
-      })
-      .catch(function(){});
-  }, 500);
+  var _ws = null;
+  var _reconnectTimer = null;
 
-  // Diğer kripto semboller rotate (1sn) - bookTicker
-  var _others = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
-  var _idx = 0;
-  var _otherTimer = setInterval(function() {
-    var sym = _others[_idx % _others.length];
-    _idx = (_idx + 1) % _others.length;
-    fetch('https://api.binance.com/api/v3/ticker/bookTicker?symbol=' + sym)
-      .then(function(r){ return r.json(); })
-      .then(function(d) {
-        var mid = (parseFloat(d.bidPrice) + parseFloat(d.askPrice)) / 2;
-        if(d.symbol && mid > 0) adReceiveRawPrice(d.symbol, mid);
-      })
-      .catch(function(){});
-  }, 1000);
-
+  function _connect() {
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _ws = new WebSocket(_streamUrl);
+    
+    _ws.onmessage = function(e) {
+      try {
+        var msg = JSON.parse(e.data);
+        var d = msg.data || msg;
+        var sym = (d.s || '').toUpperCase();
+        var mid = (parseFloat(d.b) + parseFloat(d.a)) / 2;
+        if(sym && mid > 0) adReceiveRawPrice(sym, mid);
+      } catch(ex){}
+    };
+    
+    _ws.onclose = function() {
+      // 3sn sonra yeniden bağlan
+      _reconnectTimer = setTimeout(_connect, 3000);
+    };
+    
+    _ws.onerror = function() {
+      try{_ws.close();}catch(e){}
+    };
+  }
+  
+  _connect();
+  
   window._adBnTimerClear = function() {
-    clearInterval(_btcTimer);
-    clearInterval(_otherTimer);
+    if(_reconnectTimer) clearTimeout(_reconnectTimer);
+    if(_ws) { try{_ws.close();}catch(e){} }
   };
 }
 
