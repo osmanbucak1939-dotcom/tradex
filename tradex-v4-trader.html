@@ -7361,131 +7361,56 @@ function txListenOverrides() {
   }, function(e){ console.warn('[Trader] overrides snap err:', e); });
 }
 
-// ── Feed başlat ───────────────────────────────────────────────
-// ── Trader Direkt WebSocket Feed ─────────────────────────────
-var _txTdWs = null, _txBnWs = null;
-window._txTdWs = null; window._txBnWs = null;
-var _txTdKey = '6be463dd71664cc0b5db780dd0a189ab';
+// ── TRADER FEED ───────────────────────────────────────────────
+// Tek kaynak: Admin → Firebase broker/prices → Trader
 
-var TX_TD_MAP = {
-  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
-  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
-  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
-  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'SPX500X':'SPX',     'NAS100X':'NDX',      'DJ30X':'DJI',
-  'FTSE100X':'FTSE',   'DAX40X':'DAX',
-  'USOIL':'WTI/USD',   'BRTUSD':'BRENT/USD'
-};
-var TX_TD_REV = {};
-Object.keys(TX_TD_MAP).forEach(function(k){ TX_TD_REV[TX_TD_MAP[k]] = k; });
-var TX_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
-                  'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
+function txListenPrices() {
+  if(typeof db === 'undefined' || !db) return;
+  if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} }
 
-var _txFfKey = '81e05712b4-8c68c7d36a-tcvv6a';
-var _txFfCrypto = 'BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT,XRP/USDT,CAKE/USDT,CELO/USDT,CHZ/USDT,COMP/USDT,CRO/USDT';
-var _txFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
-var _txFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
-var _txFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
-var _txFfTimer = null;
-function txStartTwelvedataWs() {
-  if(_txFfTimer) { clearInterval(_txFfTimer); _txFfTimer=null; }
-  function _applyFx(data) {
-    if(!data||!data.quotes) return;
-    window._txTdConnected = true;
-    Object.keys(data.quotes).forEach(function(sym){
-      var q=data.quotes[sym]; if(!q) return;
-      var mid=(parseFloat(q.bid)+parseFloat(q.ask))/2;
-      if(sym&&mid>0) txApplyPrice(sym,mid);
-    });
-  }
-  function _applyCrypto(data) {
-    if(!data||!data.prices) return;
-    window._txBnConnected = true;
-    Object.keys(data.prices).forEach(function(pair){
-      var sym=pair.replace('/','');
-      var price=parseFloat(data.prices[pair]);
-      if(sym&&price>0) txApplyPrice(sym,price);
-    });
-  }
-  var _fxPollCount = 0;
-  function _ffPoll() {
-    _fxPollCount++;
-    var _fxOpen = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
-    // Kripto her 2 saniyede
-    fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txFfCrypto)+'&api_key='+_txFfKey)
-      .then(function(r){return r.json();}).then(_applyCrypto)
-      .catch(function(e){console.warn('[FF Crypto]',e.message);window._txBnConnected=false;});
-    // Forex her 10 saniyede (5 döngüde bir)
-    if(_fxOpen && _fxPollCount % 5 === 0) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex1+'&api_key='+_txFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX1]',e.message);window._txTdConnected=false;});
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex2+'&api_key='+_txFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF FX2]',e.message);});
-      if(_txFfForex3) {
-        fetch('https://api.fastforex.io/fx/quote?pairs='+_txFfForex3+'&api_key='+_txFfKey)
-          .then(function(r){return r.json();}).then(_applyFx)
-          .catch(function(e){console.warn('[FF FX3]',e.message);});
-      }
+  var _knownSyms = null;
+  function _getKnown() {
+    if(_knownSyms) return _knownSyms;
+    _knownSyms = {};
+    if(typeof symConfig !== 'undefined' && symConfig) {
+      symConfig.forEach(function(s){ _knownSyms[s.sym] = true; });
     }
+    return _knownSyms;
   }
-  _ffPoll();
-  _txFfTimer = setInterval(_ffPoll, 2000);
-  window._txTdConnected = true; window._txBnConnected = true;
-}
 
-function txStartBinanceWs() {
-  // FastForex kripto polling — Binance WS yerine
-  if(_txCryptoTimer) { clearInterval(_txCryptoTimer); _txCryptoTimer=null; }
-  function _applyCrypto(data) {
-    if(!data||!data.prices) return;
-    window._txBnConnected = true;
-    Object.keys(data.prices).forEach(function(pair){
-      var sym = pair.replace('/','');
-      var price = parseFloat(data.prices[pair]);
-      if(sym && price>0) txApplyPrice(sym, price);
-    });
-  }
-  function _cryptoPoll() {
-    fetch('https://api.fastforex.io/crypto/fetch-prices?pairs='+encodeURIComponent(_txCryptoPairs)+'&api_key='+_txFfKey)
-      .then(function(r){ return r.json(); }).then(_applyCrypto)
-      .catch(function(e){ console.warn('[FF Crypto]', e.message); window._txBnConnected=false; });
-  }
-  _cryptoPoll();
-  _txCryptoTimer = setInterval(_cryptoPoll, 2000);
-  window._txBnConnected = true;
+  var _timer = setInterval(function() {
+    db.collection('broker').doc('prices').get({source:'server'})
+      .then(function(doc) {
+        if(!doc.exists) return;
+        var pd = doc.data(); if(!pd) return;
+        var known = _getKnown();
+        Object.keys(pd).forEach(function(sym) {
+          if(sym.charAt(0) === '_') return;
+          if(Object.keys(known).length > 0 && !known[sym]) return;
+          var price = parseFloat(pd[sym]);
+          if(!price || price <= 0) return;
+          var isSynth = (typeof symConfig!=='undefined'&&symConfig) &&
+                        symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
+          if(isSynth) return;
+          txApplyPrice(sym, price);
+        });
+      })
+      .catch(function(e){ console.warn('[prices poll]', e.message); });
+  }, 1000);
+
+  _txPriceUnsub = function() { clearInterval(_timer); };
 }
-// ─────────────────────────────────────────────────────────────
 
 function startRealFeed() {
   if(_txFeedActive) return;
   _txFeedActive = true;
-  // Tek kaynak: Admin → Firebase broker/prices → Trader
   txListenPricesChg();
   txListenOverrides();
   txListenSynthOffsets();
   txLoadBrokerInfo();
   txListenPrices();
   if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
-
-  // Watchdog: Firebase listener kopunca yeniden başlat
-  var _lastSnap = Date.now();
-  var _origListen = txListenPrices;
-  // onSnapshot her geldiğinde zamanı güncelle
-  window._txSnapAlive = function() { _lastSnap = Date.now(); };
-  setInterval(function() {
-    if(Date.now() - _lastSnap > 15000) {
-      console.warn('[Watchdog] Firebase listener koptu, yeniden bağlanıyor...');
-      _lastSnap = Date.now();
-      txListenPrices();
-    }
-  }, 5000);
 }
-
-// Artık kullanılmıyor - admin Firebase'e yazar, trader dinler
-var _txCryptoPollTimer = null;
-function txStartCryptoPoll() { /* devre dışı */ }
 
 function txLoadBrokerInfo() {
   if(typeof db==='undefined'||!db) return;
