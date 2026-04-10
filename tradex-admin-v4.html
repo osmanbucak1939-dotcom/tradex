@@ -1266,21 +1266,7 @@ function initAuth(){
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
-  <script>
-    // Firebase App Check — reCAPTCHA v3
-    document.addEventListener('DOMContentLoaded', function() {
-      try {
-        if(typeof firebase !== 'undefined' && firebase.app) {
-          const appCheck = firebase.appCheck();
-          appCheck.activate(
-            new firebase.appCheck.ReCaptchaV3Provider('6LdrsKwsAAAAAIt9o15QhYhydtsOysCPzMI5xXa9'),
-            true // token auto-refresh
-          );
-        }
-      } catch(e) { console.warn('AppCheck init:', e); }
-    });
-  </script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAfBaM-Oqa4L9dYNCsl6KBhzA-yVPPjmyA",
