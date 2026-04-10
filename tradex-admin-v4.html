@@ -3912,7 +3912,7 @@ function _adStartBinance() {
         if(sym && mid > 0) {
           _wsBuf[sym] = mid;
           if(!_wsFlushTimer) {
-            _wsFlushTimer = setTimeout(_wsFlush, 500);
+            _wsFlushTimer = setTimeout(_wsFlush, 200);
           }
         }
       } catch(ex){}
