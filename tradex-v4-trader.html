@@ -7369,6 +7369,17 @@ function txListenPrices() {
   var _streamUrl = 'wss://stream.binance.com:9443/stream?streams=' + _bnSyms.map(function(s){return s+'@bookTicker';}).join('/');
   var _ws = null;
   var _wsReconnect = null;
+  var _wsBuf = {}; // fiyat buffer - throttle için
+  var _wsFlushTimer = null;
+
+  function _wsFlush() {
+    // Buffer'daki fiyatları 500ms'de bir uygula
+    Object.keys(_wsBuf).forEach(function(sym) {
+      txApplyPrice(sym, _wsBuf[sym]);
+    });
+    _wsBuf = {};
+    _wsFlushTimer = null;
+  }
 
   function _wsConnect() {
     if(_ws) { try{_ws.close();}catch(e){} }
@@ -7379,7 +7390,12 @@ function txListenPrices() {
         var d = msg.data || msg;
         var sym = (d.s || '').toUpperCase();
         var mid = (parseFloat(d.b) + parseFloat(d.a)) / 2;
-        if(sym && mid > 0) txApplyPrice(sym, mid);
+        if(sym && mid > 0) {
+          _wsBuf[sym] = mid; // buffer'a yaz
+          if(!_wsFlushTimer) {
+            _wsFlushTimer = setTimeout(_wsFlush, 500); // 500ms'de bir flush
+          }
+        }
       } catch(ex){}
     };
     _ws.onclose = function() {
