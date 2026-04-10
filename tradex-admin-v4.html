@@ -3888,6 +3888,16 @@ function _adStartBinance() {
   
   var _ws = null;
   var _reconnectTimer = null;
+  var _wsBuf = {};
+  var _wsFlushTimer = null;
+
+  function _wsFlush() {
+    Object.keys(_wsBuf).forEach(function(sym) {
+      adReceiveRawPrice(sym, _wsBuf[sym]);
+    });
+    _wsBuf = {};
+    _wsFlushTimer = null;
+  }
 
   function _connect() {
     if(_ws) { try{_ws.close();}catch(e){} }
@@ -3899,12 +3909,16 @@ function _adStartBinance() {
         var d = msg.data || msg;
         var sym = (d.s || '').toUpperCase();
         var mid = (parseFloat(d.b) + parseFloat(d.a)) / 2;
-        if(sym && mid > 0) adReceiveRawPrice(sym, mid);
+        if(sym && mid > 0) {
+          _wsBuf[sym] = mid;
+          if(!_wsFlushTimer) {
+            _wsFlushTimer = setTimeout(_wsFlush, 500);
+          }
+        }
       } catch(ex){}
     };
     
     _ws.onclose = function() {
-      // 3sn sonra yeniden bağlan
       _reconnectTimer = setTimeout(_connect, 3000);
     };
     
@@ -3917,6 +3931,7 @@ function _adStartBinance() {
   
   window._adBnTimerClear = function() {
     if(_reconnectTimer) clearTimeout(_reconnectTimer);
+    if(_wsFlushTimer) clearTimeout(_wsFlushTimer);
     if(_ws) { try{_ws.close();}catch(e){} }
   };
 }
