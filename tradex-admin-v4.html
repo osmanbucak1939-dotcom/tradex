@@ -3896,41 +3896,35 @@ function _adFbWrite(sym, price) {
 function _adStartBinance() {
   if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
   
-  // BTC ayrı timer - her 500ms
+  // BTC ayrı timer - her 500ms bookTicker (anlık bid/ask)
   var _btcTimer = setInterval(function() {
-    fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+    fetch('https://api.binance.com/api/v3/ticker/bookTicker?symbol=BTCUSDT')
       .then(function(r){ return r.json(); })
       .then(function(d) {
-        var p = parseFloat(d.price);
-        if(p > 0) adReceiveRawPrice('BTCUSDT', p);
+        var mid = (parseFloat(d.bidPrice) + parseFloat(d.askPrice)) / 2;
+        if(mid > 0) adReceiveRawPrice('BTCUSDT', mid);
       })
       .catch(function(){});
   }, 500);
 
-  // Diğer kripto semboller rotate (1sn)
+  // Diğer kripto semboller rotate (1sn) - bookTicker
   var _others = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
   var _idx = 0;
-  _adBnTimer = setInterval(function() {
-    var batch = [_others[_idx % _others.length], _others[(_idx+1) % _others.length], _others[(_idx+2) % _others.length]];
-    _idx = (_idx + 3) % _others.length;
-    batch.forEach(function(sym) {
-      fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
-        .then(function(r){ return r.json(); })
-        .then(function(d) {
-          var p = parseFloat(d.price);
-          if(d.symbol && p > 0) adReceiveRawPrice(d.symbol, p);
-        })
-        .catch(function(){});
-    });
+  var _otherTimer = setInterval(function() {
+    var sym = _others[_idx % _others.length];
+    _idx = (_idx + 1) % _others.length;
+    fetch('https://api.binance.com/api/v3/ticker/bookTicker?symbol=' + sym)
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var mid = (parseFloat(d.bidPrice) + parseFloat(d.askPrice)) / 2;
+        if(d.symbol && mid > 0) adReceiveRawPrice(d.symbol, mid);
+      })
+      .catch(function(){});
   }, 1000);
 
-  // Cleanup
-  var _origTimer = _adBnTimer;
-  _adBnTimer = { _bt: _btcTimer, _ot: _origTimer };
-  // clearInterval override
   window._adBnTimerClear = function() {
     clearInterval(_btcTimer);
-    clearInterval(_origTimer);
+    clearInterval(_otherTimer);
   };
 }
 
