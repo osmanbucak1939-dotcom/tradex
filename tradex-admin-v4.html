@@ -3731,7 +3731,7 @@ function adReceiveRawPrice(sym, rawMid) {
             .catch(function(e){console.warn('[Feed] chg write error:',e);});
         }
       }
-    },500);
+    },200);
   }
   // Hesaplar listesi güncelle
   if(typeof _adUpdateEquityForSym==='function') _adUpdateEquityForSym(sym);
