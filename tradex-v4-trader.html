@@ -7387,13 +7387,47 @@ function txListenPrices() {
         Object.keys(pd).forEach(function(sym) {
           if(sym.charAt(0) === '_') return;
           if(Object.keys(known).length > 0 && !known[sym]) return;
-          var price = parseFloat(pd[sym]);
-          if(!price || price <= 0) return;
+          var rawMid = parseFloat(pd[sym]);
+          if(!rawMid || rawMid <= 0) return;
           var isSynth = (typeof symConfig!=='undefined'&&symConfig) &&
                         symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
           if(isSynth) return;
-          txApplyPrice(sym, price);
+
+          // Spread hesapla
+          var spread = 0;
+          if(typeof symConfig !== 'undefined' && symConfig) {
+            var sc = symConfig.find(function(s){ return s.sym===sym; });
+            if(sc) spread = parseFloat(sc.spread)||0;
+          }
+          var half = spread/2;
+          var bid  = rawMid - half;
+          var ask  = rawMid + half;
+          var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
+          var chg  = (window._fbChg && window._fbChg[sym] !== undefined) ? window._fbChg[sym] : (prices[sym] ? prices[sym].chg||0 : 0);
+
+          // prices güncelle
+          prices[sym]   = {mid:rawMid, price:rawMid, bid:bid, ask:ask, chg:chg, prev:prev};
+          mwPrices[sym] = prices[sym];
+
+          // Direkt DOM güncelle
+          if(typeof updateMwRow === 'function') updateMwRow(sym, bid, prev);
+          if(sym === curSym) {
+            if(typeof lwTickUpdate === 'function') lwTickUpdate();
+            if(typeof updateOrderTicket === 'function') updateOrderTicket(bid);
+            if(typeof updateTopSym === 'function') updateTopSym(sym, bid, chg);
+            if(typeof updateQuickTrade === 'function') updateQuickTrade(rawMid, spread);
+          }
+          if(typeof checkAlarms === 'function') checkAlarms(sym, bid);
+          if(typeof mTick === 'function') mTick();
         });
+
+        // Pozisyonları toplu güncelle (her poll'da bir kez)
+        if(typeof txTickPositions === 'function' && positions && positions.length) {
+          txTickPositions();
+        } else if(typeof updatePositions === 'function') {
+          updatePositions();
+        }
+        if(typeof buildTicker === 'function') buildTicker();
       })
       .catch(function(e){ console.warn('[prices poll]', e.message); });
   }, 1000);
