@@ -3895,14 +3895,24 @@ function _adFbWrite(sym, price) {
 // ── BİNANCE KRİPTO POLLING (1sn) ────────────────────────────
 function _adStartBinance() {
   if(_adBnTimer) { clearInterval(_adBnTimer); _adBnTimer=null; }
-  function _poll() {
-    // BTC her zaman + 4 sembol rotate
-    var batch = ['BTCUSDT'];
-    for(var i=0; i<4; i++) {
-      var s = _adBnSyms[(_adBnIdx+i) % _adBnSyms.length];
-      if(s !== 'BTCUSDT') batch.push(s);
-    }
-    _adBnIdx = (_adBnIdx + 4) % _adBnSyms.length;
+  
+  // BTC ayrı timer - her 500ms
+  var _btcTimer = setInterval(function() {
+    fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var p = parseFloat(d.price);
+        if(p > 0) adReceiveRawPrice('BTCUSDT', p);
+      })
+      .catch(function(){});
+  }, 500);
+
+  // Diğer kripto semboller rotate (1sn)
+  var _others = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
+  var _idx = 0;
+  _adBnTimer = setInterval(function() {
+    var batch = [_others[_idx % _others.length], _others[(_idx+1) % _others.length], _others[(_idx+2) % _others.length]];
+    _idx = (_idx + 3) % _others.length;
     batch.forEach(function(sym) {
       fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
         .then(function(r){ return r.json(); })
@@ -3910,11 +3920,18 @@ function _adStartBinance() {
           var p = parseFloat(d.price);
           if(d.symbol && p > 0) adReceiveRawPrice(d.symbol, p);
         })
-        .catch(function(e){ console.warn('[BN]', sym, e.message); });
+        .catch(function(){});
     });
-  }
-  _poll();
-  _adBnTimer = setInterval(_poll, 1000);
+  }, 1000);
+
+  // Cleanup
+  var _origTimer = _adBnTimer;
+  _adBnTimer = { _bt: _btcTimer, _ot: _origTimer };
+  // clearInterval override
+  window._adBnTimerClear = function() {
+    clearInterval(_btcTimer);
+    clearInterval(_origTimer);
+  };
 }
 
 // ── FASTFOREX FOREX POLLING (3sn) ───────────────────────────
