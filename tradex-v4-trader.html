@@ -7393,7 +7393,7 @@ function txListenPrices() {
         if(sym && mid > 0) {
           _wsBuf[sym] = mid; // buffer'a yaz
           if(!_wsFlushTimer) {
-            _wsFlushTimer = setTimeout(_wsFlush, 500); // 500ms'de bir flush
+            _wsFlushTimer = setTimeout(_wsFlush, 200); // 500ms'de bir flush
           }
         }
       } catch(ex){}
