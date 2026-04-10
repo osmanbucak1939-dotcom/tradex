@@ -7241,8 +7241,14 @@ function txListenPrices() {
         if(typeof window._txSnapAlive === 'function') window._txSnapAlive();
         if(!doc.exists) return;
         var pd = doc.data(); if(!pd) return;
+        // Sadece symConfig'de tanımlı sembolleri işle
+        var _knownSyms = {};
+        if(typeof symConfig !== 'undefined' && symConfig) {
+          symConfig.forEach(function(s){ _knownSyms[s.sym] = true; });
+        }
         Object.keys(pd).forEach(function(sym){
           if(sym.charAt(0) === '_') return;
+          if(Object.keys(_knownSyms).length > 0 && !_knownSyms[sym]) return; // bilinmeyen sembol atla
           var price = parseFloat(pd[sym]);
           if(!price || price <= 0) return;
           var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
