@@ -3896,12 +3896,12 @@ function adStartTwelvedataFeed() {
   var _adBnIdx = 0;
   var _adBnOthers = ['ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
   window._doBnPoll = function _doBnPoll() {
-    // BTC her zaman
+    // BTC her zaman, diğerlerinden 4 tane rotate
     var toFetch = ['BTCUSDT'];
-    // Diğerlerinden 2 tane rotate
-    toFetch.push(_adBnOthers[_adBnIdx % _adBnOthers.length]);
-    toFetch.push(_adBnOthers[(_adBnIdx+1) % _adBnOthers.length]);
-    _adBnIdx = (_adBnIdx + 2) % _adBnOthers.length;
+    for(var i=0; i<4; i++) {
+      toFetch.push(_adBnOthers[(_adBnIdx+i) % _adBnOthers.length]);
+    }
+    _adBnIdx = (_adBnIdx + 4) % _adBnOthers.length;
     toFetch.forEach(function(sym) {
       fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym)
         .then(function(r){return r.json();})
@@ -3942,7 +3942,7 @@ function adStartTwelvedataFeed() {
     }
   }
   _ffPoll();
-  _adFfTimer = setInterval(_ffPoll, 10000);
+  _adFfTimer = setInterval(_ffPoll, 3000);
   _adTdOk = true; _adBnOk = true;
 }
 
