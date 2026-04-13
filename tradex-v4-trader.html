@@ -4904,21 +4904,8 @@ function startLiveFeed() {
   renderMarketWatch();
   setApiDot('sim','SİM');
 
-  // Gerçek zamanlı feed — önce anonymous auth bekle, sonra başlat
-  setTimeout(function(){
-    try {
-      var _fa = firebase.auth();
-      if(_fa.currentUser) {
-        if(typeof startRealFeed==='function') startRealFeed();
-      } else {
-        _fa.signInAnonymously()
-          .then(function(){ if(typeof startRealFeed==='function') startRealFeed(); })
-          .catch(function(e){ console.warn('[Auth feed]',e.message); if(typeof startRealFeed==='function') startRealFeed(); });
-      }
-    } catch(e) {
-      if(typeof startRealFeed==='function') startRealFeed();
-    }
-  }, 500);
+  // startRealFeed artık _afterFirebaseAuth() üzerinden çağrılıyor
+  // (auth tamamlandıktan sonra — güvenli)
 
   // spreadGroups Firebase'den yükle ve grup spread'lerini uygula
   if(typeof db !== 'undefined' && db) {
@@ -7346,112 +7333,27 @@ function txListenOverrides() {
 // ── TRADER FEED ───────────────────────────────────────────────
 // Tek kaynak: Admin → Firebase broker/prices → Trader
 
+// ── TEK KAYNAK: Admin → Firebase broker/prices → Trader ─────────
+// Binance WS ve FastForex kaldırıldı — sadece Firebase onSnapshot
 function txListenPrices() {
   if(typeof db === 'undefined' || !db) return;
-  if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} }
+  if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
-  var _ffKey    = '81e05712b4-8c68c7d36a-tcvv6a';
-  var _ffForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
-  var _ffForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
-  var _ffForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
-
-  // Binance WebSocket - tüm kripto sembolleri
-  var _bnSyms = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt','adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt','cakeusdt','celousdt','chzusdt','compusdt'];
-  var _streamUrl = 'wss://stream.binance.com:9443/stream?streams=' + _bnSyms.map(function(s){return s+'@bookTicker';}).join('/');
-  var _ws = null;
-  var _wsReconnect = null;
-  var _wsBuf = {}; // fiyat buffer - throttle için
-  var _wsFlushTimer = null;
-
-  function _wsFlush() {
-    _wsFlushTimer = null;
-    var syms = Object.keys(_wsBuf);
-    for(var i=0; i<syms.length; i++) {
-      var sym = syms[i];
-      var rawMid = _wsBuf[sym];
+  var _unsub = db.collection('broker').doc('prices').onSnapshot(function(doc) {
+    if(!doc.exists) return;
+    var pd = doc.data(); if(!pd) return;
+    Object.keys(pd).forEach(function(sym) {
+      if(sym.charAt(0) === '_') return;
+      var price = parseFloat(pd[sym]);
+      if(!price || price <= 0) return;
+      // Sentetik semboller kendi hesaplamasını yapar
       var sc = _txGetSymConf(sym);
-      var spread = sc ? (parseFloat(sc.spread)||0) : 0;
-      var half = spread/2;
-      var bid = rawMid - half;
-      var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
-      var chg = (window._fbChg && window._fbChg[sym] !== undefined) ? window._fbChg[sym] : (prices[sym] ? prices[sym].chg||0 : 0);
-      prices[sym] = {mid:rawMid, price:rawMid, bid:bid, ask:rawMid+half, chg:chg, prev:prev};
-      mwPrices[sym] = prices[sym];
-      if(typeof updateMwRow === 'function') updateMwRow(sym, bid, prev);
-      if(sym === curSym) {
-        if(typeof lwTickUpdate === 'function') lwTickUpdate();
-        if(typeof updateOrderTicket === 'function') updateOrderTicket(bid);
-        if(typeof updateTopSym === 'function') updateTopSym(sym, bid, chg);
-        if(typeof updateQuickTrade === 'function') updateQuickTrade(rawMid, spread);
-      }
-      if(typeof checkAlarms === 'function') checkAlarms(sym, bid);
-    }
-    _wsBuf = {};
-    // Ağır işlemler 1sn'de bir
-    if(!window._txHeavyTimer) {
-      window._txHeavyTimer = setTimeout(function(){
-        window._txHeavyTimer = null;
-        if(typeof txTickPositions === 'function' && positions && positions.length) txTickPositions();
-        else if(typeof updatePositions === 'function') updatePositions();
-        if(typeof buildTicker === 'function') buildTicker();
-        if(typeof mTick === 'function') mTick();
-      }, 1000);
-    }
-  }
-
-  function _wsConnect() {
-    if(_ws) { try{_ws.close();}catch(e){} }
-    _ws = new WebSocket(_streamUrl);
-    _ws.onmessage = function(e) {
-      try {
-        var msg = JSON.parse(e.data);
-        var d = msg.data || msg;
-        var sym = (d.s || '').toUpperCase();
-        var mid = (parseFloat(d.b) + parseFloat(d.a)) / 2;
-        if(sym && mid > 0) {
-          _wsBuf[sym] = mid; // buffer'a yaz
-          if(!_wsFlushTimer) {
-            _wsFlushTimer = setTimeout(_wsFlush, 200); // 500ms'de bir flush
-          }
-        }
-      } catch(ex){}
-    };
-    _ws.onclose = function() {
-      _wsReconnect = setTimeout(_wsConnect, 3000);
-    };
-    _ws.onerror = function() { try{_ws.close();}catch(e){} };
-  }
-  _wsConnect();
-
-  // FastForex forex (3sn)
-  function _applyFx(data) {
-    if(!data||!data.quotes) return;
-    Object.keys(data.quotes).forEach(function(sym){
-      var q=data.quotes[sym]; if(!q) return;
-      var mid=(parseFloat(q.bid)+parseFloat(q.ask))/2;
-      if(sym&&mid>0) txApplyPrice(sym,mid);
+      if(sc && sc.priceSource) return;
+      txApplyPrice(sym, price);
     });
-  }
-  function _ffPoll() {
-    var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
-    if(!open) return;
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex1+'&api_key='+_ffKey)
-      .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex2+'&api_key='+_ffKey)
-      .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
-    if(_ffForex3) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_ffForex3+'&api_key='+_ffKey)
-        .then(function(r){return r.json();}).then(_applyFx).catch(function(){});
-    }
-  }
-  _ffPoll();
-  var _ffTimer = setInterval(_ffPoll, 3000);
+  }, function(e) { console.warn('[prices snap]', e.message); });
 
-  _txPriceUnsub = function() {
-    if(_wsReconnect) clearTimeout(_wsReconnect);
-    if(_ws) { try{_ws.close();}catch(e){} }
-    clearInterval(_ffTimer);
-  };
+  _txPriceUnsub = _unsub;
 }
 
 function startRealFeed() {
