@@ -3316,6 +3316,7 @@ function startCandleWs(sym, interval) {
     if(oldMsg) oldMsg.remove();
     lwRenderCandles(candles, sym);
     if(lbl) lbl.textContent = sym;
+    if(window._lwLiveTimer) { clearInterval(window._lwLiveTimer); window._lwLiveTimer=null; }
     window._lwLiveTimer = setInterval(function(){ lwTickUpdate(); }, 1000);
   });
 }
