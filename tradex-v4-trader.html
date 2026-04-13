@@ -7105,7 +7105,18 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
 var _txFeedActive = false;
 var _txPriceUnsub  = null;
 var _txOverUnsub   = null;
-var _txAdminOverrides = {}; // Admin'in override ettiği semboller
+var _txAdminOverrides = {};
+
+// symConfig index cache - her çağrıda find() yapmamak için
+var _txSymIdx = {};
+function _txGetSymConf(sym) {
+  if(_txSymIdx[sym] !== undefined) return _txSymIdx[sym];
+  var sc = (typeof symConfig !== 'undefined' && symConfig) ? symConfig.find(function(s){ return s.sym===sym; }) : null;
+  _txSymIdx[sym] = sc || null;
+  return _txSymIdx[sym];
+}
+// symConfig değişince cache'i temizle
+window._txClearSymIdx = function() { _txSymIdx = {}; };
 
 // ── Tek fiyat uygulama noktası ────────────────────────────────
 function txApplyPrice(sym, rawMid) {
@@ -7113,13 +7124,11 @@ function txApplyPrice(sym, rawMid) {
 
   // Spread hesapla
   var spread = 0, _spreadType = 'fixed', _spreadVariance = 20;
-  if(typeof symConfig !== 'undefined' && symConfig) {
-    var sc = symConfig.find(function(s){ return s.sym===sym; });
-    if(sc && sc.spread !== undefined) {
-      spread = parseFloat(sc.spread)||0;
-      _spreadType = sc.spreadType || 'fixed';
-      _spreadVariance = parseFloat(sc.spreadVariance)||20;
-    }
+  var sc = _txGetSymConf(sym);
+  if(sc && sc.spread !== undefined) {
+    spread = parseFloat(sc.spread)||0;
+    _spreadType = sc.spreadType || 'fixed';
+    _spreadVariance = parseFloat(sc.spreadVariance)||20;
   }
   if(!spread && typeof MW_MAP !== 'undefined' && MW_MAP[sym]) {
     spread = parseFloat(MW_MAP[sym].spread)||0;
@@ -7197,7 +7206,7 @@ function txApplyPrice(sym, rawMid) {
                   ? window._synthOffsets[s.sym]
                   : (parseFloat(s.priceOffset)||0);
     var _sp = rawMid * _factor + _offset;
-    var _sc2   = symConfig.find(function(x){ return x.sym===s.sym; });
+    var _sc2   = _txGetSymConf(s.sym);
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -7373,12 +7382,39 @@ function txListenPrices() {
   var _wsFlushTimer = null;
 
   function _wsFlush() {
-    // Buffer'daki fiyatları 500ms'de bir uygula
-    Object.keys(_wsBuf).forEach(function(sym) {
-      txApplyPrice(sym, _wsBuf[sym]);
-    });
-    _wsBuf = {};
     _wsFlushTimer = null;
+    var syms = Object.keys(_wsBuf);
+    for(var i=0; i<syms.length; i++) {
+      var sym = syms[i];
+      var rawMid = _wsBuf[sym];
+      var sc = _txGetSymConf(sym);
+      var spread = sc ? (parseFloat(sc.spread)||0) : 0;
+      var half = spread/2;
+      var bid = rawMid - half;
+      var prev = (prices[sym] && prices[sym].price) ? prices[sym].price : rawMid;
+      var chg = (window._fbChg && window._fbChg[sym] !== undefined) ? window._fbChg[sym] : (prices[sym] ? prices[sym].chg||0 : 0);
+      prices[sym] = {mid:rawMid, price:rawMid, bid:bid, ask:rawMid+half, chg:chg, prev:prev};
+      mwPrices[sym] = prices[sym];
+      if(typeof updateMwRow === 'function') updateMwRow(sym, bid, prev);
+      if(sym === curSym) {
+        if(typeof lwTickUpdate === 'function') lwTickUpdate();
+        if(typeof updateOrderTicket === 'function') updateOrderTicket(bid);
+        if(typeof updateTopSym === 'function') updateTopSym(sym, bid, chg);
+        if(typeof updateQuickTrade === 'function') updateQuickTrade(rawMid, spread);
+      }
+      if(typeof checkAlarms === 'function') checkAlarms(sym, bid);
+    }
+    _wsBuf = {};
+    // Ağır işlemler 1sn'de bir
+    if(!window._txHeavyTimer) {
+      window._txHeavyTimer = setTimeout(function(){
+        window._txHeavyTimer = null;
+        if(typeof txTickPositions === 'function' && positions && positions.length) txTickPositions();
+        else if(typeof updatePositions === 'function') updatePositions();
+        if(typeof buildTicker === 'function') buildTicker();
+        if(typeof mTick === 'function') mTick();
+      }, 1000);
+    }
   }
 
   function _wsConnect() {
