@@ -7539,11 +7539,12 @@ window.startLiveFeed = startLiveFeed;
     _autoSyncTry++;
     if(_autoSyncTry > 20) { clearInterval(_autoSyncCheck); return; }
     if(typeof db === 'undefined' || !db) return;
-    if(_cu && _cu.id && !window._fbSyncInterval) {
+    if(_cu && _cu.id) {
       clearInterval(_autoSyncCheck);
-      _authSuccess(_cu);
-    } else if(window._fbSyncInterval) {
-      clearInterval(_autoSyncCheck);
+      // _authSuccess yerine sadece Firebase snapshot'larını başlat
+      if(typeof startFirebaseSnapshots === 'function' && !window._fbSnapshotsStarted) {
+        try { startFirebaseSnapshots(); } catch(e){}
+      }
     }
   }, 500);
 
