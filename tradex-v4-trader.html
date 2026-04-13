@@ -6501,7 +6501,6 @@ function updateMwRow(sym, price, prev) {
     row.querySelector('.mw-bid').textContent = bidFmt;
     row.querySelector('.mw-ask').textContent = askFmt;
     row.classList.remove('mw-flash-g','mw-flash-r');
-    void row.offsetWidth;
     row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
     row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
     _mwApplyDirColor(row, up, neutral);
