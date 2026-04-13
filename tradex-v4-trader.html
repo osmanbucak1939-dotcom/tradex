@@ -1102,6 +1102,37 @@ function _authSuccess(user) {
     if(typeof startRealFeed === 'function' && !window._txFeedActive) {
       try { startRealFeed(); } catch(e) { console.warn('[startRealFeed]', e); }
     }
+    // Kullanıcı verisini auth sonrası yükle (kalıcı çözüm)
+    if(_cu && _cu.id && typeof db !== 'undefined' && db) {
+      db.collection('users').doc(String(_cu.id)).get().then(function(doc) {
+        if(!doc.exists) return;
+        var d = doc.data(); if(!d) return;
+        try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
+        try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
+        try { if(d.portfolio !== undefined) portfolio = Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]'); } catch(e){}
+        try { if(d.alarms !== undefined) alarms = Array.isArray(d.alarms)?d.alarms:JSON.parse(d.alarms||'[]'); } catch(e){}
+        if(Array.isArray(d.finlog)) finlog = d.finlog;
+        // balance: broker/accounts'tan al
+        db.collection('broker').doc('accounts').get().then(function(adoc) {
+          if(adoc.exists) {
+            try {
+              var accs = JSON.parse(adoc.data().data||'[]');
+              var myAcc = accs.find(function(a){ return String(a.id)===String(_cu.id); });
+              if(myAcc && myAcc.balance !== undefined) balance = parseFloat(myAcc.balance)||0;
+            } catch(e){}
+          }
+          window._lastSyncAt = '';
+          if(typeof renderPositions==='function') renderPositions();
+          if(typeof renderHistory==='function') renderHistory();
+          if(typeof updateAccount==='function') updateAccount();
+        }).catch(function() {
+          window._lastSyncAt = '';
+          if(typeof renderPositions==='function') renderPositions();
+          if(typeof renderHistory==='function') renderHistory();
+          if(typeof updateAccount==='function') updateAccount();
+        });
+      }).catch(function(e){ console.warn('[userData load]', e.message); });
+    }
   }
   try {
     var _tAuth = firebase.auth();
