@@ -7228,39 +7228,6 @@ function txApplyPrice(sym, rawMid) {
   });
 }
 
-// ── Firebase prices dinle ─────────────────────────────────────
-function txListenPrices() {
-  if(typeof db === 'undefined' || !db) return;
-  if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} }
-
-  // onSnapshot yerine polling - WebChannel sorununu aşar
-  var _txPollTimer = setInterval(function() {
-    db.collection('broker').doc('prices').get({source:'server'})
-      .then(function(doc) {
-        if(typeof window._txSnapAlive === 'function') window._txSnapAlive();
-        if(!doc.exists) return;
-        var pd = doc.data(); if(!pd) return;
-        // Sadece symConfig'de tanımlı sembolleri işle
-        var _knownSyms = {};
-        if(typeof symConfig !== 'undefined' && symConfig) {
-          symConfig.forEach(function(s){ _knownSyms[s.sym] = true; });
-        }
-        Object.keys(pd).forEach(function(sym){
-          if(sym.charAt(0) === '_') return;
-          if(Object.keys(_knownSyms).length > 0 && !_knownSyms[sym]) return; // bilinmeyen sembol atla
-          var price = parseFloat(pd[sym]);
-          if(!price || price <= 0) return;
-          var _isSynth = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
-          if(_isSynth) return;
-          txApplyPrice(sym, price);
-        });
-      })
-      .catch(function(e){ console.warn('[Trader] prices poll err:', e); });
-  }, 1000);
-
-  _txPriceUnsub = function() { clearInterval(_txPollTimer); };
-}
-
 // ── Firebase pricesChg dinle ─────────────────────────────────
 function txListenPricesChg() {
   if(typeof db === 'undefined' || !db) return;
