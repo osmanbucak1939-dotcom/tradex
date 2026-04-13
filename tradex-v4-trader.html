@@ -1098,6 +1098,10 @@ function _authSuccess(user) {
     if(typeof startFirebaseSnapshots === 'function') {
       try { startFirebaseSnapshots(); } catch(e) { console.warn('[startFirebaseSnapshots]', e); }
     }
+    // Real feed'i de auth sonrası başlat
+    if(typeof startRealFeed === 'function' && !window._txFeedActive) {
+      try { startRealFeed(); } catch(e) { console.warn('[startRealFeed]', e); }
+    }
   }
   try {
     var _tAuth = firebase.auth();
@@ -4900,10 +4904,21 @@ function startLiveFeed() {
   renderMarketWatch();
   setApiDot('sim','SİM');
 
-  // Gerçek zamanlı feed — trader kendi bağlantısını açar
+  // Gerçek zamanlı feed — önce anonymous auth bekle, sonra başlat
   setTimeout(function(){
-    if(typeof startRealFeed === 'function') startRealFeed();
-  }, 1000);
+    try {
+      var _fa = firebase.auth();
+      if(_fa.currentUser) {
+        if(typeof startRealFeed==='function') startRealFeed();
+      } else {
+        _fa.signInAnonymously()
+          .then(function(){ if(typeof startRealFeed==='function') startRealFeed(); })
+          .catch(function(e){ console.warn('[Auth feed]',e.message); if(typeof startRealFeed==='function') startRealFeed(); });
+      }
+    } catch(e) {
+      if(typeof startRealFeed==='function') startRealFeed();
+    }
+  }, 500);
 
   // spreadGroups Firebase'den yükle ve grup spread'lerini uygula
   if(typeof db !== 'undefined' && db) {
