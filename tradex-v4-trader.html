@@ -1102,6 +1102,10 @@ function _authSuccess(user) {
     if(typeof startRealFeed === 'function' && !window._txFeedActive) {
       try { startRealFeed(); } catch(e) { console.warn('[startRealFeed]', e); }
     }
+    // Firebase verilerini auth sonrası yükle
+    if(typeof _loadFirebaseData === 'function') {
+      try { _loadFirebaseData(); } catch(e) {}
+    }
     // Kullanıcı verisini auth sonrası yükle (kalıcı çözüm)
     if(_cu && _cu.id && typeof db !== 'undefined' && db) {
       db.collection('users').doc(String(_cu.id)).get().then(function(doc) {
@@ -4925,45 +4929,59 @@ function startFirebaseSnapshots() {
 }
 
 function startLiveFeed() {
+  // Simüle fiyatları yükle (UI hemen gösterilsin)
   var keys = Object.keys(SIM_PRICES);
   for(var i=0; i<keys.length; i++) {
     var sym = keys[i]; var cfg = SIM_PRICES[sym];
     mwPrices[sym] = {price:cfg.p, prev:cfg.p, chg:0};
     prices[sym]   = {price:cfg.p, chg:0, bid:cfg.p, ask:cfg.p};
   }
-  applySymConfig(); // symConfig'deki yeni sembolleri MARKET_GROUPS'a ekle
+  applySymConfig();
   renderMarketWatch();
-  setApiDot('sim','SİM');
 
-  // startRealFeed artık _afterFirebaseAuth() üzerinden çağrılıyor
-  // (auth tamamlandıktan sonra — güvenli)
+  // UI tick - Firebase bağlantısından bağımsız
+  setInterval(function() {
+    updatePositions(); buildTicker();
+    if(typeof mTick==='function') mTick();
+  }, 800);
 
-  // spreadGroups Firebase'den yükle ve grup spread'lerini uygula
-  if(typeof db !== 'undefined' && db) {
-    db.collection('broker').doc('spreadGroups').get().then(function(doc){
-      if(doc.exists && doc.data().data) {
-        try {
-          var fbSg = JSON.parse(doc.data().data);
-          if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-            spreadGroups = fbSg;
-            for(var i=0; i<spreadGroups.length; i++) {
-              if(!spreadGroups[i].spreads) spreadGroups[i].spreads = {};
-              if(!spreadGroups[i].swaps)   spreadGroups[i].swaps   = {};
-            }
-            localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
-          }
-        } catch(e){}
-      }
-      applyGroupSpreads();
-      if(document.getElementById('mwBody')) renderMarketWatch();
-    }).catch(function(){
-      applyGroupSpreads();
-    });
-  }
+  // Firebase işlemleri _afterFirebaseAuth() içinde auth sonrası yapılıyor
+}
 
+// Auth tamamlandıktan sonra Firebase'den veri yükle
+function _loadFirebaseData() {
+  if(typeof db === 'undefined' || !db) return;
 
+  // spreadGroups
+  db.collection('broker').doc('spreadGroups').get().then(function(doc){
+    if(doc.exists && doc.data().data) {
+      try {
+        var fbSg = JSON.parse(doc.data().data);
+        if(fbSg && Array.isArray(fbSg) && fbSg.length) {
+          spreadGroups = fbSg;
+          spreadGroups.forEach(function(g){ if(!g.spreads)g.spreads={}; if(!g.swaps)g.swaps={}; });
+          localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+        }
+      } catch(e){}
+    }
+    applyGroupSpreads();
+    if(document.getElementById('mwBody')) renderMarketWatch();
+  }).catch(function(){});
 
-  // spreadGroups periyodik sync (10sn)
+  // payMethods
+  db.collection('broker').doc('payMethods').get().then(function(doc){
+    if(doc.exists && doc.data().data) {
+      try {
+        var fbPm = JSON.parse(doc.data().data);
+        if(fbPm && fbPm.length) {
+          payMethods = fbPm;
+          localStorage.setItem('tx_paymethods', JSON.stringify(payMethods));
+        }
+      } catch(e){}
+    }
+  }).catch(function(){});
+
+  // spreadGroups periyodik sync (60sn)
   if(window._sgSyncInterval) clearInterval(window._sgSyncInterval);
   window._sgSyncInterval = setInterval(function(){
     if(typeof db === 'undefined' || !db) return;
@@ -4973,42 +4991,14 @@ function startLiveFeed() {
           var fbSg = JSON.parse(doc.data().data);
           if(fbSg && Array.isArray(fbSg) && fbSg.length) {
             spreadGroups = fbSg;
-            for(var i=0;i<spreadGroups.length;i++){
-              if(!spreadGroups[i].spreads) spreadGroups[i].spreads={};
-              if(!spreadGroups[i].swaps)   spreadGroups[i].swaps={};
-            }
+            spreadGroups.forEach(function(g){ if(!g.spreads)g.spreads={}; if(!g.swaps)g.swaps={}; });
             localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
             applyGroupSpreads();
-            if(document.getElementById('mwBody')) renderMarketWatch();
           }
         } catch(e){}
       }
     }).catch(function(){});
   }, 60000);
-
-  // payMethods Firebase'den yükle
-  if(typeof db !== 'undefined' && db) {
-    db.collection('broker').doc('payMethods').get().then(function(doc){
-      if(doc.exists && doc.data().data) {
-        try {
-          var fbPm = JSON.parse(doc.data().data);
-          if(fbPm && fbPm.length) {
-            payMethods = fbPm;
-            localStorage.setItem('tx_paymethods', JSON.stringify(payMethods));
-            if(typeof renderDepositMethods === 'function') renderDepositMethods();
-            if(typeof renderWithdrawMethods === 'function') renderWithdrawMethods();
-          }
-        } catch(e){}
-      }
-    }).catch(function(){});
-  }
-
-  setInterval(function() {
-    updatePositions(); buildTicker();
-    if(typeof mTick==='function') mTick();
-  }, 800);
-
-
 }
 
 var MARKET_GROUPS = [
