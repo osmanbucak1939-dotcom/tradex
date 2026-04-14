@@ -6087,7 +6087,14 @@ function renderWithdrawReqs() {
       + '<td style="font-size:11px;">' + (r.accountName||r.account||('#'+(r.accountId||'?'))) + '</td>'
       + '<td style="font-size:11px;">' + (r.method||'&#8212;') + mgrBadge + mgrName + '</td>'
       + '<td style="font-family:var(--mono);font-size:10px;color:#a0a0a0;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.address||r.iban||'&#8212;') + '</td>'
-      + '<td style="font-weight:700;font-family:var(--mono);">' + parseFloat(r.amount||0).toFixed(2) + ' ' + (r.currency||'USD') + '</td>'
+      + '<td style="font-weight:700;font-family:var(--mono);">'
+        + (function(){
+            var _a=parseFloat(r.amount||0), _c=r.currency||'USD';
+            if(_c==='USD') return '$'+_a.toFixed(2);
+            var _u=(typeof convertToUsd==='function')?convertToUsd(_a,_c):_a;
+            return _a.toFixed(2)+' '+_c+' <span style="color:#888;font-weight:400;font-size:10px;">→ $'+parseFloat(_u).toFixed(2)+'</span>';
+          })()
+        + '</td>'
       + '<td><span style="font-size:10px;color:' + sc + ';">' + sl + '</span></td>'
       + '<td style="white-space:nowrap;">' + acts + '</td>'
       + '</tr>';
@@ -8701,8 +8708,18 @@ function updateReports(){
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-family:var(--mono);font-size:11px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
           +'<div style="font-size:9px;color:#e2e2e2;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
-          +'<div style="text-align:right;flex-shrink:0;">'
-          +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+arrowColor+';">$'+parseFloat(r.amount||0).toFixed(2)+'</div>'
+          +'<div style="text-align:right;flex-shrink:0;">';
+        var _rAmt=parseFloat(r.amount||0), _rCur=r.currency||'USD';
+        var _symMap={TRY:'₺',EUR:'€',GBP:'£',USD:'$'};
+        var _rSym=_symMap[_rCur]||(_rCur+' ');
+        var _amtDisplay;
+        if(_rCur==='USD') {
+          _amtDisplay='$'+_rAmt.toFixed(2);
+        } else {
+          var _rUsd=(typeof convertToUsd==='function')?convertToUsd(_rAmt,_rCur):_rAmt;
+          _amtDisplay=_rSym+_rAmt.toFixed(2)+' <span style="color:#888;font-weight:400;">→ $'+parseFloat(_rUsd).toFixed(2)+'</span>';
+        }
+        html+='<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+arrowColor+';">'+_amtDisplay+'</div>'
           +'<div style="font-size:9px;color:'+sc+';margin-top:2px;">'+sl+'</div></div></div>';
       }); // forEach sonu
       rrEl.innerHTML=html;
