@@ -987,6 +987,25 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 </style>
 <script>
+// ════════════════════════════════════════════════════════════
+// GLOBAL LİSTENER YÖNETİCİSİ — tüm onSnapshot'lar buradan
+// ════════════════════════════════════════════════════════════
+var _FB = {
+  _subs: {},
+  sub: function(key, unsubFn) {
+    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} }
+    this._subs[key] = unsubFn;
+  },
+  unsub: function(key) {
+    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} delete this._subs[key]; }
+  },
+  unsubAll: function() {
+    var keys = Object.keys(this._subs);
+    for(var i=0;i<keys.length;i++) { try{ this._subs[keys[i]](); }catch(e){} }
+    this._subs = {};
+    console.log('[FB] tüm listener kapatıldı');
+  }
+};
 var _cu = null;
 try { _cu = JSON.parse(localStorage.getItem('tx_current_user')||'null'); } catch(e){}
 var _authType = 'demo';
@@ -4822,26 +4841,6 @@ function setApiDot(s, label) {
   // Trader müşteri arayüzünde gösterim yok — sadece admin'e sinyal
   try { localStorage.setItem('_tdFeedStatus', JSON.stringify({s:s, label:label, t:Date.now()})); } catch(e){}
 }
-
-// ════════════════════════════════════════════════════════════
-// GLOBAL LİSTENER YÖNETİCİSİ — tüm onSnapshot'lar buradan
-// ════════════════════════════════════════════════════════════
-var _FB = {
-  _subs: {},
-  sub: function(key, unsubFn) {
-    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} }
-    this._subs[key] = unsubFn;
-  },
-  unsub: function(key) {
-    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} delete this._subs[key]; }
-  },
-  unsubAll: function() {
-    var keys = Object.keys(this._subs);
-    for(var i=0;i<keys.length;i++) { try{ this._subs[keys[i]](); }catch(e){} }
-    this._subs = {};
-    console.log('[FB] Tüm listener'lar kapatıldı');
-  }
-};
 
 function startFirebaseSnapshots() {
   if(typeof db === 'undefined' || !db) return;
