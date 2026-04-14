@@ -1703,6 +1703,27 @@ function initAuth(){
     }
 
     console.log('Firebase bağlandı ✓');
+
+    // Sayfa yüklenince hemen anonymous auth yap - login olmasa bile
+    firebase.auth().onAuthStateChanged(function(user) {
+      if(!user) {
+        firebase.auth().signInAnonymously().catch(function(e){
+          console.warn('[Auth]', e.message);
+        });
+      } else {
+        // Auth tamamlandı - Firebase listener'ları başlat
+        if(!window._fbSnapshotsStarted && typeof startFirebaseSnapshots === 'function') {
+          try { startFirebaseSnapshots(); } catch(e){}
+        }
+        if(!window._txFeedActive && typeof startRealFeed === 'function') {
+          try { startRealFeed(); } catch(e){}
+        }
+        if(typeof _loadFirebaseData === 'function' && !window._fbDataLoaded) {
+          window._fbDataLoaded = true;
+          try { _loadFirebaseData(); } catch(e){}
+        }
+      }
+    });
   </script>
 
 </head>
