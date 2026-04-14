@@ -7404,27 +7404,65 @@ function txListenOverrides() {
 // ── TRADER FEED ───────────────────────────────────────────────
 // Tek kaynak: Admin → Firebase broker/prices → Trader
 
-// ── TEK KAYNAK: Admin → Firebase broker/prices → Trader ─────────
-// Binance WS ve FastForex kaldırıldı — sadece Firebase onSnapshot
+// ── TRADER FEED: Binance WS (kripto) + Firebase onSnapshot (forex) ──
 function txListenPrices() {
   if(typeof db === 'undefined' || !db) return;
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
-  var _unsub = db.collection('broker').doc('prices').onSnapshot(function(doc) {
+  // 1) Firebase onSnapshot — forex + emtia + endeks (3sn admin günceller)
+  var _fbUnsub = db.collection('broker').doc('prices').onSnapshot(function(doc) {
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
     Object.keys(pd).forEach(function(sym) {
       if(sym.charAt(0) === '_') return;
+      var isCrypto = sym.endsWith('USDT');
+      if(isCrypto) return; // kripto Binance WS'den geliyor
       var price = parseFloat(pd[sym]);
       if(!price || price <= 0) return;
-      // Sentetik semboller kendi hesaplamasını yapar
       var sc = _txGetSymConf(sym);
       if(sc && sc.priceSource) return;
       txApplyPrice(sym, price);
     });
   }, function(e) { console.warn('[prices snap]', e.message); });
 
-  _txPriceUnsub = _unsub;
+  // 2) Binance WebSocket — kripto (anlık, düşük gecikme)
+  var _bnSyms = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
+                 'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt',
+                 'cakeusdt','celousdt','chzusdt','compusdt'];
+  var _bnUrl = 'wss://stream.binance.com:9443/stream?streams=' +
+               _bnSyms.map(function(s){return s+'@bookTicker';}).join('/');
+  var _ws = null, _wsTimer = null, _wsBuf = {};
+
+  function _wsPush() {
+    var syms = Object.keys(_wsBuf);
+    for(var i=0;i<syms.length;i++) txApplyPrice(syms[i], _wsBuf[syms[i]]);
+    _wsBuf = {}; _wsTimer = null;
+  }
+
+  function _wsOpen() {
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _ws = new WebSocket(_bnUrl);
+    _ws.onmessage = function(e) {
+      try {
+        var d = JSON.parse(e.data).data || JSON.parse(e.data);
+        var sym = (d.s||'').toUpperCase();
+        var mid = (parseFloat(d.b)+parseFloat(d.a))/2;
+        if(sym && mid>0) {
+          _wsBuf[sym] = mid;
+          if(!_wsTimer) _wsTimer = setTimeout(_wsPush, 300);
+        }
+      } catch(ex){}
+    };
+    _ws.onclose = function() { setTimeout(_wsOpen, 3000); };
+    _ws.onerror = function() { try{_ws.close();}catch(e){} };
+  }
+  _wsOpen();
+
+  _txPriceUnsub = function() {
+    _fbUnsub();
+    if(_ws) { try{_ws.close();}catch(e){} }
+    if(_wsTimer) clearTimeout(_wsTimer);
+  };
 }
 
 function startRealFeed() {
