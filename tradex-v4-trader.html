@@ -1711,8 +1711,9 @@ function initAuth(){
           console.warn('[Auth]', e.message);
         });
       } else {
-        // Auth tamamlandı - Firebase listener'ları başlat
-        if(!window._fbSnapshotsStarted && typeof startFirebaseSnapshots === 'function') {
+        // Auth tamamlandı - tüm Firebase işlemlerini başlat
+        window._fbSnapshotsStarted = false; // reset - auth öncesi açılanları temizle
+        if(typeof startFirebaseSnapshots === 'function') {
           try { startFirebaseSnapshots(); } catch(e){}
         }
         if(!window._txFeedActive && typeof startRealFeed === 'function') {
@@ -1721,6 +1722,34 @@ function initAuth(){
         if(typeof _loadFirebaseData === 'function' && !window._fbDataLoaded) {
           window._fbDataLoaded = true;
           try { _loadFirebaseData(); } catch(e){}
+        }
+        // Kullanıcı giriş yapmışsa verilerini yükle
+        if(typeof _cu !== 'undefined' && _cu && _cu.id && typeof db !== 'undefined' && db) {
+          db.collection('users').doc(String(_cu.id)).get().then(function(doc) {
+            if(!doc.exists) return;
+            var d = doc.data(); if(!d) return;
+            try{if(d.positions!==undefined) positions=Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]');}catch(e){}
+            try{if(d.tradeHistory!==undefined) tradeHistory=Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]');}catch(e){}
+            try{if(d.portfolio!==undefined) portfolio=Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]');}catch(e){}
+            if(Array.isArray(d.finlog)) finlog=d.finlog;
+            db.collection('broker').doc('accounts').get().then(function(adoc){
+              if(adoc.exists){
+                try{
+                  var accs=JSON.parse(adoc.data().data||'[]');
+                  var myAcc=accs.find(function(a){return String(a.id)===String(_cu.id);});
+                  if(myAcc&&myAcc.balance!==undefined) balance=parseFloat(myAcc.balance)||0;
+                }catch(e){}
+              }
+              if(typeof renderPositions==='function') renderPositions();
+              if(typeof renderHistory==='function') renderHistory();
+              if(typeof updateAccount==='function') updateAccount();
+              if(typeof renderMarketWatch==='function') renderMarketWatch();
+            }).catch(function(){
+              if(typeof renderPositions==='function') renderPositions();
+              if(typeof renderHistory==='function') renderHistory();
+              if(typeof updateAccount==='function') updateAccount();
+            });
+          }).catch(function(e){ console.warn('[userData]', e.message); });
         }
       }
     });
