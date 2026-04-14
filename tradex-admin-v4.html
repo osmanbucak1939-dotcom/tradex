@@ -4978,10 +4978,12 @@ function adRenderFinlog() {
 
   // users/{id}'den taze veri çek
   fbLoadUserData(a.id, function(data) {
-    var logs = (data && Array.isArray(data.finlog)) ? data.finlog
-             : (Array.isArray(a.finlog) ? a.finlog : []);
-    // Memory'yi de güncelle
-    if(data && Array.isArray(data.finlog)) a.finlog = data.finlog;
+    var uLogs = (data && Array.isArray(data.finlog)) ? data.finlog : null;
+    var aLogs = Array.isArray(a.finlog) ? a.finlog : [];
+    // users boş/yoksa accounts'taki veriyi kullan (veri kaybını önle)
+    var logs = (uLogs && uLogs.length > 0) ? uLogs : aLogs;
+    // Memory'yi sadece users'da gerçekten veri varsa güncelle
+    if(uLogs && uLogs.length > 0) a.finlog = uLogs;
     _doRender(logs);
   });
 }
@@ -5068,10 +5070,11 @@ function adSaveFinlog() {
   var entry = { type:type, amount:amt, date:entryDate.toISOString(), note:note, manager:_mgr, source:'manager' };
 
   // Balance kaynağı: accounts memory (a.balance) - Firebase bozulmuş olabilir
-  // Finlog kaynağı: Firebase'den taze çek (farklı kaynaklardan gelen kayıtlar kaybolmasın)
+  // Finlog kaynağı: Firebase'den taze çek; users boş ise accounts'takini kullan
   fbLoadUserData(a.id, function(data) {
-    var fl = (data && Array.isArray(data.finlog)) ? data.finlog.slice()
-           : (Array.isArray(a.finlog) ? a.finlog.slice() : []);
+    var uFl = (data && Array.isArray(data.finlog)) ? data.finlog : null;
+    var aFl = Array.isArray(a.finlog) ? a.finlog : [];
+    var fl = (uFl && uFl.length > 0) ? uFl.slice() : aFl.slice();
     // Balance: accounts memory kullan, Firebase'deki değere güvenme
     var currentBal = parseFloat(a.balance)||0;
 
@@ -5131,8 +5134,9 @@ function adDeleteFinlog(idx) {
   var a = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
   fbLoadUserData(a.id, function(data) {
-    var fl = (data && Array.isArray(data.finlog)) ? data.finlog.slice()
-           : (Array.isArray(a.finlog) ? a.finlog.slice() : []);
+    var uFl = (data && Array.isArray(data.finlog)) ? data.finlog : null;
+    var aFl = Array.isArray(a.finlog) ? a.finlog : [];
+    var fl = (uFl && uFl.length > 0) ? uFl.slice() : aFl.slice();
     var currentBal = (data && data.balance !== undefined) ? parseFloat(data.balance)||0 : (a.balance||0);
     var log = fl[idx];
     if(!log) { showToast('Hata','Kayıt bulunamadı'); return; }
