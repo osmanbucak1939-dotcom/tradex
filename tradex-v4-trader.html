@@ -1573,6 +1573,11 @@ function initAuth(){
     function fbSaveUserData(userId, data) {
       if(!db || !userId) return;
       try {
+        // KORUMA: Trader ASLA finlog yazmamalı — sadece admin yazar. Kaza ile geliyorsa sil.
+        if('finlog' in data) {
+          console.warn('[finlog koruma] Trader finlog yazamaz, atlandı');
+          delete data.finlog;
+        }
         db.collection('users').doc(String(userId)).set(data, { merge: true })
           .catch(function(e){ console.warn('fbSaveUserData error:', e); });
       } catch(e) { console.warn(e); }
@@ -4456,7 +4461,8 @@ function closePosition(id, reason='') {
   if (tradeHistory.length > 50) tradeHistory.pop();
   save();
   if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
-    fbSaveUserData(_cu.id, {balance:balance, positions:positions, finlog:finlog});
+    // finlog YAZILMIYOR — sadece admin yazar (kök sorun: trader'ın boş finlog yazması veri kaybına yol açıyordu)
+    fbSaveUserData(_cu.id, {balance:balance, positions:positions});
   }
   renderPositions();
   renderHistory();
