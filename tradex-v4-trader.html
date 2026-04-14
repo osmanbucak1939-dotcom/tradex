@@ -7133,7 +7133,7 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
 // KURAL: Trader Firebase'i OKUR, yazmaz. Admin yazar, trader alır.
 // ════════════════════════════════════════════════════════════════
 
-var _txFeedActive = false;
+if(typeof window._txFeedActive === 'undefined') window._txFeedActive = false;
 var _txPriceUnsub  = null;
 var _txOverUnsub   = null;
 var _txAdminOverrides = {};
@@ -7422,8 +7422,8 @@ function txListenPrices() {
 }
 
 function startRealFeed() {
-  if(_txFeedActive) return;
-  _txFeedActive = true;
+  if(window._txFeedActive) return;
+  window._txFeedActive = true;
   txListenPricesChg();
   txListenOverrides();
   txListenSynthOffsets();
@@ -7482,7 +7482,7 @@ function _txRenderBrokerInfo(d) {
 }
 
 function stopRealFeed() {
-  _txFeedActive = false;
+  window._txFeedActive = false;
   if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
   if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
@@ -7864,15 +7864,11 @@ function getSwap(sym,groupId,side) {
   return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
 }
 
-// Eski isimleri yönlendir
-function loadSpreadGroups() { sgLoad(); }
-function saveSpreadGroups() { sgSave(); }
-function renderSpreadGroups() { sgRender(); }
+// Eski isimleri yönlendir (yaşayan wrapper'lar)
 function saveSgGeneral() { sgSaveGeneral(); }
 function saveSgSpreads() { sgSaveSpreads(); }
 function addSpreadGroup() { sgAddGroup(); }
 function deleteSpreadGroup() { sgDeleteGroup(); }
-function refreshSgSelects() { sgRefreshSelects(); }
 function selectSgTab(id) { _activeSgId=id; sgRender(); }
 function sgSubTab() {}
 
@@ -8120,26 +8116,6 @@ function pcRenderOverrides() {
   }
   html += '</div>';
   el.innerHTML = html;
-}
-
-
-// Cihaz tespiti
-function detectDevice() {
-  var ua = navigator.userAgent || '';
-  if(/android/i.test(ua)) return 'android';
-  if(/iphone|ipad|ipod/i.test(ua)) return 'ios';
-  if(/windows phone/i.test(ua)) return 'windows-phone';
-  if(/macintosh|mac os x/i.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
-  return 'web';
-}
-function deviceIcon(d) {
-  var icons = {
-    'android': '🤖',
-    'ios': '🍎',
-    'web': '🌐',
-    'windows-phone': '📱'
-  };
-  return (icons[d]||'🌐') + ' ' + (d==='android'?'Android':d==='ios'?'iOS':d==='windows-phone'?'Win Phone':'Web');
 }
 
 
