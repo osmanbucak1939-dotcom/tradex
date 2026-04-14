@@ -1290,6 +1290,52 @@ function genId(prefix) {
   return (prefix||'ID') + '_' + ts + '_' + rnd;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// AUDIT LOG — Her yönetici eylemi buradan geçer
+// broker/auditLog/{autoId} — {ts, managerId, managerName, action, target, before, after, reason}
+// ═══════════════════════════════════════════════════════════════
+function adAudit(action, target, before, after, reason) {
+  try {
+    if(typeof db === 'undefined' || !db) return;
+    var mgr = (typeof _currentStaff !== 'undefined' && _currentStaff) ? _currentStaff : null;
+    var entry = {
+      ts: new Date().toISOString(),
+      managerId: mgr ? (mgr.id || mgr.email || mgr.login || '') : 'system',
+      managerName: mgr ? (mgr.name || mgr.email || 'Manager') : 'System',
+      action: String(action || 'unknown'),
+      target: String(target || ''),
+      before: (before === undefined) ? null : _adAuditSanitize(before),
+      after: (after === undefined) ? null : _adAuditSanitize(after)
+    };
+    if(reason) entry.reason = String(reason);
+    // Asenkron yaz — hata olursa sistemi durdurma
+    db.collection('broker').doc('auditLog').collection('entries').add(entry)
+      .catch(function(e){ console.warn('[audit]', e && e.message); });
+  } catch(e) { console.warn('[audit]', e); }
+}
+
+// Büyük objeleri kırp, sadece anlamlı alanları tut
+function _adAuditSanitize(v) {
+  try {
+    if(v === null || v === undefined) return null;
+    if(typeof v !== 'object') return v;
+    if(Array.isArray(v)) {
+      // Array uzunsa sadece count + ilk 3 eleman
+      if(v.length > 3) return { _count: v.length, _sample: v.slice(0,3) };
+      return v.slice(0, 3);
+    }
+    // Obje — 500 karakteri aşan alanları kırp
+    var out = {};
+    Object.keys(v).forEach(function(k){
+      var val = v[k];
+      if(typeof val === 'string' && val.length > 500) out[k] = val.substring(0,500) + '…';
+      else if(Array.isArray(val) && val.length > 3) out[k] = { _count: val.length, _sample: val.slice(0,3) };
+      else out[k] = val;
+    });
+    return out;
+  } catch(e) { return '[sanitize-error]'; }
+}
+
 function fbSaveAccounts() {
       if(!db) return;
       if(!accounts||accounts.length<1){console.warn('fbSaveAccounts: bos - engellendi');return;}
@@ -1313,8 +1359,7 @@ function fbSaveAccounts() {
               phone:a.phone||'', password:a.password||'',
               currency:a.currency||'USD', bonus:a.bonus||0
             };
-            // finlog varsa dahil et — kaybolmasın
-            if(Array.isArray(a.finlog) && a.finlog.length) _ud.finlog = a.finlog;
+            // finlog BURADAN YAZILMAZ — sadece merkezi finlog fonksiyonu yazar (veri kaybını önle)
             db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
           });
         }catch(e){console.warn(e);}
@@ -1387,6 +1432,24 @@ function fbSaveAccounts() {
       if(!db || !userId) return;
       try {
         data.updatedAt = new Date().toISOString();
+        // KORUMA: finlog yazılıyorsa, Firebase'deki mevcut veriden kısa/boş olamaz
+        if('finlog' in data && Array.isArray(data.finlog)) {
+          db.collection('users').doc(String(userId)).get().then(function(doc){
+            var cur = (doc.exists && Array.isArray(doc.data().finlog)) ? doc.data().finlog : [];
+            // Yeni veri mevcuttan kısa ise → şüpheli, yazma (veri kaybını önle)
+            if(data.finlog.length < cur.length) {
+              console.warn('[finlog koruma] Kısa yazım engellendi:', userId, 'mevcut='+cur.length, 'yazılacak='+data.finlog.length);
+              delete data.finlog;
+            }
+            db.collection('users').doc(String(userId)).set(data, { merge: true })
+              .catch(function(e){ console.warn('fbSaveUserData error:', e); });
+          }).catch(function(){
+            // get başarısızsa yine de yaz (offline fallback)
+            db.collection('users').doc(String(userId)).set(data, { merge: true })
+              .catch(function(e){ console.warn('fbSaveUserData error:', e); });
+          });
+          return;
+        }
         db.collection('users').doc(String(userId)).set(data, { merge: true })
           .catch(function(e){ console.warn('fbSaveUserData error:', e); });
       } catch(e) { console.warn(e); }
@@ -1741,6 +1804,7 @@ console.log('Firebase bağlandı ✓');
     <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
     <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit">🏢 Broker Bilgileri</button>
     <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit">🛡 Backup</button>
+    <button class="nav-btn" onclick="adminNav('auditlog',this)" data-perm="settings.edit">📝 Audit Log</button>
     <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
     <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
@@ -2295,6 +2359,40 @@ console.log('Firebase bağlandı ✓');
         </div>
         <div id="bi_toast" style="display:none;margin-top:10px;padding:8px 14px;background:#0a2a1a;border:1px solid #26a69a;border-radius:4px;font-family:var(--mono);font-size:11px;color:#26a69a"></div>
       </div>
+    </div>
+
+    <div class="admin-section" id="sec-auditlog" style="display:none;flex:1;overflow-y:auto;padding:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:700;">📝 AUDIT LOG — Yönetici İşlem Geçmişi</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="alFilter" class="mgr-input" style="width:220px;" placeholder="🔍 Manager / action / target..." oninput="alRender()">
+          <select id="alActionFilter" class="mgr-input" style="width:180px;" onchange="alRender()">
+            <option value="">Tüm Eylemler</option>
+            <option value="finance">Finans</option>
+            <option value="request">Talep (deposit/withdraw)</option>
+            <option value="finlog">Finlog</option>
+            <option value="position">Pozisyon</option>
+            <option value="price">Fiyat Override</option>
+            <option value="spreadGroup">Spread Grup</option>
+          </select>
+          <button class="mgr-btn" onclick="alLoad()">🔄 Yenile</button>
+        </div>
+      </div>
+      <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:4px;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;">
+          <thead>
+            <tr style="background:#161616;">
+              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:10px;letter-spacing:1px;">TARİH</th>
+              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:10px;letter-spacing:1px;">MANAGER</th>
+              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:10px;letter-spacing:1px;">EYLEM</th>
+              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:10px;letter-spacing:1px;">HEDEF</th>
+              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:10px;letter-spacing:1px;">DEĞİŞİM</th>
+            </tr>
+          </thead>
+          <tbody id="alBody"><tr><td colspan="5" style="padding:24px;text-align:center;color:#777;">Yükleniyor...</td></tr></tbody>
+        </table>
+      </div>
+      <div id="alStatus" style="margin-top:12px;font-size:10px;color:#888;font-family:var(--mono);"></div>
     </div>
 
     <div class="admin-section" id="sec-walletsettings" style="display:none;flex:1;overflow-y:auto;padding:16px;">
@@ -3272,6 +3370,13 @@ function closePosition(id, reason='') {
   renderHistory();
   // updateAccount burada çağrılmıyor — çağıran (updatePositions/manuel) zaten çağırır
   // Aksi halde closePosition → updateAccount → closePosition döngüsü oluşur
+
+  // Audit: manuel kapama (stop_out/sl/tp otomatik, reason varsa sistem)
+  if(!reason || reason === 'manuel') {
+    adAudit('position.close.manual', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, side:pos.side, qty:pos.qty, openPrice:pos.openPrice}, {closePrice:closePrice, pnl:pnl, reason:reason||'manuel'});
+  } else if(reason === 'stop_out') {
+    adAudit('position.close.stopout', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, qty:pos.qty}, {closePrice:closePrice, pnl:pnl});
+  }
 
   if(reason) {
     var _tAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
@@ -4855,6 +4960,7 @@ function adDeposit() {
   saveAccounts(); renderAccTable();
   fbSyncUserFinance(a);
   adRenderFinlog();
+  adAudit('finance.deposit', 'users/'+a.id, {balance: a.balance - amt}, {balance: a.balance, amount: amt, note: note}, note);
   showToast('Para Yatırıldı ✓','$'+amt.toFixed(2)+' → '+a.name);
   adRenderTab('finance');
 }
@@ -4891,6 +4997,7 @@ function adWithdraw() {
   saveAccounts(); renderAccTable();
   fbSyncUserFinance(a);
   adRenderFinlog();
+  adAudit('finance.withdraw', 'users/'+a.id, {balance: a.balance + amt}, {balance: a.balance, amount: amt, note: note}, note);
   showToast('Para Çekildi ✓','$'+amt.toFixed(2)+' ← '+a.name);
   adRenderTab('finance');
 }
@@ -4913,6 +5020,7 @@ function adBonus(sign) {
       updatedAt: new Date().toISOString()
     }, {merge:true}).catch(function(e){ console.warn('bonus sync err:', e); });
   }
+  adAudit(sign>0 ? 'finance.bonus_in' : 'finance.bonus_out', 'users/'+a.id, {bonus: oldBonus}, {bonus: newBonus, amount: amt});
   showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
   adRenderTab('finance');
 }
@@ -5124,6 +5232,7 @@ function adSaveFinlog() {
     document.getElementById('adFinlogForm').style.display = 'none';
     adRenderFinlog();
     adRefreshBadges();
+    adAudit('finlog.' + (editIdx!==null && !isNaN(editIdx) ? 'edit' : 'add'), 'users/'+a.id, editIdx!==null && !isNaN(editIdx) ? {entry: (uFl && uFl.length>editIdx) ? uFl[editIdx] : null} : null, {type: type, amount: amt, note: note}, note);
     showToast('Kaydedildi ✓', type);
   });
 }
@@ -5150,6 +5259,7 @@ function adDeleteFinlog(idx) {
     fbSaveUserData(String(a.id), { balance: currentBal, bonus: a.bonus||0, finlog: fl, _balanceSource: 'manager', updatedAt: new Date().toISOString() });
     adRenderFinlog();
     adRefreshBadges();
+    adAudit('finlog.delete', 'users/'+a.id, {entry: log}, null);
     showToast('Silindi','Kayıt kaldırıldı');
   });
 }
@@ -6106,6 +6216,7 @@ function approveReq(id) {
   var r=withdrawRequests.find(function(x){return x.id===id;});
   if(!r)return;
   r.status='approved'; saveRequests();
+  adAudit('request.withdraw.approve', 'users/'+(r.accountId||'?'), {status:'pending', amount:r.amount, currency:r.currency}, {status:'approved', requestId:id, method:r.method});
   if(r.accountId&&typeof _reqUpdateBalance==='function'){
     var _wdAmtRaw = +(r.amount||0);
     var _wdCur = r.currency || 'USD';
@@ -6125,7 +6236,10 @@ function approveReq(id) {
 function rejectReq(id, type) {
   var list = type==='deposit' ? depositRequests : withdrawRequests;
   var r=list.find(function(x){return x.id===id;});
-  if(r){r.status='rejected';saveRequests();renderWithdrawReqs();updatePendingBadge();showAdminToast('Reddedildi','#'+id+' talebi reddedildi','info');}
+  if(r){
+    adAudit('request.'+type+'.reject', 'users/'+(r.accountId||'?'), {status:r.status, amount:r.amount, currency:r.currency}, {status:'rejected', requestId:id});
+    r.status='rejected';saveRequests();renderWithdrawReqs();updatePendingBadge();showAdminToast('Reddedildi','#'+id+' talebi reddedildi','info');
+  }
 }
 
 function deleteReq(id) { withdrawRequests=withdrawRequests.filter(x=>x.id!==id); saveRequests(); renderWithdrawReqs(); }
@@ -6155,6 +6269,7 @@ function approveDepReq(id) {
   var r=depositRequests.find(function(x){return x.id===id;});
   if(!r)return;
   r.status='approved'; saveRequests();
+  adAudit('request.deposit.approve', 'users/'+(r.accountId||'?'), {status:'pending', amount:r.amount, currency:r.currency}, {status:'approved', requestId:id, method:r.method});
   if(r.accountId&&typeof _reqUpdateBalance==='function'){
     var _raw=+(r.amount||0), _cur=r.currency||'USD', _usd=convertToUsd(_raw,_cur);
     var _note=(r.method||'')+' yatırım #'+id+(_cur!=='USD'?' ('+_raw+' '+_cur+' → $'+_usd+')':'');
@@ -6171,7 +6286,7 @@ function approveDepReq(id) {
 
 function rejectDepReq(id) {
   const r = depositRequests.find(x=>x.id===id);
-  if(r) { r.status='rejected'; saveRequests(); renderWithdrawReqs(); }
+  if(r) { adAudit('request.deposit.reject', 'users/'+(r.accountId||'?'), {status:r.status}, {status:'rejected', requestId:id}); r.status='rejected'; saveRequests(); renderWithdrawReqs(); }
 }
 
 function deleteDepReq(id) { depositRequests=depositRequests.filter(x=>x.id!==id); saveRequests(); renderWithdrawReqs(); }
@@ -7131,7 +7246,9 @@ function sgAddGroup() {
   if(spreadGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
   spreadGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
   _activeSgId=id; el.value='';
-  sgSave(); sgRender(); sgRefreshSelects(); showToast('Grup Eklendi ✓',name);
+  sgSave(); sgRender(); sgRefreshSelects();
+  adAudit('spreadGroup.add', 'spreadGroups/'+id, null, {id:id, name:name});
+  showToast('Grup Eklendi ✓',name);
 }
 
 function sgDeleteGroup() {
@@ -7141,7 +7258,9 @@ function sgDeleteGroup() {
   
   spreadGroups = spreadGroups.filter(function(x){ return x.id!==_activeSgId; });
   _activeSgId = spreadGroups[0].id;
-  sgSave(); sgRender(); sgRefreshSelects(); showToast('Silindi',g.name);
+  sgSave(); sgRender(); sgRefreshSelects();
+  adAudit('spreadGroup.delete', 'spreadGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
+  showToast('Silindi',g.name);
 }
 
 function sgRefreshSelects() {
@@ -7618,6 +7737,7 @@ function pcSetPrice() {
   inp.value='';
   pcRefresh();
   pcRenderOverrides();
+  adAudit('price.override.set', 'symbols/'+sym, {prevMarket: _adPrices[sym]||null}, {price: val, synth: !!(_sc&&_sc.priceSource)});
 }
 
 function pcApplyPrice(sym, price) {
@@ -8230,7 +8350,8 @@ function adminNav(sec,btn){
     'accounts':'accounts.view','reports':'reports.view','finance':'finance.view',
     'spreadgroups':'spreadgroups.view','symbols':'symbols.view','feed':'feed.view',
     'pricecontrol':'feed.edit','staff':'staff.view','settings':'settings.view',
-    'brokerinfo':'settings.edit','walletsettings':'settings.edit','withdrawreqs':'finance.view'
+    'brokerinfo':'settings.edit','walletsettings':'settings.edit','withdrawreqs':'finance.view',
+    'auditlog':'settings.edit'
   };
   if(_secPerms[sec] && typeof hasPerm==='function' && !hasPerm(_secPerms[sec])) {
     showAdminToast('Yetkisiz','Bu bölüme erişim yetkiniz yok','danger');
@@ -8311,6 +8432,84 @@ function adminNav(sec,btn){
       }).catch(_renderPM);
     } else { _renderPM(); }if(typeof renderPayMethods==='function')renderPayMethods();}
   if(sec==='withdrawreqs'){fbLoadRequests(function(){renderWithdrawReqs();updatePendingBadge();});}
+  if(sec==='auditlog'){ if(typeof alLoad==='function') alLoad(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT LOG VIEWER
+// ═══════════════════════════════════════════════════════════════
+var _alCache = [];
+
+function alLoad() {
+  var body = document.getElementById('alBody');
+  var status = document.getElementById('alStatus');
+  if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#777;">Yükleniyor...</td></tr>';
+  if(typeof db==='undefined' || !db) {
+    if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef5350;">Firebase bağlantısı yok</td></tr>';
+    return;
+  }
+  db.collection('broker').doc('auditLog').collection('entries')
+    .orderBy('ts','desc').limit(500).get()
+    .then(function(snap){
+      _alCache = [];
+      snap.forEach(function(d){ _alCache.push(Object.assign({_id:d.id}, d.data())); });
+      if(status) status.textContent = 'Son ' + _alCache.length + ' kayıt yüklendi';
+      alRender();
+    })
+    .catch(function(e){
+      if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef5350;">Hata: '+(e&&e.message||e)+'</td></tr>';
+    });
+}
+
+function alRender() {
+  var body = document.getElementById('alBody');
+  if(!body) return;
+  var q = ((document.getElementById('alFilter')||{}).value || '').toLowerCase().trim();
+  var af = (document.getElementById('alActionFilter')||{}).value || '';
+  var list = _alCache.filter(function(e){
+    if(af && (e.action||'').indexOf(af) !== 0) return false;
+    if(q) {
+      var hay = [e.managerName, e.managerId, e.action, e.target, e.reason].filter(Boolean).join(' ').toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  if(!list.length) {
+    body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#777;">Kayıt yok</td></tr>';
+    return;
+  }
+  var ACTION_COLORS = {
+    'finance.deposit':'#26a69a','finance.withdraw':'#ef5350',
+    'finance.bonus_in':'#f5c518','finance.bonus_out':'#f5a623',
+    'finlog.add':'#26a69a','finlog.edit':'#f5c518','finlog.delete':'#ef5350',
+    'request.deposit.approve':'#26a69a','request.deposit.reject':'#ef5350',
+    'request.withdraw.approve':'#26a69a','request.withdraw.reject':'#ef5350',
+    'position.close.manual':'#2979ff','position.close.stopout':'#ef5350',
+    'price.override.set':'#f5c518','price.override.reset':'#888',
+    'spreadGroup.add':'#26a69a','spreadGroup.delete':'#ef5350'
+  };
+  body.innerHTML = list.map(function(e){
+    var ts = e.ts ? (typeof fmtDate==='function' ? fmtDate(e.ts) : new Date(e.ts).toLocaleString('tr-TR')) : '—';
+    var ac = ACTION_COLORS[e.action] || '#c0c0c0';
+    var changeStr = _alDiffStr(e.before, e.after);
+    return '<tr style="border-bottom:1px solid #1a1a1a;">'
+      + '<td style="padding:6px 12px;color:#a0a0a0;white-space:nowrap;">' + ts + '</td>'
+      + '<td style="padding:6px 12px;color:#ddd;">' + (e.managerName||'—') + '<div style="font-size:9px;color:#666;">' + (e.managerId||'') + '</div></td>'
+      + '<td style="padding:6px 12px;"><span style="color:'+ac+';font-weight:700;">' + (e.action||'') + '</span>' + (e.reason?'<div style="font-size:9px;color:#888;">'+e.reason+'</div>':'') + '</td>'
+      + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (e.target||'—') + '</td>'
+      + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + changeStr + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function _alDiffStr(before, after) {
+  try {
+    var b = before ? JSON.stringify(before) : '∅';
+    var a = after  ? JSON.stringify(after)  : '∅';
+    if(b.length > 80) b = b.substring(0,80) + '…';
+    if(a.length > 80) a = a.substring(0,80) + '…';
+    return '<span style="color:#666;">' + b + '</span> → <span style="color:#ddd;">' + a + '</span>';
+  } catch(e) { return '—'; }
 }
 
 function showAdminToast(title,msg,type){
@@ -9403,7 +9602,9 @@ function pcReset() {
   var sel = document.getElementById('pc_sym');
   if(!sel) return;
   var sym = sel.value;
+  var oldOverride = _pcOverrides[sym];
   delete _pcOverrides[sym];
+  adAudit('price.override.reset', 'symbols/'+sym, {override: oldOverride}, null);
   adShowToast('Sıfırlandı', sym + ' — simülasyon devam ediyor', 'info');
   pcRenderOverrides();
   pcRefresh();
