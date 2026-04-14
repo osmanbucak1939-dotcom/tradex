@@ -1152,45 +1152,7 @@ function _authSuccess(user) {
     // Auth yoksa yine de dene
     _afterFirebaseAuth();
   }
-  // Firebase'den kullanıcı verisini yükle
-  fbLoadUserData(user.id, function(data) {
-    if(data) {
-      try { if(data.positions !== undefined) positions = Array.isArray(data.positions)?data.positions:JSON.parse(data.positions||'[]'); } catch(e){}
-      try { if(data.tradeHistory) tradeHistory = Array.isArray(data.tradeHistory)?data.tradeHistory:JSON.parse(data.tradeHistory||'[]'); } catch(e){}
-      try { if(data.portfolio) portfolio = Array.isArray(data.portfolio)?data.portfolio:JSON.parse(data.portfolio||'[]'); } catch(e){}
-      try { if(data.alarms) alarms = Array.isArray(data.alarms)?data.alarms:JSON.parse(data.alarms||'[]'); } catch(e){}
-      // finlog'u users/{id}'den al (doğru kaynak)
-      if(Array.isArray(data.finlog)) finlog = data.finlog;
-      // Balance: önce users/{id}'deki manager balance'ını kontrol et
-      if(data.balance !== undefined && data._balanceSource === 'manager') {
-        balance = parseFloat(data.balance)||0;
-      }
-      // broker/accounts'tan resmi balance'ı al (override)
-      if(typeof db !== 'undefined' && db) {
-        db.collection('broker').doc('accounts').get().then(function(adoc){
-          if(adoc.exists) {
-            try {
-              var accs = JSON.parse(adoc.data().data||'[]');
-              var myAcc = accs.find(function(a){ return String(a.id)===String(_cu.id); });
-              if(myAcc && myAcc.balance !== undefined) {
-                balance = parseFloat(myAcc.balance)||0;
-              }
-            } catch(e){}
-          }
-          window._lastSyncAt = '';
-          renderPositions(); renderHistory(); updateAccount();
-        }).catch(function(){
-          window._lastSyncAt = '';
-          renderPositions(); renderHistory(); updateAccount();
-        });
-      } else {
-        window._lastSyncAt = '';
-        renderPositions(); renderHistory(); updateAccount();
-      }
-    }
-    if(window._fbUnsubscribe) { try{ window._fbUnsubscribe(); }catch(e){} window._fbUnsubscribe = null; }
-
-  });
+  // Kullanıcı verisi _afterFirebaseAuth içinde yükleniyor
   // Polling - db hazır olmasa bile setTimeout ile bekle
   if(window._fbSyncInterval) { clearInterval(window._fbSyncInterval); window._fbSyncInterval = null; }
   if(window._fbUnsubscribeUser) { try{window._fbUnsubscribeUser();}catch(e){} window._fbUnsubscribeUser = null; }
@@ -1231,39 +1193,27 @@ function _authSuccess(user) {
   // localStorage polling de gereksiz (aynı sekme içinde)
   var _lastPriceTs = 0;
 
-  // users/{id} realtime sync - polling yerine onSnapshot
-  if(window._fbUnsubscribeUser) { try{window._fbUnsubscribeUser();}catch(e){} }
-  window._fbUnsubscribeUser = db.collection('users').doc(String(_cu.id))
-    .onSnapshot(function(doc) {
-        if(!doc.exists) return;
-        var d = doc.data();
-        if(!d) return;
-        var remoteUpdatedAt = d.updatedAt || '';
-        if(remoteUpdatedAt && remoteUpdatedAt !== window._lastSyncAt) {
-          window._lastSyncAt = remoteUpdatedAt;
-          // spreadGroup değiştiyse uygula
-          if(d.spreadGroup && d.spreadGroup !== _cu.spreadGroup) {
-            _cu.spreadGroup = d.spreadGroup;
-            applyGroupSpreads();
-            if(document.getElementById('mwBody')) renderMarketWatch();
-          }
-          if(d.leverage)        _cu.leverage = d.leverage;
-          if(d.marginLevelPct)  _cu.marginLevelPct = d.marginLevelPct;
-          try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
-          try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
-          // Manager deposit/withdraw onayladıysa balance'ı al
-          if(d.balance !== undefined && d._balanceSource === 'manager') {
-            balance = parseFloat(d.balance)||0;
-          }
-          if(Array.isArray(d.finlog)) finlog = d.finlog;
-          if(_cu) { var _acc = accounts.find(function(x){ return String(x.id)===String(_cu.id); }); if(_acc){ _acc.balance=balance; _acc.finlog=finlog; } }
-          renderPositions(); renderHistory(); updateAccount();
-          // Finans sekmesi açıksa yenile
-          var _finEl = document.getElementById('bp-finans-content');
-          if(_finEl && document.getElementById('bp-finans') && document.getElementById('bp-finans').style.display!=='none') _renderBpFinansTable(_finEl);
-          
-        }
-      }, function(e){ console.warn('[SYNC] err:', e); });;
+  // users/{id} realtime sync — _FB manager ile (tekil, temizlenebilir)
+  _FB.sub('user', db.collection('users').doc(String(_cu.id)).onSnapshot(function(doc) {
+    if(!doc.exists) return;
+    var d = doc.data(); if(!d) return;
+    var remoteUpdatedAt = d.updatedAt || '';
+    if(remoteUpdatedAt && remoteUpdatedAt === window._lastSyncAt) return;
+    window._lastSyncAt = remoteUpdatedAt;
+    if(d.spreadGroup && d.spreadGroup !== _cu.spreadGroup) {
+      _cu.spreadGroup = d.spreadGroup; applyGroupSpreads();
+      if(document.getElementById('mwBody')) renderMarketWatch();
+    }
+    if(d.leverage) _cu.leverage = d.leverage;
+    if(d.marginLevelPct) _cu.marginLevelPct = d.marginLevelPct;
+    try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
+    try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
+    if(d.balance !== undefined && d._balanceSource === 'manager') balance = parseFloat(d.balance)||0;
+    if(Array.isArray(d.finlog)) finlog = d.finlog;
+    renderPositions(); renderHistory(); updateAccount();
+    var _finEl = document.getElementById('bp-finans-content');
+    if(_finEl) _renderBpFinansTable && _renderBpFinansTable(_finEl);
+  }, function(e){ console.warn('[user snap]', e.message); }));
 
   _authClose();
   var lb = document.getElementById('tbLoginBtn');
@@ -1464,10 +1414,19 @@ function _doRegister() {
   });
 }
 function logoutUser() {
-  // Çıkış anında online:false ve lastSeen yaz - hem users hem broker/accounts
   _txSetOffline();
+  // Tüm Firebase listener'ları kapat
+  _FB.unsubAll();
+  // Feed'i durdur
+  if(typeof stopRealFeed==='function') stopRealFeed();
+  window._fbSnapshotsStarted = false;
+  window._txFeedActive = false;
+  window._fbDataLoaded = false;
+  window._lastSyncAt = '';
+  // Timer'ları temizle
   if(window._heartbeatTimer){ clearInterval(window._heartbeatTimer); window._heartbeatTimer=null; }
-  if(window._fbSyncInterval) { clearInterval(window._fbSyncInterval); window._fbSyncInterval = null; clearInterval(window._fbPriceInterval); window._fbPriceInterval = null; if(window._fbUnsubscribe){ try{window._fbUnsubscribe();}catch(e){} window._fbUnsubscribe=null; } }
+  if(window._sgSyncInterval){ clearInterval(window._sgSyncInterval); window._sgSyncInterval=null; }
+  if(window._userDataUnsub){ try{window._userDataUnsub();}catch(e){} window._userDataUnsub=null; }
   _cu=null;
   try{localStorage.removeItem('tx_current_user');}catch(e){}
   var lb=document.getElementById('tbLoginBtn');
@@ -1633,8 +1592,7 @@ function initAuth(){
     window._userDataUnsub = null;
     function fbListenUserData(userId) {
       if(!db || !userId) return;
-      if(window._userDataUnsub) { try{window._userDataUnsub();}catch(e){} }
-      window._userDataUnsub = db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
+      _FB.sub('user', db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
         if(!doc.exists) return;
         var d = doc.data(); if(!d) return;
         var changed = false;
@@ -1682,7 +1640,7 @@ function initAuth(){
           if(typeof mFP==='function') mFP();
           if(typeof renderPendingOrders==='function') renderPendingOrders();
         }
-      }, function(e){ console.warn('fbListenUserData err:', e); });
+      }, function(e){ console.warn('fbListenUserData err:', e); }));
     }
 
     // Spread gruplarını Firebase'e kaydet
@@ -4865,118 +4823,118 @@ function setApiDot(s, label) {
   try { localStorage.setItem('_tdFeedStatus', JSON.stringify({s:s, label:label, t:Date.now()})); } catch(e){}
 }
 
+// ════════════════════════════════════════════════════════════
+// GLOBAL LİSTENER YÖNETİCİSİ — tüm onSnapshot'lar buradan
+// ════════════════════════════════════════════════════════════
+var _FB = {
+  _subs: {},
+  sub: function(key, unsubFn) {
+    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} }
+    this._subs[key] = unsubFn;
+  },
+  unsub: function(key) {
+    if(this._subs[key]) { try{ this._subs[key](); }catch(e){} delete this._subs[key]; }
+  },
+  unsubAll: function() {
+    var keys = Object.keys(this._subs);
+    for(var i=0;i<keys.length;i++) { try{ this._subs[keys[i]](); }catch(e){} }
+    this._subs = {};
+    console.log('[FB] Tüm listener'lar kapatıldı');
+  }
+};
+
 function startFirebaseSnapshots() {
-  // Firebase snapshot'ları — sadece auth tamamlandıktan sonra çağrılır
   if(typeof db === 'undefined' || !db) return;
-  if(window._fbSnapshotsStarted) return; // tekrar bağlanma
+  // Önceki tüm listener'ları temizle
+  _FB.unsub('symbols'); _FB.unsub('spreadGroups');
+  _FB.unsub('payMethods'); _FB.unsub('requests'); _FB.unsub('accounts');
   window._fbSnapshotsStarted = true;
-  db.collection('broker').doc('symbols').onSnapshot(function(doc) {
-      if(doc.exists && doc.data() && doc.data().data) {
-        try {
-          var fbSyms = JSON.parse(doc.data().data);
-          if(Array.isArray(fbSyms) && fbSyms.length) {
-            localStorage.setItem('tx_syms', JSON.stringify(fbSyms));
-            symConfig = fbSyms;
-            window._symConfig = fbSyms;
-            applySymConfig();
-            renderMarketWatch();
-            // Aktif sembol için lot input güncelle
-            var _curSC = symConfig.find(function(s){return s.sym===curSym;});
-            if(_curSC) {
-              var _ml = parseFloat(_curSC.minLot)||0.01;
-              var _lEl = document.getElementById('qtLotVal');
-              var _oEl = document.getElementById('ordQty');
-              if(_lEl){ _lEl.min=_ml; _lEl.step=_ml; }
-              if(_oEl){ _oEl.min=_ml; _oEl.step=_ml; }
-            }
-          }
-        } catch(e){ console.warn('symbols load:', e); }
+
+  // broker/symbols
+  _FB.sub('symbols', db.collection('broker').doc('symbols').onSnapshot(function(doc) {
+    if(!doc.exists || !doc.data() || !doc.data().data) return;
+    try {
+      var fbSyms = JSON.parse(doc.data().data);
+      if(Array.isArray(fbSyms) && fbSyms.length) {
+        localStorage.setItem('tx_syms', JSON.stringify(fbSyms));
+        symConfig = fbSyms; window._symConfig = fbSyms;
+        applySymConfig(); renderMarketWatch();
+        var _curSC = symConfig.find(function(s){return s.sym===curSym;});
+        if(_curSC) {
+          var _ml = parseFloat(_curSC.minLot)||0.01;
+          var _lEl = document.getElementById('qtLotVal');
+          var _oEl = document.getElementById('ordQty');
+          if(_lEl){ _lEl.min=_ml; _lEl.step=_ml; }
+          if(_oEl){ _oEl.min=_ml; _oEl.step=_ml; }
+        }
       }
-    }, function(e){ console.warn('symbols snapshot err:', e); });
+    } catch(e){ console.warn('symbols snap:', e); }
+  }, function(e){ console.warn('symbols err:', e.message); }));
 
-    // spreadGroups realtime sync
-    db.collection('broker').doc('spreadGroups').onSnapshot(function(doc){
-      if(!doc.exists || !doc.data()) return;
-      try {
-        var _d = doc.data();
-        var _groups = _d.data ? JSON.parse(_d.data) : (_d.groups ? JSON.parse(_d.groups) : null);
-        if(Array.isArray(_groups) && _groups.length) {
-          spreadGroups = _groups;
-          applyGroupSpreads();
-        }
-      } catch(e){ console.warn('spreadGroups snap:', e); }
-    }, function(e){ console.warn('spreadGroups snap err:',e); });
+  // broker/spreadGroups
+  _FB.sub('spreadGroups', db.collection('broker').doc('spreadGroups').onSnapshot(function(doc){
+    if(!doc.exists || !doc.data()) return;
+    try {
+      var _d = doc.data();
+      var _groups = _d.data ? JSON.parse(_d.data) : (_d.groups ? JSON.parse(_d.groups) : null);
+      if(Array.isArray(_groups) && _groups.length) {
+        spreadGroups = _groups;
+        spreadGroups.forEach(function(g){ if(!g.spreads)g.spreads={}; if(!g.swaps)g.swaps={}; });
+        applyGroupSpreads();
+      }
+    } catch(e){ console.warn('spreadGroups snap:', e); }
+  }, function(e){ console.warn('spreadGroups err:', e.message); }));
 
-    // payMethods realtime sync
-    db.collection('broker').doc('payMethods').onSnapshot(function(doc){
-      if(!doc.exists || !doc.data()) return;
-      try {
-        var _pm = doc.data().methods ? JSON.parse(doc.data().methods) : null;
-        if(!_pm && doc.data().data) _pm = JSON.parse(doc.data().data);
-        if(Array.isArray(_pm)) {
-          payMethods = _pm;
-          if(typeof renderDepositMethods === 'function') renderDepositMethods();
-        }
-      } catch(e){ console.warn('payMethods snap:', e); }
-    }, function(e){ console.warn('payMethods snap err:',e); });
+  // broker/payMethods
+  _FB.sub('payMethods', db.collection('broker').doc('payMethods').onSnapshot(function(doc){
+    if(!doc.exists || !doc.data()) return;
+    try {
+      var _pm = doc.data().methods ? JSON.parse(doc.data().methods) : null;
+      if(!_pm && doc.data().data) _pm = JSON.parse(doc.data().data);
+      if(Array.isArray(_pm)) {
+        payMethods = _pm;
+        if(typeof renderDepositMethods==='function') renderDepositMethods();
+      }
+    } catch(e){ console.warn('payMethods snap:', e); }
+  }, function(e){ console.warn('payMethods err:', e.message); }));
 
-    // requests realtime sync (talep onayları anında yansısın)
-    db.collection('broker').doc('requests').onSnapshot(function(doc){
-      if(!doc.exists || !doc.data()) return;
-      try {
-        var _data = doc.data();
-        var _wReqs = _data.withdraw ? JSON.parse(_data.withdraw) : (_data.withdrawRequests ? JSON.parse(_data.withdrawRequests) : null);
-        var _dReqs = _data.deposit  ? JSON.parse(_data.deposit)  : (_data.depositRequests  ? JSON.parse(_data.depositRequests)  : null);
-        if(Array.isArray(_wReqs)) withdrawRequests = _wReqs;
-        if(Array.isArray(_dReqs)) depositRequests  = _dReqs;
-        // Talep listesi açıksa yenile
-        var _reqEl = document.getElementById('bp-talepler-content');
-        if(_reqEl) _renderBpTaleplerTable && _renderBpTaleplerTable(_reqEl);
-      } catch(e){ console.warn('requests snap:', e); }
-    }, function(e){ console.warn('requests snap err:',e); });
+  // broker/requests
+  _FB.sub('requests', db.collection('broker').doc('requests').onSnapshot(function(doc){
+    if(!doc.exists || !doc.data()) return;
+    try {
+      var _data = doc.data();
+      var _wReqs = _data.withdraw ? JSON.parse(_data.withdraw) : (_data.withdrawRequests ? JSON.parse(_data.withdrawRequests) : null);
+      var _dReqs = _data.deposit  ? JSON.parse(_data.deposit)  : (_data.depositRequests  ? JSON.parse(_data.depositRequests)  : null);
+      if(Array.isArray(_wReqs)) withdrawRequests = _wReqs;
+      if(Array.isArray(_dReqs)) depositRequests  = _dReqs;
+      var _reqEl = document.getElementById('bp-talepler-content');
+      if(_reqEl && typeof _renderBpTaleplerTable==='function') _renderBpTaleplerTable(_reqEl);
+    } catch(e){ console.warn('requests snap:', e); }
+  }, function(e){ console.warn('requests err:', e.message); }));
 
-    // prices realtime sync
-    db.collection('broker').doc('prices').onSnapshot(function(doc){
-      // prices artık txListenPrices() ile dinleniyor — buradaki listener kaldırıldı
-      // (startRealFeed içinde txListenPrices zaten bağlanıyor)
-    }, function(e){ console.warn('prices snap err:',e); });
-
-    // broker/accounts realtime sync (leverage, spreadGroup değişimleri)
-    db.collection('broker').doc('accounts').onSnapshot(function(doc){
-      if(!doc.exists || !doc.data()) return;
-      try {
-        var _accs = JSON.parse(doc.data().data||'[]');
-        if(_cu && Array.isArray(_accs)) {
-          var _myAcc = _accs.find(function(a){ return String(a.id)===String(_cu.id); });
-          if(_myAcc) {
-            if(_myAcc.leverage && _myAcc.leverage !== _cu.leverage) { _cu.leverage = _myAcc.leverage; }
-            if(_myAcc.spreadGroup && _myAcc.spreadGroup !== _cu.spreadGroup) {
-              _cu.spreadGroup = _myAcc.spreadGroup;
-              applyGroupSpreads();
-              if(document.getElementById('mwBody')) renderMarketWatch();
-            }
-            // Bonus sync
-            if(_myAcc.bonus !== undefined) {
-              var _newBonus = parseFloat(_myAcc.bonus)||0;
-              _cu.bonus = _newBonus;
-              // users/{id}'ye de yaz - tek kaynak haline getir
-              if(typeof fbSaveUserData==='function' && _cu && _cu.id) {
-                fbSaveUserData(_cu.id, {bonus: _newBonus, updatedAt: new Date().toISOString()});
-              }
-            }
-            // Balance'ı broker/accounts'tan al — tek resmi kaynak
-            if(_myAcc.balance !== undefined) {
-              var _newBal = parseFloat(_myAcc.balance)||0;
-              if(_newBal !== balance) {
-                balance = _newBal;
-                updateAccount();
-              }
-            }
-          }
-        }
-      } catch(e){ console.warn('accounts snap:', e); }
-    }, function(e){ console.warn('accounts snap err:',e); });
+  // broker/accounts — balance, leverage, spreadGroup
+  _FB.sub('accounts', db.collection('broker').doc('accounts').onSnapshot(function(doc){
+    if(!doc.exists || !doc.data()) return;
+    try {
+      var _accs = JSON.parse(doc.data().data||'[]');
+      if(!_cu || !Array.isArray(_accs)) return;
+      var _myAcc = _accs.find(function(a){ return String(a.id)===String(_cu.id); });
+      if(!_myAcc) return;
+      if(_myAcc.leverage && _myAcc.leverage !== _cu.leverage) _cu.leverage = _myAcc.leverage;
+      if(_myAcc.spreadGroup && _myAcc.spreadGroup !== _cu.spreadGroup) {
+        _cu.spreadGroup = _myAcc.spreadGroup;
+        applyGroupSpreads();
+        if(document.getElementById('mwBody')) renderMarketWatch();
+      }
+      if(_myAcc.bonus !== undefined) _cu.bonus = parseFloat(_myAcc.bonus)||0;
+      if(_myAcc.balance !== undefined) {
+        var _nb = parseFloat(_myAcc.balance)||0;
+        if(Math.abs(_nb - balance) > 0.001) { balance = _nb; updateAccount(); }
+      }
+    } catch(e){ console.warn('accounts snap:', e); }
+  }, function(e){ console.warn('accounts err:', e.message); }));
 }
+
 
 function startLiveFeed() {
   // Simüle fiyatları yükle (UI hemen gösterilsin)
@@ -7305,7 +7263,7 @@ function txApplyPrice(sym, rawMid) {
 // ── Firebase pricesChg dinle ─────────────────────────────────
 function txListenPricesChg() {
   if(typeof db === 'undefined' || !db) return;
-  db.collection('broker').doc('pricesChg').onSnapshot(function(doc){
+  _FB.sub('pricesChg', db.collection('broker').doc('pricesChg').onSnapshot(function(doc){
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
     Object.keys(pd).forEach(function(sym){
@@ -7325,13 +7283,13 @@ function txListenPricesChg() {
       }
       if(typeof _mwUpdateChg === 'function') _mwUpdateChg(sym, chg);
     });
-  }, function(e){ console.warn('[Trader] pricesChg snap err:', e); });
+  }, function(e){ console.warn('[Trader] pricesChg err:', e.message); }));
 }
 
 // ── Firebase overrides dinle ──────────────────────────────────
 function txListenSynthOffsets() {
   if(typeof db === 'undefined' || !db) return;
-  db.collection('broker').doc('synthOffsets').onSnapshot(function(doc){
+  _FB.sub('synthOffsets', db.collection('broker').doc('synthOffsets').onSnapshot(function(doc){
     if(!window._synthOffsets) window._synthOffsets = {};
     if(doc.exists) {
       var data = doc.data() || {};
@@ -7340,14 +7298,12 @@ function txListenSynthOffsets() {
         window._synthOffsets[k] = parseFloat(data[k])||0;
       });
     }
-  }, function(e){ console.warn('[synthOffsets]', e.message); });
+  }, function(e){ console.warn('[synthOffsets]', e.message); }));
 }
 
 function txListenOverrides() {
   if(typeof db === 'undefined' || !db) return;
-  if(_txOverUnsub) { try{_txOverUnsub();}catch(e){} }
-
-  _txOverUnsub = db.collection('broker').doc('overrides').onSnapshot(function(doc){
+  _FB.sub('overrides', db.collection('broker').doc('overrides').onSnapshot(function(doc){
     var prevOv = Object.assign({}, _txAdminOverrides);
     _txAdminOverrides = {};
 
@@ -7398,7 +7354,7 @@ function txListenOverrides() {
         delete window._txPriceInit[sym]; // yeniden başlat
       }
     });
-  }, function(e){ console.warn('[Trader] overrides snap err:', e); });
+  }, function(e){ console.warn('[overrides]', e.message); }));
 }
 
 // ── TRADER FEED ───────────────────────────────────────────────
@@ -7410,7 +7366,7 @@ function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
   // 1) Firebase onSnapshot — forex + emtia + endeks (3sn admin günceller)
-  var _fbUnsub = db.collection('broker').doc('prices').onSnapshot(function(doc) {
+  _FB.sub('prices', db.collection('broker').doc('prices').onSnapshot(function(doc) {
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
     Object.keys(pd).forEach(function(sym) {
@@ -7459,7 +7415,7 @@ function txListenPrices() {
   _wsOpen();
 
   _txPriceUnsub = function() {
-    _fbUnsub();
+    _FB.unsub('prices');
     if(_ws) { try{_ws.close();}catch(e){} }
     if(_wsTimer) clearTimeout(_wsTimer);
   };
