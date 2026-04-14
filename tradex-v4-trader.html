@@ -1115,7 +1115,7 @@ function _authSuccess(user) {
         try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
         try { if(d.portfolio !== undefined) portfolio = Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]'); } catch(e){}
         try { if(d.alarms !== undefined) alarms = Array.isArray(d.alarms)?d.alarms:JSON.parse(d.alarms||'[]'); } catch(e){}
-        if(Array.isArray(d.finlog)) finlog = d.finlog;
+        if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
         // balance: broker/accounts'tan al
         db.collection('broker').doc('accounts').get().then(function(adoc) {
           if(adoc.exists) {
@@ -1174,7 +1174,7 @@ function _authSuccess(user) {
             try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
             try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
             // balance'ı users/{id}'den alma — broker/accounts kaynaklı olmalı
-            if(Array.isArray(d.finlog)) finlog = d.finlog;
+            if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
             renderPositions(); renderHistory(); updateAccount();
           }
         }).catch(function(){});
@@ -1209,7 +1209,7 @@ function _authSuccess(user) {
     try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
     try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
     if(d.balance !== undefined && d._balanceSource === 'manager') balance = parseFloat(d.balance)||0;
-    if(Array.isArray(d.finlog)) finlog = d.finlog;
+    if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
     renderPositions(); renderHistory(); updateAccount();
     var _finEl = document.getElementById('bp-finans-content');
     if(_finEl) _renderBpFinansTable && _renderBpFinansTable(_finEl);
@@ -1689,7 +1689,7 @@ function initAuth(){
             try{if(d.positions!==undefined) positions=Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]');}catch(e){}
             try{if(d.tradeHistory!==undefined) tradeHistory=Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]');}catch(e){}
             try{if(d.portfolio!==undefined) portfolio=Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]');}catch(e){}
-            if(Array.isArray(d.finlog)) finlog=d.finlog;
+            if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog=d.finlog;
             db.collection('broker').doc('accounts').get().then(function(adoc){
               if(adoc.exists){
                 try{
@@ -4723,7 +4723,6 @@ function bpSwitch(id, btn) {
   btn.classList.add('active');
   document.getElementById('bp-'+id).classList.add('active');
   if (id==='hist') renderHistory();
-  if (id==='port')
   if (id==='finans') renderBpFinans();
 }
 
