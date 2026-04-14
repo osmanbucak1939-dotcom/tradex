@@ -1414,7 +1414,7 @@ function _doRegister() {
   });
 }
 function logoutUser() {
-  _txSetOffline();
+  if(typeof window._txSetOffline === 'function') window._txSetOffline();
   // Tüm Firebase listener'ları kapat
   _FB.unsubAll();
   // Feed'i durdur
