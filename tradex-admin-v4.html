@@ -10040,6 +10040,10 @@ function adOpenTrade(btn){
   var sc    = (typeof symConfig!=='undefined'&&symConfig) ? symConfig.find(function(s){ return s.sym===sym; }) : null;
   var cs    = sc ? (parseFloat(sc.contractSize)||1) : 1;
   var lev   = parseFloat((a&&a.leverage)||100);
+  // Sembol margin oranı varsa onu kullan (trader'la aynı mantık) — yoksa hesabın leverage'ı
+  if(sc && sc.margin && parseFloat(sc.margin) > 0) {
+    lev = 100 / parseFloat(sc.margin);
+  }
   var cost  = (price * qty * cs) / lev;
   var label = sc ? (sc.label||sym) : sym;
   if(cost > ((a.balance||0)+(a.bonus||0))){
