@@ -8553,75 +8553,18 @@ function updateMarginCallPanel() {
       if(sg && sg.marginCall) mcLevel = parseFloat(sg.marginCall)||80;
     }
 
-    // Stop out kontrolü
+    // Stop out kontrolü — SADECE GÖSTERGE (Cloud Function risk engine yapıyor)
+    // ESKİ: Bu blokta admin tarayıcısı stop out yapardı.
+    // YENİ (2026-04-14): onPriceUpdate + riskEngineBackup Cloud Function'ları yapıyor.
+    // Çifte kapatma riski olmasın diye buradaki kapatma kaldırıldı.
     var stopLevel = 20;
     if(typeof spreadGroups !== 'undefined' && spreadGroups) {
       var _sg2 = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
       if(_sg2 && _sg2.stopOut) stopLevel = parseFloat(_sg2.stopOut)||20;
     }
-    var shouldStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
-    if(shouldStopOut && positions.length > 0) {
-      var _soKey = 'so_'+a.id;
-      if(!window._soThrottle) window._soThrottle = {};
-      if(!window._soThrottle[_soKey] || Date.now()-window._soThrottle[_soKey] > 5000) {
-        window._soThrottle[_soKey] = Date.now();
-        // En zararlı pozisyonu bul
-        var sortedPos = positions.slice().sort(function(x,y){
-          var px = adGetPrice(x.sym,x.side==='buy'?'sell':'buy')||x.openPrice;
-          var py = adGetPrice(y.sym,y.side==='buy'?'sell':'buy')||y.openPrice;
-          var cs_x=parseFloat(x.contractSize)||1, cs_y=parseFloat(y.contractSize)||1;
-          var plX=(x.side==='buy'?px-x.openPrice:x.openPrice-px)*(parseFloat(x.qty)||0)*cs_x;
-          var plY=(y.side==='buy'?py-y.openPrice:y.openPrice-py)*(parseFloat(y.qty)||0)*cs_y;
-          return plX-plY;
-        });
-        var toClose = sortedPos[0];
-        if(!toClose) { window._soThrottle[_soKey] = 0; return; }
-        var closeP = adGetPrice(toClose.sym, toClose.side==='buy'?'sell':'buy')||toClose.openPrice;
-        var _cs2=parseFloat(toClose.contractSize)||1, _qty2=parseFloat(toClose.qty)||0;
-        var _pnl2=(toClose.side==='buy'?closeP-toClose.openPrice:toClose.openPrice-closeP)*_qty2*_cs2+(parseFloat(toClose.swapTotal)||0);
-
-        // cost=0 olan eski pozisyonlar için anlık fiyatla margin hesapla
-        var _scSO=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===toClose.sym;}):null;
-        var _lvSO=(_scSO&&_scSO.margin&&_scSO.margin>0)?(100/parseFloat(_scSO.margin)):(parseFloat(a.leverage||100));
-        var _costSO = (parseFloat(toClose.cost)>0)
-          ? parseFloat(toClose.cost)
-          : (_qty2*(toClose.openPrice||0)*_cs2)/_lvSO;
-
-        // Bakiye güncelleme: cost iade + pnl
-        var _newBal = parseFloat(a.balance||0) + _costSO + _pnl2;
-        a.balance = _newBal;
-
-        // Pozisyonu listeden çıkar
-        var _posIdx = positions.indexOf(toClose);
-        if(_posIdx>-1) positions.splice(_posIdx,1);
-        a.positions = positions;
-        if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=positions;
-
-        // adCalcStats ile tüm cache'leri senkronize et — MC paneli, hesap detayı, liste aynı değeri görsün
-        var _soSt = adCalcStats(a, positions);
-        a._liveEquity=_soSt.equity; a._openPnl=_soSt.openPnl; a._openCount=_soSt.openCount;
-        a.equity=_soSt.equity; a.margin=_soSt.margin;
-
-        // tradeHistory güncelle
-        if(!Array.isArray(a.tradeHistory)) a.tradeHistory=[];
-        a.tradeHistory.unshift(Object.assign({},toClose,{closePrice:closeP,pnl:_pnl2,closeTime:new Date().toISOString(),closeReason:'stop_out'}));
-
-        // Firebase yaz — equity ve margin da gönder ki trader paneli de tutarlı olsun
-        if(typeof db!=='undefined'&&db){
-          db.collection('users').doc(String(a.id)).set({
-            positions:   positions,
-            tradeHistory:a.tradeHistory.slice(0,100),
-            balance:     _newBal,
-            equity:      _soSt.equity,
-            margin:      _soSt.margin,
-            updatedAt:   new Date().toISOString()
-          },{merge:true}).catch(function(e){console.warn('SO FB err:',e);});
-        }
-        saveAccounts();
-        var _accName='#'+(a.login||a.id)+' '+(a.name||'');
-        showAdminToast('⚠ STOP OUT',_accName+' — '+toClose.sym+' '+((_pnl2>=0?'+':'')+adFmtMoney(_pnl2)),'danger');
-      }
-    }
+    var isUnderStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
+    // Not: isUnderStopOut === true ise Cloud Function birkaç saniye içinde kapatacak.
+    // Eğer 30sn+ geçtiği halde hâlâ açıksa Cloud Function'da sorun var demektir.
 
     // Sadece margin call seviyesini göster
     if(usedMargin > 0 && marginLevel > 0 && marginLevel < 100) {
