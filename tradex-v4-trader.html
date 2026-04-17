@@ -1210,8 +1210,11 @@ function _authSuccess(user) {
   scheduleSwap();
 
   // Gerçek zamanlı veri senkronizasyonu başlat
+  console.log('[_authSuccess] fbListenUserData çağrılacak:', typeof fbListenUserData, _cu && _cu.id);
   if(typeof fbListenUserData==='function' && _cu && _cu.id) {
     fbListenUserData(_cu.id);
+  } else {
+    console.warn('[_authSuccess] fbListenUserData ÇAĞRILAMADI:', typeof fbListenUserData, !!_cu);
   }
 
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
@@ -1580,10 +1583,13 @@ function initAuth(){
     // Gerçek zamanlı pozisyon/bakiye senkronizasyonu — TEK LISTENER
     window._userDataUnsub = null;
     function fbListenUserData(userId) {
-      if(!db || !userId) return;
+      if(!db || !userId) { console.warn('[fbListenUserData] db veya userId yok:', !!db, userId); return; }
+      if(typeof _FB === 'undefined') { console.warn('[fbListenUserData] _FB tanımlı değil!'); return; }
+      console.log('[fbListenUserData] Listener kuruluyor, userId:', userId);
       _FB.sub('user', db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
-        if(!doc.exists) return;
+        if(!doc.exists) { console.warn('[fbListenUserData] doc yok'); return; }
         var d = doc.data(); if(!d) return;
+        console.log('[fbListenUserData] Veri geldi, balance:', d.balance, 'positions:', (d.positions||[]).length);
 
         // SpreadGroup değişimi
         if(d.spreadGroup && typeof _cu !== 'undefined' && _cu && d.spreadGroup !== _cu.spreadGroup) {
