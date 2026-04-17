@@ -1336,6 +1336,129 @@ function _adAuditSanitize(v) {
   } catch(e) { return '[sanitize-error]'; }
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// CANONICAL DATA LAYER — broker/accounts sadece meta, users/{id} tek gerçek
+// ═══════════════════════════════════════════════════════════════════════
+// broker/accounts'a YAZILABİLEN alanlar (whitelist). Bunların dışı silinir.
+var _ACC_META_FIELDS = [
+  'id','login','name','surname','email','phone','password',
+  'type','currency','leverage','spreadGroup','active',
+  'created','regDate','lastLogin','online','lastSeen',
+  'country','avatar','tags','notes',
+  '_readOnly','_blocked','_verified'
+];
+
+// broker/accounts yazımından önce balance/positions/bonus/finlog'u temizler
+function accSanitizeForBroker(acc) {
+  if(!acc || typeof acc !== 'object') return acc;
+  var clean = {};
+  for(var i=0;i<_ACC_META_FIELDS.length;i++) {
+    var k = _ACC_META_FIELDS[i];
+    if(acc[k] !== undefined) clean[k] = acc[k];
+  }
+  return clean;
+}
+
+// Canonical cache: users/{id}'den gelen gerçek balance/positions/bonus
+// Her hesap için realtime listener tutar, render'lar buradan okur
+var _accCanon = {};     // { accId: {balance, bonus, positions, tradeHistory, finlog, _unsub, lastUpdate} }
+var _accCanonReady = false;
+
+// users/{id} realtime listener başlat (tüm hesaplar için)
+function startAccCanonListeners() {
+  if(!db || !accounts || !accounts.length) return;
+  accounts.forEach(function(a){
+    if(!a || !a.id) return;
+    var key = String(a.id);
+    if(_accCanon[key] && _accCanon[key]._unsub) return; // zaten dinleniyor
+    _accCanon[key] = _accCanon[key] || {};
+    try {
+      _accCanon[key]._unsub = db.collection('users').doc(key).onSnapshot(function(doc){
+        if(!doc.exists) return;
+        var d = doc.data() || {};
+        _accCanon[key].balance      = parseFloat(d.balance)||0;
+        _accCanon[key].bonus        = parseFloat(d.bonus)||0;
+        _accCanon[key].positions    = Array.isArray(d.positions) ? d.positions : [];
+        _accCanon[key].tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : [];
+        _accCanon[key].finlog       = Array.isArray(d.finlog) ? d.finlog : [];
+        _accCanon[key].marginLevelPct = parseFloat(d.marginLevelPct)||null;
+        _accCanon[key].lastUpdate   = d.updatedAt || '';
+        _accCanon[key].ready        = true;
+        // Render ihtiyaçları
+        if(typeof renderAccTable === 'function' && document.getElementById('accTblBody')) {
+          // hafif throttle — onlarca hesaptan flood gelir
+          if(!window._accCanonRenderTimer) {
+            window._accCanonRenderTimer = setTimeout(function(){
+              window._accCanonRenderTimer = null;
+              try { renderAccTable(); } catch(e){}
+            }, 300);
+          }
+        }
+      }, function(e){ console.warn('[canon]', key, e.message); });
+    } catch(e) { console.warn('[canon init]', key, e.message); }
+  });
+  _accCanonReady = true;
+}
+
+// Yeni hesap eklendiğinde de listener bağla
+function attachCanonListener(accId) {
+  if(!accId || !db) return;
+  var key = String(accId);
+  if(_accCanon[key] && _accCanon[key]._unsub) return;
+  _accCanon[key] = _accCanon[key] || {};
+  _accCanon[key]._unsub = db.collection('users').doc(key).onSnapshot(function(doc){
+    if(!doc.exists) return;
+    var d = doc.data() || {};
+    _accCanon[key].balance      = parseFloat(d.balance)||0;
+    _accCanon[key].bonus        = parseFloat(d.bonus)||0;
+    _accCanon[key].positions    = Array.isArray(d.positions) ? d.positions : [];
+    _accCanon[key].tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : [];
+    _accCanon[key].finlog       = Array.isArray(d.finlog) ? d.finlog : [];
+    _accCanon[key].marginLevelPct = parseFloat(d.marginLevelPct)||null;
+    _accCanon[key].lastUpdate   = d.updatedAt || '';
+    _accCanon[key].ready        = true;
+  });
+}
+
+// Canonical read API — tüm render/hesap fonksiyonları buradan okur
+function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
+function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
+function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
+function getAccHist(accId)     { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.tradeHistory))?c.tradeHistory:[]; }
+function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
+function getAccEquity(accId)   {
+  // equity = balance + bonus + ∑ floating P&L
+  var bal = getAccBal(accId) + getAccBonus(accId);
+  var poses = getAccPos(accId);
+  var fp = 0;
+  for(var i=0;i<poses.length;i++){
+    var po = poses[i];
+    var pr = (typeof adGetPrice==='function') ? adGetPrice(po.sym) : 0;
+    if(!pr) continue;
+    var cs = parseFloat(po.contractSize)||1;
+    var qt = parseFloat(po.qty)||0;
+    fp += (po.side==='buy' ? pr-po.openPrice : po.openPrice-pr) * qt * cs + (parseFloat(po.swapTotal)||0);
+  }
+  return bal + fp;
+}
+
+// Canonical write — sadece users/{id}'ye, broker/accounts'a DOKUNMAZ
+function userWriteTrade(accId, patch) {
+  if(!accId || !db || !patch) return Promise.resolve();
+  var key = String(accId);
+  var payload = {};
+  // Sadece izinli alanlar
+  var allowed = ['balance','bonus','positions','tradeHistory','pendingOrders','marginLevelPct','_balanceSource'];
+  for(var i=0;i<allowed.length;i++){
+    if(patch[allowed[i]] !== undefined) payload[allowed[i]] = patch[allowed[i]];
+  }
+  if(!Object.keys(payload).length) return Promise.resolve();
+  payload.updatedAt = new Date().toISOString();
+  return db.collection('users').doc(key).set(payload, {merge:true})
+    .catch(function(e){ console.warn('userWriteTrade', key, e); });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 function fbSaveAccounts() {
       if(!db) return;
       if(!accounts||accounts.length<1){console.warn('fbSaveAccounts: bos - engellendi');return;}
@@ -1344,9 +1467,11 @@ function fbSaveAccounts() {
       window._fbSaveTimer = setTimeout(function() {
         window._fbSaveTimer = null;
         if(!accounts||accounts.length<1) return;
-        var _ts=new Date().toISOString(),_data=JSON.stringify(accounts);
+        // ⚠️ broker/accounts sadece META: balance/positions/bonus/finlog buradan çıkarılır
+        var _clean = accounts.map(accSanitizeForBroker);
+        var _ts=new Date().toISOString(),_data=JSON.stringify(_clean);
         try {
-          db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:accounts.length}).catch(function(e){console.warn(e);});
+          db.collection('broker').doc('accounts').set({data:_data,updatedAt:_ts,count:_clean.length}).catch(function(e){console.warn(e);});
           var _h=new Date().toISOString().substring(0,13).replace('T','_');
           db.collection('broker').doc('accounts_backup_'+_h).set({data:_data,savedAt:_ts}).catch(function(){});
           accounts.forEach(function(a){
@@ -1357,9 +1482,10 @@ function fbSaveAccounts() {
               spreadGroup:a.spreadGroup||'standard', leverage:a.leverage||100,
               active:a.active!==false, created:a.created||'', regDate:a.regDate||'',
               phone:a.phone||'', password:a.password||'',
-              currency:a.currency||'USD', bonus:a.bonus||0
+              currency:a.currency||'USD'
+              // ⚠️ bonus ARTIK BURADAN YAZILMAZ — canonical (users/{id}) tek kaynak
+              // finlog BURADAN YAZILMAZ — sadece merkezi finlog fonksiyonu yazar (veri kaybını önle)
             };
-            // finlog BURADAN YAZILMAZ — sadece merkezi finlog fonksiyonu yazar (veri kaybını önle)
             db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
           });
         }catch(e){console.warn(e);}
@@ -1650,6 +1776,8 @@ console.log('Firebase bağlandı ✓');
           window.accounts=newAccs;
           if(typeof accounts!=='undefined')accounts=newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
+          // ⚠️ Canonical listener başlat — accounts yüklendikten sonra
+          if(typeof startAccCanonListeners === 'function') startAccCanonListeners();
         }catch(e){console.warn('accounts onSnapshot err:',e);}
       },function(err){console.warn('accounts onSnapshot error:',err);});
 
@@ -3872,14 +4000,14 @@ function _adUpdateEquityForSym(sym) {
   var _fmt = function(n){ n=parseFloat(n||0); return (n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
   accounts.forEach(function(a){
     if(a.role && a.role!=='customer') return;
-    var _poses = (_allAccountPositions&&_allAccountPositions[a.id])||a.positions||[];
+    var _poses = getAccPos(a.id);
     if(!Array.isArray(_poses)||!_poses.length) return;
     if(!_poses.some(function(p){return p.sym===sym;})) return;
     var st = adCalcStats(a, _poses);
     a._liveEquity=st.equity; a._openPnl=st.openPnl; a._openCount=st.openCount;
     document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
       el.textContent=_fmt(st.equity);
-      el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
+      el.style.color=st.equity>=getAccBal(a.id)?'#26a69a':'#ef5350';
     });
   });
 }
@@ -3890,7 +4018,7 @@ function adRecalcAllEquities() {
   if(typeof accounts==='undefined' || !accounts.length) return;
   accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
     var _poses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
-      ? _allAccountPositions[a.id] : (Array.isArray(a.positions)?a.positions:[]);
+      ? _allAccountPositions[a.id] : getAccPos(a.id);
     if(typeof adCalcStats==='function') {
       var st = adCalcStats(a, _poses);
       a._liveEquity = st.equity;
@@ -4662,12 +4790,12 @@ function adRenderTab(tab) {
     var _soPct = _infoSg ? (_infoSg.stopOut||20) : 20;
     cnt.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#26a69a;">$'+(a.balance||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#26a69a;">$'+((a.equity||a.balance)||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+(a.bonus||0).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccBal(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccEquity(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+getAccBonus(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT</div><div class="ad-stat-val">$'+(a.margin||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(function(){var _st=adCalcStats(a,Array.isArray(a.positions)?a.positions:[]);return _st.freeMargin.toFixed(2);})() +'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?((((a.equity||a.balance||0))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(function(){var _st=adCalcStats(a,getAccPos(a.id));return _st.freeMargin.toFixed(2);})() +'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?(((getAccEquity(a.id))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:#f5c518;">%'+_mcPct+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:#ef5350;">%'+_soPct+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:#26a69a;">Aktif</span>':'<span style="color:#b0b0b0;">Pasif</span>')+'</div></div>' +
@@ -4936,10 +5064,11 @@ function adDeposit() {
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_dep_note')||{}).value || '';
-  a.balance += amt;
-  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
-  if(!Array.isArray(a.finlog)) a.finlog = [];
-  a.finlog.unshift({ type:'deposit', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
+  // Canonical okuma — mevcut balance users/{id}'den
+  var _curBal = getAccBal(a.id);
+  var _newBal = _curBal + amt;
+  var _curFl  = getAccFinlog(a.id).slice();
+  _curFl.unshift({ type:'deposit', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
   // depositRequests'e de ekle - raporlarda görünsün
   var req = {
     id: genId('DEP'),
@@ -4957,10 +5086,19 @@ function adDeposit() {
   };
   depositRequests.unshift(req);
   saveRequests();
-  saveAccounts(); renderAccTable();
-  fbSyncUserFinance(a);
+  // ⚠️ ARTIK a.balance'a ve a.finlog'a dokunmuyoruz — canonical users/{id} tek kaynak
+  // Sadece users/{id}'ye yaz; _accCanon listener değişikliği anında yakalar
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      finlog: _curFl,
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adDeposit write err:', e); });
+  }
+  renderAccTable();
   adRenderFinlog();
-  adAudit('finance.deposit', 'users/'+a.id, {balance: a.balance - amt}, {balance: a.balance, amount: amt, note: note}, note);
+  adAudit('finance.deposit', 'users/'+a.id, {balance: _curBal}, {balance: _newBal, amount: amt, note: note}, note);
   showToast('Para Yatırıldı ✓','$'+amt.toFixed(2)+' → '+a.name);
   adRenderTab('finance');
 }
@@ -4970,13 +5108,13 @@ function adWithdraw() {
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_wd_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  if(amt > a.balance){ showToast('Hata','Yetersiz bakiye! Mevcut: $'+a.balance.toFixed(2)); return; }
+  var _curBal = getAccBal(a.id);
+  if(amt > _curBal){ showToast('Hata','Yetersiz bakiye! Mevcut: $'+_curBal.toFixed(2)); return; }
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_wd_note')||{}).value || '';
-  a.balance -= amt;
-  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
-  if(!Array.isArray(a.finlog)) a.finlog = [];
-  a.finlog.unshift({ type:'withdraw', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
+  var _newBal = _curBal - amt;
+  var _curFl  = getAccFinlog(a.id).slice();
+  _curFl.unshift({ type:'withdraw', amount:amt, date:new Date().toISOString(), note:note, manager:_mgr, source:'manager' });
   // withdrawRequests'e de ekle - raporlarda görünsün
   var req = {
     id: genId('WIT'),
@@ -4994,10 +5132,17 @@ function adWithdraw() {
   };
   withdrawRequests.unshift(req);
   saveRequests();
-  saveAccounts(); renderAccTable();
-  fbSyncUserFinance(a);
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      finlog: _curFl,
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adWithdraw write err:', e); });
+  }
+  renderAccTable();
   adRenderFinlog();
-  adAudit('finance.withdraw', 'users/'+a.id, {balance: a.balance + amt}, {balance: a.balance, amount: amt, note: note}, note);
+  adAudit('finance.withdraw', 'users/'+a.id, {balance: _curBal}, {balance: _newBal, amount: amt, note: note}, note);
   showToast('Para Çekildi ✓','$'+amt.toFixed(2)+' ← '+a.name);
   adRenderTab('finance');
 }
@@ -5007,19 +5152,18 @@ function adBonus(sign) {
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_bon_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  var oldBonus = a.bonus || 0;
+  // Canonical okuma — bonus users/{id}'den
+  var oldBonus = getAccBonus(a.id);
   var newBonus = Math.max(0, oldBonus + sign * amt);
-  var diff = newBonus - oldBonus; // gerçek eklenen/çıkarılan miktar
-  a.bonus  = newBonus;
-  // a.equity manuel set etme — adCalcStats her zaman doğru hesaplar
-  saveAccounts(); renderAccTable();
-  // users/{id}'ye bonus yaz - trader anlık görsün
+  // ⚠️ a.bonus'a dokunmuyoruz — canonical tek kaynak
+  // users/{id}'ye bonus yaz - trader + admin canon listener anlık görür
   if(typeof db!=='undefined' && db && _adAccId) {
     db.collection('users').doc(String(_adAccId)).set({
       bonus: newBonus,
       updatedAt: new Date().toISOString()
     }, {merge:true}).catch(function(e){ console.warn('bonus sync err:', e); });
   }
+  renderAccTable();
   adAudit(sign>0 ? 'finance.bonus_in' : 'finance.bonus_out', 'users/'+a.id, {bonus: oldBonus}, {bonus: newBonus, amount: amt});
   showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
   adRenderTab('finance');
@@ -5087,11 +5231,11 @@ function adRenderFinlog() {
   // users/{id}'den taze veri çek
   fbLoadUserData(a.id, function(data) {
     var uLogs = (data && Array.isArray(data.finlog)) ? data.finlog : null;
-    var aLogs = Array.isArray(a.finlog) ? a.finlog : [];
+    var aLogs = getAccFinlog(a.id);
     // users boş/yoksa accounts'taki veriyi kullan (veri kaybını önle)
     var logs = (uLogs && uLogs.length > 0) ? uLogs : aLogs;
     // Memory'yi sadece users'da gerçekten veri varsa güncelle
-    if(uLogs && uLogs.length > 0) a.finlog = uLogs;
+    // a.finlog artik canonical — uLogs _accCanon'dan geliyor
     _doRender(logs);
   });
 }
@@ -5101,7 +5245,7 @@ function adOpenFinlogForm(type, editIdx) {
   if(!form) return;
   var isEdit = editIdx !== undefined && editIdx !== null;
   var a = accounts.find(function(x){ return x.id===_adAccId; });
-  var log = (isEdit && a && a.finlog) ? a.finlog[editIdx] : null;
+  var log = (isEdit && a) ? (getAccFinlog(a.id)[editIdx]||null) : null;
   var TYPE_LABELS = {deposit:'Para Yatır', withdraw:'Para Çek', bonus_in:'Bonus Ekle', bonus_out:'Bonus Çıkar'};
   var label = TYPE_LABELS[type] || type;
   var nowDt = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
@@ -5124,8 +5268,9 @@ function adOpenFinlogForm(type, editIdx) {
 
 function adEditFinlog(idx) {
   var a = accounts.find(function(x){ return x.id===_adAccId; });
-  if(!a||!a.finlog||!a.finlog[idx]) return;
-  adOpenFinlogForm(a.finlog[idx].type, idx);
+  var _efl = getAccFinlog(a.id);
+  if(!a||!_efl||!_efl[idx]) return;
+  adOpenFinlogForm(_efl[idx].type, idx);
 }
 
 
@@ -5138,9 +5283,9 @@ function fbSyncUserFinance(a) {
   if(typeof db === 'undefined' || !db) return;
   function _doSync() {
     db.collection('users').doc(String(a.id)).set({
-      balance:  a.balance||0,
-      bonus:    a.bonus||0,
-      finlog:   Array.isArray(a.finlog) ? a.finlog : [],
+      balance:  getAccBal(a.id),
+      bonus:    getAccBonus(a.id),
+      finlog:   getAccFinlog(a.id),
       updatedAt: new Date().toISOString()
     }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
   }
@@ -5177,64 +5322,65 @@ function adSaveFinlog() {
   if(isNaN(entryDate)) entryDate = new Date();
   var entry = { type:type, amount:amt, date:entryDate.toISOString(), note:note, manager:_mgr, source:'manager' };
 
-  // Balance kaynağı: accounts memory (a.balance) - Firebase bozulmuş olabilir
-  // Finlog kaynağı: Firebase'den taze çek; users boş ise accounts'takini kullan
-  fbLoadUserData(a.id, function(data) {
-    var uFl = (data && Array.isArray(data.finlog)) ? data.finlog : null;
-    var aFl = Array.isArray(a.finlog) ? a.finlog : [];
-    var fl = (uFl && uFl.length > 0) ? uFl.slice() : aFl.slice();
-    // Balance: accounts memory kullan, Firebase'deki değere güvenme
-    var currentBal = parseFloat(a.balance)||0;
+  // ⚠️ CANONICAL: balance/bonus/finlog users/{id}'den — _accCanon listener zaten güncel tutuyor
+  var fl    = getAccFinlog(a.id).slice();
+  var cBal  = getAccBal(a.id);
+  var cBon  = getAccBonus(a.id);
 
-    if(editIdx !== null && !isNaN(editIdx)) {
-      var old = fl[editIdx];
-      if(!old) { showToast('Hata','Kayıt bulunamadı'); return; }
-      var oldSign = (old.type==='deposit'||old.type==='bonus_in') ? 1 : -1;
-      var newSign = (type==='deposit'||type==='bonus_in') ? 1 : -1;
-      if(old.type==='deposit'||old.type==='withdraw') currentBal = Math.max(0, currentBal - oldSign*(old.amount||0));
-      else a.bonus = Math.max(0,(a.bonus||0) - oldSign*(old.amount||0));
-      if(type==='deposit'||type==='withdraw') currentBal = Math.max(0, currentBal + newSign*amt);
-      else a.bonus = Math.max(0,(a.bonus||0) + newSign*amt);
-      fl[editIdx] = entry;
-    } else {
-      var sign = (type==='deposit'||type==='bonus_in') ? 1 : -1;
-      if(type==='deposit'||type==='withdraw') currentBal = Math.max(0, currentBal + sign*amt);
-      else a.bonus = Math.max(0,(a.bonus||0) + sign*amt);
-      fl.push(entry);
+  if(editIdx !== null && !isNaN(editIdx)) {
+    var old = fl[editIdx];
+    if(!old) { showToast('Hata','Kayıt bulunamadı'); return; }
+    var oldSign = (old.type==='deposit'||old.type==='bonus_in') ? 1 : -1;
+    var newSign = (type==='deposit'||type==='bonus_in') ? 1 : -1;
+    if(old.type==='deposit'||old.type==='withdraw') cBal = Math.max(0, cBal - oldSign*(old.amount||0));
+    else cBon = Math.max(0, cBon - oldSign*(old.amount||0));
+    if(type==='deposit'||type==='withdraw') cBal = Math.max(0, cBal + newSign*amt);
+    else cBon = Math.max(0, cBon + newSign*amt);
+    fl[editIdx] = entry;
+  } else {
+    var sign = (type==='deposit'||type==='bonus_in') ? 1 : -1;
+    if(type==='deposit'||type==='withdraw') cBal = Math.max(0, cBal + sign*amt);
+    else cBon = Math.max(0, cBon + sign*amt);
+    fl.push(entry);
 
-      // Raporlar icin withdrawRequests / depositRequests'e ekle
-      var req = {
-        id: genId(type==='deposit'||type==='bonus_in'?'DEP':'WIT'),
-        date: entryDate.toISOString(),
-        dateIso: entryDate.toISOString(),
-        accountId: a.id,
-        accountName: (a.name||'')+(a.surname?' '+a.surname:''),
-        method: 'Manuel (' + _mgr + ')',
-        methodType: 'manual',
-        currency: 'USD',
-        address: note || (type==='deposit' ? 'Manuel yatirim' : 'Manuel cekim'),
-        amount: amt,
-        status: 'approved',
-        manager: _mgr,
-        source: 'manager'
-      };
-      if(type==='deposit' || type==='bonus_in') depositRequests.unshift(req);
-      else if(type==='withdraw' || type==='bonus_out') withdrawRequests.unshift(req);
-      saveRequests();
-    }
+    // Raporlar icin withdrawRequests / depositRequests'e ekle
+    var req = {
+      id: genId(type==='deposit'||type==='bonus_in'?'DEP':'WIT'),
+      date: entryDate.toISOString(),
+      dateIso: entryDate.toISOString(),
+      accountId: a.id,
+      accountName: (a.name||'')+(a.surname?' '+a.surname:''),
+      method: 'Manuel (' + _mgr + ')',
+      methodType: 'manual',
+      currency: 'USD',
+      address: note || (type==='deposit' ? 'Manuel yatirim' : 'Manuel cekim'),
+      amount: amt,
+      status: 'approved',
+      manager: _mgr,
+      source: 'manager'
+    };
+    if(type==='deposit' || type==='bonus_in') depositRequests.unshift(req);
+    else if(type==='withdraw' || type==='bonus_out') withdrawRequests.unshift(req);
+    saveRequests();
+  }
 
-    // Memory ve her iki Firebase koleksiyonunu güncelle
-    a.balance = currentBal;
-    a.finlog  = fl;
-    saveAccounts();
-    fbSaveUserData(String(a.id), { balance: currentBal, bonus: a.bonus||0, finlog: fl, _balanceSource: 'manager', updatedAt: new Date().toISOString() });
+  // ⚠️ SADECE users/{id}'ye yaz — broker/accounts'a DOKUNMA
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: cBal,
+      bonus: cBon,
+      finlog: fl,
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adSaveFinlog:', e); });
+  }
 
-    document.getElementById('adFinlogForm').style.display = 'none';
-    adRenderFinlog();
-    adRefreshBadges();
-    adAudit('finlog.' + (editIdx!==null && !isNaN(editIdx) ? 'edit' : 'add'), 'users/'+a.id, editIdx!==null && !isNaN(editIdx) ? {entry: (uFl && uFl.length>editIdx) ? uFl[editIdx] : null} : null, {type: type, amount: amt, note: note}, note);
-    showToast('Kaydedildi ✓', type);
-  });
+  document.getElementById('adFinlogForm').style.display = 'none';
+  adRenderFinlog();
+  adRefreshBadges();
+  var _preFl = getAccFinlog(a.id);
+  adAudit('finlog.' + (editIdx!==null && !isNaN(editIdx) ? 'edit' : 'add'), 'users/'+a.id, editIdx!==null && !isNaN(editIdx) ? {entry: _preFl[editIdx]} : null, {type: type, amount: amt, note: note}, note);
+  showToast('Kaydedildi ✓', type);
 }
 
 function adDeleteFinlog(idx) {
@@ -5242,26 +5388,30 @@ function adDeleteFinlog(idx) {
   if(!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   var a = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
-  fbLoadUserData(a.id, function(data) {
-    var uFl = (data && Array.isArray(data.finlog)) ? data.finlog : null;
-    var aFl = Array.isArray(a.finlog) ? a.finlog : [];
-    var fl = (uFl && uFl.length > 0) ? uFl.slice() : aFl.slice();
-    var currentBal = (data && data.balance !== undefined) ? parseFloat(data.balance)||0 : (a.balance||0);
-    var log = fl[idx];
-    if(!log) { showToast('Hata','Kayıt bulunamadı'); return; }
-    var sign = (log.type==='deposit'||log.type==='bonus_in') ? 1 : -1;
-    if(log.type==='deposit'||log.type==='withdraw') currentBal = Math.max(0, currentBal - sign*(log.amount||0));
-    else a.bonus = Math.max(0,(a.bonus||0) - sign*(log.amount||0));
-    fl.splice(idx, 1);
-    a.balance = currentBal;
-    a.finlog  = fl;
-    saveAccounts();
-    fbSaveUserData(String(a.id), { balance: currentBal, bonus: a.bonus||0, finlog: fl, _balanceSource: 'manager', updatedAt: new Date().toISOString() });
-    adRenderFinlog();
-    adRefreshBadges();
-    adAudit('finlog.delete', 'users/'+a.id, {entry: log}, null);
-    showToast('Silindi','Kayıt kaldırıldı');
-  });
+  // ⚠️ CANONICAL: canon'dan oku
+  var fl   = getAccFinlog(a.id).slice();
+  var cBal = getAccBal(a.id);
+  var cBon = getAccBonus(a.id);
+  var log = fl[idx];
+  if(!log) { showToast('Hata','Kayıt bulunamadı'); return; }
+  var sign = (log.type==='deposit'||log.type==='bonus_in') ? 1 : -1;
+  if(log.type==='deposit'||log.type==='withdraw') cBal = Math.max(0, cBal - sign*(log.amount||0));
+  else cBon = Math.max(0, cBon - sign*(log.amount||0));
+  fl.splice(idx, 1);
+
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: cBal,
+      bonus: cBon,
+      finlog: fl,
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adDeleteFinlog:', e); });
+  }
+  adRenderFinlog();
+  adRefreshBadges();
+  adAudit('finlog.delete', 'users/'+a.id, {entry: log}, null);
+  showToast('Silindi','Kayıt kaldırıldı');
 }
 
 function adSaveSettings() {
@@ -5451,8 +5601,8 @@ function renderAccTable(){
     var va,vb;
     if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
     else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
-    else if(sc==='bal'){va=a.balance||0;vb=b.balance||0;}
-    else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:(a.balance||0);vb=b._liveEquity!==undefined?b._liveEquity:(b.balance||0);}
+    else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
+    else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
     else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
     else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
     else return 0;
@@ -5548,17 +5698,17 @@ function renderAccTable(){
     tbodyHtml='<tr><td colspan="20" style="text-align:center;color:#b0b0b0;padding:40px;font-size:12px;">Hesap bulunamadı</td></tr>';
   } else {
     rows.forEach(function(a,rowIdx){
-      var bal=(a.balance||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var bal=getAccBal(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       // Pozisyonları al
       var _accPoses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
-        ? _allAccountPositions[a.id] : (Array.isArray(a.positions)?a.positions:[]);
+        ? _allAccountPositions[a.id] : getAccPos(a.id);
       // adCalcStats ile her zaman hesapla - fiyat varsa doğru, yoksa balance+bonus
       var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
-      var liveEq = _accSt ? _accSt.equity : ((a.balance||0)+(a.bonus||0));
+      var liveEq = _accSt ? _accSt.equity : (getAccBal(a.id)+getAccBonus(a.id));
       if(_accSt){ a._liveEquity=_accSt.equity; a._openPnl=_accSt.openPnl; a._openCount=_accSt.openCount; }
-      var eqColor = liveEq>=(a.balance||0)?'#26a69a':'#ef5350';
+      var eqColor = liveEq>=getAccBal(a.id)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      var bon=(a.bonus||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var bon=getAccBonus(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       // 2 dakika içinde lastSeen varsa online say
       var isOnline=(a.online===true) && lsMs > 0 && (now-lsMs)<120000;
@@ -5690,7 +5840,7 @@ function renderAccListSmall() {
         <td style="color:var(--muted)">${a.id}</td>
         <td style="font-weight:600">${a.name}</td>
         <td style="color:var(--muted)">${a.type==='demo'?'Demo':'Gerçek'}</td>
-        <td>${a.currency} ${a.balance.toFixed(2)}</td>
+        <td>${a.currency} ${getAccBal(a.id).toFixed(2)}</td>
         <td><span class="${a.active?'badge-active':'badge-inactive'}">${a.active?'Aktif':'Pasif'}</span></td>
         <td></td>
       </tr>`).join('')}
@@ -8366,12 +8516,12 @@ function adminNav(sec,btn){
     if(typeof accounts==='undefined'||!Array.isArray(accounts)){renderAccTable();return;}
     // Tüm hesapları cache'e yükle
     accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
-      if(typeof _allAccountPositions!=='undefined' && Array.isArray(a.positions) && a.positions.length) {
-        _allAccountPositions[a.id] = a.positions;
+      if(typeof _allAccountPositions!=='undefined' && getAccPos(a.id).length) {
+        _allAccountPositions[a.id] = getAccPos(a.id);
       }
       // adCalcStats ile cache doldur - fiyat varsa hesapla
       if(a._liveEquity===undefined && typeof adCalcStats==='function') {
-        var _poses = (_allAccountPositions&&_allAccountPositions[a.id])||a.positions||[];
+        var _poses = getAccPos(a.id);
         var _st = adCalcStats(a, _poses);
         if(_st){ a._liveEquity=_st.equity; a._openPnl=_st.openPnl; a._openCount=_st.openCount; }
       }
@@ -8536,7 +8686,7 @@ function updateMarginCallPanel() {
   var mcList = [];
 
   customers.forEach(function(a) {
-    var positions = Array.isArray(a.positions) ? a.positions
+    var positions = getAccPos(a.id).length ? getAccPos(a.id)
       : (typeof _allAccountPositions!=='undefined' ? (_allAccountPositions[a.id]||[]) : []);
     if(!positions.length) return;
 
@@ -8746,8 +8896,8 @@ function updateReports(){
   var ptEl = document.getElementById('rep-posTable');
   var c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var act=c2.filter(function(a){return a.active;});
-  var tb=c2.reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0);
-  var bo=c2.reduce(function(s,a){return s+(parseFloat(a.bonus)||0);},0);
+  var tb=c2.reduce(function(s,a){return s+getAccBal(a.id);},0);
+  var bo=c2.reduce(function(s,a){return s+getAccBonus(a.id);},0);
   var demo=c2.filter(function(a){return a.type==='demo';});
   var real=c2.filter(function(a){return a.type!=='demo';});
   var fp2=function(v){return '$'+v.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
@@ -8767,8 +8917,8 @@ function updateReports(){
   // Finlog'dan yatırım/çekim topla
   var totalDep=0, totalWdr=0;
   c2.forEach(function(a){
-    if(Array.isArray(a.finlog)){
-      a.finlog.forEach(function(fl){
+    var _rfl=getAccFinlog(a.id); if(_rfl.length){
+      _rfl.forEach(function(fl){
         if(fl.type==='deposit') totalDep+=parseFloat(fl.amount)||0;
         else if(fl.type==='withdraw') totalWdr+=parseFloat(fl.amount)||0;
       });
@@ -8789,7 +8939,7 @@ function updateReports(){
   // Açık pozisyon sayısı ve net K/Z
   var openPosCount=0, netPnl=0;
   c2.forEach(function(a){
-    var _pos = Array.isArray(a.positions) ? a.positions : [];
+    var _pos = getAccPos(a.id);
     if(_pos.length){
       openPosCount+=_pos.length;
       _pos.forEach(function(p){
@@ -8813,10 +8963,10 @@ function updateReports(){
   // Demo / gerçek
   var dEl=document.getElementById('rep-demo');
   if(dEl) dEl.innerHTML='<div style="font-family:var(--mono);font-size:13px;color:var(--accent);">'+demo.length+' hesap</div>'
-    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(demo.reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0))+'</div>';
+    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(demo.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
   var rEl=document.getElementById('rep-real');
   if(rEl) rEl.innerHTML='<div style="font-family:var(--mono);font-size:13px;color:var(--accent);">'+real.length+' hesap</div>'
-    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(real.reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0))+'</div>';
+    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(real.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
 
   // Son talepler (bekleyen önce, max 8)
   var rrEl=document.getElementById('rep-recentReqs');
@@ -8873,7 +9023,7 @@ function updateReports(){
     var allPos = [];
     c2.forEach(function(a){
       // positions: Firebase'den yüklenen (loadAllPositionsAndUpdate sonrası a.positions dolu olmalı)
-      var _pos = Array.isArray(a.positions) ? a.positions :
+      var _pos = getAccPos(a.id).length ? getAccPos(a.id) :
                  (typeof _allAccountPositions!=='undefined' && _allAccountPositions && _allAccountPositions[a.id]) ? _allAccountPositions[a.id] : [];
       _pos.forEach(function(p){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
@@ -9035,7 +9185,7 @@ function finWithdraw(){
   var note=(document.getElementById('fin_note')||{value:''}).value||'Manuel çekim';
   if(!accId||amt<=0){showAdminToast('Hata','Hesap ve miktar seçin','error');return;}
   var a=accounts.find(function(x){return x.id===accId;});if(!a)return;
-  if(amt>(a.balance||0)){showAdminToast('Hata','Yetersiz bakiye','error');return;}
+  if(amt>getAccBal(a.id)){showAdminToast('Hata','Yetersiz bakiye','error');return;}
   _reqUpdateBalance(accId,-amt,'withdraw',note,function(newBal){
     var res=document.getElementById('fin_result');
     if(res)res.innerHTML='<span style="color:#ef5350;">✓ $'+amt.toFixed(2)+' çekildi | Bakiye: $'+parseFloat(newBal).toFixed(2)+'</span>';
@@ -9046,7 +9196,7 @@ function finWithdraw(){
 function exportAccounts(){
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Spread Grubu','Kayıt']];
-  list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),(a.type||'real'),(a.balance||0),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
+  list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),(a.type||'real'),getAccBal(a.id),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join(String.fromCharCode(10));
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var a2=document.createElement('a');a2.href=URL.createObjectURL(blob);a2.download='hesaplar.csv';a2.click();
@@ -9483,7 +9633,7 @@ var AD_SIM={
         // Varlık
         document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
           var _leq=a._liveEquity||0;el.textContent=(_leq<0?'-$':'$')+Math.abs(_leq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-          el.style.color=a._liveEquity>=(a.balance||0)?'#26a69a':'#ef5350';
+          el.style.color=a._liveEquity>=getAccBal(a.id)?'#26a69a':'#ef5350';
         });
         // Açık işlem sayısı
       });
@@ -9690,7 +9840,7 @@ function adRefreshBadges(){
   var _id = _adAccId;
   document.querySelectorAll('[data-eq="'+_id+'"]').forEach(function(el){
     el.textContent=_fmt(st.equity);
-    el.style.color=st.equity>=(a.balance||0)?'#26a69a':'#ef5350';
+    el.style.color=st.equity>=getAccBal(a.id)?'#26a69a':'#ef5350';
   });
 }
 
@@ -9724,8 +9874,8 @@ function adLoadAndRender(){
       if(Array.isArray(data.finlog)) a.finlog = data.finlog;
     }
     // users/{id}'de positions yoksa broker/accounts'taki a.positions kullan
-    if(!newPos.length && Array.isArray(a.positions) && a.positions.length) {
-      newPos = a.positions;
+    if(!newPos.length && getAccPos(a.id).length) {
+      newPos = getAccPos(a.id);
     }
     // Atomik güncelle
     _adPositions = newPos;
@@ -9915,17 +10065,26 @@ function adClosePos(btn){
   var pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs
             + (parseFloat(pos.swapTotal)||0);
   // Bakiyeye geri ekle: açılışta cost düşüldü → kapanınca cost+pnl iade et
-  a.balance = (a.balance||0) + (pos.cost||0) + pnl;
+  // ⚠️ Canonical balance'ı kullan
+  var _newBal = getAccBal(a.id) + (pos.cost||0) + pnl;
   // Geçmişe ekle
   _adHistory.unshift(Object.assign({}, pos, {
     closePrice: cur, pnl: pnl,
     closeTime: new Date().toISOString(), closeReason:'admin-kapat'
   }));
   _adPositions.splice(idx, 1);
-  a.positions = _adPositions;
+  // ⚠️ a.positions'a DOKUNMA — canonical users/{id}'ye yazılıyor
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  saveAccounts();
-  adSaveUserTrades();
+  // Sadece users/{id}'ye yaz — broker/accounts'a DOKUNMA
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      positions: _adPositions,
+      tradeHistory: _adHistory.slice(0, 100),
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adClosePos:', e); });
+  }
   adRenderOpenTable();
   adRenderHistoryTable();
   adRefreshBadges();
@@ -10015,7 +10174,8 @@ function adDeletePos(){
   if(!confirm('Pozisyonu silmek istediğinizden emin misiniz?')) return;
   _adPositions.splice(idx, 1);
   var a = accounts.find(function(x){ return x.id===_adAccId; });
-  if(a){ a.positions=_adPositions; if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions; }
+  // ⚠️ a.positions'a DOKUNMA
+  if(a && typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
   adSaveUserTrades();
   adRenderOpenTable();
   adRefreshBadges();
@@ -10046,11 +10206,13 @@ function adOpenTrade(btn){
   }
   var cost  = (price * qty * cs) / lev;
   var label = sc ? (sc.label||sym) : sym;
-  if(cost > ((a.balance||0)+(a.bonus||0))){
+  // ⚠️ CANONICAL: balance/bonus users/{id}'den
+  var _curBal = getAccBal(a.id);
+  var _curBon = getAccBonus(a.id);
+  if(cost > (_curBal + _curBon)){
     showAdminToast('Yetersiz Teminat','$'+adFp(cost)+' teminat gerekli','error'); return;
   }
-  // Açılışta bakiyeyi düş (trader mantığıyla aynı)
-  a.balance = (parseFloat(a.balance)||0) - cost;
+  var _newBal = _curBal - cost;
   // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
   var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
   var _swapSg = (typeof spreadGroups!=='undefined'&&spreadGroups)?spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
@@ -10062,32 +10224,38 @@ function adOpenTrade(btn){
     time:new Date().toISOString(), openDate:new Date().toISOString(),
     cost:cost, swapTotal:0, swapBuy:_swBuy, swapSell:_swSell
   });
-  a.positions = _adPositions;
+  // ⚠️ a.positions'a DOKUNMA — users/{id} canonical
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  saveAccounts();
-  adSaveUserTrades();
+  // Sadece users/{id}'ye yaz
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      positions: _adPositions,
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adOpenTrade:', e); });
+  }
   adRenderOpenTable();
   adRefreshBadges();
   showAdminToast('Açıldı', sym+' '+(side==='buy'?'▲ AL':'▼ SAT')+' '+qty+' lot @ '+adFp(price), 'success');
   var pi = document.getElementById('nt_price'); if(pi) pi.value='';
 }
 
-// ── Trades kaydet ─────────────────────────────────────────────
+// ── Trades kaydet — SADECE users/{id}, broker/accounts'a DOKUNMAZ ─────
 function adSaveUserTrades(){
   var a = accounts.find(function(x){ return x.id===_adAccId; });
   if(!a) return;
-  a.positions = _adPositions;
+  // ⚠️ balance canonical'dan — a.balance GÜVENİLMEZ
   var payload = {
-    positions:    _adPositions,        // array olarak kaydet — trader direkt okur
+    positions:    _adPositions,
     tradeHistory: _adHistory.slice(0,100),
-    balance:      a.balance||0,
+    balance:      getAccBal(a.id),
     updatedAt:    new Date().toISOString()
   };
   if(typeof db!=='undefined'&&db){
     db.collection('users').doc(String(a.id)).set(payload,{merge:true})
       .catch(function(e){ console.warn('[adSaveUserTrades]',e); });
   }
-  if(typeof saveAccounts==='function') saveAccounts();
 }
 
 // ── Geçmiş düzenle ────────────────────────────────────────────
