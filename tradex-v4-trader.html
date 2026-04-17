@@ -1116,25 +1116,13 @@ function _authSuccess(user) {
         try { if(d.portfolio !== undefined) portfolio = Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]'); } catch(e){}
         try { if(d.alarms !== undefined) alarms = Array.isArray(d.alarms)?d.alarms:JSON.parse(d.alarms||'[]'); } catch(e){}
         if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
-        // balance: broker/accounts'tan al
-        db.collection('broker').doc('accounts').get().then(function(adoc) {
-          if(adoc.exists) {
-            try {
-              var accs = JSON.parse(adoc.data().data||'[]');
-              var myAcc = accs.find(function(a){ return String(a.id)===String(_cu.id); });
-              if(myAcc && myAcc.balance !== undefined) balance = parseFloat(myAcc.balance)||0;
-            } catch(e){}
-          }
-          window._lastSyncAt = '';
-          if(typeof renderPositions==='function') renderPositions();
-          if(typeof renderHistory==='function') renderHistory();
-          if(typeof updateAccount==='function') updateAccount();
-        }).catch(function() {
-          window._lastSyncAt = '';
-          if(typeof renderPositions==='function') renderPositions();
-          if(typeof renderHistory==='function') renderHistory();
-          if(typeof updateAccount==='function') updateAccount();
-        });
+        // ⚠️ balance: users/{id}'den direkt oku — broker/accounts'a BAKMA
+        if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
+        if(d.bonus !== undefined) _cu.bonus = parseFloat(d.bonus)||0;
+        window._lastSyncAt = '';
+        if(typeof renderPositions==='function') renderPositions();
+        if(typeof renderHistory==='function') renderHistory();
+        if(typeof updateAccount==='function') updateAccount();
       }).catch(function(e){ console.warn('[userData load]', e.message); });
     }
   }
@@ -1208,7 +1196,9 @@ function _authSuccess(user) {
     if(d.marginLevelPct) _cu.marginLevelPct = d.marginLevelPct;
     try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
     try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
-    if(d.balance !== undefined && d._balanceSource === 'manager') balance = parseFloat(d.balance)||0;
+    // ⚠️ users/{id} TEK KAYNAK — _balanceSource kontrolü kaldırıldı, her balance güncellenir
+    if(d.balance !== undefined) { balance = parseFloat(d.balance)||0; }
+    if(d.bonus !== undefined) { _cu.bonus = parseFloat(d.bonus)||0; }
     if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
     renderPositions(); renderHistory(); updateAccount();
     var _finEl = document.getElementById('bp-finans-content');
@@ -1695,23 +1685,13 @@ function initAuth(){
             try{if(d.tradeHistory!==undefined) tradeHistory=Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]');}catch(e){}
             try{if(d.portfolio!==undefined) portfolio=Array.isArray(d.portfolio)?d.portfolio:JSON.parse(d.portfolio||'[]');}catch(e){}
             if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog=d.finlog;
-            db.collection('broker').doc('accounts').get().then(function(adoc){
-              if(adoc.exists){
-                try{
-                  var accs=JSON.parse(adoc.data().data||'[]');
-                  var myAcc=accs.find(function(a){return String(a.id)===String(_cu.id);});
-                  if(myAcc&&myAcc.balance!==undefined) balance=parseFloat(myAcc.balance)||0;
-                }catch(e){}
-              }
-              if(typeof renderPositions==='function') renderPositions();
-              if(typeof renderHistory==='function') renderHistory();
-              if(typeof updateAccount==='function') updateAccount();
-              if(typeof renderMarketWatch==='function') renderMarketWatch();
-            }).catch(function(){
-              if(typeof renderPositions==='function') renderPositions();
-              if(typeof renderHistory==='function') renderHistory();
-              if(typeof updateAccount==='function') updateAccount();
-            });
+            // ⚠️ balance: users/{id}'den direkt oku — broker/accounts'a BAKMA
+            if(d.balance !== undefined) balance=parseFloat(d.balance)||0;
+            if(d.bonus !== undefined) _cu.bonus=parseFloat(d.bonus)||0;
+            if(typeof renderPositions==='function') renderPositions();
+            if(typeof renderHistory==='function') renderHistory();
+            if(typeof updateAccount==='function') updateAccount();
+            if(typeof renderMarketWatch==='function') renderMarketWatch();
           }).catch(function(e){ console.warn('[userData]', e.message); });
         }
       }
@@ -4917,7 +4897,7 @@ function startFirebaseSnapshots() {
     } catch(e){ console.warn('requests snap:', e); }
   }, function(e){ console.warn('requests err:', e.message); }));
 
-  // broker/accounts — balance, leverage, spreadGroup
+  // broker/accounts — SADECE leverage ve spreadGroup (balance/bonus artık users/{id}'den gelir)
   _FB.sub('accounts', db.collection('broker').doc('accounts').onSnapshot(function(doc){
     if(!doc.exists || !doc.data()) return;
     try {
@@ -4931,11 +4911,7 @@ function startFirebaseSnapshots() {
         applyGroupSpreads();
         if(document.getElementById('mwBody')) renderMarketWatch();
       }
-      if(_myAcc.bonus !== undefined) _cu.bonus = parseFloat(_myAcc.bonus)||0;
-      if(_myAcc.balance !== undefined) {
-        var _nb = parseFloat(_myAcc.balance)||0;
-        if(Math.abs(_nb - balance) > 0.001) { balance = _nb; updateAccount(); }
-      }
+      // ⚠️ balance ve bonus ARTIK BURADAN OKUNMAZ — users/{id} onSnapshot tek kaynak
     } catch(e){ console.warn('accounts snap:', e); }
   }, function(e){ console.warn('accounts err:', e.message); }));
 }
