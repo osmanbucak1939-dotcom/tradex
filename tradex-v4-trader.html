@@ -1513,6 +1513,19 @@ function initAuth(){
         accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
         accounts.push(acc);
         localStorage.setItem('tx_accounts', JSON.stringify(accounts));
+        // ⚠️ users/{id}'ye initial balance yaz (canonical tek kaynak)
+        var _initBal = parseFloat(acc.balance)||0;
+        db.collection('users').doc(String(acc.id)).set({
+          name: acc.name||'', surname: acc.surname||'', email: acc.email||'',
+          login: acc.login||acc.id, type: acc.type||'live',
+          spreadGroup: acc.spreadGroup||'standard', leverage: acc.leverage||100,
+          active: true, created: acc.created||'', phone: acc.phone||'',
+          password: acc.password||'', currency: acc.currency||'USD',
+          balance: _initBal, bonus: 0, finlog: [],
+          positions: [], tradeHistory: [], pendingOrders: [],
+          _balanceSource: 'system',
+          updatedAt: new Date().toISOString()
+        }).catch(function(e){ console.warn('fbAddAccount users write:', e); });
         callback && callback(null, acc);
       }).catch(function(e) {
         callback && callback(e.message==='EMAIL_EXISTS' ? 'EMAIL_EXISTS' : e.message);
