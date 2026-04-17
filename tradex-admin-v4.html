@@ -1546,22 +1546,31 @@ function fbSaveAccounts() {
 
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
+      // ⚠️ broker/accounts'tan gelen veriden balance/positions/bonus/finlog TEMİZLENİR
+      function _stripCanonFields(accs) {
+        if(!Array.isArray(accs)) return accs;
+        accs.forEach(function(a){
+          delete a.balance; delete a.positions; delete a.bonus;
+          delete a.finlog; delete a.equity; delete a.marginLevelPct;
+        });
+        return accs;
+      }
       // localStorage fallback — Firebase permissions hatası olursa bunu kullan
       function _lsLoad() {
         try {
           var ls = localStorage.getItem('tx_accounts');
           var d = ls ? JSON.parse(ls) : [];
-          if(d && d.length) { console.warn('[fbLoadAccounts] Firebase izin hatası, localStorage kullanılıyor'); callback(d); return true; }
+          if(d && d.length) { console.warn('[fbLoadAccounts] Firebase izin hatası, localStorage kullanılıyor'); callback(_stripCanonFields(d)); return true; }
         } catch(e) {}
         return false;
       }
       if(!db){ _lsLoad() || callback([]); return; }
       db.collection('broker').doc('accounts').get()
         .then(function(doc){
-          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(d);return;}}catch(e){}}
+          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(_stripCanonFields(d));return;}}catch(e){}}
           var hours=[];for(var i=0;i<24;i++){var dt=new Date(Date.now()-i*3600000);hours.push(dt.toISOString().substring(0,13).replace('T','_'));}
           var tryH=function(idx){if(idx>=hours.length){ _lsLoad() || callback([]); return;}
-            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(dd);db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
+            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(_stripCanonFields(dd));db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
           tryH(0);
         }).catch(function(e){
           console.warn('[fbLoadAccounts] Firebase hatası:', e.message||e);
@@ -1750,21 +1759,21 @@ function parseFinlogDate(input) {
     function _reqUpdateBalance(accId, delta, finType, note, callback) {
       var acc=accounts.find(function(x){return String(x.id)===String(accId);});
       if(!acc){showAdminToast('Hata','Hesap #'+accId+' bulunamadı','danger');return;}
-      // Balance'ı broker/accounts'tan al (tek resmi kaynak), finlog'u users/{id}'den al
-      var bal = parseFloat(acc.balance)||0;
+      // ⚠️ CANONICAL: balance/finlog users/{id}'den (_accCanon)
+      var bal = getAccBal(accId);
       var newBal = Math.max(0, bal + delta);
-      // finlog'u users/{id}'den çek, sonra güncelle
-      fbLoadUserData(accId, function(data){
-        var fl=(data&&Array.isArray(data.finlog))?data.finlog.slice():(Array.isArray(acc.finlog)?acc.finlog.slice():[]);
-        fl.unshift({type:finType,amount:Math.abs(delta),date:new Date().toISOString(),note:note||''});
-        // users/{id}'ye sadece finlog + balance yaz
-        fbSaveUserData(accId,{balance:newBal,finlog:fl,_balanceSource:'manager'});
-        // broker/accounts güncelle (tek resmi kaynak)
-        acc.balance=newBal; acc.finlog=fl;
-        fbSaveAccounts();
-        try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
-        if(callback)callback(newBal);
-      });
+      var fl = getAccFinlog(accId).slice();
+      fl.unshift({type:finType,amount:Math.abs(delta),date:new Date().toISOString(),note:note||''});
+      // Sadece users/{id}'ye yaz — broker/accounts'a DOKUNMA
+      if(typeof db !== 'undefined' && db) {
+        db.collection('users').doc(String(accId)).set({
+          balance: newBal,
+          finlog: fl,
+          _balanceSource: 'manager',
+          updatedAt: new Date().toISOString()
+        }, {merge:true}).catch(function(e){ console.warn('_reqUpdateBalance:', e); });
+      }
+      if(callback)callback(newBal);
     }
 
 console.log('Firebase bağlandı ✓');
@@ -1778,12 +1787,19 @@ console.log('Firebase bağlandı ✓');
         try{
           var newAccs=JSON.parse(doc.data().data||'[]');
           if(!newAccs||!newAccs.length){ console.warn('[onSnapshot] Boş accounts geldi, yoksayıldı'); return; }
-          // Cache'leri koru
+          // ⚠️ broker/accounts'tan gelen verideki balance/positions/bonus/finlog'u TEMİZLE
+          // Bu alanlar artık sadece _accCanon (users/{id}) üzerinden okunur
           newAccs.forEach(function(na){
+            delete na.balance;
+            delete na.positions;
+            delete na.bonus;
+            delete na.finlog;
+            delete na.equity;
+            delete na.marginLevelPct;
+            // UI cache'leri koru (eski accounts array'inden)
             var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
             var old=_accs.find(function(x){return x.id===na.id;});
             if(old){
-              if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
               if(old._openCount!==undefined)   na._openCount=old._openCount;
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
@@ -4051,8 +4067,9 @@ function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
 function adCalcStats(account, positions) {
-  var bal   = parseFloat(account.balance)||0;
-  var bonus = parseFloat(account.bonus)||0;
+  // ⚠️ CANONICAL: balance/bonus users/{id}'den (_accCanon)
+  var bal   = getAccBal(account.id);
+  var bonus = getAccBonus(account.id);
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
