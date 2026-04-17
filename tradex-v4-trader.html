@@ -1161,7 +1161,9 @@ function _authSuccess(user) {
             window._lastSyncAt = remoteUpdatedAt;
             try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
             try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
-            // balance'ı users/{id}'den alma — broker/accounts kaynaklı olmalı
+            // ⚠️ users/{id} TEK KAYNAK
+            if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
+            if(d.bonus !== undefined) _cu.bonus = parseFloat(d.bonus)||0;
             if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
             renderPositions(); renderHistory(); updateAccount();
           }
@@ -1185,9 +1187,6 @@ function _authSuccess(user) {
   _FB.sub('user', db.collection('users').doc(String(_cu.id)).onSnapshot(function(doc) {
     if(!doc.exists) return;
     var d = doc.data(); if(!d) return;
-    var remoteUpdatedAt = d.updatedAt || '';
-    if(remoteUpdatedAt && remoteUpdatedAt === window._lastSyncAt) return;
-    window._lastSyncAt = remoteUpdatedAt;
     if(d.spreadGroup && d.spreadGroup !== _cu.spreadGroup) {
       _cu.spreadGroup = d.spreadGroup; applyGroupSpreads();
       if(document.getElementById('mwBody')) renderMarketWatch();
