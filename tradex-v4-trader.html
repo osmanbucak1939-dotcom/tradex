@@ -1183,26 +1183,8 @@ function _authSuccess(user) {
   // localStorage polling de gereksiz (aynı sekme içinde)
   var _lastPriceTs = 0;
 
-  // users/{id} realtime sync — _FB manager ile (tekil, temizlenebilir)
-  _FB.sub('user', db.collection('users').doc(String(_cu.id)).onSnapshot(function(doc) {
-    if(!doc.exists) return;
-    var d = doc.data(); if(!d) return;
-    if(d.spreadGroup && d.spreadGroup !== _cu.spreadGroup) {
-      _cu.spreadGroup = d.spreadGroup; applyGroupSpreads();
-      if(document.getElementById('mwBody')) renderMarketWatch();
-    }
-    if(d.leverage) _cu.leverage = d.leverage;
-    if(d.marginLevelPct) _cu.marginLevelPct = d.marginLevelPct;
-    try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
-    try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
-    // ⚠️ users/{id} TEK KAYNAK — _balanceSource kontrolü kaldırıldı, her balance güncellenir
-    if(d.balance !== undefined) { balance = parseFloat(d.balance)||0; }
-    if(d.bonus !== undefined) { _cu.bonus = parseFloat(d.bonus)||0; }
-    if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
-    renderPositions(); renderHistory(); updateAccount();
-    var _finEl = document.getElementById('bp-finans-content');
-    if(_finEl) _renderBpFinansTable && _renderBpFinansTable(_finEl);
-  }, function(e){ console.warn('[user snap]', e.message); }));
+  // ⚠️ users/{id} realtime listener → fbListenUserData() tek yerde (satır ~1600)
+  // Buradaki eski listener kaldırıldı — ikisi aynı _FB key'i kullanıyordu, biri diğerini eziyordu
 
   _authClose();
   var lb = document.getElementById('tbLoginBtn');
@@ -1595,58 +1577,62 @@ function initAuth(){
         .catch(function(e){ console.warn('fbLoadUserData error:', e); callback(null); });
     }
 
-    // Gerçek zamanlı pozisyon/bakiye senkronizasyonu
+    // Gerçek zamanlı pozisyon/bakiye senkronizasyonu — TEK LISTENER
     window._userDataUnsub = null;
     function fbListenUserData(userId) {
       if(!db || !userId) return;
       _FB.sub('user', db.collection('users').doc(String(userId)).onSnapshot(function(doc) {
         if(!doc.exists) return;
         var d = doc.data(); if(!d) return;
-        var changed = false;
 
-        // Pozisyonlar - timestamp yerine ID listesi karşılaştır
+        // SpreadGroup değişimi
+        if(d.spreadGroup && typeof _cu !== 'undefined' && _cu && d.spreadGroup !== _cu.spreadGroup) {
+          _cu.spreadGroup = d.spreadGroup;
+          if(typeof applyGroupSpreads === 'function') applyGroupSpreads();
+          if(document.getElementById('mwBody') && typeof renderMarketWatch === 'function') renderMarketWatch();
+        }
+        // Leverage & margin level
+        if(d.leverage && typeof _cu !== 'undefined' && _cu) _cu.leverage = d.leverage;
+        if(d.marginLevelPct && typeof _cu !== 'undefined' && _cu) _cu.marginLevelPct = d.marginLevelPct;
+
+        // Pozisyonlar
         if(d.positions !== undefined) {
           try {
             var newPos = Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions||'[]');
-            var oldIds = (positions||[]).map(function(p){return p.id;}).sort().join(',');
-            var newIds = newPos.map(function(p){return p.id;}).sort().join(',');
-            if(oldIds !== newIds) {
-              positions = newPos;
-              changed = true;
-            }
-            // SL/TP güncellemelerini de yakala
-            else if(newPos.length > 0) {
-              var slTpChanged = newPos.some(function(np) {
-                var op = (positions||[]).find(function(p){return p.id===np.id;});
-                return op && (op.sl!==np.sl || op.tp!==np.tp);
-              });
-              if(slTpChanged) { positions = newPos; changed = true; }
-            }
+            positions = newPos;
           } catch(e){ console.warn('positions parse err:', e); }
         }
+        // Balance — koşulsuz güncelle
         if(d.balance !== undefined) {
-          var nb = parseFloat(d.balance)||0;
-          if(Math.abs(nb - balance) > 0.001) { balance = nb; changed = true; }
+          balance = parseFloat(d.balance)||0;
         }
+        // Bonus
         if(d.bonus !== undefined && typeof _cu !== 'undefined' && _cu) {
-          var newBonus = parseFloat(d.bonus)||0;
-          if(_cu.bonus !== newBonus) { _cu.bonus = newBonus; changed = true; }
+          _cu.bonus = parseFloat(d.bonus)||0;
         }
+        // Trade history
         if(d.tradeHistory !== undefined) {
           try {
             tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : JSON.parse(d.tradeHistory||'[]');
           } catch(e){}
         }
+        // Pending orders
         if(d.pendingOrders !== undefined) {
           try {
             pendingOrders = Array.isArray(d.pendingOrders) ? d.pendingOrders : JSON.parse(d.pendingOrders||'[]');
           } catch(e){}
         }
-        if(changed) {
-          renderPositions(); renderHistory(); updateAccount();
-          if(typeof mFP==='function') mFP();
-          if(typeof renderPendingOrders==='function') renderPendingOrders();
-        }
+        // Finlog
+        if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
+
+        // Her değişiklikte render — guard yok, Firebase zaten sadece gerçek değişikliklerde tetikler
+        if(typeof renderPositions === 'function') renderPositions();
+        if(typeof renderHistory === 'function') renderHistory();
+        if(typeof updateAccount === 'function') updateAccount();
+        if(typeof mFP === 'function') mFP();
+        if(typeof renderPendingOrders === 'function') renderPendingOrders();
+        var _finEl = document.getElementById('bp-finans-content');
+        if(_finEl && typeof _renderBpFinansTable === 'function') _renderBpFinansTable(_finEl);
       }, function(e){ console.warn('fbListenUserData err:', e); }));
     }
 
