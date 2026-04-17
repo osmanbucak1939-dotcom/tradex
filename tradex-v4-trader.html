@@ -1421,19 +1421,8 @@ function initAuth(){
     if(el) el.style.display = 'flex';
   }
   if(_cu && _cu.name) {
-    _authClose();
-    var lb=document.getElementById('tbLoginBtn');
-    var ub=document.getElementById('tbUserBadge');
-    if(lb)lb.style.display='none';
-    if(ub)ub.style.display='flex';
-    var av=document.getElementById('tbUserAvatar');
-    var un=document.getElementById('tbUserName');
-    var ut=document.getElementById('tbUserType');
-    if(av)av.textContent=(_cu.name||'?')[0].toUpperCase();
-    if(un)un.textContent=_cu.name+(_cu.surname?' '+_cu.surname:'');
-    if(ut)ut.textContent=_cu.type==='demo'?'Demo Hesap':'Gerçek Hesap';
-    var ul2=document.getElementById('tbUserLogin'); if(ul2) ul2.textContent=(_cu.login||_cu.id)?'#'+(_cu.login||_cu.id):'';
-    try{if(_cu.balance&&typeof balance!=='undefined'){balance=parseFloat(_cu.balance);}}catch(e){}
+    // ⚠️ Auto-login: _authSuccess çağır — Firebase Auth + listeners kurulur
+    _authSuccess(_cu);
   }
 }
 </script>
