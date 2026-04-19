@@ -4909,6 +4909,8 @@ function startFirebaseSnapshots() {
       if(Array.isArray(_groups) && _groups.length) {
         spreadGroups = sgNormalizeAll(_groups);
         applyGroupSpreads();
+        // Whitelist değişmiş olabilir — MW'yi yeniden render et ki kilit/gri durumu güncellensin
+        if(typeof renderMarketWatch === 'function') renderMarketWatch(document.getElementById('mwSearch') ? document.getElementById('mwSearch').value : '');
       }
     } catch(e){ console.warn('spreadGroups snap:', e); }
   }, function(e){ console.warn('spreadGroups err:', e.message); }));
@@ -6664,7 +6666,12 @@ function renderMarketWatch(filter) {
     for(var ii=0; ii<g.items.length; ii++) {
       var it = g.items[ii];
       var match = !filter || it.name.toLowerCase().indexOf(filter)>=0 || it.full.toLowerCase().indexOf(filter)>=0;
-      if(match) items.push(it);
+      if(!match) continue;
+      // Trading group whitelist — izinli değilse hiç listeleme
+      if(typeof canTradeSymbol === 'function' && _cu) {
+        if(!canTradeSymbol(_cu.spreadGroup || 'standard', it.sym)) continue;
+      }
+      items.push(it);
     }
     if(!items.length) continue;
 
