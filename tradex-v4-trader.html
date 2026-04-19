@@ -1044,7 +1044,7 @@ function applyDailySwap() {
     // Eski pozisyonlarda swapBuy/swapSell yoksa symConfig + spreadGroup'tan doldur
     if(pos.swapBuy === undefined || pos.swapSell === undefined) {
       var _sc = symConfig ? symConfig.find(function(s){return s.sym===pos.sym;}) : null;
-      var _sg = spreadGroups ? spreadGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
+      var _sg = tradingGroups ? tradingGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
       pos.swapBuy  = (_sg&&_sg.swaps&&_sg.swaps[pos.sym]!==undefined) ? _sg.swaps[pos.sym].buy  : (_sc ? (_sc.swapBuy||0)  : 0);
       pos.swapSell = (_sg&&_sg.swaps&&_sg.swaps[pos.sym]!==undefined) ? _sg.swaps[pos.sym].sell : (_sc ? (_sc.swapSell||0) : 0);
       pos.swapTotal = pos.swapTotal || 0;
@@ -1052,7 +1052,7 @@ function applyDailySwap() {
     // swapBuy/swapSell yoksa (admin'den açılan pozisyon) spreadGroup'tan doldur
     if(!pos.swapBuy && !pos.swapSell) {
       var _sc2 = symConfig ? symConfig.find(function(s){return s.sym===pos.sym;}) : null;
-      var _sg2 = spreadGroups ? spreadGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
+      var _sg2 = tradingGroups ? tradingGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
       pos.swapBuy  = (_sg2&&_sg2.swaps&&_sg2.swaps[pos.sym]!==undefined) ? _sg2.swaps[pos.sym].buy  : (_sc2?(_sc2.swapBuy||0):0);
       pos.swapSell = (_sg2&&_sg2.swaps&&_sg2.swaps[pos.sym]!==undefined) ? _sg2.swaps[pos.sym].sell : (_sc2?(_sc2.swapSell||0):0);
     }
@@ -4199,7 +4199,7 @@ function placeOrder(side) {
   // Stop out seviyesi: spreadGroup'tan al
   var _stopOutLvl = 20; // default
   try {
-    var _mySg = spreadGroups ? spreadGroups.find(function(g){ return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard'); }) : null;
+    var _mySg = tradingGroups ? tradingGroups.find(function(g){ return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard'); }) : null;
     if(_mySg && _mySg.stopOut) _stopOutLvl = parseFloat(_mySg.stopOut);
   } catch(e) {}
 
@@ -4272,7 +4272,7 @@ function placeOrder(side) {
 
   var _symCfgSw = symConfig ? symConfig.find(function(s){return s.sym===curSym;}) : null;
   var _contractSize = _symCfgSw ? (_symCfgSw.contractSize || 1) : 1;
-  var _sgSw = spreadGroups ? spreadGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
+  var _sgSw = tradingGroups ? tradingGroups.find(function(g){return g.id===(_cu&&_cu.spreadGroup?_cu.spreadGroup:'standard');}) : null;
   var _swBuy  = (_sgSw&&_sgSw.swaps&&_sgSw.swaps[curSym]!==undefined) ? _sgSw.swaps[curSym].buy  : (_symCfgSw ? (_symCfgSw.swapBuy||0)  : 0);
   var _swSell = (_sgSw&&_sgSw.swaps&&_sgSw.swaps[curSym]!==undefined) ? _sgSw.swaps[curSym].sell : (_symCfgSw ? (_symCfgSw.swapSell||0) : 0);
   var _decPos = _symCfgSw ? (_symCfgSw.decimals||2) : 2;
@@ -4601,9 +4601,9 @@ function _checkStopOut(equity, marginUsed, marginLvl) {
     if(typeof getTradingGroup === 'function' && _cu) {
       var _g = getTradingGroup(_cu.spreadGroup || 'standard');
       if(_g) stopOutLevel = parseFloat(_g.stopOut) || 50;
-    } else if(typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
+    } else if(typeof tradingGroups !== 'undefined' && Array.isArray(tradingGroups) && tradingGroups.length) {
       var _sgId = (_cu && _cu.spreadGroup) ? _cu.spreadGroup : 'standard';
-      var _sg = spreadGroups.find(function(g){ return g.id === _sgId; });
+      var _sg = tradingGroups.find(function(g){ return g.id === _sgId; });
       if(_sg) stopOutLevel = parseFloat(_sg.stopOut) || 50;
     }
   } catch(e) {}
@@ -4900,20 +4900,20 @@ function startFirebaseSnapshots() {
     } catch(e){ console.warn('symbols snap:', e); }
   }, function(e){ console.warn('symbols err:', e.message); }));
 
-  // broker/spreadGroups
+  // broker/tradingGroups
   _FB.sub('spreadGroups', db.collection('broker').doc('spreadGroups').onSnapshot(function(doc){
     if(!doc.exists || !doc.data()) return;
     try {
       var _d = doc.data();
       var _groups = _d.data ? JSON.parse(_d.data) : (_d.groups ? JSON.parse(_d.groups) : null);
       if(Array.isArray(_groups) && _groups.length) {
-        spreadGroups = sgNormalizeAll(_groups);
+        tradingGroups = sgNormalizeAll(_groups);
         applyGroupSpreads();
         // Whitelist değişmiş olabilir — MW'yi yeniden render et ki kilit/gri durumu güncellensin
         if(typeof renderMarketWatch === 'function') renderMarketWatch(document.getElementById('mwSearch') ? document.getElementById('mwSearch').value : '');
       }
-    } catch(e){ console.warn('spreadGroups snap:', e); }
-  }, function(e){ console.warn('spreadGroups err:', e.message); }));
+    } catch(e){ console.warn('tradingGroups snap:', e); }
+  }, function(e){ console.warn('tradingGroups err:', e.message); }));
 
   // broker/payMethods
   _FB.sub('payMethods', db.collection('broker').doc('payMethods').onSnapshot(function(doc){
@@ -4986,14 +4986,14 @@ function startLiveFeed() {
 function _loadFirebaseData() {
   if(typeof db === 'undefined' || !db) return;
 
-  // spreadGroups
+  // tradingGroups
   db.collection('broker').doc('spreadGroups').get().then(function(doc){
     if(doc.exists && doc.data().data) {
       try {
         var fbSg = JSON.parse(doc.data().data);
         if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-          spreadGroups = sgNormalizeAll(fbSg);
-          localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+          tradingGroups = sgNormalizeAll(fbSg);
+          localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
         }
       } catch(e){}
     }
@@ -5014,7 +5014,7 @@ function _loadFirebaseData() {
     }
   }).catch(function(){});
 
-  // spreadGroups periyodik sync (60sn)
+  // tradingGroups periyodik sync (60sn)
   if(window._sgSyncInterval) clearInterval(window._sgSyncInterval);
   window._sgSyncInterval = setInterval(function(){
     if(typeof db === 'undefined' || !db) return;
@@ -5023,8 +5023,8 @@ function _loadFirebaseData() {
         try {
           var fbSg = JSON.parse(doc.data().data);
           if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-            spreadGroups = sgNormalizeAll(fbSg);
-            localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+            tradingGroups = sgNormalizeAll(fbSg);
+            localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
             applyGroupSpreads();
           }
         } catch(e){}
@@ -5295,8 +5295,8 @@ function addSymbolMgr() { saveSymbolMgr(); }
 function getGroupSpread(sym) {
   // Hesabın grubundan sembol spread'ini al
   if(!_cu || !(_cu.spreadGroup || _cu.group)) return null;
-  if(!spreadGroups || !Array.isArray(spreadGroups)) return null;
-  var sg = spreadGroups.find(function(g){ return g.id === (_cu.spreadGroup || _cu.group); });
+  if(!tradingGroups || !Array.isArray(tradingGroups)) return null;
+  var sg = tradingGroups.find(function(g){ return g.id === (_cu.spreadGroup || _cu.group); });
   if(!sg || !sg.spreads) return null;
   var v = sg.spreads[sym];
   return (v !== undefined && v !== null && v !== '') ? parseFloat(v) : null;
@@ -7778,13 +7778,20 @@ function submitPwChange() {
 // Şema: id, name, spreads, swaps, marginCall, stopOut,
 //   maxLeverage, defaultLeverage, symbolWhitelist, commissionPerLot, minDeposit, marginMode
 // ═══════════════════════════════════════
-var spreadGroups = [
+var tradingGroups = [
   {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
   {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
   {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
   {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
 ];
 var _activeSgId = 'standard';
+
+// Backward-compat alias — eski `spreadGroups` ismi hâlâ çalışsın
+Object.defineProperty(window, 'spreadGroups', {
+  get: function(){ return tradingGroups; },
+  set: function(v){ tradingGroups = v; },
+  configurable: true
+});
 
 // Migration/normalize — eski dokümanlar için backward-compat
 function sgNormalizeGroup(g) {
@@ -7809,10 +7816,10 @@ function sgNormalizeAll(groups) {
 
 // ─── Trading Groups Public API ───
 function getTradingGroup(groupId) {
-  if(!spreadGroups || !spreadGroups.length) sgLoad();
-  var g = spreadGroups.find(function(x){ return x.id === groupId; });
-  if(!g) g = spreadGroups.find(function(x){ return x.id === 'standard'; });
-  if(!g) g = spreadGroups[0];
+  if(!tradingGroups || !tradingGroups.length) sgLoad();
+  var g = tradingGroups.find(function(x){ return x.id === groupId; });
+  if(!g) g = tradingGroups.find(function(x){ return x.id === 'standard'; });
+  if(!g) g = tradingGroups[0];
   return sgNormalizeGroup(g);
 }
 function getMaxLeverage(groupId) {
@@ -7853,25 +7860,25 @@ function sgLoad() {
     {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
     {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
   ];
-  if(!spreadGroups || !Array.isArray(spreadGroups) || !spreadGroups.length) {
-    spreadGroups = defaults;
+  if(!tradingGroups || !Array.isArray(tradingGroups) || !tradingGroups.length) {
+    tradingGroups = defaults;
   }
   try {
     var saved = JSON.parse(localStorage.getItem('tx_sg') || 'null');
     if(saved && Array.isArray(saved) && saved.length && saved[0] && saved[0].id) {
-      spreadGroups = saved;
+      tradingGroups = saved;
     }
   } catch(e) {}
-  sgNormalizeAll(spreadGroups);
+  sgNormalizeAll(tradingGroups);
   var found = false;
-  for(var j=0; j<spreadGroups.length; j++) {
-    if(spreadGroups[j].id === _activeSgId) { found = true; break; }
+  for(var j=0; j<tradingGroups.length; j++) {
+    if(tradingGroups[j].id === _activeSgId) { found = true; break; }
   }
-  if(!found) _activeSgId = spreadGroups[0].id;
+  if(!found) _activeSgId = tradingGroups[0].id;
 }
 
 function sgSave() {
-  try { localStorage.setItem('tx_sg', JSON.stringify(spreadGroups)); } catch(e){}
+  try { localStorage.setItem('tx_sg', JSON.stringify(tradingGroups)); } catch(e){}
 }
 
 function sgRender() {
@@ -7881,7 +7888,7 @@ function sgRender() {
   var bar = document.getElementById('sgTabBar');
   if(bar) {
     bar.innerHTML = '';
-    for(var gi=0; gi<spreadGroups.length; gi++) {
+    for(var gi=0; gi<tradingGroups.length; gi++) {
       (function(g){
         var btn = document.createElement('button');
         btn.textContent = g.name;
@@ -7889,15 +7896,15 @@ function sgRender() {
         btn.style.cssText = 'padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
         btn.onclick = function(){ _activeSgId = g.id; sgRender(); };
         bar.appendChild(btn);
-      })(spreadGroups[gi]);
+      })(tradingGroups[gi]);
     }
   }
 
   var g = null;
-  for(var gi2=0; gi2<spreadGroups.length; gi2++) {
-    if(spreadGroups[gi2].id === _activeSgId) { g = spreadGroups[gi2]; break; }
+  for(var gi2=0; gi2<tradingGroups.length; gi2++) {
+    if(tradingGroups[gi2].id === _activeSgId) { g = tradingGroups[gi2]; break; }
   }
-  if(!g && spreadGroups.length) { g = spreadGroups[0]; _activeSgId = g.id; }
+  if(!g && tradingGroups.length) { g = tradingGroups[0]; _activeSgId = g.id; }
   if(!g) return;
 
   var del = document.getElementById('sgDeleteBtn');
@@ -7946,7 +7953,7 @@ function sgRender() {
 
 
 function sgSaveGeneral() {
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||80;
   var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||50;
   var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLev     = parseInt(ml.value)||100;
@@ -7955,7 +7962,7 @@ function sgSaveGeneral() {
 }
 
 function sgSaveSpreads() {
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var n=0;
   symConfig.filter(function(s){ return s.active; }).forEach(function(s){
     var sv = document.getElementById('sgs_'+s.sym); var spVal = sv ? sv.value.trim() : '';
@@ -7971,37 +7978,37 @@ function sgAddGroup() {
   var el = document.getElementById('sg_new_name'); if(!el) return;
   var name = el.value.trim(); if(!name){ showToast('Hata','Grup adı girin!'); return; }
   var id = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if(spreadGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
-  spreadGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
+  if(tradingGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
+  tradingGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
   _activeSgId=id; el.value='';
   sgSave(); sgRender(); sgRefreshSelects(); showToast('Grup Eklendi ✓',name);
 }
 
 function sgDeleteGroup() {
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; });
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; });
   if(!g||!g.deletable){ showToast('Hata','Bu grup silinemez!'); return; }
   if(accounts.some(function(a){ return a.spreadGroup===_activeSgId; })){ showToast('Hata','Hesaplarda kullanılıyor!'); return; }
   
-  spreadGroups = spreadGroups.filter(function(x){ return x.id!==_activeSgId; });
-  _activeSgId = spreadGroups[0].id;
+  tradingGroups = tradingGroups.filter(function(x){ return x.id!==_activeSgId; });
+  _activeSgId = tradingGroups[0].id;
   sgSave(); sgRender(); sgRefreshSelects(); showToast('Silindi',g.name);
 }
 
 function sgRefreshSelects() {
   document.querySelectorAll('#ad_sg,#na_spreadGroup').forEach(function(sel){
     var cur=sel.value;
-    sel.innerHTML=spreadGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
+    sel.innerHTML=tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
     sel.value=cur||'standard';
   });
 }
 
 function getEffectiveSpread(sym,groupId) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
+  var g=tradingGroups.find(function(x){ return x.id===groupId; });
   if(g&&g.spreads&&g.spreads[sym]!==undefined) return g.spreads[sym];
   var sc=symConfig.find(function(x){ return x.sym===sym; }); return sc?sc.spread:0;
 }
 function getSwap(sym,groupId,side) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
+  var g=tradingGroups.find(function(x){ return x.id===groupId; });
   if(!g||!g.swaps||!g.swaps[sym]) return 0;
   return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
 }
