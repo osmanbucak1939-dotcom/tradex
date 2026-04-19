@@ -6263,15 +6263,25 @@ function submitDeposit() {
   if(!amt || amt <= 0) { showToast('Hata','Miktar girin!'); return; }
   if(amt < (selectedDepositMethod.min||0)) { showToast('Hata',`Min. ${selectedDepositMethod.min} ${selectedDepositMethod.currency}`); return; }
 
-  // Trading group minDeposit kontrolü (USD cinsinden)
+  // Trading group minDeposit kontrolü (USD bazında)
   if(typeof getMinDeposit === 'function' && _cu) {
     var _grpId = _cu.spreadGroup || 'standard';
     var _min = getMinDeposit(_grpId);
-    // Sadece USD / USDT yatırımlarda kontrol et (TL/EUR gibi alternatif para birimlerinde currency çevirisi ayrı iş)
-    var _cur = (selectedDepositMethod.currency || '').toUpperCase();
-    if(_min > 0 && (_cur === 'USD' || _cur === 'USDT') && amt < _min) {
-      showToast('Hata', _grpId+' grubu için minimum yatırım: $'+_min);
-      return;
+    if(_min > 0) {
+      var _cur = (selectedDepositMethod.currency || 'USD').toUpperCase();
+      // Basit USD dönüşümü — canlı kur ayrı iş; yaklaşık değerler
+      var _fx = {USD:1, USDT:1, EUR:1.08, GBP:1.25, TRY:0.028, RUB:0.011, JPY:0.0066};
+      var _rate = _fx[_cur];
+      if(_rate === undefined) {
+        // Bilmediğimiz para birimi — güvenli tarafta kal, engelle ve uyar
+        showToast('Hata', _cur+' için minDeposit kontrolü yapılamıyor. Destek ekibine başvurun.');
+        return;
+      }
+      var _usdEq = amt * _rate;
+      if(_usdEq < _min) {
+        showToast('Hata', _grpId+' grubu için min $'+_min+' (≈ '+Math.ceil(_min/_rate)+' '+_cur+')');
+        return;
+      }
     }
   }
 
