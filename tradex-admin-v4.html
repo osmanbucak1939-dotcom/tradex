@@ -1943,6 +1943,12 @@ console.log('Firebase bağlandı ✓');
     <span style="color:#e2e2e2;margin:0 10px;">|</span>
     <span style="font-size:11px;color:#b0b0b0;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
+      <!-- Feed sağlık göstergesi: kripto / forex / firebase -->
+      <div id="feedHealth" title="Fiyat feed durumu" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;padding:3px 10px;background:#111;border:1px solid #222;border-radius:3px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhCrypto" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>BN</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhForex"  style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>FX</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhFB"     style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>DB</span>
+      </div>
       <span style="color:#a0a0a0;" id="topbar-user">—</span>
       <span style="color:#b0b0b0;" id="topbar-role"></span>
       <button onclick="adminLogout()" class="mgr-btn" style="font-size:10px;padding:3px 10px;">Çıkış</button>
@@ -4210,6 +4216,7 @@ function _adFbWrite(sym, price) {
       if(!Object.keys(buf).length) return;
       buf._ts = Date.now();
       db.collection('broker').doc('prices').set(buf, {merge:true})
+        .then(function(){ window._adLastFbWrite = Date.now(); })
         .catch(function(e){ console.warn('[FB write]', e.message); });
     }, 200);
   }
@@ -4360,8 +4367,53 @@ function adStartTwelvedataFeed() {
   _adBnOk = true;
 }
 
+// ── FEED SAĞLIK GÖSTERGESİ ──
+// Top bar'daki 3 küçük dot'u her 5sn'de bir günceller.
+// Yeşil = taze veri, Sarı = 30sn-2dk arası, Kırmızı = 2dk+ veya hiç
+function _feedHealthTick() {
+  var now = Date.now();
+  function _setDot(id, age, labelColor) {
+    var el = document.getElementById(id);
+    if(!el) return;
+    var color;
+    if(age == null || age === Infinity) color = '#666';
+    else if(age < 30000)   color = '#26a69a'; // yeşil — taze
+    else if(age < 120000)  color = '#f5c518'; // sarı — gecikmeli
+    else                   color = '#ef5350'; // kırmızı — ölü
+    el.style.background = color;
+    el.style.boxShadow = (age != null && age < 30000) ? '0 0 4px '+color : 'none';
+    if(el.parentElement) {
+      el.parentElement.title = (age == null || age === Infinity)
+        ? 'Hiç veri yok'
+        : 'Son güncelleme: ' + Math.floor(age/1000) + 'sn önce';
+    }
+  }
+
+  // Kripto (Binance): en taze kripto fiyatının yaşı
+  var cryptoAge = Infinity;
+  var _cryptoSyms = ['BTCUSDT','ETHUSDT','BNBUSDT'];
+  for(var i=0; i<_cryptoSyms.length; i++) {
+    var p = _FX.prices[_cryptoSyms[i]];
+    if(p && p.ts) cryptoAge = Math.min(cryptoAge, now - p.ts);
+  }
+  _setDot('fhCrypto', cryptoAge);
+
+  // Forex (FastForex): _adFfLastOk'dan hesapla
+  var forexAge = window._adFfLastOk ? (now - window._adFfLastOk) : Infinity;
+  _setDot('fhForex', forexAge);
+
+  // Firebase (yazım): son başarılı yazım zamanı
+  var fbAge = window._adLastFbWrite ? (now - window._adLastFbWrite) : Infinity;
+  _setDot('fhFB', fbAge);
+}
+
 function adStartRealFeed() {
   _adFeedOn = true;
+  // Feed sağlık göstergesini başlat
+  if(typeof _feedHealthTick === 'function') {
+    _feedHealthTick();
+    setInterval(_feedHealthTick, 5000);
+  }
   // Önce Firebase'deki son bilinen fiyatları yükle — forex kapalıyken fallback için.
   // Bu sayede AD_SIM sabit simülasyon değerlerine (EURUSD=1.085 gibi) düşmek yerine
   // son gerçek cuma kapanış fiyatı kullanılır.
