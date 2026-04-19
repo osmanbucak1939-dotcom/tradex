@@ -4274,33 +4274,82 @@ function _adStartBinance() {
 }
 
 // ── FASTFOREX FOREX POLLING (3sn) ───────────────────────────
+// SAĞLIK TAKİBİ: window._adFfLastOk = son başarılı fetch zamanı, _adFfLastErr = son hata mesajı
 function _adStartForex() {
   if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
-  function _applyFx(data) {
-    if(!data || !data.quotes) return;
+  window._adFfLastOk  = window._adFfLastOk  || 0;
+  window._adFfLastErr = null;
+
+  function _applyFx(data, tag) {
+    if(!data || !data.quotes) {
+      // Beklenmeyen format — API keyi geçersizse genelde {error:...} gelir
+      window._adFfLastErr = '['+tag+'] format beklenmedik: ' + JSON.stringify(data||{}).slice(0, 200);
+      console.warn('[forex feed]', window._adFfLastErr);
+      return;
+    }
+    var _applied = 0;
     Object.keys(data.quotes).forEach(function(sym) {
       var q = data.quotes[sym]; if(!q) return;
       var mid = (parseFloat(q.bid) + parseFloat(q.ask)) / 2;
-      if(sym && mid > 0) adReceiveRawPrice(sym, mid);
+      if(sym && mid > 0) { adReceiveRawPrice(sym, mid); _applied++; }
     });
+    if(_applied > 0) {
+      window._adFfLastOk = Date.now();
+      window._adFfLastErr = null;
+    }
   }
+
+  function _fetchOne(pairs, tag) {
+    return fetch('https://api.fastforex.io/fx/quote?pairs='+pairs+'&api_key='+_adFfKey)
+      .then(function(r){
+        if(!r.ok) {
+          window._adFfLastErr = '['+tag+'] HTTP ' + r.status + ' ' + r.statusText;
+          console.warn('[forex feed]', window._adFfLastErr);
+          return null;
+        }
+        return r.json();
+      })
+      .then(function(data){ if(data) _applyFx(data, tag); })
+      .catch(function(e){
+        window._adFfLastErr = '['+tag+'] ' + e.message;
+        console.warn('[forex feed]', window._adFfLastErr);
+      });
+  }
+
   function _poll() {
     var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
     if(!open) return;
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF1]',e.message);});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF2]',e.message);});
-    if(_adFfForex3) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF3]',e.message);});
-    }
+    _fetchOne(_adFfForex1, 'FF1');
+    _fetchOne(_adFfForex2, 'FF2');
+    if(_adFfForex3) _fetchOne(_adFfForex3, 'FF3');
   }
   _poll();
   _adFfTimer = setInterval(_poll, 3000);
+
+  // Sağlık kontrolü: 30sn'dir taze forex fiyatı gelmediyse uyar
+  if(window._adFfHealthTimer) clearInterval(window._adFfHealthTimer);
+  window._adFfHealthTimer = setInterval(function(){
+    // Piyasa kapalıysa atla
+    if(typeof _marketHours !== 'undefined' && !_marketHours.forexOpen()) return;
+    var ageMs = window._adFfLastOk ? (Date.now() - window._adFfLastOk) : Infinity;
+    if(ageMs > 30000) {
+      // Feed ölü — simülasyonu durdur ve konsola sürekli uyar
+      window._adForexFeedDead = true;
+      if(!window._adForexFeedWarned || (Date.now() - window._adForexFeedWarned) > 60000) {
+        console.error('[forex feed] ⚠ Forex fiyat feed\'i ÖLÜ. Son başarılı tick: ' +
+                      (window._adFfLastOk ? new Date(window._adFfLastOk).toISOString() : 'HİÇ') +
+                      '. Son hata: ' + (window._adFfLastErr || 'bilinmiyor') +
+                      '. Simülasyon fiyatları Firebase\'e YAZILMIYOR — TD/FF keyini kontrol et!');
+        window._adForexFeedWarned = Date.now();
+        // UI'da görünür uyarı
+        if(typeof showAdminToast === 'function') {
+          showAdminToast('⚠ Forex Feed Yok', 'FastForex API yanıt vermiyor. API key veya network problemi olabilir.', 'danger');
+        }
+      }
+    } else {
+      window._adForexFeedDead = false;
+    }
+  }, 10000);
 }
 
 function adStartTwelvedataFeed() {
@@ -9877,8 +9926,27 @@ var AD_SIM={
     var _rfs={};
     if(typeof AD_TD_MAP!=='undefined') Object.keys(AD_TD_MAP).forEach(function(k){_rfs[k]=true;});
     if(typeof AD_BN_SYMS!=='undefined') AD_BN_SYMS.forEach(function(s){_rfs[s.toUpperCase()]=true;});
-    var _has=false;
-    Object.keys(_adPrices).forEach(function(k){if(!_rfs[k]){_pu[k]=_adPrices[k];_has=true;}});
+
+    // ⚠ KILL SWITCH: Forex feed ölüyse forex sembollerini Firebase'e YAZMA.
+    // Aksi halde admin'in sahte/eski simülasyon fiyatları trader'a gidiyor, müşteriler yanlış fiyatla işlem yapıyor.
+    var _forexDead = !!window._adForexFeedDead;
+    var _forexSyms = {};
+    if(_forexDead && typeof symConfig !== 'undefined') {
+      symConfig.forEach(function(s){
+        if(s.category === 'forex') _forexSyms[s.sym] = true;
+      });
+    }
+
+    var _has=false, _skipped=0;
+    Object.keys(_adPrices).forEach(function(k){
+      if(_rfs[k]) return;
+      if(_forexDead && _forexSyms[k]) { _skipped++; return; } // forex feed ölü — atla
+      _pu[k]=_adPrices[k];
+      _has=true;
+    });
+    if(_skipped > 0 && window._simTickCount%150===0) {
+      console.warn('[sim tick] Forex feed ölü; '+_skipped+' forex sembolü Firebase\'e yazılmadı.');
+    }
     if(_has){
       db.collection('broker').doc('prices').set(_pu,{merge:true}).catch(function(e){console.warn('simTick FB:',e);});
       try{localStorage.setItem('tx_prices',JSON.stringify(_pu));}catch(e){}
