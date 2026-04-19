@@ -3412,10 +3412,10 @@ function placeOrder(side) {
   var _stopOutLvl = 50;
   try {
     if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
-       typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
+       typeof tradingGroups !== 'undefined' && Array.isArray(tradingGroups) && tradingGroups.length) {
       var _chkAcc = accounts.find(function(a){ return a.active; });
       if(_chkAcc) {
-        var _chkSg = spreadGroups.find(function(g){ return g.id===(_chkAcc.spreadGroup||'standard'); });
+        var _chkSg = tradingGroups.find(function(g){ return g.id===(_chkAcc.spreadGroup||'standard'); });
         if(_chkSg) _stopOutLvl = _chkSg.stopOut || 50;
       }
     }
@@ -5053,7 +5053,7 @@ function adRenderTab(tab) {
 
   if(tab === 'info') {
     // spreadGroup'tan marginCall / stopOut al
-    var _infoSg = (typeof spreadGroups!=='undefined'&&spreadGroups) ? spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}) : null;
+    var _infoSg = (typeof tradingGroups!=='undefined'&&tradingGroups) ? tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}) : null;
     var _mcPct = _infoSg ? (_infoSg.marginCall||80) : 80;
     var _soPct = _infoSg ? (_infoSg.stopOut||20) : 20;
     cnt.innerHTML =
@@ -7550,7 +7550,7 @@ function submitPwChange() {
 // SPREAD GRUPLARI
 // ═══════════════════════════════════════
 // ═══════════════════════════════════════
-// TRADING GROUPS (eski ad: spreadGroups)
+// TRADING GROUPS (eski ad: tradingGroups)
 // Şema (2026-04-18 itibarıyla):
 //   id, name, spreads, swaps,
 //   marginCall, stopOut,
@@ -7562,16 +7562,24 @@ function submitPwChange() {
 //   marginMode     — 'hedging' | 'netting' (v1'de sadece bilgi amaçlı; enforcement v2)
 //   desc, deletable
 //
-// Firestore dokümanı: broker/spreadGroups (koleksiyon adı DEĞİŞMEDİ — backward-compatible
+// Firestore dokümanı: broker/tradingGroups (koleksiyon adı DEĞİŞMEDİ — backward-compatible
 // JSON string alanına yeni property'ler eklendi). Eski veriler sgNormalize() ile otomatik upgrade olur.
 // ═══════════════════════════════════════
-var spreadGroups = [
+var tradingGroups = [
   {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
   {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
   {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
   {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
 ];
 var _activeSgId = 'standard';
+
+// Backward-compat alias — eski `spreadGroups` ismi hâlâ çalışsın (console'dan veya eski kod okursa).
+// Bu sadece bir getter/setter; gerçek veri tradingGroups'ta.
+Object.defineProperty(window, 'spreadGroups', {
+  get: function(){ return tradingGroups; },
+  set: function(v){ tradingGroups = v; },
+  configurable: true
+});
 
 // Tek bir grubun eksik alanlarını doldurur — geri uyumluluk katmanı.
 // Eski dokümanlarda maxLev vardı; yeni kodda maxLeverage. Her ikisini de destekle.
@@ -7601,10 +7609,10 @@ function sgNormalizeAll(groups) {
 // Tek giriş noktası — tüm sistem bunları kullanmalı.
 // groupId eksik/geçersizse 'standard' fallback'ine düşer. null dönmez, her zaman bir grup döner.
 function getTradingGroup(groupId) {
-  if(!spreadGroups || !spreadGroups.length) sgLoad();
-  var g = spreadGroups.find(function(x){ return x.id === groupId; });
-  if(!g) g = spreadGroups.find(function(x){ return x.id === 'standard'; });
-  if(!g) g = spreadGroups[0];
+  if(!tradingGroups || !tradingGroups.length) sgLoad();
+  var g = tradingGroups.find(function(x){ return x.id === groupId; });
+  if(!g) g = tradingGroups.find(function(x){ return x.id === 'standard'; });
+  if(!g) g = tradingGroups[0];
   return sgNormalizeGroup(g); // çağrı anında defensive normalize
 }
 function getMaxLeverage(groupId) {
@@ -7651,22 +7659,22 @@ function sgLoad() {
     {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
   ];
   // Her zaman defaults ile başla, sonra localStorage'ı merge et
-  if(!spreadGroups || !Array.isArray(spreadGroups) || !spreadGroups.length) {
-    spreadGroups = defaults;
+  if(!tradingGroups || !Array.isArray(tradingGroups) || !tradingGroups.length) {
+    tradingGroups = defaults;
   }
   try {
     var saved = JSON.parse(localStorage.getItem('tx_sg') || 'null');
     if(saved && Array.isArray(saved) && saved.length && saved[0] && saved[0].id) {
-      spreadGroups = saved;
+      tradingGroups = saved;
     }
   } catch(e) {}
-  sgNormalizeAll(spreadGroups);
+  sgNormalizeAll(tradingGroups);
   // _activeSgId geçerli mi?
   var found = false;
-  for(var j=0; j<spreadGroups.length; j++) {
-    if(spreadGroups[j].id === _activeSgId) { found = true; break; }
+  for(var j=0; j<tradingGroups.length; j++) {
+    if(tradingGroups[j].id === _activeSgId) { found = true; break; }
   }
-  if(!found) _activeSgId = spreadGroups[0].id;
+  if(!found) _activeSgId = tradingGroups[0].id;
 }
 
 function sgLoadFromFirebase(callback) {
@@ -7680,8 +7688,8 @@ function sgLoadFromFirebase(callback) {
       try {
         var fbSg = JSON.parse(doc.data().data);
         if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-          spreadGroups = sgNormalizeAll(fbSg);
-          localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+          tradingGroups = sgNormalizeAll(fbSg);
+          localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
         }
       } catch(e){}
     }
@@ -7692,9 +7700,9 @@ function sgLoadFromFirebase(callback) {
 function sgSave() {
   if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
   window._sgLastSave = Date.now();
-  try { localStorage.setItem('tx_sg', JSON.stringify(spreadGroups)); } catch(e){}
+  try { localStorage.setItem('tx_sg', JSON.stringify(tradingGroups)); } catch(e){}
   if(typeof db !== 'undefined' && db) {
-    db.collection('broker').doc('spreadGroups').set({data: JSON.stringify(spreadGroups)}, {merge:true})
+    db.collection('broker').doc('spreadGroups').set({data: JSON.stringify(tradingGroups)}, {merge:true})
       .catch(function(e){ console.warn('sgSave FB:', e); });
   }
 }
@@ -7709,7 +7717,7 @@ function sgRenderInner() {
   var bar = document.getElementById('sgTabBar');
   if(bar) {
     bar.innerHTML = '';
-    for(var gi=0; gi<spreadGroups.length; gi++) {
+    for(var gi=0; gi<tradingGroups.length; gi++) {
       (function(g){
         var btn = document.createElement('button');
         btn.textContent = g.name;
@@ -7717,15 +7725,15 @@ function sgRenderInner() {
         btn.style.cssText = 'padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
         btn.onclick = function(){ _activeSgId = g.id; sgRender(); };
         bar.appendChild(btn);
-      })(spreadGroups[gi]);
+      })(tradingGroups[gi]);
     }
   }
 
   var g = null;
-  for(var gi2=0; gi2<spreadGroups.length; gi2++) {
-    if(spreadGroups[gi2].id === _activeSgId) { g = spreadGroups[gi2]; break; }
+  for(var gi2=0; gi2<tradingGroups.length; gi2++) {
+    if(tradingGroups[gi2].id === _activeSgId) { g = tradingGroups[gi2]; break; }
   }
-  if(!g && spreadGroups.length) { g = spreadGroups[0]; _activeSgId = g.id; }
+  if(!g && tradingGroups.length) { g = tradingGroups[0]; _activeSgId = g.id; }
   if(!g) return;
 
   var del = document.getElementById('sgDeleteBtn');
@@ -7811,7 +7819,7 @@ function sgRenderInner() {
 
 function sgSaveGeneral() {
   if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
 
   // Eski hâli audit için kaydet
   var _before = {
@@ -7861,7 +7869,7 @@ function sgWhitelistToggleAll(checked) {
 
 function sgSaveWhitelist() {
   if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var box = document.getElementById('sgWhitelistBox');
   if(!box) return;
   var _before = (g.symbolWhitelist||[]).slice();
@@ -7885,7 +7893,7 @@ function sgSaveWhitelist() {
 
 function sgSaveSpreads() {
   if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var n=0;
   symConfig.filter(function(s){ return s.active; }).forEach(function(s){
     var sv = document.getElementById('sgs_'+s.sym); var spVal = sv ? sv.value.trim() : '';
@@ -7901,7 +7909,7 @@ function sgAddGroup() {
   var el = document.getElementById('sg_new_name'); if(!el) return;
   var name = el.value.trim(); if(!name){ showToast('Hata','Grup adı girin!'); return; }
   var id = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if(spreadGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
+  if(tradingGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
   var _newGroup = sgNormalizeGroup({
     id:id, name:name,
     spreads:{}, swaps:{},
@@ -7912,7 +7920,7 @@ function sgAddGroup() {
     marginMode:'hedging',
     desc:'', deletable:true
   });
-  spreadGroups.push(_newGroup);
+  tradingGroups.push(_newGroup);
   _activeSgId=id; el.value='';
   sgSave(); sgRender(); sgRefreshSelects();
   adAudit('tradingGroup.create', 'tradingGroups/'+id, null, {id:id, name:name});
@@ -7920,12 +7928,12 @@ function sgAddGroup() {
 }
 
 function sgDeleteGroup() {
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; });
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; });
   if(!g||!g.deletable){ showToast('Hata','Bu grup silinemez!'); return; }
   if(accounts.some(function(a){ return a.spreadGroup===_activeSgId; })){ showToast('Hata','Hesaplarda kullanılıyor!'); return; }
   
-  spreadGroups = spreadGroups.filter(function(x){ return x.id!==_activeSgId; });
-  _activeSgId = spreadGroups[0].id;
+  tradingGroups = tradingGroups.filter(function(x){ return x.id!==_activeSgId; });
+  _activeSgId = tradingGroups[0].id;
   sgSave(); sgRender(); sgRefreshSelects();
   adAudit('tradingGroup.delete', 'tradingGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
   showToast('Silindi',g.name);
@@ -7934,18 +7942,18 @@ function sgDeleteGroup() {
 function sgRefreshSelects() {
   document.querySelectorAll('#ad_sg,#na_spreadGroup').forEach(function(sel){
     var cur=sel.value;
-    sel.innerHTML=spreadGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
+    sel.innerHTML=tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
     sel.value=cur||'standard';
   });
 }
 
 function getEffectiveSpread(sym,groupId) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
+  var g=tradingGroups.find(function(x){ return x.id===groupId; });
   if(g&&g.spreads&&g.spreads[sym]!==undefined) return g.spreads[sym];
   var sc=symConfig.find(function(x){ return x.sym===sym; }); return sc?sc.spread:0;
 }
 function getSwap(sym,groupId,side) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
+  var g=tradingGroups.find(function(x){ return x.id===groupId; });
   if(!g||!g.swaps||!g.swaps[sym]) return 0;
   return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
 }
@@ -8195,8 +8203,8 @@ function adFeedRenderSymTable() {
 
 // Spread grubundan sembol verisi al (default grup)
 function _getFeedSymSpread(sym) {
-  if(typeof spreadGroups === 'undefined' || !spreadGroups.length) return {spread:0,swapBuy:0,swapSell:0};
-  var dg = spreadGroups.find(function(g){ return g.name==='Standard'||g.name==='Default'||g.default; }) || spreadGroups[0];
+  if(typeof tradingGroups === 'undefined' || !tradingGroups.length) return {spread:0,swapBuy:0,swapSell:0};
+  var dg = tradingGroups.find(function(g){ return g.name==='Standard'||g.name==='Default'||g.default; }) || tradingGroups[0];
   return {
     spread:   (dg.spreads && dg.spreads[sym] !== undefined) ? dg.spreads[sym] : 0,
     swapBuy:  (dg.swaps   && dg.swaps[sym]   !== undefined) ? dg.swaps[sym].buy   : 0,
@@ -8210,8 +8218,8 @@ function adFeedSaveSym(sym) {
   var sb = parseFloat((document.getElementById('fse_sb_'+sym)||{}).value)||0;
   var ss = parseFloat((document.getElementById('fse_ss_'+sym)||{}).value)||0;
   // Tüm spread gruplarında bu sembolü güncelle
-  if(typeof spreadGroups !== 'undefined') {
-    spreadGroups.forEach(function(g){
+  if(typeof tradingGroups !== 'undefined') {
+    tradingGroups.forEach(function(g){
       if(!g.spreads) g.spreads = {};
       if(!g.swaps)   g.swaps   = {};
       g.spreads[sym] = sp;
@@ -8221,10 +8229,10 @@ function adFeedSaveSym(sym) {
     if(typeof sgSave === 'function') sgSave();
     else if(typeof db !== 'undefined' && db) {
       db.collection('broker').doc('spreadGroups').set(
-        {data: JSON.stringify(spreadGroups)}, {merge:true}
+        {data: JSON.stringify(tradingGroups)}, {merge:true}
       ).catch(function(){});
     }
-    localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+    localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
   }
   showAdminToast('Kaydedildi ✓', sym+' spread/swap güncellendi', 'success');
 }
@@ -8726,7 +8734,7 @@ function _txFullBackup() {
     savedAt:     now.toISOString(),
     version:     4,
     accounts:    JSON.stringify(typeof accounts!=='undefined'?accounts:[]),
-    spreadGroups:JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]),
+    tradingGroups:JSON.stringify(typeof tradingGroups!=='undefined'?tradingGroups:[]),
     symbols:     JSON.stringify(typeof symConfig!=='undefined'?symConfig:[]),
     payMethods:  JSON.stringify(typeof payMethods!=='undefined'&&payMethods?payMethods:[]),
     settings:    JSON.stringify(typeof settings!=='undefined'?settings:{}),
@@ -8812,8 +8820,10 @@ function restoreFromBackup(dateStr) {
       db.collection('broker').doc('accounts').set({data:d.accounts,updatedAt:new Date().toISOString()})
         .then(function(){ alert('Hesaplar geri yüklendi: ' + accs.length + ' hesap'); location.reload(); });
     }
-    var sgs = JSON.parse(d.spreadGroups||'[]');
-    if(sgs.length) db.collection('broker').doc('spreadGroups').set({data:d.spreadGroups});
+    // Backward-compat: eski backup'larda 'spreadGroups', yenilerinde 'tradingGroups'
+    var _tgRaw = d.tradingGroups || d.spreadGroups || '[]';
+    var sgs = JSON.parse(_tgRaw);
+    if(sgs.length) db.collection('broker').doc('spreadGroups').set({data:_tgRaw});
     var syms = JSON.parse(d.symbols||'[]');
     if(syms.length) db.collection('broker').doc('symbols').set({data:d.symbols});
     var pms = JSON.parse(d.payMethods||'[]');
@@ -9115,8 +9125,8 @@ function updateMarginCallPanel() {
 
     // Hesabın spread grubundan margin call seviyesini al
     var mcLevel = 80; // varsayılan
-    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
-      var sg = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+    if(typeof tradingGroups !== 'undefined' && tradingGroups) {
+      var sg = tradingGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
       if(sg && sg.marginCall) mcLevel = parseFloat(sg.marginCall)||80;
     }
 
@@ -9125,8 +9135,8 @@ function updateMarginCallPanel() {
     // YENİ (2026-04-14): onPriceUpdate + riskEngineBackup Cloud Function'ları yapıyor.
     // Çifte kapatma riski olmasın diye buradaki kapatma kaldırıldı.
     var stopLevel = 20;
-    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
-      var _sg2 = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+    if(typeof tradingGroups !== 'undefined' && tradingGroups) {
+      var _sg2 = tradingGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
       if(_sg2 && _sg2.stopOut) stopLevel = parseFloat(_sg2.stopOut)||20;
     }
     var isUnderStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
@@ -10651,7 +10661,7 @@ function adOpenTrade(btn){
   var _newBal = _curBal - cost;
   // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
   var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
-  var _swapSg = (typeof spreadGroups!=='undefined'&&spreadGroups)?spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
+  var _swapSg = (typeof tradingGroups!=='undefined'&&tradingGroups)?tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
   var _swBuy  = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].buy  :(_swapSc?(_swapSc.swapBuy||0):0);
   var _swSell = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].sell :(_swapSc?(_swapSc.swapSell||0):0);
   _adPositions.push({
