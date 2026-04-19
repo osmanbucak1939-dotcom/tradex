@@ -4317,8 +4317,9 @@ function _adStartForex() {
   }
 
   function _poll() {
-    var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
-    if(!open) return;
+    // NOT: market hours check kaldırıldı. Forex piyasası kapalı olsa bile
+    // FastForex son bilinen fiyatı döndürüyor (cuma kapanış). Bu değer admin/trader
+    // için hâlâ AD_SIM sabitinden (1.085 gibi) çok daha doğru.
     _fetchOne(_adFfForex1, 'FF1');
     _fetchOne(_adFfForex2, 'FF2');
     if(_adFfForex3) _fetchOne(_adFfForex3, 'FF3');
