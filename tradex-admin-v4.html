@@ -1662,23 +1662,8 @@ function fbSaveAccounts() {
         .catch(function(e){ console.warn('fbLoadUserData error:', e); callback(null); });
     }
 
-    // Spread gruplarını Firebase'e kaydet
-    function fbSaveSpreadGroups() {
-      try{localStorage.setItem('tx_spreadgroups',JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]));} catch(e){}
-      if(!db) return;
-      try {
-        db.collection('broker').doc('spreadGroups').set({ data: JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]) })
-          .catch(function(e){ console.warn(e); });
-      } catch(e) {}
-    }
-
-    // Spread gruplarını yükle
-    function fbLoadSpreadGroups(callback) {
-      if(!db) { callback(null); return; }
-      db.collection('broker').doc('spreadGroups').get()
-        .then(function(doc){ callback(doc.exists ? JSON.parse(doc.data().data||'null') : null); })
-        .catch(function(){ callback(null); });
-    }
+    // (Spread/trading groups için ayrı Firebase wrapper'ı yok —
+    //  sgSave() ve sgLoadFromFirebase() doğrudan broker/spreadGroups'a yazar/okur.)
 
     
     // ── Standart tarih formatı: DD.MM.YYYY HH:MM ──
@@ -1956,7 +1941,7 @@ console.log('Firebase bağlandı ✓');
     <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view">👥 Hesaplar</button>
     <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view">📑 Raporlar</button>
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Spread Grupları</button>
+    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Trading Grupları</button>
     <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view">📈 Semboller</button>
     <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="feed.edit">💹 Kotasyon</button>
     <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
@@ -2163,7 +2148,7 @@ console.log('Firebase bağlandı ✓');
       <!-- Genel ayarlar -->
       <div class="ad-sect" style="margin-bottom:14px;padding:14px;">
         <div class="ad-sect-title" style="margin-bottom:10px;">GRUP AYARLARI</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
           <div>
             <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Call (%)</label>
             <input class="mgr-input" id="sg_mc" type="number" step="1" min="0" placeholder="80" style="width:100%;">
@@ -2183,12 +2168,57 @@ console.log('Firebase bağlandı ✓');
             </select>
           </div>
           <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Default Kaldıraç</label>
+            <select class="mgr-input" id="sg_defaultLev" style="width:100%;">
+              <option value="50">1:50</option>
+              <option value="100">1:100</option>
+              <option value="200">1:200</option>
+              <option value="500">1:500</option>
+              <option value="1000">1:1000</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Komisyon (lot/USD)</label>
+            <input class="mgr-input" id="sg_commission" type="number" step="any" min="0" placeholder="0" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Min. Yatırım (USD)</label>
+            <input class="mgr-input" id="sg_minDeposit" type="number" step="any" min="0" placeholder="0" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Modu</label>
+            <select class="mgr-input" id="sg_marginMode" style="width:100%;" title="Netting: aynı sembolde karşı emir netleşir (v2). Hedging: paralel pozisyonlar serbest.">
+              <option value="hedging">Hedging</option>
+              <option value="netting">Netting (v2)</option>
+            </select>
+          </div>
+          <div>
             <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Açıklama</label>
             <input class="mgr-input" id="sg_desc" placeholder="Grup açıklaması..." style="width:100%;">
           </div>
         </div>
         <div style="margin-top:10px;">
           <button class="mgr-btn success" onclick="sgSaveGeneral()" style="padding:6px 18px;">💾 Genel Ayarları Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Sembol İzinleri kartı (whitelist) -->
+      <div class="ad-sect" style="padding:14px;">
+        <div class="ad-sect-title" style="margin-bottom:6px;">SEMBOL İZİNLERİ</div>
+        <p style="font-family:var(--mono);font-size:10px;color:#b0b0b0;margin-bottom:10px;">
+          Hiçbiri işaretli değilse &rarr; <strong>tüm semboller serbest</strong> (varsayılan).
+          En az bir tanesi işaretliyse &rarr; yalnızca işaretliler trade edilebilir.
+        </p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="mgr-btn" onclick="sgWhitelistToggleAll(true)"  style="font-size:10px;padding:4px 10px;">Tümünü Seç</button>
+          <button class="mgr-btn" onclick="sgWhitelistToggleAll(false)" style="font-size:10px;padding:4px 10px;">Temizle</button>
+          <span id="sg_wl_count" style="font-size:10px;color:#a0a0a0;font-family:var(--mono);align-self:center;margin-left:auto;"></span>
+        </div>
+        <div id="sgWhitelistBox" style="max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px;padding:6px;border:1px solid #2a2a2a;border-radius:3px;background:rgba(255,255,255,0.02);">
+          <div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Grup seçin...</div>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="mgr-btn success" onclick="sgSaveWhitelist()" style="padding:6px 18px;">💾 Sembol İzinlerini Kaydet</button>
         </div>
       </div>
 
@@ -2447,7 +2477,7 @@ console.log('Firebase bağlandı ✓');
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--mono);font-size:10px;color:#a0a0a0;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;color:#aaa;">
-              <div>✅ Hesaplar</div><div>✅ Spread Grupları</div>
+              <div>✅ Hesaplar</div><div>✅ Trading Grupları</div>
               <div>✅ Semboller</div><div>✅ Ödeme Yöntemleri</div>
               <div>✅ Yatırım/Çekim</div><div>✅ Personel (staff)</div>
               <div>✅ Kullanıcı pozisyonları</div><div>✅ Ayarlar</div>
@@ -4439,7 +4469,7 @@ function toggleManager() {
     o.classList.add('open');
     renderSymMgr();
     renderAccCards();
-    if(!spreadGroups) loadSpreadGroups();
+    sgLoad();
     renderAccListSmall();
     renderAlarmMgr();
     renderPortMgr();
@@ -4755,8 +4785,18 @@ function createAccount() {
   var pass    = (document.getElementById('na_pass')||{}).value||'';
   var type    = (document.getElementById('na_type')||{}).value||'real';
   var balance = 0;
-  var lev     = parseInt((document.getElementById('na_lev')||{}).value)||100;
   var sg      = (document.getElementById('na_sg')||{}).value||'standard';
+  // Leverage input varsa parse et, boşsa grubun defaultLeverage'ını kullan
+  var _levRaw = (document.getElementById('na_lev')||{}).value;
+  var lev;
+  if(_levRaw && !isNaN(parseInt(_levRaw))) {
+    lev = parseInt(_levRaw);
+  } else {
+    lev = (typeof getDefaultLeverage === 'function') ? getDefaultLeverage(sg) : 100;
+  }
+  // Grubun maxLeverage'ını aşma — sessizce cap'le
+  var _maxLev = (typeof getMaxLeverage === 'function') ? getMaxLeverage(sg) : 100;
+  if(lev > _maxLev) lev = _maxLev;
   var msgEl   = document.getElementById('na_msg');
   if(!name||!email||!pass){
     if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Ad, e-posta ve sifre zorunlu</span>';
@@ -4846,7 +4886,7 @@ function adRenderTab(tab) {
         '<div>' +
           '<div class="ad-section-title">Ticaret Ayarları</div>' +
           '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-            adIR('Spread Grubu', '<span style="color:'+(sgCol[a.spreadGroup||'standard']||'#888')+'">'+(sgMap[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</span>') +
+            adIR('Trading Grubu', '<span style="color:'+(sgCol[a.spreadGroup||'standard']||'#888')+'">'+(sgMap[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</span>') +
             adIR('Kaldıraç', '1:'+(a.leverage||100)) +
             adIR('Marjin Seviyesi', '%'+(a.marginLevelPct||100)) +
             adIR('Para Birimi', a.currency||'USD') +
@@ -5028,7 +5068,7 @@ function adRenderTab(tab) {
         '<div>' +
           '<div class="ad-section-title">Grup & Kaldıraç & Marjin</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Spread Grubu</label>' +
+            '<div><label class="ad-label">Trading Grubu</label>' +
               '<select class="ad-input" id="ad_sg" style="cursor:pointer;">' +
                 '<option value="standard">Standard</option>' +
                 '<option value="ecn">ECN</option>' +
@@ -5095,6 +5135,15 @@ function adDeposit() {
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_dep_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
+
+  // minDeposit altında → sadece uyarı (admin override edebilir). Audit log zaten yazılıyor.
+  if(typeof getMinDeposit === 'function') {
+    var _min = getMinDeposit(a.spreadGroup||'standard');
+    if(_min > 0 && amt < _min) {
+      showToast('Uyarı', (a.spreadGroup||'standard')+' grubu min. $'+_min+' — yine de işleniyor');
+    }
+  }
+
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_dep_note')||{}).value || '';
   // Canonical okuma — mevcut balance users/{id}'den
@@ -5453,6 +5502,16 @@ function adSaveSettings() {
   var sg  = (document.getElementById('ad_sg')||{}).value||'standard';
   var lev = parseInt((document.getElementById('ad_lev')||{}).value)||100;
   var ml  = parseFloat((document.getElementById('ad_ml')||{}).value)||100;
+
+  // Trading group'un maxLeverage'ını aşma kontrolü
+  var _maxLev = (typeof getMaxLeverage === 'function') ? getMaxLeverage(sg) : 100;
+  if(lev > _maxLev) {
+    showToast('Uyarı', 'Kaldıraç, '+sg+' grubunun max değerine (1:'+_maxLev+') çekildi');
+    lev = _maxLev;
+    var lvEl = document.getElementById('ad_lev');
+    if(lvEl) lvEl.value = String(lev);
+  }
+
   a.spreadGroup=sg; a.leverage=lev; a.marginLevelPct=ml;
   saveAccounts(); renderAccTable();
   // Firebase'e de yaz
@@ -5510,12 +5569,40 @@ function adManualTrade() {
   var sl    = parseFloat((document.getElementById('ad_tsl')||{}).value)||null;
   var tp    = parseFloat((document.getElementById('ad_ttp')||{}).value)||null;
   if(!op){ showToast('Hata','Açılış fiyatı girin!'); return; }
+
+  // Whitelist — admin OVERRIDE edebilir (blok değil, confirm)
+  if(typeof canTradeSymbol === 'function' && !canTradeSymbol(a.spreadGroup||'standard', sym)) {
+    if(!confirm(sym+' bu hesabın grubunda ('+(a.spreadGroup||'standard')+') whitelist dışı.\n\nYine de açmak istiyor musunuz?\n(Audit log\'a düşecektir.)')) return;
+  }
+
+  // Commission — trader'dakiyle aynı mantık (lot başına × lot miktarı)
+  var _comm = 0;
+  if(typeof getCommission === 'function') {
+    _comm = getCommission(a.spreadGroup||'standard', lot);
+  }
+
   if(typeof positions==='undefined') window.positions=[];
   var sc=symConfig.find(function(s){ return s.sym===sym; })||{};
-  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,manual:true});
+  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,commission:_comm,manual:true});
+
+  // Commission hesabın balance'ından kesilir (MT5 pattern — açılışta)
+  if(_comm > 0 && typeof getAccBal === 'function') {
+    var _curBal = getAccBal(a.id);
+    var _newBal = _curBal - _comm;
+    if(typeof fbSaveUserData === 'function') {
+      fbSaveUserData(a.id, { balance: _newBal, _balanceSource: 'manager', updatedAt: new Date().toISOString() });
+    }
+    // Manager tarafı manuel işlem kaydı için audit
+    if(typeof adAudit === 'function') {
+      adAudit('position.manual_open', 'users/'+a.id,
+        {balance: _curBal},
+        {sym:sym, side:side, qty:lot, openPrice:op, commission:_comm, balance:_newBal});
+    }
+  }
+
   if(typeof save==='function') save();
   if(typeof renderPositions==='function') renderPositions();
-  showToast('İşlem Açıldı ✓',lot+' lot '+sym);
+  showToast('İşlem Açıldı ✓', lot+' lot '+sym+(_comm>0?' (komisyon: $'+_comm.toFixed(2)+')':''));
   document.getElementById('adMTF').style.display='none';
   adRenderTrades();
 }
@@ -6824,7 +6911,7 @@ renderPortfolio();
 renderAlarms();
 updateAccount();
   window._symConfig = symConfig;
-  loadSpreadGroups();
+  sgLoad();
   window._mainInitDone = true;
 
 accounts = JSON.parse(localStorage.getItem('tx_accounts') || '[]');
@@ -6965,16 +7052,31 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.startLiveFeed = startLiveFeed;
   window.openApiKeyModal = openApiKeyModal;
 
-  window.loadSpreadGroups   = loadSpreadGroups;
-  window.saveSpreadGroups   = saveSpreadGroups;
-  window.renderSpreadGroups = renderSpreadGroups;
+  // Trading Groups (eski adıyla spreadGroups) — A sistemi
+  window.sgLoad             = sgLoad;
+  window.sgSave             = sgSave;
+  window.sgRender           = sgRender;
   window.selectSgTab        = selectSgTab;
   window.sgSubTab           = sgSubTab;
   window.saveSgGeneral      = saveSgGeneral;
   window.saveSgSpreads      = saveSgSpreads;
-  window.addSpreadGroup     = addSpreadGroup;
-  window.deleteSpreadGroup  = deleteSpreadGroup;
-  window.refreshSgSelects   = refreshSgSelects;
+  window.sgAddGroup         = sgAddGroup;
+  window.sgDeleteGroup      = sgDeleteGroup;
+  window.sgRefreshSelects   = sgRefreshSelects;
+  window.sgSaveGeneral      = sgSaveGeneral;
+  window.sgSaveSpreads      = sgSaveSpreads;
+  window.sgSaveWhitelist    = sgSaveWhitelist;
+  window.sgWhitelistToggleAll = sgWhitelistToggleAll;
+  window.addSpreadGroup     = addSpreadGroup;   // wrapper → sgAddGroup
+  window.deleteSpreadGroup  = deleteSpreadGroup; // wrapper → sgDeleteGroup
+  // Trading Groups Public API
+  window.getTradingGroup    = getTradingGroup;
+  window.getMaxLeverage     = getMaxLeverage;
+  window.getDefaultLeverage = getDefaultLeverage;
+  window.getCommission      = getCommission;
+  window.getMinDeposit      = getMinDeposit;
+  window.getMarginMode      = getMarginMode;
+  window.canTradeSymbol     = canTradeSymbol;
 
   window.toggleUserDropdown = toggleUserDropdown;
   window.closeUserDropdown = closeUserDropdown;
@@ -7252,20 +7354,106 @@ function submitPwChange() {
 // ═══════════════════════════════════════
 // SPREAD GRUPLARI
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// TRADING GROUPS (eski ad: spreadGroups)
+// Şema (2026-04-18 itibarıyla):
+//   id, name, spreads, swaps,
+//   marginCall, stopOut,
+//   maxLeverage    — kaldıraç tavanı (hesap bu kadarını aşamaz)
+//   defaultLeverage — yeni hesap default kaldıraç
+//   symbolWhitelist — string[]; boş array = tüm semboller serbest
+//   commissionPerLot — lot başına USD (pozisyon açılışında balance'tan kesilir)
+//   minDeposit     — USD; trader deposit request form alt sınırı
+//   marginMode     — 'hedging' | 'netting' (v1'de sadece bilgi amaçlı; enforcement v2)
+//   desc, deletable
+//
+// Firestore dokümanı: broker/spreadGroups (koleksiyon adı DEĞİŞMEDİ — backward-compatible
+// JSON string alanına yeni property'ler eklendi). Eski veriler sgNormalize() ile otomatik upgrade olur.
+// ═══════════════════════════════════════
 var spreadGroups = [
-  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:100, desc:'', deletable:false},
-  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:200, desc:'', deletable:false},
-  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:500, desc:'', deletable:false},
-  {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false}
+  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
+  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
+  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
+  {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
 ];
 var _activeSgId = 'standard';
 
+// Tek bir grubun eksik alanlarını doldurur — geri uyumluluk katmanı.
+// Eski dokümanlarda maxLev vardı; yeni kodda maxLeverage. Her ikisini de destekle.
+function sgNormalizeGroup(g) {
+  if(!g || typeof g !== 'object') return g;
+  if(!g.spreads) g.spreads = {};
+  if(!g.swaps)   g.swaps   = {};
+  // maxLev → maxLeverage migration (eski alanı koru)
+  if(g.maxLeverage == null) g.maxLeverage = (g.maxLev != null ? g.maxLev : 100);
+  if(g.defaultLeverage == null) g.defaultLeverage = Math.min(100, g.maxLeverage || 100);
+  if(!Array.isArray(g.symbolWhitelist)) g.symbolWhitelist = [];
+  if(g.commissionPerLot == null) g.commissionPerLot = 0;
+  if(g.minDeposit == null) g.minDeposit = 0;
+  if(!g.marginMode) g.marginMode = 'hedging';
+  if(g.desc == null) g.desc = '';
+  // maxLev'i de güncel tut (eski kod hâlâ okuyor olabilir)
+  g.maxLev = g.maxLeverage;
+  return g;
+}
+function sgNormalizeAll(groups) {
+  if(!Array.isArray(groups)) return groups;
+  for(var i=0; i<groups.length; i++) sgNormalizeGroup(groups[i]);
+  return groups;
+}
+
+// ─── Trading Groups Public API ───
+// Tek giriş noktası — tüm sistem bunları kullanmalı.
+// groupId eksik/geçersizse 'standard' fallback'ine düşer. null dönmez, her zaman bir grup döner.
+function getTradingGroup(groupId) {
+  if(!spreadGroups || !spreadGroups.length) sgLoad();
+  var g = spreadGroups.find(function(x){ return x.id === groupId; });
+  if(!g) g = spreadGroups.find(function(x){ return x.id === 'standard'; });
+  if(!g) g = spreadGroups[0];
+  return sgNormalizeGroup(g); // çağrı anında defensive normalize
+}
+function getMaxLeverage(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.maxLeverage || 100) : 100;
+}
+function getDefaultLeverage(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.defaultLeverage || g.maxLeverage || 100) : 100;
+}
+// Lot başına commission × lot miktarı. qty "lot" cinsindense direkt çarpılır.
+// NOT: TradeX'te qty bazen lot, bazen kontrat miktarı olarak kullanılıyor —
+// çağıran taraf lot'a çevirmekten sorumlu.
+function getCommission(groupId, lots) {
+  var g = getTradingGroup(groupId);
+  var per = g ? (g.commissionPerLot || 0) : 0;
+  var q = parseFloat(lots) || 0;
+  return per * q;
+}
+function getMinDeposit(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.minDeposit || 0) : 0;
+}
+function getMarginMode(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.marginMode || 'hedging') : 'hedging';
+}
+// Boş whitelist = tüm semboller serbest (MT5 pattern'i).
+// Dolu whitelist = SADECE listedeki semboller serbest.
+function canTradeSymbol(groupId, sym) {
+  if(!sym) return false;
+  var g = getTradingGroup(groupId);
+  if(!g) return true; // defensive — grup bulunamazsa engelleme
+  var wl = g.symbolWhitelist;
+  if(!Array.isArray(wl) || wl.length === 0) return true;
+  return wl.indexOf(sym) !== -1;
+}
+
 function sgLoad() {
   var defaults = [
-    {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false},
-    {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:200, desc:'', deletable:false},
-    {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLev:500, desc:'', deletable:false},
-    {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false}
+    {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
+    {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
+    {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
+    {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
   ];
   // Her zaman defaults ile başla, sonra localStorage'ı merge et
   if(!spreadGroups || !Array.isArray(spreadGroups) || !spreadGroups.length) {
@@ -7277,11 +7465,7 @@ function sgLoad() {
       spreadGroups = saved;
     }
   } catch(e) {}
-  // Eksik alanları tamamla
-  for(var i=0; i<spreadGroups.length; i++) {
-    if(!spreadGroups[i].spreads) spreadGroups[i].spreads = {};
-    if(!spreadGroups[i].swaps)   spreadGroups[i].swaps   = {};
-  }
+  sgNormalizeAll(spreadGroups);
   // _activeSgId geçerli mi?
   var found = false;
   for(var j=0; j<spreadGroups.length; j++) {
@@ -7301,11 +7485,7 @@ function sgLoadFromFirebase(callback) {
       try {
         var fbSg = JSON.parse(doc.data().data);
         if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-          spreadGroups = fbSg;
-          for(var i=0; i<spreadGroups.length; i++) {
-            if(!spreadGroups[i].spreads) spreadGroups[i].spreads = {};
-            if(!spreadGroups[i].swaps)   spreadGroups[i].swaps   = {};
-          }
+          spreadGroups = sgNormalizeAll(fbSg);
           localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
         }
       } catch(e){}
@@ -7315,7 +7495,7 @@ function sgLoadFromFirebase(callback) {
 }
 
 function sgSave() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
   window._sgLastSave = Date.now();
   try { localStorage.setItem('tx_sg', JSON.stringify(spreadGroups)); } catch(e){}
   if(typeof db !== 'undefined' && db) {
@@ -7356,10 +7536,46 @@ function sgRenderInner() {
   var del = document.getElementById('sgDeleteBtn');
   if(del) del.style.display = g.deletable ? 'inline-block' : 'none';
 
+  // defensive normalize — direkt g'ye yazacağız
+  sgNormalizeGroup(g);
+
   var mc = document.getElementById('sg_mc');    if(mc) mc.value = g.marginCall||100;
   var so = document.getElementById('sg_so');    if(so) so.value = g.stopOut||20;
-  var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLev||100);
+  var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLeverage||100);
+  var dl = document.getElementById('sg_defaultLev'); if(dl) dl.value = String(g.defaultLeverage || g.maxLeverage || 100);
+  var cm = document.getElementById('sg_commission'); if(cm) cm.value = g.commissionPerLot || 0;
+  var md = document.getElementById('sg_minDeposit'); if(md) md.value = g.minDeposit || 0;
+  var mm = document.getElementById('sg_marginMode'); if(mm) mm.value = g.marginMode || 'hedging';
   var dc = document.getElementById('sg_desc');  if(dc) dc.value = g.desc||'';
+
+  // --- WHITELIST KUTUSU ---
+  var wlBox = document.getElementById('sgWhitelistBox');
+  var wlCnt = document.getElementById('sg_wl_count');
+  if(wlBox) {
+    var _wlSyms = window._symConfig || [];
+    if(!_wlSyms.length) { try { _wlSyms = JSON.parse(localStorage.getItem('tx_syms')||'[]'); } catch(e){ _wlSyms=[]; } }
+    if(!_wlSyms.length && typeof symConfig !== 'undefined' && symConfig) { _wlSyms = symConfig; }
+    var _activeOnly = _wlSyms.filter(function(s){ return s.active; });
+    var _wl = Array.isArray(g.symbolWhitelist) ? g.symbolWhitelist : [];
+    if(!_activeOnly.length) {
+      wlBox.innerHTML = '<div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Aktif sembol yok</div>';
+    } else {
+      var wlHtml = '';
+      for(var wi=0; wi<_activeOnly.length; wi++) {
+        var _ws = _activeOnly[wi];
+        var _chk = _wl.indexOf(_ws.sym) !== -1 ? ' checked' : '';
+        wlHtml += '<label style="display:flex;align-items:center;gap:6px;padding:3px 6px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:2px;" onmouseover="this.style.background=\'rgba(240,185,11,0.08)\'" onmouseout="this.style.background=\'\'">'
+               +   '<input type="checkbox" id="sgwl_'+_ws.sym+'" data-sym="'+_ws.sym+'"'+_chk+' style="cursor:pointer;">'
+               +   '<span>'+_ws.sym+'</span>'
+               + '</label>';
+      }
+      wlBox.innerHTML = wlHtml;
+    }
+    if(wlCnt) {
+      if(_wl.length === 0) wlCnt.textContent = 'Tümü serbest';
+      else wlCnt.textContent = _wl.length + ' / ' + _activeOnly.length + ' izinli';
+    }
+  }
 
   var tb = document.getElementById('sgSymBody');
   if(!tb) return;
@@ -7399,17 +7615,81 @@ function sgRenderInner() {
 
 
 function sgSaveGeneral() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
   var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+
+  // Eski hâli audit için kaydet
+  var _before = {
+    marginCall: g.marginCall, stopOut: g.stopOut,
+    maxLeverage: g.maxLeverage, defaultLeverage: g.defaultLeverage,
+    commissionPerLot: g.commissionPerLot, minDeposit: g.minDeposit,
+    marginMode: g.marginMode, desc: g.desc
+  };
+
   var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||100;
   var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||20;
-  var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLev     = parseInt(ml.value)||100;
+  var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLeverage = parseInt(ml.value)||100;
+  var dl = document.getElementById('sg_defaultLev'); if(dl) g.defaultLeverage = parseInt(dl.value)||100;
+  var cm = document.getElementById('sg_commission'); if(cm) g.commissionPerLot = Math.max(0, parseFloat(cm.value)||0);
+  var md = document.getElementById('sg_minDeposit'); if(md) g.minDeposit = Math.max(0, parseFloat(md.value)||0);
+  var mm = document.getElementById('sg_marginMode'); if(mm) g.marginMode = (mm.value === 'netting' ? 'netting' : 'hedging');
   var dc = document.getElementById('sg_desc');  if(dc)  g.desc       = dc.value||'';
-  sgSave(); sgRenderInner(); showToast('Kaydedildi ✓', g.name);
+
+  // Validation: defaultLeverage <= maxLeverage
+  if(g.defaultLeverage > g.maxLeverage) {
+    g.defaultLeverage = g.maxLeverage;
+    if(dl) dl.value = String(g.maxLeverage);
+    showToast('Düzeltildi', 'Default kaldıraç Max değerine çekildi');
+  }
+  // maxLev alanını eski kod hâlâ okuyor olabilir — güncel tut
+  g.maxLev = g.maxLeverage;
+
+  sgSave(); sgRenderInner(); sgRefreshSelects();
+  adAudit('tradingGroup.update', 'tradingGroups/'+g.id, _before, {
+    marginCall: g.marginCall, stopOut: g.stopOut,
+    maxLeverage: g.maxLeverage, defaultLeverage: g.defaultLeverage,
+    commissionPerLot: g.commissionPerLot, minDeposit: g.minDeposit,
+    marginMode: g.marginMode, desc: g.desc
+  });
+  showToast('Kaydedildi ✓', g.name);
+}
+
+// Whitelist kutusundaki tüm checkbox'ları işaretle/temizle
+function sgWhitelistToggleAll(checked) {
+  var box = document.getElementById('sgWhitelistBox');
+  if(!box) return;
+  var boxes = box.querySelectorAll('input[type=checkbox][data-sym]');
+  for(var i=0; i<boxes.length; i++) boxes[i].checked = !!checked;
+  var cnt = document.getElementById('sg_wl_count');
+  if(cnt) cnt.textContent = checked ? (boxes.length + ' / ' + boxes.length + ' izinli') : 'Tümü serbest';
+}
+
+function sgSaveWhitelist() {
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
+  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var box = document.getElementById('sgWhitelistBox');
+  if(!box) return;
+  var _before = (g.symbolWhitelist||[]).slice();
+  var selected = [];
+  var boxes = box.querySelectorAll('input[type=checkbox][data-sym]');
+  for(var i=0; i<boxes.length; i++) {
+    if(boxes[i].checked) selected.push(boxes[i].getAttribute('data-sym'));
+  }
+  g.symbolWhitelist = selected;
+  sgSave();
+  adAudit('tradingGroup.whitelist.update', 'tradingGroups/'+g.id,
+    {symbolWhitelist: _before},
+    {symbolWhitelist: selected});
+  var cnt = document.getElementById('sg_wl_count');
+  if(cnt) {
+    if(selected.length === 0) cnt.textContent = 'Tümü serbest';
+    else cnt.textContent = selected.length + ' izinli';
+  }
+  showToast('Kaydedildi ✓', g.name + ' — ' + (selected.length === 0 ? 'Tümü serbest' : selected.length + ' sembol'));
 }
 
 function sgSaveSpreads() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
   var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var n=0;
   symConfig.filter(function(s){ return s.active; }).forEach(function(s){
@@ -7427,10 +7707,20 @@ function sgAddGroup() {
   var name = el.value.trim(); if(!name){ showToast('Hata','Grup adı girin!'); return; }
   var id = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
   if(spreadGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
-  spreadGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
+  var _newGroup = sgNormalizeGroup({
+    id:id, name:name,
+    spreads:{}, swaps:{},
+    marginCall:80, stopOut:50,
+    maxLeverage:100, defaultLeverage:100,
+    symbolWhitelist:[],
+    commissionPerLot:0, minDeposit:0,
+    marginMode:'hedging',
+    desc:'', deletable:true
+  });
+  spreadGroups.push(_newGroup);
   _activeSgId=id; el.value='';
   sgSave(); sgRender(); sgRefreshSelects();
-  adAudit('spreadGroup.add', 'spreadGroups/'+id, null, {id:id, name:name});
+  adAudit('tradingGroup.create', 'tradingGroups/'+id, null, {id:id, name:name});
   showToast('Grup Eklendi ✓',name);
 }
 
@@ -7442,7 +7732,7 @@ function sgDeleteGroup() {
   spreadGroups = spreadGroups.filter(function(x){ return x.id!==_activeSgId; });
   _activeSgId = spreadGroups[0].id;
   sgSave(); sgRender(); sgRefreshSelects();
-  adAudit('spreadGroup.delete', 'spreadGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
+  adAudit('tradingGroup.delete', 'tradingGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
   showToast('Silindi',g.name);
 }
 
@@ -7473,112 +7763,6 @@ function addSpreadGroup() { sgAddGroup(); }
 function deleteSpreadGroup() { sgDeleteGroup(); }
 function selectSgTab(id) { _activeSgId=id; sgRender(); }
 function sgSubTab() {}
-
-// ═══════════════════════════════════════
-var spreadGroups = null;
-
-function loadSpreadGroups() {
-  try { spreadGroups = JSON.parse(localStorage.getItem('tx_spread_groups') || 'null'); } catch(e) { spreadGroups = null; }
-  if(!spreadGroups) {
-    // localStorage boş - Firebase'den yükle
-    if(typeof fbLoadSpreadGroups === 'function') {
-      fbLoadSpreadGroups(function(data) {
-        if(data && data.length) {
-          spreadGroups = data;
-          // marginCall/stopOut eksikse varsayılan ekle
-          spreadGroups.forEach(function(g) {
-            if(!g.marginCall) g.marginCall = 100;
-            if(!g.stopOut && g.stopOut !== 0) g.stopOut = 20;
-            if(!g.spreads) g.spreads = {};
-            if(!g.swaps) g.swaps = {};
-          });
-        } else {
-          spreadGroups = [
-            {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-            {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
-            {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
-            {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-          ];
-        }
-        localStorage.setItem('tx_spread_groups', JSON.stringify(spreadGroups));
-        if(typeof sgLoad==='function') sgLoad();
-      });
-      return;
-    }
-    spreadGroups = [
-      {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-      {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
-      {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
-      {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-    ];
-    saveSpreadGroups();
-  } else {
-    // localStorage'dan geldi - marginCall/stopOut eksikse ekle
-    var changed = false;
-    spreadGroups.forEach(function(g) {
-      if(!g.marginCall) { g.marginCall = 100; changed = true; }
-      if(!g.stopOut && g.stopOut !== 0) { g.stopOut = 20; changed = true; }
-      if(!g.spreads) { g.spreads = {}; changed = true; }
-      if(!g.swaps) { g.swaps = {}; changed = true; }
-    });
-    if(changed) saveSpreadGroups();
-  }
-}
-
-function saveSpreadGroups() {
-  localStorage.setItem('tx_spread_groups', JSON.stringify(spreadGroups)); fbSaveSpreadGroups();
-}
-
-function getSpreadGroupById(id) {
-  if(!spreadGroups) loadSpreadGroups();
-  return spreadGroups.find(function(g){ return g.id===id; }) || spreadGroups[0];
-}
-
-function calcEffectiveSpread(baseSpread, groupId) {
-  var g = getSpreadGroupById(groupId);
-  return Math.max(0, baseSpread * g.mult + g.fixed);
-}
-
-function renderSpreadGroups() {
-  if(!spreadGroups) loadSpreadGroups();
-  var tb = document.getElementById('sgTableBody');
-  if(!tb) return;
-  if(!spreadGroups.length) {
-    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px;font-family:var(--mono);">Grup yok</td></tr>';
-    return;
-  }
-  tb.innerHTML = spreadGroups.map(function(g, i) {
-    var isDefault = ['standard','ecn','vip','zero'].includes(g.id);
-    return '<tr>' +
-      '<td style="font-family:var(--mono);font-weight:700;color:var(--accent);">'+g.name+'</td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+g.mult+'" onchange="updateSG('+i+',\'mult\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:100px;padding:3px 6px;" type="number" step="any" value="'+g.fixed+'" onchange="updateSG('+i+',\'fixed\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:180px;padding:3px 6px;" value="'+(g.desc||'')+'" onchange="updateSG('+i+',\'desc\',this.value)"></td>' +
-      '<td>'+(!isDefault ? '<button class="mgr-btn danger" onclick="deleteSpreadGroup(\''+g.id+'\')" style="padding:2px 8px;font-size:10px;">✕</button>' : '<span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Varsayılan</span>')+'</td>' +
-    '</tr>';
-  }).join('');
-
-  // Hesap detay modalındaki tüm spread grubu selectlerini güncelle
-  refreshSgSelects();
-}
-
-function updateSG(i, field, val) {
-  if(!spreadGroups[i]) return;
-  spreadGroups[i][field] = val;
-  saveSpreadGroups();
-  showToast('Güncellendi', spreadGroups[i].name);
-}
-
-function refreshSgSelects() {
-  var selects = document.querySelectorAll('#ad_sg, #na_spreadGroup');
-  selects.forEach(function(sel){
-    var current = sel.value;
-    sel.innerHTML = spreadGroups.map(function(g){
-      return '<option value="'+g.id+'">'+ g.name +'</option>';
-    }).join('');
-    sel.value = current || 'standard';
-  });
-}
 
 
 // ═══════════════════════════════════════
@@ -7838,8 +8022,8 @@ function adFeedSaveSym(sym) {
       g.spreads[sym] = sp;
       g.swaps[sym]   = {buy: sb, sell: ss};
     });
-    // Firebase'e kaydet
-    if(typeof fbSaveSpreadGroups === 'function') fbSaveSpreadGroups();
+    // Firebase'e kaydet (A sisteminin API'si)
+    if(typeof sgSave === 'function') sgSave();
     else if(typeof db !== 'undefined' && db) {
       db.collection('broker').doc('spreadGroups').set(
         {data: JSON.stringify(spreadGroups)}, {merge:true}
@@ -8232,8 +8416,8 @@ var PERM_DEFS = [
   {group:'Semboller & Spread', perms:[
     {key:'symbols.view',     label:'Sembolleri Görüntüle'},
     {key:'symbols.edit',     label:'Sembol Düzenle'},
-    {key:'spreadgroups.view',label:'Spread Grupları Görüntüle'},
-    {key:'spreadgroups.edit',label:'Spread Grubu Düzenle'},
+    {key:'spreadgroups.view',label:'Trading Grupları Görüntüle'},
+    {key:'spreadgroups.edit',label:'Trading Grubu Düzenle'},
   ]},
   {group:'Sistem', perms:[
     {key:'feed.view',        label:'Feed Görüntüle'},
@@ -8669,7 +8853,12 @@ function alRender() {
     'request.withdraw.approve':'#26a69a','request.withdraw.reject':'#ef5350',
     'position.close.manual':'#2979ff','position.close.stopout':'#ef5350',
     'price.override.set':'#f5c518','price.override.reset':'#888',
-    'spreadGroup.add':'#26a69a','spreadGroup.delete':'#ef5350'
+    // Eski spreadGroup.* action'ları için backward-compat (Cloud Function ve eski audit kayıtları hâlâ bu adlarla yazmış olabilir)
+    'spreadGroup.add':'#26a69a','spreadGroup.delete':'#ef5350',
+    // Trading Groups (yeni action ad setleri)
+    'tradingGroup.create':'#26a69a','tradingGroup.delete':'#ef5350',
+    'tradingGroup.update':'#f5c518','tradingGroup.whitelist.update':'#f5c518',
+    'position.manual_open':'#2979ff'
   };
   body.innerHTML = list.map(function(e){
     var ts = e.ts ? (typeof fmtDate==='function' ? fmtDate(e.ts) : new Date(e.ts).toLocaleString('tr-TR')) : '—';
@@ -8851,8 +9040,8 @@ function loadInitialData(){
   fbLoadAccounts(function(accs){
     accounts = accs || [];
     try{ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }catch(e){}
-    fbLoadSpreadGroups(function(sgs){
-      spreadGroups = sgs || [];
+    // Trading groups'u A sisteminin API'si ile yükle (defaults + normalize dahil)
+    sgLoadFromFirebase(function(){
       // Tüm hesapların pozisyonlarını yükle, equity'yi hesapla
       _loadAllEquities(function(){
         renderAccTable();
@@ -9228,7 +9417,7 @@ function finWithdraw(){
 
 function exportAccounts(){
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
-  var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Spread Grubu','Kayıt']];
+  var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Trading Grubu','Kayıt']];
   list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),(a.type||'real'),getAccBal(a.id),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join(String.fromCharCode(10));
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
