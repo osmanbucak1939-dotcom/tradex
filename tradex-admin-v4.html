@@ -4361,9 +4361,54 @@ function adStartTwelvedataFeed() {
 
 function adStartRealFeed() {
   _adFeedOn = true;
-  adStartTwelvedataFeed();
-  adListenOverrides();
-  if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  // Önce Firebase'deki son bilinen fiyatları yükle — forex kapalıyken fallback için.
+  // Bu sayede AD_SIM sabit simülasyon değerlerine (EURUSD=1.085 gibi) düşmek yerine
+  // son gerçek cuma kapanış fiyatı kullanılır.
+  adLoadLastKnownPrices(function(){
+    adStartTwelvedataFeed();
+    adListenOverrides();
+    if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  });
+}
+
+// Admin açıldığında broker/prices'tan son fiyatları bir kerelik yükle → _FX.prices doldur.
+// Forex feed kapalıyken adGetPrice() AD_SIM yerine bu değerleri kullanacak.
+function adLoadLastKnownPrices(cb) {
+  if(typeof db==='undefined' || !db) { if(cb) cb(); return; }
+  db.collection('broker').doc('prices').get().then(function(doc){
+    if(!doc.exists) { if(cb) cb(); return; }
+    var data = doc.data() || {};
+    var loaded = 0;
+    Object.keys(data).forEach(function(sym){
+      if(sym.charAt(0) === '_') return; // _ts gibi meta alanlar
+      var val = data[sym];
+      var price = 0;
+      if(typeof val === 'number') price = val;
+      else if(val && typeof val === 'object') price = parseFloat(val.price || val.mid || val.bid || 0);
+      else if(val) price = parseFloat(val);
+      if(price > 0 && !_FX.prices[sym]) {
+        // _FX.prices'a seed olarak yaz — ts eski olduğu için feed açıldığında üzerine yazılır
+        var spread = (typeof _adGetSpread==='function') ? (_adGetSpread(sym)||0) : 0;
+        var half = spread/2;
+        _FX.prices[sym] = {
+          mid: price, price: price,
+          bid: price - half, ask: price + half,
+          spread: spread, chg: 0, prev: price,
+          ts: doc.data()._ts || 0, // eski ts — feed geldiğinde üzerine yazılır
+          _seed: true // Firebase'den seed edildi işareti
+        };
+        // prices global ile senkron tut
+        if(typeof prices !== 'undefined') prices[sym] = _FX.prices[sym];
+        if(typeof _adPrices !== 'undefined') _adPrices[sym] = price;
+        loaded++;
+      }
+    });
+    console.log('[adLoadLastKnownPrices] Firebase broker/prices\'tan '+loaded+' sembol seed edildi');
+    if(cb) cb();
+  }).catch(function(e){
+    console.warn('[adLoadLastKnownPrices]', e.message);
+    if(cb) cb();
+  });
 }
 
 function adListenOverrides() {
