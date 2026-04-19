@@ -4586,50 +4586,104 @@ function updateAccount() {
   var _sbBonusEl = document.getElementById('sbBonus');
   if(_sbBonusEl) _sbBonusEl.closest('div') && (_sbBonusEl.closest('div').style.display = _bonus > 0 ? 'flex' : 'none');
 
-  // ── STOP OUT & EQUITy KONTROLÜ ──
-  if(positions.length === 0) return;
+  // ── STOP OUT KONTROLÜ (merkezi fonksiyona delege) ──
+  _checkStopOut(equity, marginUsed, marginLvl);
+}
+
+// Stop out kontrolünü updateAccount'tan ayırdık — hem oradan hem bağımsız interval'dan çağrılır.
+// Böylece fiyat tick'i gelmese / sekme arka planda olsa bile düzenli kontrol edilir.
+function _checkStopOut(equity, marginUsed, marginLvl) {
+  if(!Array.isArray(positions) || positions.length === 0) return;
 
   // Aktif hesabın stop out seviyesini al (_cu'dan spreadGroup)
   var stopOutLevel = 50;
-  var marginCallLevel = 80;
   try {
-    if(typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
+    if(typeof getTradingGroup === 'function' && _cu) {
+      var _g = getTradingGroup(_cu.spreadGroup || 'standard');
+      if(_g) stopOutLevel = parseFloat(_g.stopOut) || 50;
+    } else if(typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
       var _sgId = (_cu && _cu.spreadGroup) ? _cu.spreadGroup : 'standard';
       var _sg = spreadGroups.find(function(g){ return g.id === _sgId; });
-      if(_sg) { stopOutLevel = parseFloat(_sg.stopOut)||50; marginCallLevel = parseFloat(_sg.marginCall)||80; }
+      if(_sg) stopOutLevel = parseFloat(_sg.stopOut) || 50;
     }
   } catch(e) {}
 
-  // Equity sıfırın altına düştü veya stop out seviyesine geldi
+  // Tetikleme koşulları
   var triggerStopOut = false;
-  if(equity <= 0) triggerStopOut = true;
-  if(marginLvl !== null && marginLvl <= stopOutLevel) triggerStopOut = true;
+  if(typeof equity === 'number' && equity <= 0) triggerStopOut = true;
+  if(marginLvl !== null && typeof marginLvl === 'number' && !isNaN(marginLvl) && marginLvl <= stopOutLevel) triggerStopOut = true;
 
-  if(triggerStopOut && positions.length > 0) {
-    // Race condition koruması: zaten bir stop-out işlemi varsa atla
-    if(window._stopOutBusy) return;
-    window._stopOutBusy = true;
-    var sortedPos = positions.slice().sort(function(a, b) {
-      var pa = prices[a.sym] ? prices[a.sym].price : a.openPrice;
-      var pb = prices[b.sym] ? prices[b.sym].price : b.openPrice;
-      var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty * (a.contractSize||1);
-      var plB = (b.side==='buy' ? pb-b.openPrice : b.openPrice-pb) * b.qty * (b.contractSize||1);
-      return plA - plB; // en negatif (en büyük zarar) önce
-    });
-    var toClose = sortedPos[0];
-    // _cu trader login bilgisi - localStorage'dan da kontrol et
-    var _soAccName = '';
-    var _cuData = (typeof _cu!=='undefined'&&_cu) ? _cu : null;
-    if(!_cuData) { try{ _cuData=JSON.parse(localStorage.getItem('tx_current_user')||'null'); }catch(e){} }
-    if(_cuData) {
-      _soAccName = '#'+((_cuData.login||_cuData.id)||'?')+' '+(_cuData.name||'');
+  if(!triggerStopOut) return;
+
+  // Race condition koruması — exception-safe kilit
+  if(window._stopOutBusy) {
+    // 5sn'den uzun takılıysa zorla serbest bırak
+    if(window._stopOutLockAt && (Date.now() - window._stopOutLockAt) > 5000) {
+      console.warn('[stop-out] kilit 5sn+ takılıydı, zorla serbest bırakılıyor');
+      window._stopOutBusy = false;
+      window._stopOutLockAt = 0;
+    } else {
+      return;
     }
-    showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
-    setTimeout(function(){
-      closePosition(toClose.id, 'stop_out');
-      window._stopOutBusy = false; // bir sonraki tick'te tekrar kontrol edilebilir
-    }, 300);
   }
+  window._stopOutBusy = true;
+  window._stopOutLockAt = Date.now();
+
+  // En büyük zarardaki pozisyondan başla
+  var sortedPos = positions.slice().sort(function(a, b) {
+    var pa = prices[a.sym] ? prices[a.sym].price : a.openPrice;
+    var pb = prices[b.sym] ? prices[b.sym].price : b.openPrice;
+    var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty * (a.contractSize||1);
+    var plB = (b.side==='buy' ? pb-b.openPrice : b.openPrice-pb) * b.qty * (b.contractSize||1);
+    return plA - plB;
+  });
+  var toClose = sortedPos[0];
+  console.log('[stop-out] tetiklendi eq='+(typeof equity==='number'?equity.toFixed(2):'?')+
+              ' ml='+(marginLvl?marginLvl.toFixed(1):'null')+
+              ' soLvl='+stopOutLevel+
+              ' pos='+positions.length+' kapatılıyor: #'+toClose.id+' '+toClose.sym);
+
+  var _cuData = (typeof _cu!=='undefined'&&_cu) ? _cu : null;
+  if(!_cuData) { try{ _cuData=JSON.parse(localStorage.getItem('tx_current_user')||'null'); }catch(e){} }
+  var _soAccName = _cuData ? '#'+((_cuData.login||_cuData.id)||'?')+' '+(_cuData.name||'') : '';
+  showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
+
+  // Kilit garantili serbest bırakma
+  var _releaseLock = function(){
+    window._stopOutBusy = false;
+    window._stopOutLockAt = 0;
+  };
+  var _safetyTimer = setTimeout(_releaseLock, 2000); // fallback
+
+  setTimeout(function(){
+    try {
+      closePosition(toClose.id, 'stop_out');
+    } catch(err) {
+      console.error('[stop-out] closePosition hatası:', err);
+    } finally {
+      clearTimeout(_safetyTimer);
+      _releaseLock();
+    }
+  }, 300);
+}
+
+// ── BAĞIMSIZ STOP OUT INTERVAL ──
+// Fiyat tick'i gelmese veya sekme arka planda olsa bile 3sn'de bir kontrol.
+// Bu, senin karşılaştığın "equity negatif, stop out durdu" senaryosuna karşı savunma.
+if(!window._stopOutInterval) {
+  window._stopOutInterval = setInterval(function(){
+    try {
+      if(window._readOnly) return; // izleyici modunda kapatma yok
+      if(!Array.isArray(positions) || positions.length === 0) return;
+      if(typeof txCalcStats !== 'function') return;
+      var _acc = _cu || {balance:(typeof balance!=='undefined'?balance:0), bonus:0, leverage:100};
+      if(typeof balance !== 'undefined') _acc.balance = balance;
+      var _st = txCalcStats(_acc, positions);
+      _checkStopOut(_st.equity, _st.margin, _st.marginLvl);
+    } catch(e) {
+      console.warn('[stop-out] interval hatası:', e);
+    }
+  }, 3000);
 }
 
 function toggleAlarmForm() {
