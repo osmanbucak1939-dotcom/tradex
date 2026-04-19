@@ -3377,99 +3377,8 @@ function setOrdType(type, btn) {
   var _st_limitPriceRow=document.getElementById('limitPriceRow'); if(_st_limitPriceRow) _st_limitPriceRow.style.display = (type==='limit'||type==='stop') ? 'flex' : 'none';
 }
 
-function placeOrder(side) {
-  var _qtyEl = document.getElementById('ordQty');
-  if(_qtyEl && (!_qtyEl.value || parseFloat(_qtyEl.value)<=0)) _qtyEl.value='0.01';
-  const qty = parseFloat(_qtyEl ? _qtyEl.value : '0.01') || 0.01;
-  const p = prices[curSym];
-  if (!p) { showToast('Hata', 'Fiyat verisi yok!'); return; }
-
-  let execPrice = p.price;
-  if (ordType === 'limit' || ordType === 'stop') {
-    const lp = parseFloat(document.getElementById('limitPrice').value);
-    if (!lp || lp <= 0) { showToast('Hata', 'Limit fiyat girin!'); return; }
-    execPrice = lp;
-  }
-
-  const sl = parseFloat(document.getElementById('ordSL').value) || null;
-  const tp = parseFloat(document.getElementById('ordTP').value) || null;
-  const cost = execPrice * qty;
-
-  // Hedge margin: aynı sembolde karşı pozisyon varsa net teminat hesapla
-  var hedgeQty = 0;
-  for(var _hi=0; _hi<positions.length; _hi++) {
-    var _hp = positions[_hi];
-    if(_hp.sym === curSym && _hp.side !== side) {
-      hedgeQty += _hp.qty;
-    }
-  }
-  var netQty = Math.max(0, qty - hedgeQty); // karşı tarafla netleşince kalan
-  var netCost = execPrice * netQty;          // sadece net kısım için teminat
-
-  if (netCost > balance) { showToast('Yetersiz Bakiye', 'Gerekli: $'+fp(netCost)); return; }
-
-  // İşlem açılınca margin level stop out seviyesinin üzerinde olacak mı kontrol et
-  var _stopOutLvl = 50;
-  try {
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
-       typeof tradingGroups !== 'undefined' && Array.isArray(tradingGroups) && tradingGroups.length) {
-      var _chkAcc = accounts.find(function(a){ return a.active; });
-      if(_chkAcc) {
-        var _chkSg = tradingGroups.find(function(g){ return g.id===(_chkAcc.spreadGroup||'standard'); });
-        if(_chkSg) _stopOutLvl = _chkSg.stopOut || 50;
-      }
-    }
-  } catch(e) {}
-
-  // Yeni işlemden sonraki durumu simüle et
-  var _newBalance = balance - netCost;
-  var _newMarginUsed = 0;
-  var _symCostsChk = {};
-  for(var _ci=0; _ci<positions.length; _ci++) {
-    var _cp = positions[_ci];
-    if(!_symCostsChk[_cp.sym]) _symCostsChk[_cp.sym] = {buy:0, sell:0};
-    if(_cp.side==='buy') _symCostsChk[_cp.sym].buy  += (_cp.cost||0);
-    else                 _symCostsChk[_cp.sym].sell += (_cp.cost||0);
-  }
-  if(!_symCostsChk[curSym]) _symCostsChk[curSym] = {buy:0, sell:0};
-  if(side==='buy') _symCostsChk[curSym].buy  += netCost;
-  else             _symCostsChk[curSym].sell += netCost;
-  var _chkKeys = Object.keys(_symCostsChk);
-  for(var _cj=0; _cj<_chkKeys.length; _cj++) {
-    var _cs = _symCostsChk[_chkKeys[_cj]];
-    _newMarginUsed += Math.abs(_cs.buy - _cs.sell);
-  }
-  // Açık PL hesapla
-  var _chkPL = 0;
-  for(var _ck=0; _ck<positions.length; _ck++) {
-    var _cpos = positions[_ck];
-    var _cp2 = prices[_cpos.sym];
-    if(_cp2) _chkPL += (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1);
-  }
-  var _newEquity = _newBalance + _chkPL;
-  var _newMarginLvl = _newMarginUsed > 0 ? (_newEquity / _newMarginUsed * 100) : null;
-
-  if(_newMarginLvl !== null && _newMarginLvl <= _stopOutLvl) {
-    showToast('Yetersiz Marj', 'İşlem açılamaz — Marj seviyesi %' + _newMarginLvl.toFixed(0) + ' (Min: %' + _stopOutLvl + ')');
-    return;
-  }
-
-  balance -= netCost;
-
-  const pos = { id:Date.now(), sym:curSym, label:(function(){ var _sf=null; for(var _si=0;_si<SYMS.length;_si++){if(SYMS[_si].sym===curSym){_sf=SYMS[_si];break;}} return _sf?_sf.label:curSym; })(), side, qty, openPrice:execPrice, sl, tp, time:new Date().toISOString(), cost:netCost, hedge:(netQty < qty), device:detectDevice() };
-  positions.push(pos);
-  save();
-  renderPositions();
-  updateAccount();
-
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = '';
-  var _gdad61c=document.getElementById('ordSL'); if(_gdad61c) _gdad61c.value = '';
-  var _g4b1c55=document.getElementById('ordTP'); if(_g4b1c55) _g4b1c55.value = '';
-  if (ordType !== 'market') var _gebac64=document.getElementById('limitPrice'); if(_gebac64) _gebac64.value = '';
-
-  const sideLabel = side === 'buy' ? '▲ ALIM' : '▼ SATIM';
-  showToast(`${sideLabel} Gerçekleşti`, `${qty} ${curSym.replace('USDT','')} @ $${fp(execPrice)}`);
-}
+// placeOrder() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
+// Sadece qtOrder() çağırıyordu; o da ölü kod olarak silindi.
 
 function updatePositions() {
   if(!Array.isArray(positions)) positions = [];
@@ -3682,18 +3591,7 @@ function toggleAlarmForm() {
   f.style.display = f.style.display==='none' ? 'flex' : 'none';
 }
 
-function addAlarm() {
-  const sym = document.getElementById('alSym').value;
-  const dir = document.getElementById('alDir').value;
-  const t = parseFloat(document.getElementById('alPrice').value);
-  if (!t||t<=0) { showToast('Hata','Hedef fiyat girin!'); return; }
-  alarms.push({ sym, dir, target:t, id:Date.now(), active:true });
-  save(); renderAlarms();
-  var _g49e24e=document.getElementById('alPrice'); if(_g49e24e) _g49e24e.value = '';
-  var _st_alarmForm=document.getElementById('alarmForm'); if(_st_alarmForm) _st_alarmForm.style.display = 'none';
-  showToast('Alarm Kuruldu 🔔', `${sym} $${t} ${dir==='above'?'üzeri':'altı'}`);
-  if (Notification.permission==='default') Notification.requestPermission();
-}
+// addAlarm() kaldırıldı (2026-04-19) — trader kopyası. Admin mgrAddAlarm() kullanıyor.
 
 function delAlarm(id) { alarms=alarms.filter(a=>a.id!==id); triggered.delete(id); save(); renderAlarms(); }
 
@@ -3713,6 +3611,7 @@ function checkAlarms(sym, price) {
 
 function renderAlarms() {
   const el = document.getElementById('alarmItems');
+  if (!el) return; // 2026-04-19: admin'de 'alarmItems' DOM yok, guard eklendi. Admin renderAlarmMgr() kullanıyor.
   if (!alarms.length) { el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Alarm yok</span>'; return; }
   el.innerHTML = alarms.map(a => {
     const up = a.dir==='above';
@@ -3738,14 +3637,7 @@ function buildTicker() {
   if (el) el.innerHTML = items+items;
 }
 
-function bpSwitch(id, btn) {
-  document.querySelectorAll('.bp-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.bp-section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('bp-'+id).classList.add('active');
-  if (id==='hist') renderHistory();
-  if (id==='port') renderPortfolio();
-}
+// bpSwitch() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
 
 var tTmr;
 var SIM_PRICES = {
@@ -6300,155 +6192,11 @@ function saveRequests() {
   }
 }
 
-function openWallet() {
-  document.getElementById('walletOverlay').classList.add('open');
-  walletTab('deposit', document.querySelector('.wallet-tab'));
-}
-
-function closeWallet() { document.getElementById('walletOverlay').classList.remove('open'); }
-
-function walletBgClose(e) { if(e.target===document.getElementById('walletOverlay')) closeWallet(); }
-
-function walletTab(tab, el) {
-  document.querySelectorAll('.wallet-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.wallet-section').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('ws-'+tab).classList.add('active');
-  if(tab==='deposit') renderDepositMethods();
-  if(tab==='withdraw') renderWithdrawMethods();
-}
-
-function renderDepositMethods() {
-  const active = payMethods.filter(p=>p.active);
-  const grid = document.getElementById('depositMethodGrid');
-  grid.innerHTML = active.map(m => `
-    <div class="wallet-method" id="dm-${m.id}" onclick="selectDepositMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
-      <div class="wallet-method-name">${m.name}</div>
-      <div class="wallet-method-sub">${m.type==='bank'?m.currency+' · Min '+m.currency+' '+(m.min||0):m.network+' · Min '+m.min+' '+m.currency}</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Ödeme yöntemi tanımlanmamış.<br>Manager > Ödeme Yön. kısmından ekleyin.</div>';
-  var _st_depositDetails=document.getElementById('depositDetails'); if(_st_depositDetails) _st_depositDetails.style.display = 'none';
-  selectedDepositMethod = null;
-}
-
-function selectDepositMethod(id) {
-  document.querySelectorAll('.wallet-method').forEach(m=>m.classList.remove('selected'));
-  const el = document.getElementById('dm-'+id);
-  if(el) el.classList.add('selected');
-  selectedDepositMethod = payMethods.find(p=>p.id===id);
-  if(!selectedDepositMethod) return;
-  const m = selectedDepositMethod;
-  var _st_depositDetails=document.getElementById('depositDetails'); if(_st_depositDetails) _st_depositDetails.style.display = 'block';
-  var _el_depositCurrency=document.getElementById('depositCurrency'); if(_el_depositCurrency) _el_depositCurrency.textContent = m.currency;
-
-  let infoHtml = '';
-  if(m.type==='bank') {
-    infoHtml = `
-      <div class="wallet-info-row"><span class="wallet-info-key">Banka</span><span class="wallet-info-val">${m.bankName}</span></div>
-      <div class="wallet-info-row"><span class="wallet-info-key">Hesap Sahibi</span><span class="wallet-info-val">${m.holder}</span></div>
-      <div class="wallet-info-row">
-        <span class="wallet-info-key">IBAN</span>
-        <span class="wallet-info-val">${m.iban}</span>
-        <button class="wallet-copy-btn" onclick="copyText('${m.iban}')">KOPYALA</button>
-      </div>
-      ${m.ref?`<div class="wallet-info-row"><span class="wallet-info-key">Açıklama</span><span class="wallet-info-val">${m.ref}</span></div>`:''}
-    `;
-  } else {
-    infoHtml = `
-      <div class="wallet-info-row"><span class="wallet-info-key">Ağ</span><span class="wallet-info-val">${m.network}</span></div>
-      <div class="wallet-info-row">
-        <span class="wallet-info-key">Adres</span>
-        <span class="wallet-info-val" style="font-size:10px">${m.wallet}</span>
-        <button class="wallet-copy-btn" onclick="copyText('${m.wallet}')">KOPYALA</button>
-      </div>
-      <div class="wallet-info-row"><span class="wallet-info-key">Min.</span><span class="wallet-info-val">${m.min} ${m.currency}</span></div>
-    `;
-  }
-  var _ih_depositInfoBox=document.getElementById('depositInfoBox'); if(_ih_depositInfoBox) _ih_depositInfoBox.innerHTML = infoHtml;
-  var _el_depositNote=document.getElementById('depositNote'); if(_el_depositNote) _el_depositNote.textContent = '⚠ ' + (m.note || '');
-}
-
-function setDepositAmt(v) { var _g910dbb=document.getElementById('depositAmount'); if(_g910dbb) _g910dbb.value = v; }
-
-function submitDeposit() {
-  if(!selectedDepositMethod) { showToast('Hata','Ödeme yöntemi seçin!'); return; }
-  const amt = parseFloat(document.getElementById('depositAmount').value);
-  if(!amt || amt <= 0) { showToast('Hata','Miktar girin!'); return; }
-  if(amt < (selectedDepositMethod.min||0)) { showToast('Hata',`Min. ${selectedDepositMethod.min} ${selectedDepositMethod.currency}`); return; }
-  const req = {
-    id: genId('DEP'),
-    date: new Date().toISOString(),
-    method: selectedDepositMethod.name,
-    methodType: selectedDepositMethod.type,
-    currency: selectedDepositMethod.currency,
-    amount: amt,
-    note: selectedDepositMethod.type==='bank'?'IBAN: '+selectedDepositMethod.iban:'Adres: '+selectedDepositMethod.wallet,
-    status: 'pending'
-  };
-  depositRequests.unshift(req);
-  saveRequests();
-  closeWallet();
-  showToast('Bildirim Alındı ✓', `${amt} ${selectedDepositMethod.currency} yatırma bildirimi gönderildi`);
-}
-
-function renderWithdrawMethods() {
-  const active = payMethods.filter(p=>p.active);
-  const grid = document.getElementById('withdrawMethodGrid');
-  grid.innerHTML = active.map(m => `
-    <div class="wallet-method" id="wm-${m.id}" onclick="selectWithdrawMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
-      <div class="wallet-method-name">${m.name}</div>
-      <div class="wallet-method-sub">${m.type==='bank'?m.currency:m.network+' · '+m.currency}</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Ödeme yöntemi tanımlanmamış.</div>';
-  var _st_withdrawDetails=document.getElementById('withdrawDetails'); if(_st_withdrawDetails) _st_withdrawDetails.style.display = 'none';
-  selectedWithdrawMethod = null;
-}
-
-function selectWithdrawMethod(id) {
-  document.querySelectorAll('#withdrawMethodGrid .wallet-method').forEach(m=>m.classList.remove('selected'));
-  const el = document.getElementById('wm-'+id);
-  if(el) el.classList.add('selected');
-  selectedWithdrawMethod = payMethods.find(p=>p.id===id);
-  if(!selectedWithdrawMethod) return;
-  const m = selectedWithdrawMethod;
-  var _st_withdrawDetails=document.getElementById('withdrawDetails'); if(_st_withdrawDetails) _st_withdrawDetails.style.display = 'block';
-  var _el_withdrawCurrency=document.getElementById('withdrawCurrency'); if(_el_withdrawCurrency) _el_withdrawCurrency.textContent = m.currency;
-  var _gbe2de5=document.getElementById('withdrawAddress'); if(_gbe2de5) _gbe2de5.placeholder = m.type==='bank'?'IBAN numaranızı girin':'Cüzdan adresinizi girin';
-  var _el_withdrawNote=document.getElementById('withdrawNote'); if(_el_withdrawNote) _el_withdrawNote.textContent = m.type==='bank'
-    ? '⚠ Lütfen size ait IBAN numarasını girin. Başkasına ait hesaba işlem yapılmaz.'
-    : '⚠ Lütfen '+m.network+' ağına ait cüzdan adresinizi girin. Hatalı adrese yapılan transferler geri alınamaz.';
-}
-
-function setWithdrawAmt(v) {
-  if(v==='all') var _g0997b4=document.getElementById('withdrawAmount'); if(_g0997b4) _g0997b4.value = balance.toFixed(2);
-  else var _g0997b4=document.getElementById('withdrawAmount'); if(_g0997b4) _g0997b4.value = v;
-}
-
-function submitWithdraw() {
-  if(!selectedWithdrawMethod) { showToast('Hata','Çekim yöntemi seçin!'); return; }
-  const amt = parseFloat(document.getElementById('withdrawAmount').value);
-  const addr = document.getElementById('withdrawAddress').value.trim();
-  if(!amt || amt <= 0) { showToast('Hata','Miktar girin!'); return; }
-  if(!addr) { showToast('Hata',selectedWithdrawMethod.type==='bank'?'IBAN girin!':'Cüzdan adresi girin!'); return; }
-  if(amt > balance) { showToast('Yetersiz Bakiye',`Bakiye: $${fp(balance)}`); return; }
-  const req = {
-    id: genId('WIT'),
-    date: new Date().toISOString(),
-    account: 'Aktif Hesap',
-    method: selectedWithdrawMethod.name,
-    methodType: selectedWithdrawMethod.type,
-    currency: selectedWithdrawMethod.currency,
-    address: addr,
-    amount: amt,
-    status: 'pending'
-  };
-  withdrawRequests.unshift(req);
-  saveRequests();
-  closeWallet();
-  showToast('Talep Alındı ✓', `${amt} ${selectedWithdrawMethod.currency} çekim talebi oluşturuldu`);
-}
+// Wallet cluster (openWallet/closeWallet/walletBgClose/walletTab/
+// renderDepositMethods/selectDepositMethod/setDepositAmt/submitDeposit/
+// renderWithdrawMethods/selectWithdrawMethod/setWithdrawAmt/submitWithdraw)
+// kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
+// Admin deposit/withdraw için adDeposit()/adWithdraw() ve approveDepReq/approveReq akışını kullanıyor.
 
 function copyText(txt) {
   navigator.clipboard.writeText(txt).then(()=>showToast('Kopyalandı ✓', txt.slice(0,30)+'...')).catch(()=>{
@@ -6880,63 +6628,8 @@ function mwSelect(sym, groupId) {
   if(ctSym2) ctSym2.textContent = sym;
 }
 
-function lpSwitch(tab, el) {
-  var tabs = document.querySelectorAll('.lp-tab');
-  var secs = document.querySelectorAll('.lp-section');
-  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
-  for(var i=0;i<secs.length;i++) { secs[i].classList.remove('active'); secs[i].style.display=''; }
-  if(el) el.classList.add('active');
-  if(tab === 'order') {
-    var o = document.getElementById('lp-order'); if(o) o.classList.add('active');
-  }
-  if(tab === 'market') {
-    var m = document.getElementById('lp-market'); if(m) m.classList.add('active');
-    renderMarketWatch();
-  }
-}
-
-function qtLotSet(val) {
-  if(!val || val <= 0) val = 0.01;
-  val = Math.round(val * 100) / 100; // 2 decimal
-  qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 0;
-  var el = document.getElementById('qtLotVal');
-  if(el) el.value = val.toFixed(2);
-  var _qb = document.querySelectorAll('.qt-preset');
-  for(var _qi=0; _qi<_qb.length; _qi++){
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === val);
-  }
-}
-
-function qtLotStep(dir) {
-  qtLotIdx = Math.max(0, Math.min(QT_LOTS.length - 1, qtLotIdx + dir));
-  qtLot = QT_LOTS[qtLotIdx];
-  var _el_qtLotVal=document.getElementById('qtLotVal'); if(_el_qtLotVal) _el_qtLotVal.value = qtLot.toFixed(2);
-  var _qb = document.querySelectorAll('.qt-preset');
-  for(var _qi=0; _qi<_qb.length; _qi++) {
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === qtLot);
-  }
-}
-
-function qtSetLot(val, btn) {
-  qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 1;
-  var _el_qtLotVal=document.getElementById('qtLotVal'); if(_el_qtLotVal) _el_qtLotVal.value = val.toFixed(val < 0.1 ? 3 : 2);
-  var _qsb = document.querySelectorAll('.qt-preset');
-  for(var _qsi=0; _qsi<_qsb.length; _qsi++) _qsb[_qsi].classList.remove('active');
-  if(btn) btn.classList.add('active');
-}
-
-function qtOrder(side) {
-  const price = (prices[curSym] ? prices[curSym].price : null);
-  if(!price) { showToast('Fiyat yok', 'Fiyat verisi bekleniyor'); return; }
-  const prevQty = document.getElementById('ordQty').value;
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = qtLot;
-  placeOrder(side);
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = prevQty;
-}
+// lpSwitch, qtLotSet, qtLotStep, qtSetLot, qtOrder kaldırıldı (2026-04-19)
+// — trader kopyası, admin'de ölü kod. qtOrder sadece placeOrder çağırıyordu (o da silindi).
 
 function updateQuickTrade(price, spread) {
   const bid = (price - spread/2).toFixed(price > 100 ? 2 : price > 1 ? 3 : 4);
@@ -7205,18 +6898,7 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.clearPortfolio = clearPortfolio;
   window.savePayMethods = savePayMethods;
   window.saveRequests = saveRequests;
-  window.openWallet = openWallet;
-  window.closeWallet = closeWallet;
-  window.walletBgClose = walletBgClose;
-  window.walletTab = walletTab;
-  window.renderDepositMethods = renderDepositMethods;
-  window.selectDepositMethod = selectDepositMethod;
-  window.setDepositAmt = setDepositAmt;
-  window.submitDeposit = submitDeposit;
-  window.renderWithdrawMethods = renderWithdrawMethods;
-  window.selectWithdrawMethod = selectWithdrawMethod;
-  window.setWithdrawAmt = setWithdrawAmt;
-  window.submitWithdraw = submitWithdraw;
+  // Wallet cluster export'ları kaldırıldı (2026-04-19) — fonksiyonlar silindi.
   window.copyText = copyText;
   window.pmTypeChange = pmTypeChange;
   window.renderPayMethodList = renderPayMethodList;
@@ -7238,10 +6920,7 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.toggleMwGroup = toggleMwGroup;
   window.mwFilter = mwFilter;
   window.mwSelect = mwSelect;
-  window.lpSwitch = lpSwitch;
-  window.qtLotStep = qtLotStep;
-  window.qtSetLot = qtSetLot;
-  window.qtOrder = qtOrder;
+  // lpSwitch, qtLotStep, qtSetLot, qtOrder export'ları kaldırıldı (2026-04-19) — fonksiyonlar silindi.
   window.updateQuickTrade = updateQuickTrade;
   window.toggleQuickTrade = toggleQuickTrade;
   window.startLiveFeed = startLiveFeed;
@@ -7251,7 +6930,7 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.sgLoad             = sgLoad;
   window.sgSave             = sgSave;
   window.sgRender           = sgRender;
-  window.selectSgTab        = selectSgTab;
+  // selectSgTab export kaldırıldı (2026-04-19) — fonksiyon silindi.
   window.sgSubTab           = sgSubTab;
   window.saveSgGeneral      = saveSgGeneral;
   window.saveSgSpreads      = saveSgSpreads;
@@ -7964,7 +7643,7 @@ function saveSgGeneral() { sgSaveGeneral(); }
 function saveSgSpreads() { sgSaveSpreads(); }
 function addSpreadGroup() { sgAddGroup(); }
 function deleteSpreadGroup() { sgDeleteGroup(); }
-function selectSgTab(id) { _activeSgId=id; sgRender(); }
+// selectSgTab kaldırıldı (2026-04-19) — çağıran yok, ölü kod.
 function sgSubTab() {}
 
 
@@ -8495,57 +8174,9 @@ function getDeviceIcon(d) {
   return (icons[d]||'🌐') + ' ' + d;
 }
 
-function symSearchOpen(){var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');var d=document.getElementById('symDropdown');if(d)d.style.display='block';}
-function symSearchClose(){var d=document.getElementById('symDropdown');if(d)d.style.display='none';}
-function symSearchFilter(q){
-  var dd=document.getElementById('symDropdown');if(!dd)return;
-  var _all=(typeof symConfig!=='undefined'&&Array.isArray(symConfig)&&symConfig.length)?symConfig:SYMS;
-  var _active=_all.filter(function(s){return s.active;});
-  var _pinned=[];try{_pinned=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var q2=(q||'').toLowerCase();
-  var filtered=q2?_active.filter(function(s){return s.sym.toLowerCase().indexOf(q2)>=0||(s.label&&s.label.toLowerCase().indexOf(q2)>=0);}):_active;
-  dd.innerHTML='';
-  if(!filtered.length){
-    var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#b0b0b0;font-family:monospace;font-size:11px;';
-    empty.textContent='Sembol bulunamadi';
-    dd.appendChild(empty);
-    dd.style.display='block'; return;
-  }
-  filtered.forEach(function(s){
-    var isPinned=_pinned.indexOf(s.sym)>=0;
-    var p=prices[s.sym];
-    var dec=p?(p.price>100?2:p.price>1?4:6):2;
-    var priceStr=p?('$'+p.price.toFixed(dec)):'—';
-    var chgStr=p?((p.chg>=0?'+':'')+p.chg.toFixed(2)+'%'):'';
-    var chgCol=p?(p.chg>=0?'#26a69a':'#ef5350'):'#888';
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#e2e2e2;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#b0b0b0;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="color:#a0a0a0;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
-      +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
-      +'<span class="sym-pin-star" style="color:'+(isPinned?'#f0b90b':'#444')+';font-size:16px;cursor:pointer;">&#9733;</span>'
-      +'</div>';
-    row.onmouseover=function(){this.style.background='#252525';};
-    row.onmouseout=function(){this.style.background='transparent';};
-    row.onclick=(function(sym){return function(){symSearchSelect(sym);};})(s.sym);
-    var star=row.querySelector('.sym-pin-star');
-    if(star) star.onclick=(function(sym,el){return function(e){e.stopPropagation();symTogglePin(sym);};})(s.sym,star);
-    dd.appendChild(row);
-  });
-  dd.style.display='block';
-}
-function symSearchSelect(sym){switchSym(sym);var s=document.getElementById('symSearch');if(s)s.value='';symSearchClose();}
-function symTogglePin(sym){
-  var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var i=_p.indexOf(sym);
-  if(i>=0){_p.splice(i,1);showToast('Kaldirildi',sym+' ust bardan kaldirildi');}
-  else{_p.push(sym);showToast('Eklendi',sym+' ust bara eklendi');}
-  try{localStorage.setItem('tx_pinned_syms',JSON.stringify(_p));}catch(e){}
-  buildSymTabs();
-  var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');
-}
+// symSearchOpen/Close/Filter/Select + symTogglePin kaldırıldı (2026-04-19)
+// — trader kopyası. Kendi içinde kapalı ölü zincir, dış çağıranı yok.
+// Admin sembol yönetimi için renderSymMgr/symUnpin akışını kullanıyor.
 function symUnpin(sym){
   var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
   _p=_p.filter(function(s){return s!==sym;});
@@ -10124,10 +9755,7 @@ var AD_SIM={
   },5000);
 })();
 // ── Kotasyon (Fiyat Kontrol) Fonksiyonları ──
-var _pcOverrides = {}; window._pcOverrides = _pcOverrides;
-var _pcGradTimer = null;
-
-// pcInit: removed duplicate
+// (not: _pcOverrides ve _pcGradTimer L7974-7976'da declare edildi — duplicate var kaldırıldı 2026-04-19)
 
 function pcLoadSym() {
   pcRefresh();
