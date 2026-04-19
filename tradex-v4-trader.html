@@ -7426,6 +7426,27 @@ function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
   // 1) Firebase onSnapshot — forex + emtia + endeks (3sn admin günceller)
+  // İlk açılışta Firebase'den son bilinen fiyatları hemen çek (snapshot'tan önce)
+  // Aksi halde seed'deki '1' gibi sabit varsayılanlar bir süre prices'ta kalıyor
+  // ve trader yanlış P&L gösteriyor.
+  db.collection('broker').doc('prices').get().then(function(doc){
+    if(!doc.exists) return;
+    var pd = doc.data(); if(!pd) return;
+    var _loaded = 0;
+    Object.keys(pd).forEach(function(sym) {
+      if(sym.charAt(0) === '_') return;
+      var isCrypto = sym.endsWith('USDT');
+      if(isCrypto) return;
+      var price = parseFloat(pd[sym]);
+      if(!price || price <= 0) return;
+      var sc = _txGetSymConf(sym);
+      if(sc && sc.priceSource) return;
+      txApplyPrice(sym, price);
+      _loaded++;
+    });
+    console.log('[prices eager] Firebase\'den '+_loaded+' forex/diğer fiyat yüklendi');
+  }).catch(function(e){ console.warn('[prices eager]', e.message); });
+
   _FB.sub('prices', db.collection('broker').doc('prices').onSnapshot(function(doc) {
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
