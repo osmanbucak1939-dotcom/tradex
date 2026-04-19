@@ -1431,13 +1431,24 @@ function getAccEquity(accId)   {
   var bal = getAccBal(accId) + getAccBonus(accId);
   var poses = getAccPos(accId);
   var fp = 0;
+  var _missing = 0;
   for(var i=0;i<poses.length;i++){
     var po = poses[i];
     var pr = (typeof adGetPrice==='function') ? adGetPrice(po.sym) : 0;
-    if(!pr) continue;
+    // ⚠️ Fiyat yoksa pozisyonu ATLAMA — openPrice'i kullan (P&L=0 gibi davran).
+    // Eski davranış `continue`'ydu: büyük zarardaki pozisyonlar fiyat feed'i kopunca
+    // equity hesabından düşüyordu → equity yanlış pozitif görünüp stop out tetiklenmiyordu.
+    if(!pr) {
+      pr = po.openPrice;
+      _missing++;
+    }
     var cs = parseFloat(po.contractSize)||1;
     var qt = parseFloat(po.qty)||0;
     fp += (po.side==='buy' ? pr-po.openPrice : po.openPrice-pr) * qt * cs + (parseFloat(po.swapTotal)||0);
+  }
+  if(_missing > 0 && window._equityMissingLog !== accId) {
+    console.warn('[getAccEquity] #'+accId+' için '+_missing+' pozisyonda fiyat yok — openPrice fallback kullanılıyor');
+    window._equityMissingLog = accId; // aynı hesap için tekrar spamlemesin
   }
   return bal + fp;
 }
@@ -3871,13 +3882,40 @@ function _adGetSpread(sym) {
 function adGetPrice(sym, side) {
   // side: 'buy'=ask fiyatı, 'sell'=bid fiyatı, undefined=mid
   if(_pcOverrides && _pcOverrides[sym]) return _pcOverrides[sym];
+
+  // 1) _FX.prices — WS feed (öncelikli, bid/ask içerir)
   if(_FX.prices[sym]) {
     if(side==='buy')  return _FX.prices[sym].ask || _FX.prices[sym].mid;
     if(side==='sell') return _FX.prices[sym].bid || _FX.prices[sym].mid;
     return _FX.prices[sym].mid;
   }
+
+  // 2) prices (global) — Firebase / trader ile ortak kaynak. Forex'te feed kopmuşsa burası dolu olur.
+  // ⚠️ KRİTİK: _FX.prices boşken AD_SIM sabitlerine düşmek yanlış P&L'e yol açıyordu.
+  // Önce prices'a bak, orada varsa onu kullan — trader'la tutarlı sonuç.
+  if(typeof prices !== 'undefined' && prices && prices[sym]) {
+    var _p = prices[sym];
+    var _px = (typeof _p === 'object') ? (_p.price || _p.mid) : _p;
+    if(_px && _px > 0) {
+      // Spread'i bid/ask ayrımı için uygula (prices objesi sadece mid tutuyor olabilir)
+      if(side === 'buy' || side === 'sell') {
+        var _sprd = 0;
+        if(typeof _p === 'object' && _p.spread) _sprd = _p.spread;
+        else if(typeof _adGetSpread === 'function') {
+          try { _sprd = _adGetSpread(sym) || 0; } catch(e){}
+        }
+        if(side === 'buy')  return _px + _sprd/2;
+        if(side === 'sell') return _px - _sprd/2;
+      }
+      return _px;
+    }
+  }
+
+  // 3) AD_SIM — simülasyon fallback (SADECE geri uyumluluk için, gerçek feed yoksa)
   if(typeof AD_SIM!=='undefined' && AD_SIM[sym]) return AD_SIM[sym].p;
   if(typeof SIM_PRICES!=='undefined' && SIM_PRICES[sym]) return SIM_PRICES[sym].p;
+
+  // 4) Sentetik sembol → kaynak sembolün fiyatından türet
   if(typeof symConfig!=='undefined' && symConfig) {
     var sc2 = symConfig.find(function(s){ return s.sym===sym; });
     if(sc2 && sc2.priceSource && sc2.priceSource!==sym) return adGetPrice(sc2.priceSource, side);
@@ -4103,14 +4141,24 @@ function adCalcStats(account, positions) {
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
+  var _missingPrices = 0;
   (positions||[]).forEach(function(pos){
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
-    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
-    if(!closeP) return;
+    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || adGetPrice(pos.sym);
+    // ⚠️ Fiyat yoksa pozisyonu atlamak yerine openPrice kullan (P&L=0 gibi davran).
+    // Feed koptuğunda büyük zarardaki pozisyonlar equity'den düşmemeli.
+    if(!closeP) {
+      closeP = pos.openPrice;
+      _missingPrices++;
+    }
     var cs=parseFloat(pos.contractSize)||1, qty=parseFloat(pos.qty)||0;
     openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs;
     openPnl += parseFloat(pos.swapTotal)||0;
   });
+  if(_missingPrices > 0 && window._calcStatsMissingLog !== account.id) {
+    console.warn('[adCalcStats] #'+account.id+' '+_missingPrices+' pozisyonda fiyat yok — openPrice fallback');
+    window._calcStatsMissingLog = account.id;
+  }
   var equity=bal+bonus+openPnl;
   var nets={};
   (positions||[]).forEach(function(pos){
