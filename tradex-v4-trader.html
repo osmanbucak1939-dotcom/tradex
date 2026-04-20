@@ -328,74 +328,22 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   position:fixed; inset:0; background:rgba(0,0,0,.7);
   z-index:500; display:none; align-items:center; justify-content:center;
 }
-.mgr-overlay.open { display:flex; }
-
-.mgr-panel {
-  background:#1a1a1a; border:1px solid var(--border2);
-  width:900px; max-width:96vw; height:80vh; max-height:700px;
-  display:flex; flex-direction:column; border-radius:4px;
-  box-shadow:0 24px 64px rgba(0,0,0,.8);
-}
-
-.mgr-header {
-  display:flex; align-items:center; padding:0 20px;
-  height:44px; border-bottom:1px solid var(--border);
-  flex-shrink:0; gap:12px;
-}
-.mgr-title { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent); letter-spacing:1px; }
-.mgr-close {
-  margin-left:auto; background:none; border:1px solid var(--border);
-  color:var(--muted); font-family:var(--mono); font-size:12px;
-  padding:3px 10px; border-radius:2px; cursor:pointer; transition:all .15s;
-}
-.mgr-close:hover { border-color:var(--sell); color:var(--sell); }
-
-.mgr-body { display:flex; flex:1; overflow:hidden; }
-
-/* MANAGER SIDEBAR */
+.mgr-overlay.open { display:flex; }/* MANAGER SIDEBAR */
 .mgr-nav {
   width:160px; flex-shrink:0; border-right:1px solid var(--border);
   display:flex; flex-direction:column; padding:8px 0;
-}
-.mgr-nav-item {
-  padding:10px 16px; font-family:var(--mono); font-size:11px;
-  color:var(--muted); cursor:pointer; transition:all .15s;
-  border-left:2px solid transparent; display:flex; align-items:center; gap:8px;
-}
-.mgr-nav-item:hover { color:var(--text); background:var(--panel2); }
-.mgr-nav-item.active { color:var(--accent); background:var(--panel2); border-left-color:var(--accent); }
+}.mgr-nav-item.active { color:var(--accent); background:var(--panel2); border-left-color:var(--accent); }
 .mgr-nav-item .ni { font-size:14px; }
 
 /* MANAGER CONTENT */
-.mgr-content { flex:1; overflow-y:auto; padding:20px; }
-.mgr-section { display:none; }
-.mgr-section.active { display:block; }
-.mgr-section-title {
-  font-family:var(--mono); font-size:10px; font-weight:700;
-  color:var(--muted); letter-spacing:2px; text-transform:uppercase;
-  margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border);
-}
-
-/* MANAGER FORM ELEMENTS */
+.mgr-content { flex:1; overflow-y:auto; padding:20px; }.mgr-section.active { display:block; }/* MANAGER FORM ELEMENTS */
 .mgr-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
 .mgr-table th { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:left; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; }
 .mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid #2a2a2a; vertical-align:middle; }
 .mgr-table tr:last-child td { border-bottom:none; }
-.mgr-table tr:hover td { background:rgba(255,255,255,.02); }
-
-.mgr-input { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:5px 8px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; transition:border-color .15s; width:100%; }
-.mgr-input:focus { border-color:var(--accent); }
-.mgr-select { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:5px 8px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; width:100%; cursor:pointer; }
-
-.mgr-row { display:grid; gap:12px; margin-bottom:14px; }
-.mgr-row.cols2 { grid-template-columns:1fr 1fr; }
+.mgr-table tr:hover td { background:rgba(255,255,255,.02); }.mgr-row.cols2 { grid-template-columns:1fr 1fr; }
 .mgr-row.cols3 { grid-template-columns:1fr 1fr 1fr; }
-.mgr-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; }
-
-.mgr-field { display:flex; flex-direction:column; gap:4px; }
-.mgr-label { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.5px; }
-
-.mgr-btn {
+.mgr-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; }.mgr-btn {
   padding:7px 16px; border-radius:2px; border:none; font-family:var(--mono);
   font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; letter-spacing:.3px;
 }
@@ -406,11 +354,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mgr-btn.danger { background:transparent; color:var(--sell); border:1px solid var(--sell-dim); }
 .mgr-btn.danger:hover { background:var(--sell-dim); }
 .mgr-btn.success { background:var(--buy-dim); color:var(--buy); border:1px solid rgba(38,166,154,.3); }
-.mgr-btn.success:hover { background:var(--buy); color:#fff; }
-
-.mgr-divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
-
-.sym-color-dot { width:12px; height:12px; border-radius:50%; display:inline-block; cursor:pointer; }
+.mgr-btn.success:hover { background:var(--buy); color:#fff; }.sym-color-dot { width:12px; height:12px; border-radius:50%; display:inline-block; cursor:pointer; }
 .toggle-switch { position:relative; width:36px; height:20px; cursor:pointer; }
 .toggle-switch input { opacity:0; width:0; height:0; }
 .toggle-track { position:absolute; inset:0; background:var(--border2); border-radius:10px; transition:.2s; }
@@ -959,22 +903,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* Mobile nav hidden on desktop */
 
-.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }
-.ad-input { background:var(--input); border:1px solid var(--border); color:var(--text); padding:7px 10px; font-family:var(--mono); font-size:12px; width:100%; border-radius:3px; box-sizing:border-box; }
-.ad-label { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:.5px; }
-.ad-card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
-.ad-stat-val { font-size:16px; font-weight:700; font-family:var(--mono); }
-.ad-stat-lbl { font-size:10px; color:var(--muted); margin-bottom:4px; font-family:var(--mono); }
-.ad-section-title { font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px; border-bottom:1px solid #222; padding-bottom:6px; }
-.ad-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.ad-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-.ad-btn { padding:8px 16px; border-radius:4px; font-family:var(--mono); font-size:11px; cursor:pointer; font-weight:700; }
-.ad-btn-primary  { background:var(--accent); color:#000; border:none; }
-.ad-btn-secondary{ background:#222; color:var(--text); border:1px solid #444; }
-.ad-btn-danger   { background:transparent; color:#ef5350; border:1px solid #ef5350; }
-.ad-btn-success  { background:transparent; color:#2979ff; border:1px solid #2979ff; }
-
-.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
+.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
 .ct-type-btn.active { color:#fff; background:#181818; }
 .ct-type-btn:hover { color:#aaa; }
 .draw-tool-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
@@ -1376,8 +1305,7 @@ function _doRegister() {
       if(err) { _authErr('err-register','Kayıt hatası: '+err); return; }
       var finalAcc = savedAcc || acc;
       accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
-      if(typeof renderAccCards==='function') renderAccCards();
-      if(typeof renderAccListSmall==='function') renderAccListSmall();
+      // renderAccCards/renderAccListSmall çağrıları kaldırıldı (2026-04-20) — manager panel trader'dan silindi.
       var ok=document.getElementById('ok-register');
       if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
       setTimeout(function(){_authSuccess(finalAcc);},1200);
@@ -2224,583 +2152,8 @@ function initAuth(){
 </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     MANAGER OVERLAY
-══════════════════════════════════════════ -->
-<div class="mgr-overlay" id="mgrOverlay" onclick="overlayClose(event)">
-<div class="mgr-panel" onclick="event.stopPropagation()">
+<!-- mgrOverlay DOM (manager panel) kaldırıldı (2026-04-20) — ~577 satır. Trader-admin birleşikken manager panel trader HTML içindeydi. Artık admin ayrı dosyada. -->
 
-  <div class="mgr-header">
-    <div class="mgr-title">⚙ COMMERZ TERMINAL MANAGER</div>
-    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">v1.1</span>
-    <button class="mgr-close" onclick="toggleManager()">✕ KAPAT</button>
-  </div>
-
-  <div class="mgr-body">
-    <nav class="mgr-nav">
-      <div class="mgr-nav-item active" onclick="mgrTab('symbols',this)"><span class="ni">◈</span>Semboller</div>
-      <div class="mgr-nav-item" onclick="mgrTab('accounts',this)"><span class="ni">◉</span>Hesaplar</div>
-      <div class="mgr-nav-item" onclick="mgrTab('newaccount',this)"><span class="ni">+</span>Hesap Aç</div>
-      <div class="mgr-nav-item" onclick="mgrTab('settings',this)"><span class="ni">◧</span>Ayarlar</div>
-      <div class="mgr-nav-item" onclick="mgrTab('alarmsmgr',this)"><span class="ni">◎</span>Alarmlar</div>
-      <div class="mgr-nav-item" onclick="mgrTab('portfoliomgr',this)"><span class="ni">◱</span>Portföy</div>
-      <div class="mgr-nav-item" onclick="mgrTab('walletsettings',this)"><span class="ni">⬡</span>Ödeme Yön.</div>
-      <div class="mgr-nav-item" onclick="mgrTab('withdrawreqs',this)"><span class="ni">↑</span>Çekim Talep</div>
-      <div class="mgr-nav-item" onclick="mgrTab('spreadgroups',this);setTimeout(function(){if(!window._symConfig&&typeof symConfig!=='undefined')window._symConfig=symConfig;sgLoad();sgRender();},50)"><span class="ni">◑</span>Trading Grupları</div>
-      <div class="mgr-nav-item" onclick="mgrTab('pricecontrol',this)"><span class="ni">⟳</span>Fiyat Yön.</div>
-    </nav>
-
-    <div class="mgr-content">
-
-      <!-- SEMBOLLER -->
-      <div class="mgr-section active" id="mgr-symbols">
-        <div class="mgr-section-title">SEMBOL YÖNETİMİ</div>
-
-        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
-          <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">FİLTRE:</span>
-          <button class="mgr-btn secondary" onclick="filterSymCat('all')" id="scf-all" style="padding:3px 10px;font-size:10px;">Tümü</button>
-          <button class="mgr-btn secondary" onclick="filterSymCat('crypto')" id="scf-crypto" style="padding:3px 10px;font-size:10px;">Kripto</button>
-          <button class="mgr-btn secondary" onclick="filterSymCat('forex')" id="scf-forex" style="padding:3px 10px;font-size:10px;">Forex</button>
-          <button class="mgr-btn secondary" onclick="filterSymCat('commodity')" id="scf-commodity" style="padding:3px 10px;font-size:10px;">Emtia</button>
-          <button class="mgr-btn secondary" onclick="filterSymCat('index')" id="scf-index" style="padding:3px 10px;font-size:10px;">Endeks</button>
-        </div>
-
-        <div style="overflow-x:auto;">
-        <table class="mgr-table" style="min-width:900px;">
-          <thead><tr>
-            <th style="width:40px;">Aktif</th>
-            <th>Sembol</th>
-            <th>Etiket</th>
-            <th>Kategori</th>
-            <th>Spread</th>
-            <th>Swap AL</th>
-            <th>Swap SAT</th>
-            <th>Sözl.Büy.</th>
-            <th>Teminat%</th>
-            <th>Basamak</th>
-            <th>Min Lot</th>
-            <th>Renk</th>
-            <th>İşlem</th>
-          </tr></thead>
-          <tbody id="symMgrBody"></tbody>
-        </table>
-        </div>
-
-        <hr class="mgr-divider">
-
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div class="mgr-section-title" id="symFormTitle" style="margin:0;">YENİ SEMBOL EKLE</div>
-          <button class="mgr-btn secondary" onclick="resetSymForm()" style="padding:3px 10px;font-size:10px;">Formu Temizle</button>
-        </div>
-        <input type="hidden" id="ns_editIdx" value="-1">
-
-        <div class="mgr-row cols4">
-          <div class="mgr-field"><label class="mgr-label">Sembol Kodu *</label><input class="mgr-input" id="ns_sym" placeholder="BTCUSDT"></div>
-          <div class="mgr-field"><label class="mgr-label">Görünen Ad *</label><input class="mgr-input" id="ns_label" placeholder="BTC/USDT"></div>
-          <div class="mgr-field"><label class="mgr-label">Kısa Ad *</label><input class="mgr-input" id="ns_short" placeholder="BTC"></div>
-          <div class="mgr-field"><label class="mgr-label">Kategori</label>
-            <select class="mgr-select" id="ns_category" style="background:var(--input);color:var(--text);border:1px solid var(--border);padding:6px 8px;font-family:var(--mono);font-size:11px;width:100%;">
-              <option value="crypto">Kripto</option>
-              <option value="forex">Forex</option>
-              <option value="commodity">Emtia</option>
-              <option value="index">Endeks</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="mgr-row cols4">
-          <div class="mgr-field">
-            <label class="mgr-label">Spread</label>
-            <input class="mgr-input" id="ns_spread" type="number" placeholder="0.0002" step="any">
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Swap AL (gece/lot)</label>
-            <input class="mgr-input" id="ns_swapBuy" type="number" placeholder="-0.5" step="any">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">Negatif=maliyet, pozitif=kazanç</span>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Swap SAT (gece/lot)</label>
-            <input class="mgr-input" id="ns_swapSell" type="number" placeholder="-0.3" step="any">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">Gece açık pozisyona uygulanır</span>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Sözleşme Büyüklüğü</label>
-            <input class="mgr-input" id="ns_contractSize" type="number" placeholder="100000" step="any">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">Forex:100000 | Kripto:1 | Altın:100</span>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Teminat Oranı %</label>
-            <input class="mgr-input" id="ns_margin" type="number" placeholder="2" step="any">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">2 = %2 teminat (1:50 kaldıraç)</span>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Basamak (Decimals)</label>
-            <input class="mgr-input" id="ns_decimals" type="number" placeholder="5" min="0" max="8" step="1">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">Fiyat gösterim basamağı</span>
-          </div>
-        </div>
-
-        <div class="mgr-row cols4">
-          <div class="mgr-field"><label class="mgr-label">Min Lot</label><input class="mgr-input" id="ns_minlot" type="number" placeholder="0.01" step="any"></div>
-          <div class="mgr-field"><label class="mgr-label">Renk</label><input type="color" class="mgr-input" id="ns_color" value="#f0b90b" style="height:34px;padding:2px 4px;cursor:pointer"></div>
-          <div class="mgr-field" style="padding-top:18px;">
-            <button class="mgr-btn primary" onclick="saveSymbolMgr()" style="width:100%;font-size:12px;padding:9px;" id="symSaveBtn">+ SEMBOL EKLE</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- HESAPLAR -->
-      <!-- HESAPLAR -->
-      <div class="mgr-section" id="mgr-accounts">
-        <div class="mgr-section-title">HESAP LİSTESİ</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
-          <input class="mgr-input" id="accSearch" placeholder="Ara..." style="width:200px;padding:5px 10px;" oninput="renderAccTable()">
-          <select id="accFilterType" onchange="renderAccTable()" style="background:var(--input);color:var(--text);border:1px solid var(--border);padding:5px 8px;font-family:var(--mono);font-size:11px;">
-            <option value="all">Tümü</option><option value="demo">Demo</option><option value="real">Gerçek</option>
-          </select>
-          <select id="accFilterStatus" onchange="renderAccTable()" style="background:var(--input);color:var(--text);border:1px solid var(--border);padding:5px 8px;font-family:var(--mono);font-size:11px;">
-            <option value="all">Tüm Durumlar</option><option value="active">Aktif</option><option value="inactive">Pasif</option>
-          </select>
-          <span id="accCount" style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto;"></span>
-        </div>
-        <div style="overflow-x:auto;">
-        <table class="mgr-table" style="min-width:1100px;">
-          <thead><tr>
-            <th style="width:24px;"></th>
-            <th>Kayıt Tarihi</th>
-            <th>Account ID</th>
-            <th>İsim Soyisim</th>
-            <th>E-posta</th>
-            <th>Tip</th>
-            <th>Trading Grubu</th>
-            <th>Durum</th>
-            <th>Son Görülme</th>
-            <th style="text-align:right;">Bakiye</th>
-            <th style="text-align:right;">Bonus</th>
-            <th style="text-align:right;">Varlık</th>
-            <th>İşlem</th>
-          </tr></thead>
-          <tbody id="accTableBody"></tbody>
-        </table>
-        </div>
-      </div>
-      <!-- HESAP AÇ -->
-      <div class="mgr-section" id="mgr-newaccount">
-        <div class="mgr-section-title">Yeni Hesap Aç</div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field"><label class="mgr-label">Ad Soyad</label><input class="mgr-input" id="na_name" placeholder="Ahmet Yılmaz"></div>
-          <div class="mgr-field"><label class="mgr-label">E-posta</label><input class="mgr-input" id="na_email" type="email" placeholder="ahmet@email.com"></div>
-        </div>
-        <div class="mgr-row cols4">
-          <div class="mgr-field"><label class="mgr-label">Hesap Tipi</label><select class="mgr-select" id="na_type"><option value="demo">Demo</option><option value="live">Gerçek</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Para Birimi</label><select class="mgr-select" id="na_currency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="TRY">TRY</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Başlangıç Bakiyesi</label><input class="mgr-input" id="na_balance" type="number" placeholder="10000"></div>
-        </div>
-        <div class="mgr-row cols3">
-          <div class="mgr-field"><label class="mgr-label">Kaldıraç</label><select class="mgr-select" id="na_leverage"><option value="1">1:1</option><option value="5">1:5</option><option value="10">1:10</option><option value="20" selected>1:20</option><option value="50">1:50</option><option value="100">1:100</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Şifre</label><input class="mgr-input" id="na_pass" type="password" placeholder="••••••••"></div>
-          <div class="mgr-field"><label class="mgr-label">Şifre Tekrar</label><input class="mgr-input" id="na_pass2" type="password" placeholder="••••••••"></div>
-        </div>
-        <div class="mgr-row"><button class="mgr-btn primary" style="width:fit-content" onclick="createAccount()">Hesap Oluştur</button></div>
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Mevcut Hesaplar</div>
-        <div id="accListSmall"></div>
-      </div>
-
-
-      <!-- SPREAD GRUPLARI -->
-      <div class="mgr-section" id="mgr-spreadgroups">
-        <div class="mgr-section-title">SPREAD GRUPLARI</div>
-
-        <!-- Grup butonları - JS ile doldurulur -->
-        <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">GRUP:</span>
-          <div id="sgTabBar" style="display:flex;gap:6px;flex-wrap:wrap;">
-            <!-- JS tarafından doldurulur -->
-          </div>
-          <div style="margin-left:auto;display:flex;gap:8px;">
-            <input class="mgr-input" id="sg_new_name" placeholder="Yeni grup adı..." style="width:160px;padding:5px 10px;">
-            <button class="mgr-btn primary" onclick="sgAddGroup()" style="padding:5px 14px;">+ Ekle</button>
-            <button class="mgr-btn danger" id="sgDeleteBtn" onclick="sgDeleteGroup()" style="padding:5px 12px;display:none;">🗑 Sil</button>
-          </div>
-        </div>
-
-        <!-- Genel ayarlar -->
-        <div class="mgr-row cols4" style="margin-bottom:12px;">
-          <div class="mgr-field">
-            <label class="mgr-label">Margin Call (%)</label>
-            <input class="mgr-input" id="sg_mc" type="number" step="1" min="0" placeholder="80">
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Stop Out (%)</label>
-            <input class="mgr-input" id="sg_so" type="number" step="1" min="0" placeholder="50">
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Max Kaldıraç</label>
-            <select class="mgr-input" id="sg_maxlev" style="cursor:pointer;">
-              <option value="50">1:50</option>
-              <option value="100">1:100</option>
-              <option value="200">1:200</option>
-              <option value="500">1:500</option>
-              <option value="1000">1:1000</option>
-            </select>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Açıklama</label>
-            <input class="mgr-input" id="sg_desc" placeholder="Grup açıklaması...">
-          </div>
-        </div>
-        <div style="margin-bottom:16px;">
-          <button class="mgr-btn primary" onclick="sgSaveGeneral()" style="padding:6px 18px;">💾 Genel Ayarları Kaydet</button>
-        </div>
-
-        <hr class="mgr-divider">
-        <div class="mgr-section-title" style="margin-top:0;">SEMBOL SPREAD & SWAP AYARLARI</div>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;">
-          Boş = sembol varsayılanı kullanılır &nbsp;|&nbsp; ★ = özelleştirilmiş
-        </p>
-        <div style="overflow-x:auto;">
-          <table class="mgr-table" style="min-width:650px;">
-            <thead><tr>
-              <th>Sembol</th><th>Kategori</th><th>Def. Spread</th>
-              <th>Grup Spread</th><th>Swap AL</th><th>Swap SAT</th>
-            </tr></thead>
-            <tbody id="sgSymBody">
-              <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);">Grup seçin...</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div style="margin-top:12px;">
-          <button class="mgr-btn primary" onclick="sgSaveSpreads()" style="padding:7px 20px;">💾 Spread & Swap Kaydet</button>
-        </div>
-      </div>
-
-      
-      <!-- FİYAT YÖNETİMİ -->
-      <div class="mgr-section" id="mgr-pricecontrol">
-        <div class="mgr-section-title">SENTETİK FİYAT YÖNETİMİ</div>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:16px;">
-          Seçilen sembolün fiyatını manuel olarak ayarlayın. Fiyat grafik ve tüm hesaplamalara yansır.
-        </p>
-
-        <!-- Sembol seçimi -->
-        <div class="mgr-row cols4" style="margin-bottom:16px;">
-          <div class="mgr-field">
-            <label class="mgr-label">Sembol</label>
-            <select class="mgr-input" id="pc_sym" onchange="pcLoadSym()" style="cursor:pointer;">
-            <option value="BTCUSDT">BTCUSDT</option>
-            <option value="ETHUSDT">ETHUSDT</option>
-            <option value="BNBUSDT">BNBUSDT</option>
-            <option value="SOLUSDT">SOLUSDT</option>
-            <option value="XRPUSDT">XRPUSDT</option>
-            <option value="ADAUSDT">ADAUSDT</option>
-            <option value="DOGEUSDT">DOGEUSDT</option>
-            <option value="AVAXUSDT">AVAXUSDT</option>
-            <option value="DOTUSDT">DOTUSDT</option>
-            <option value="MATICUSDT">MATICUSDT</option>
-            <option value="LINKUSDT">LINKUSDT</option>
-            <option value="UNIUSDT">UNIUSDT</option>
-            <option value="LTCUSDT">LTCUSDT</option>
-            <option value="ATOMUSDT">ATOMUSDT</option>
-            <option value="XMRUSDT">XMRUSDT</option>
-            <option value="EURUSDT">EURUSDT</option>
-            <option value="GBPUSDT">GBPUSDT</option>
-            <option value="JPYUSDT">JPYUSDT</option>
-            <option value="CHFUSDT">CHFUSDT</option>
-            <option value="AUDUSDX">AUDUSDX</option>
-            <option value="USDCADX">USDCADX</option>
-            <option value="NZDUSDX">NZDUSDX</option>
-            <option value="USDTRY">USDTRY</option>
-            <option value="EURTRY">EURTRY</option>
-            <option value="XAUUSDT">XAUUSDT</option>
-            <option value="XAGUSDT">XAGUSDT</option>
-            <option value="WTIUSDT">WTIUSDT</option>
-            <option value="BRENTUSDT">BRENTUSDT</option>
-            <option value="US30">US30</option>
-            <option value="US500">US500</option>
-            <option value="NAS100">NAS100</option>
-            <option value="GER40">GER40</option>
-          </select>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Mevcut Fiyat</label>
-            <div id="pc_current" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);padding:8px 0;">—</div>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Override Fiyat</label>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <input class="mgr-input" id="pc_price" type="number" step="any" placeholder="Hedef fiyat..." style="flex:1;">
-            </div>
-          </div>
-          <div class="mgr-field" style="padding-top:18px;">
-            <button class="mgr-btn primary" onclick="pcSetPrice()" style="width:100%;padding:9px;">⟳ Fiyatı Uygula</button>
-          </div>
-        </div>
-
-        <!-- Swap Test -->
-        <div class="mgr-section-title" style="margin-top:8px;">SWAP TEST</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-          <button class="mgr-btn secondary" onclick="applyDailySwap();showToast('Swap','Manuel swap uygulandı')">⚡ Swap Uygula (Manuel)</button>
-          <button class="mgr-btn secondary" onclick="positions.forEach(function(p){console.log('Pos #'+p.id+' swapBuy:'+p.swapBuy+' swapSell:'+p.swapSell+' swapTotal:'+p.swapTotal)});showToast('Swap Debug','Konsola yazıldı')">🔍 Swap Debug</button>
-        </div>
-
-        <!-- Hızlı kaydırma -->
-        <div class="mgr-section-title" style="margin-top:8px;">HIZLI KAYDIRMA</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="pc_quick_btns">
-          <button class="mgr-btn danger"   onclick="pcMove(-5)">−5%</button>
-          <button class="mgr-btn danger"   onclick="pcMove(-2)">−2%</button>
-          <button class="mgr-btn danger"   onclick="pcMove(-1)">−1%</button>
-          <button class="mgr-btn danger"   onclick="pcMove(-0.5)">−0.5%</button>
-          <button class="mgr-btn secondary" onclick="pcReset()">Sıfırla</button>
-          <button class="mgr-btn success"  onclick="pcMove(0.5)">+0.5%</button>
-          <button class="mgr-btn success"  onclick="pcMove(1)">+1%</button>
-          <button class="mgr-btn success"  onclick="pcMove(2)">+2%</button>
-          <button class="mgr-btn success"  onclick="pcMove(5)">+5%</button>
-        </div>
-
-        <!-- Kademeli hareket -->
-        <div class="mgr-section-title" style="margin-top:8px;">KADEMELİ HAREKET</div>
-        <div class="mgr-row cols4" style="margin-bottom:12px;">
-          <div class="mgr-field">
-            <label class="mgr-label">Hedef Fiyat</label>
-            <input class="mgr-input" id="pc_target" type="number" step="any" placeholder="85000">
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Süre (saniye)</label>
-            <input class="mgr-input" id="pc_duration" type="number" value="10" min="1" max="300">
-          </div>
-          <div class="mgr-field" style="padding-top:18px;">
-            <button class="mgr-btn primary" onclick="pcGradual()" style="width:100%;padding:9px;" id="pc_grad_btn">▶ Kademeli Hareket</button>
-          </div>
-          <div class="mgr-field" style="padding-top:18px;">
-            <button class="mgr-btn danger" onclick="pcStopGradual()" style="width:100%;padding:9px;">⏹ Durdur</button>
-          </div>
-        </div>
-
-        <!-- Aktif override listesi -->
-        <div class="mgr-section-title" style="margin-top:8px;">AKTİF OVERRİDE'LAR</div>
-        <div id="pc_override_list" style="font-family:var(--mono);font-size:11px;color:var(--muted);">Henüz override yok</div>
-      </div>
-
-      <!-- AYARLAR -->
-      <div class="mgr-section" id="mgr-settings">
-        <div class="mgr-section-title">Terminal Ayarları</div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field"><label class="mgr-label">Başlangıç Bakiyesi ($)</label><input class="mgr-input" id="st_balance" type="number" placeholder="10000"></div>
-          <div class="mgr-field"><label class="mgr-label">Kaldıraç</label><select class="mgr-select" id="st_leverage"><option value="1">1:1</option><option value="5">1:5</option><option value="10">1:10</option><option value="20" selected>1:20</option><option value="50">1:50</option><option value="100">1:100</option></select></div>
-        </div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field"><label class="mgr-label">Terminal Başlığı</label><input class="mgr-input" id="st_title" placeholder="Commerz Terminal"></div>
-          <div class="mgr-field"><label class="mgr-label">Para Birimi</label><select class="mgr-select" id="st_currency"><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="TRY">TRY (₺)</option></select></div>
-        </div>
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Görünüm</div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field" style="flex-direction:row;align-items:center;gap:12px">
-            <label class="mgr-label" style="margin:0">Ticker Bandı</label>
-            <label class="toggle-switch"><input type="checkbox" id="st_ticker" checked><div class="toggle-track"></div></label>
-          </div>
-          <div class="mgr-field" style="flex-direction:row;align-items:center;gap:12px">
-            <label class="mgr-label" style="margin:0">Fiyat Animasyonu</label>
-            <label class="toggle-switch"><input type="checkbox" id="st_anim" checked><div class="toggle-track"></div></label>
-          </div>
-        </div>
-        <div style="margin-top:16px;display:flex;gap:10px">
-          <button class="mgr-btn primary" onclick="saveSettings()">Kaydet</button>
-          <button class="mgr-btn danger" onclick="resetAll()">Tümünü Sıfırla</button>
-        </div>
-      </div>
-
-      <!-- ALARMLAR YÖNETİM -->
-      <div class="mgr-section" id="mgr-alarmsmgr">
-        <div class="mgr-section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Alarm Yönetimi</span>
-          <button class="mgr-btn danger" onclick="clearAllAlarms()" style="font-size:10px;padding:4px 10px">Tümünü Temizle</button>
-        </div>
-        <table class="mgr-table">
-          <thead><tr><th>Durum</th><th>Sembol</th><th>Yön</th><th>Hedef $</th><th>Sil</th></tr></thead>
-          <tbody id="alarmMgrBody"></tbody>
-        </table>
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Yeni Alarm</div>
-        <div class="mgr-row cols4">
-          <div class="mgr-field"><label class="mgr-label">Kripto</label><select class="mgr-select" id="mal_sym"><option value="BTC">BTC</option><option value="ETH">ETH</option><option value="SOL">SOL</option><option value="BNB">BNB</option><option value="XRP">XRP</option><option value="DOGE">DOGE</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Yön</label><select class="mgr-select" id="mal_dir"><option value="above">▲ Geçerse</option><option value="below">▼ Düşerse</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Hedef $</label><input class="mgr-input" id="mal_price" type="number" placeholder="0.00" step="any"></div>
-          <div class="mgr-field" style="justify-content:flex-end"><button class="mgr-btn primary" onclick="mgrAddAlarm()" style="margin-top:auto">+ Ekle</button></div>
-        </div>
-      </div>
-
-      <!-- PORTFÖY YÖNETİM -->
-      <div class="mgr-section" id="mgr-portfoliomgr">
-        <div class="mgr-section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Portföy Yönetimi</span>
-          <button class="mgr-btn danger" onclick="clearPortfolio()" style="font-size:10px;padding:4px 10px">Portföyü Temizle</button>
-        </div>
-        <table class="mgr-table">
-          <thead><tr><th>Kripto</th><th>Miktar</th><th>Alış $</th><th>Güncel $</th><th>Değer</th><th>K/Z</th><th>Sil</th></tr></thead>
-          <tbody id="portMgrBody"></tbody>
-        </table>
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Varlık Ekle</div>
-        <div class="mgr-row cols4">
-          <div class="mgr-field"><label class="mgr-label">Kripto</label><select class="mgr-select" id="mp_sym"><option value="BTC">Bitcoin (BTC)</option><option value="ETH">Ethereum (ETH)</option><option value="SOL">Solana (SOL)</option><option value="BNB">BNB</option><option value="XRP">XRP</option><option value="ADA">Cardano</option><option value="DOGE">Dogecoin</option><option value="AVAX">Avalanche</option></select></div>
-          <div class="mgr-field"><label class="mgr-label">Miktar</label><input class="mgr-input" id="mp_amt" type="number" placeholder="0.00" step="any"></div>
-          <div class="mgr-field"><label class="mgr-label">Alış Fiyatı ($)</label><input class="mgr-input" id="mp_buy" type="number" placeholder="0.00" step="any"></div>
-          <div class="mgr-field" style="justify-content:flex-end"><button class="mgr-btn primary" onclick="mgrAddPortfolio()" style="margin-top:auto">+ Ekle</button></div>
-        </div>
-      </div>
-
-      <!-- ÖDEME YÖNTEMLERİ YÖNETİMİ -->
-      <div class="mgr-section" id="mgr-walletsettings">
-        <div class="mgr-section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Ödeme Yöntemi Yönetimi</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">Para Yatır / Çek ekranında görünür</span>
-        </div>
-
-        <!-- Mevcut yöntemler -->
-        <div style="margin-bottom:16px">
-          <div class="mgr-label" style="margin-bottom:8px">Aktif Ödeme Yöntemleri</div>
-          <div id="payMethodList"></div>
-        </div>
-
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Yeni Ödeme Yöntemi Ekle</div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field">
-            <label class="mgr-label">Yöntem Türü</label>
-            <select class="mgr-select" id="pm_type" onchange="pmTypeChange()">
-              <option value="bank">Banka / IBAN</option>
-              <option value="crypto">Kripto Cüzdan</option>
-            </select>
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Görünen Ad</label>
-            <input class="mgr-input" id="pm_name" placeholder="Örn: Ziraat Bankası / BTC TRC20">
-          </div>
-        </div>
-        <div class="mgr-row cols2">
-          <div class="mgr-field">
-            <label class="mgr-label">İkon (emoji)</label>
-            <input class="mgr-input" id="pm_icon" placeholder="🏦" style="font-size:18px" maxlength="4">
-          </div>
-          <div class="mgr-field">
-            <label class="mgr-label">Para Birimi</label>
-            <select class="mgr-select" id="pm_currency">
-              <option value="TRY">TRY (₺)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="BTC">BTC</option>
-              <option value="ETH">ETH</option>
-              <option value="USDT">USDT</option>
-              <option value="BNB">BNB</option>
-            </select>
-          </div>
-        </div>
-        <!-- IBAN fields -->
-        <div id="pm_bank_fields">
-          <div class="mgr-row cols2">
-            <div class="mgr-field">
-              <label class="mgr-label">Banka Adı</label>
-              <input class="mgr-input" id="pm_bank_name" placeholder="Ziraat Bankası">
-            </div>
-            <div class="mgr-field">
-              <label class="mgr-label">Hesap Sahibi</label>
-              <input class="mgr-input" id="pm_holder" placeholder="Commerz Terminal Ltd. Şti.">
-            </div>
-          </div>
-          <div class="mgr-row">
-            <div class="mgr-field">
-              <label class="mgr-label">IBAN</label>
-              <input class="mgr-input" id="pm_iban" placeholder="TR00 0000 0000 0000 0000 0000 00">
-            </div>
-          </div>
-          <div class="mgr-row cols2">
-            <div class="mgr-field">
-              <label class="mgr-label">Min. Yatırım</label>
-              <input class="mgr-input" id="pm_min" type="number" placeholder="100">
-            </div>
-            <div class="mgr-field">
-              <label class="mgr-label">Açıklama Kodu</label>
-              <input class="mgr-input" id="pm_ref" placeholder="Otomatik (opsiyonel)">
-            </div>
-          </div>
-        </div>
-        <!-- Crypto fields -->
-        <div id="pm_crypto_fields" style="display:none">
-          <div class="mgr-row cols2">
-            <div class="mgr-field">
-              <label class="mgr-label">Ağ (Network)</label>
-              <input class="mgr-input" id="pm_network" placeholder="TRC20 / ERC20 / BEP20">
-            </div>
-            <div class="mgr-field">
-              <label class="mgr-label">Min. Yatırım</label>
-              <input class="mgr-input" id="pm_crypto_min" type="number" placeholder="0.01">
-            </div>
-          </div>
-          <div class="mgr-row">
-            <div class="mgr-field">
-              <label class="mgr-label">Cüzdan Adresi</label>
-              <input class="mgr-input" id="pm_wallet" placeholder="0x... / T... / bc1...">
-            </div>
-          </div>
-        </div>
-        <div class="mgr-row" style="margin-top:4px">
-          <div class="mgr-field">
-            <label class="mgr-label">Kullanım Notu (yatırımcıya gösterilecek)</label>
-            <input class="mgr-input" id="pm_note" placeholder="Açıklama kısmına Müşteri No yazınız">
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:4px">
-          <button class="mgr-btn primary" onclick="addPayMethod()">+ Yöntem Ekle</button>
-        </div>
-      </div>
-
-      <!-- ÇEKİM TALEPLERİ -->
-      <div class="mgr-section" id="mgr-withdrawreqs">
-        <div class="mgr-section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Çekim Talepleri</span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span id="pendingCount" style="font-family:var(--mono);font-size:11px;color:var(--accent)"></span>
-            <button class="mgr-btn danger" onclick="clearAllRequests()" style="font-size:10px;padding:4px 10px">Tümünü Temizle</button>
-          </div>
-        </div>
-
-        <!-- Filter -->
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <select class="mgr-select" id="reqFilter" onchange="renderWithdrawReqs()" style="width:140px">
-            <option value="all">Tümü</option>
-            <option value="pending">Bekleyen</option>
-            <option value="approved">Onaylanan</option>
-            <option value="rejected">Reddedilen</option>
-          </select>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center">
-            Toplam: <span id="reqTotal" style="color:var(--text);margin-left:4px">0</span>
-          </span>
-        </div>
-
-        <table class="mgr-table" id="withdrawReqTable">
-          <thead>
-            <tr>
-              <th>#</th><th>Tarih</th><th>Hesap</th><th>Yöntem</th><th>Adres</th><th>Miktar</th><th>Durum</th><th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawReqBody"></tbody>
-        </table>
-
-        <!-- Deposit requests section -->
-        <hr class="mgr-divider">
-        <div class="mgr-section-title">Para Yatırma Bildirimleri</div>
-        <table class="mgr-table">
-          <thead><tr><th>#</th><th>Tarih</th><th>Yöntem</th><th>Miktar</th><th>Not</th><th>Durum</th><th>İşlem</th></tr></thead>
-          <tbody id="depositReqBody"></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-</div>
-</div>
 
 <script>
 
@@ -4847,10 +4200,6 @@ var SIM_PRICES = {
   'DAX40X':  {p:19500, v:0.0003, d:2}, 'XU100X':  {p:9800,  v:0.0004, d:2}
 };
 
-function setApiDot(s, label) {
-  // Trader müşteri arayüzünde gösterim yok — sadece admin'e sinyal
-  try { localStorage.setItem('_tdFeedStatus', JSON.stringify({s:s, label:label, t:Date.now()})); } catch(e){}
-}
 
 // ════════════════════════════════════════════════════════════
 // GLOBAL LİSTENER YÖNETİCİSİ — tüm onSnapshot'lar buradan
@@ -5116,182 +4465,17 @@ function saveSymConfig(){ localStorage.setItem('tx_syms', JSON.stringify(symConf
 
 function saveAccounts(){ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); fbSaveAccounts(); }
 
-function saveSettingsData(){ localStorage.setItem('tx_settings', JSON.stringify(settings)); }
 
-function toggleManager() {
-  const o = document.getElementById('mgrOverlay');
-  const isOpen = o.classList.contains('open');
-  if (!isOpen) {
-    o.classList.add('open');
-    renderSymMgr();
-    renderAccCards();
-    sgLoad();
-    renderAccListSmall();
-    renderAlarmMgr();
-    renderPortMgr();
-    loadSettingsForm();
-  } else {
-    o.classList.remove('open');
-  }
-}
 
-function overlayClose(e) {
-  if (e.target === document.getElementById('mgrOverlay')) toggleManager();
-}
 
-function mgrTab(id, el) {
-  document.querySelectorAll('.mgr-nav-item').forEach(i=>i.classList.remove('active'));
-  document.querySelectorAll('.mgr-section').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-  var sec = document.getElementById('mgr-'+id);
-  if(sec) sec.classList.add('active');
-  if (id==='alarmsmgr')    renderAlarmMgr();
-  if (id==='portfoliomgr') renderPortMgr();
-  if (id==='accounts')     renderAccCards();
-  if (id==='newaccount')   renderAccListSmall();
-  if (id==='spreadgroups') {
-    if(!window._symConfig && typeof symConfig !== 'undefined') window._symConfig = symConfig;
-    sgLoad();
-    sgRender();
-  }
-  if (id==='pricecontrol') { pcInit(); }
-}
 
-function renderSymMgr(filterCat) {
-  filterCat = filterCat || window._symFilter || 'all';
-  window._symFilter = filterCat;
-  ['all','crypto','forex','commodity','index'].forEach(function(k){
-    var b = document.getElementById('scf-'+k);
-    if(!b) return;
-    b.style.borderColor = (k===filterCat) ? 'var(--accent)' : '';
-    b.style.color       = (k===filterCat) ? 'var(--accent)' : '';
-  });
-  var tb = document.getElementById('symMgrBody');
-  if(!tb) return;
-  var filtered = symConfig.map(function(s,i){ return {s:s,i:i}; })
-    .filter(function(x){ return filterCat==='all' || x.s.category===filterCat; });
-  var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks'};
-  tb.innerHTML = filtered.map(function(x){
-    var s=x.s, i=x.i;
-    return '<tr>' +
-      '<td><label class="toggle-switch"><input type="checkbox" '+(s.active?'checked':'')+' onchange="toggleSym('+i+',this.checked)"><div class="toggle-track"></div></label></td>' +
-      '<td style="font-family:var(--mono);font-weight:700;white-space:nowrap;">'+s.sym+'</td>' +
-      '<td><input class="mgr-input" style="width:90px;padding:3px 6px;" value="'+s.label+'" onchange="updateSym('+i+',\'label\',this.value)"></td>' +
-      '<td style="font-size:11px;">'+(catMap[s.category||'crypto']||s.category||'-')+'</td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.spread||0)+'" onchange="updateSym('+i+',\'spread\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.swapBuy||0)+'" onchange="updateSym('+i+',\'swapBuy\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+(s.swapSell||0)+'" onchange="updateSym('+i+',\'swapSell\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:90px;padding:3px 6px;" type="number" step="any" value="'+(s.contractSize||1)+'" onchange="updateSym('+i+',\'contractSize\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:65px;padding:3px 6px;" type="number" step="any" value="'+(s.margin||1)+'" onchange="updateSym('+i+',\'margin\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:55px;padding:3px 6px;" type="number" min="0" max="8" step="1" value="'+(s.decimals||5)+'" onchange="updateSym('+i+',\'decimals\',parseInt(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:70px;padding:3px 6px;" type="number" step="any" value="'+(s.minLot||0.01)+'" onchange="updateSym('+i+',\'minLot\',parseFloat(this.value))"></td>' +
-      '<td><input type="color" style="width:36px;height:24px;padding:1px;cursor:pointer;border:1px solid var(--border);background:none;" value="'+(s.color||'#ffffff')+'" onchange="updateSym('+i+',\'color\',this.value)"></td>' +
-      '<td style="white-space:nowrap;">' +
-        '<button class="mgr-btn secondary" onclick="editSymForm('+i+')" style="padding:2px 8px;font-size:10px;margin-right:3px;">&#9998;</button>' +
-        '<button class="mgr-btn danger" onclick="deleteSymMgr('+i+')" style="padding:2px 8px;font-size:10px;">&#10005;</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-}
-function toggleSym(i, val) {
-  symConfig[i].active = val;
-  saveSymConfig();
-  applySymConfig();
-}
 
-function deleteSymMgr(i) {
-  if(!symConfig || !symConfig[i]) return;
-  var sym = symConfig[i].sym || symConfig[i].label || ('Sembol #'+i);
-  if(!confirm(sym + ' sembolünü silmek istediğinizden emin misiniz?')) return;
-  symConfig.splice(i, 1);
-  saveSymConfig();
-  applySymConfig();
-  renderSymTable();
-}
 
-function updateSym(i, key, val) {
-  symConfig[i][key] = val;
-  saveSymConfig();
-  applySymConfig();
-}
 
-function removeSym(i) {
-  if (symConfig.length <= 1) { showToast('Hata','En az 1 sembol olmalı!'); return; }
-  symConfig.splice(i, 1);
-  saveSymConfig();
-  renderSymMgr();
-  applySymConfig();
-}
 
-function saveSymbolMgr() {
-  var editIdx      = parseInt(document.getElementById('ns_editIdx').value);
-  var sym          = document.getElementById('ns_sym').value.toUpperCase().trim();
-  var label        = document.getElementById('ns_label').value.trim();
-  var sh           = document.getElementById('ns_short').value.toUpperCase().trim();
-  var spread       = parseFloat(document.getElementById('ns_spread').value) || 0.0002;
-  var swapBuy      = parseFloat(document.getElementById('ns_swapBuy').value)  || 0;
-  var swapSell     = parseFloat(document.getElementById('ns_swapSell').value) || 0;
-  var color        = document.getElementById('ns_color').value;
-  var minLot       = parseFloat(document.getElementById('ns_minlot').value) || 0.01;
-  var contractSize = parseFloat(document.getElementById('ns_contractSize').value) || 1;
-  var margin       = parseFloat(document.getElementById('ns_margin').value) || 1;
-  var decimals     = parseInt(document.getElementById('ns_decimals').value) || 5;
-  var category     = document.getElementById('ns_category').value;
 
-  if(!sym || !label || !sh) { showToast('Hata', 'Sembol, etiket ve kisa ad zorunlu!'); return; }
 
-  var obj = {sym:sym, label:label, s:sh, spread:spread, swapBuy:swapBuy, swapSell:swapSell, color:color, minLot:minLot,
-             active:true, contractSize:contractSize, margin:margin, decimals:decimals, category:category};
 
-  if(editIdx >= 0) {
-    obj.active = symConfig[editIdx].active;
-    symConfig[editIdx] = obj;
-    showToast('Guncellendi', label + ' guncellendi');
-  } else {
-    var exists = symConfig.some(function(x){ return x.sym === sym; });
-    if(exists) { showToast('Hata', 'Bu sembol zaten var!'); return; }
-    symConfig.push(obj);
-    showToast('Eklendi', label + ' eklendi');
-  }
-  localStorage.setItem('tx_syms', JSON.stringify(symConfig));
-  window._symConfig = symConfig; // sgRender için erişilebilir yap
-  resetSymForm();
-  renderSymMgr();
-}
-
-function editSymForm(i) {
-  var s = symConfig[i];
-  document.getElementById('ns_editIdx').value      = i;
-  document.getElementById('ns_sym').value          = s.sym;
-  document.getElementById('ns_label').value        = s.label;
-  document.getElementById('ns_short').value        = s.s;
-  document.getElementById('ns_spread').value       = s.spread;
-  document.getElementById('ns_swapBuy').value      = s.swapBuy  || 0;
-  document.getElementById('ns_swapSell').value     = s.swapSell || 0;
-  document.getElementById('ns_color').value        = s.color || '#f0b90b';
-  document.getElementById('ns_minlot').value       = s.minLot;
-  document.getElementById('ns_contractSize').value = s.contractSize || 1;
-  document.getElementById('ns_margin').value       = s.margin || 1;
-  document.getElementById('ns_decimals').value     = s.decimals || 5;
-  document.getElementById('ns_category').value     = s.category || 'crypto';
-  document.getElementById('symFormTitle').textContent = 'SEMBOL DUZENLE: ' + s.sym;
-  document.getElementById('symSaveBtn').textContent   = 'KAYDET';
-  document.getElementById('symFormTitle').scrollIntoView({behavior:'smooth'});
-}
-
-function resetSymForm() {
-  ['ns_editIdx','ns_sym','ns_label','ns_short','ns_spread','ns_contractSize','ns_margin','ns_decimals','ns_minlot'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.value = id==='ns_editIdx' ? -1 : '';
-  });
-  document.getElementById('ns_color').value        = '#f0b90b';
-  document.getElementById('ns_category').value     = 'crypto';
-  document.getElementById('symFormTitle').textContent = 'YENİ SEMBOL EKLE';
-  document.getElementById('symSaveBtn').textContent   = '+ SEMBOL EKLE';
-}
-
-function filterSymCat(cat) { renderSymMgr(cat); }
-function addSymbolMgr() { saveSymbolMgr(); }
 function getGroupSpread(sym) {
   // Hesabın grubundan sembol spread'ini al
   if(!_cu || !(_cu.spreadGroup || _cu.group)) return null;
@@ -5376,573 +4560,36 @@ function applySymConfig() {
   if(document.getElementById('mwBody')) renderMarketWatch();
 }
 
-function createAccount() {
-  const name    = document.getElementById('na_name').value.trim();
-  const email   = document.getElementById('na_email').value.trim();
-  const type    = document.getElementById('na_type').value;
-  const currency= document.getElementById('na_currency').value;
-  const bal     = parseFloat(document.getElementById('na_balance').value) || 10000;
-  var   lev     = parseInt(document.getElementById('na_leverage').value) || 20;
-  const pass    = document.getElementById('na_pass').value;
-  const pass2   = document.getElementById('na_pass2').value;
-  if (!name || !email) { showToast('Hata','Ad ve e-posta gerekli!'); return; }
-  if (pass && pass !== pass2) { showToast('Hata','Şifreler eşleşmiyor!'); return; }
-  // Login numarası 10000'den başlar, her hesapta artar
-  var _allIds = accounts.map(function(a){ return parseInt(a.login||a.id)||0; });
-  var _nextLogin = _allIds.length ? Math.max.apply(null, _allIds) + 1 : 10000;
-  if(_nextLogin < 10000) _nextLogin = 10000;
-  const id = String(_nextLogin);
-  var sg2 = document.getElementById('na_spreadGroup') ? document.getElementById('na_spreadGroup').value : 'standard';
-  // Grubun maxLeverage'ını aşma
-  if(typeof getMaxLeverage === 'function') {
-    var _maxL = getMaxLeverage(sg2);
-    if(lev > _maxL) {
-      showToast('Uyarı', 'Kaldıraç, '+sg2+' max değerine (1:'+_maxL+') çekildi');
-      lev = _maxL;
-    }
-  }
-  var bn2 = parseFloat(document.getElementById('na_bonus') ? document.getElementById('na_bonus').value : 0) || 0;
-  var now2 = new Date();
-  var _newAcc = { id:id, login:id, name:name, email:email, password:pass, type:type, currency:currency, balance:bal, equity:bal, leverage:lev, active:true, created:now2.toString(), regDate:now2.toISOString(), spreadGroup:sg2, bonus:bn2, lastSeen:null, online:false };
-  fbAddAccount(accounts[accounts.length-1], function(err, savedAcc) {
-    if(err) { showToast('Hata', err); accounts.pop(); return; }
-    var finalAcc = savedAcc || accounts[accounts.length-1];
-    if(savedAcc) { accounts[accounts.length-1] = savedAcc; localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }
-    renderAccCards();
-    renderAccListSmall();
-    showToast('Hesap Oluşturuldu ✓', name + ' — #' + finalAcc.login);
-    ['na_name','na_email','na_pass','na_pass2','na_balance'].forEach(function(i){ var el=document.getElementById(i); if(el) el.value=''; });
-  });
-}
 
 
 var _adAccId = null;
 
-function openAccDetail(id) {
-  // Önce accounts array'inde ara, yoksa _cu'dan oluştur
-  var a = accounts.find(function(x){ return x.id === id; });
-  if(!a && _cu && String(_cu.id) === String(id)) {
-    // _cu'yu accounts'a ekle
-    a = _cu;
-    accounts.push(a);
-  }
-  if(!a) { console.error('Account not found:', id); return; }
-  _adAccId = id;
 
-  // Firebase'den taze balance + finlog çek
-  fbLoadUserData(id, function(data) {
-    if(data) {
-      if(data.balance !== undefined) { a.balance = parseFloat(data.balance)||0; }
-      if(Array.isArray(data.finlog))  { a.finlog  = data.finlog; }
-      // Global finlog'u da güncelle (finance tab için)
-      if(typeof finlog !== 'undefined' && Array.isArray(data.finlog)) finlog = data.finlog;
-      if(typeof balance !== 'undefined' && data.balance !== undefined) balance = parseFloat(data.balance)||0;
-    }
-    var dot = document.getElementById('adOnlineDot');
-    if(dot) { dot.style.background = a.online ? '#2979ff' : '#444'; dot.style.boxShadow = a.online ? '0 0 6px #2979ff' : 'none'; }
-    var accIdEl = document.getElementById('adAccId'); if(accIdEl) accIdEl.textContent = a.id;
-    var nameEl  = document.getElementById('adName');  if(nameEl)  nameEl.textContent  = a.name;
-    var typeEl  = document.getElementById('adType');  if(typeEl)  { typeEl.textContent = a.type==='demo'?'DEMO':'GERÇEK'; typeEl.style.color = a.type==='demo'?'#aaa':'#2979ff'; }
-    var stEl    = document.getElementById('adStatus'); if(stEl) { stEl.textContent = a.active?'AKTİF':'PASİF'; stEl.style.color = a.active?'#2979ff':'#ef5350'; stEl.style.background = a.active?'rgba(38,166,154,0.1)':'rgba(239,83,80,0.1)'; }
-    var ov = document.getElementById('accDetailOverlay');
-    ov.style.display = 'flex';
-    document.querySelectorAll('.ad-tab').forEach(function(b){ b.classList.remove('ad-active'); b.style.borderBottomColor='transparent'; b.style.color='var(--muted)'; });
-    var firstTab = document.querySelector('.ad-tab');
-    if(firstTab) { firstTab.classList.add('ad-active'); firstTab.style.borderBottomColor='var(--accent)'; firstTab.style.color='var(--accent)'; }
-    adRenderTab('trades');
-  });
-}
 
-function closeAccDetail() {
-  var ov = document.getElementById('accDetailOverlay');
-  if(ov) ov.style.display = 'none';
-  _adAccId = null;
-}
 
-function adTab(tab, el) {
-  document.querySelectorAll('.ad-tab').forEach(function(b){
-    b.classList.remove('ad-active');
-    b.style.borderBottomColor = 'transparent';
-    b.style.color = 'var(--muted)';
-  });
-  el.classList.add('ad-active');
-  el.style.borderBottomColor = 'var(--accent)';
-  el.style.color = 'var(--accent)';
-  adRenderTab(tab);
-}
 
-function adRenderTab(tab) {
-  var a = accounts.find(function(x){ return x.id === _adAccId; });
-  if(!a) return;
-  var cnt = document.getElementById('adContent');
-  if(!cnt) return;
-  var sgMap = {standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero Spread'};
-  var sgCol = {standard:'#888',ecn:'#2979ff',vip:'#f5c518',zero:'#ef5350'};
 
-  if(tab === 'info') {
-    cnt.innerHTML =
-      '<div class="ad-grid3" style="margin-bottom:16px;">' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#2979ff;">$'+(a.balance||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#2979ff;">$'+((a.equity||a.balance)||0).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BONUS</div><div class="ad-stat-val" style="color:#f5c518;">$'+(a.bonus||0).toFixed(2)+'</div></div>' +
-      '</div>' +
-      '<div class="ad-grid2">' +
-        '<div>' +
-          '<div class="ad-section-title">Hesap Bilgileri</div>' +
-          '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-            adIR('Account ID', a.id) + adIR('Ad Soyad', a.name) + adIR('E-posta', a.email) +
-            adIR('Kayıt Tarihi', a.regDate ? fmtDate(a.regDate) : (a.created||'—')) +
-            adIR('Son Görülme', a.lastSeen ? fmtDate(a.lastSeen) : '—') +
-            adIR('Hesap Tipi', a.type==='demo'?'Demo':'Gerçek') +
-          '</table>' +
-        '</div>' +
-        '<div>' +
-          '<div class="ad-section-title">Ticaret Ayarları</div>' +
-          '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-            adIR('Trading Grubu', '<span style="color:'+(sgCol[a.spreadGroup||'standard']||'#888')+'">'+(sgMap[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</span>') +
-            adIR('Kaldıraç', '1:'+(a.leverage||100)) +
-            adIR('Marjin Seviyesi', '%'+(a.marginLevelPct||100)) +
-            adIR('Para Birimi', a.currency||'USD') +
-            adIR('Durum', '<span style="color:'+(a.active?'#2979ff':'#ef5350')+'">'+(a.active?'Aktif':'Pasif')+'</span>') +
-          '</table>' +
-        '</div>' +
-      '</div>';
 
-  } else if(tab === 'finance') {
-    cnt.innerHTML =
-      '<div class="ad-grid2" style="gap:20px;">' +
-        '<div>' +
-          '<div class="ad-section-title">Para Yatır</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Miktar ($)</label><input class="ad-input" id="ad_dep_amt" type="number" placeholder="1000" min="0"></div>' +
-            '<div><label class="ad-label">Açıklama</label><input class="ad-input" id="ad_dep_note" placeholder="Banka havalesi..."></div>' +
-            '<button class="ad-btn ad-btn-success" onclick="adDeposit()">💰 Para Yatır</button>' +
-          '</div>' +
-          '<div class="ad-section-title" style="margin-top:20px;">Para Çek</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Miktar ($)</label><input class="ad-input" id="ad_wd_amt" type="number" placeholder="500" min="0"></div>' +
-            '<div><label class="ad-label">Açıklama</label><input class="ad-input" id="ad_wd_note" placeholder="Çekim talebi..."></div>' +
-            '<button class="ad-btn ad-btn-danger" onclick="adWithdraw()">↑ Para Çek</button>' +
-          '</div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="ad-section-title">Bonus Ekle / Çıkar</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Bonus Miktarı ($)</label><input class="ad-input" id="ad_bon_amt" type="number" placeholder="100"></div>' +
-            '<div style="display:flex;gap:8px;">' +
-              '<button class="ad-btn ad-btn-success" onclick="adBonus(1)" style="flex:1;">+ Ekle</button>' +
-              '<button class="ad-btn ad-btn-danger" onclick="adBonus(-1)" style="flex:1;">− Çıkar</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="ad-section-title" style="margin-top:20px;">Özet</div>' +
-          '<div class="ad-card">' +
-            '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-              adIR("Bakiye", "$"+((typeof balance!=='undefined'?balance:a.balance)||0).toFixed(2)) +
-              adIR("Bonus",  "$"+(a.bonus||0).toFixed(2)) +
-              adIR("Varlık", "$"+((a.equity||(typeof balance!=='undefined'?balance:a.balance))||0).toFixed(2)) +
-            "</table>" +
-          "</div>" +
-        "</div>" +
-      "</div>" +
-      '<div style="margin-top:20px;">' +
-        '<div class="ad-section-title">İşlem Geçmişi</div>' +
-        '<table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;">' +
-        '<thead><tr style="background:#181818;">' +
-          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Tarih</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Tip</th>' +
-          '<th style="padding:6px 10px;text-align:right;color:#c0c0c0;border-bottom:1px solid #222;">Miktar</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:#c0c0c0;border-bottom:1px solid #222;">Not</th>' +
-        '</tr></thead>' +
-        '<tbody>' +
-        (finlog.length ? finlog.map(function(l){
-          var tp = {deposit:"Para Yatır",withdraw:"Para Çek",bonus_in:"Bonus Ekle",bonus_out:"Bonus Çıkar"};
-          var cl = {deposit:"#2979ff",withdraw:"#ef5350",bonus_in:"#f5c518",bonus_out:"#f5a623"};
-          var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
-          return '<tr style="border-bottom:1px solid #1a1a1a;">'
-            +'<td style="padding:5px 10px;color:#c0c0c0;">'+fmtDate(l.date)+'</td>'
-            +'<td style="padding:5px 10px;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+(tp[l.type]||l.type)+'</td>'
-            +'<td style="padding:5px 10px;text-align:right;color:'+(cl[l.type]||'#888')+';font-weight:700;">'+ sign +'$'+ parseFloat(l.amount||0).toFixed(2) +'</td>'
-            +'<td style="padding:5px 10px;color:#b0b0b0;">'+( l.note||'—')+'</td>'
-            +'</tr>';
-        }).join('') : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#777;">Kayıt yok</td></tr>') +
-        '</tbody></table></div>';
 
-  } else if(tab === 'trades') {
-    var symopts = symConfig.filter(function(s){ return s.active; }).map(function(s){ return '<option value="'+s.sym+'">'+s.label+'</option>'; }).join('');
-    cnt.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
-        '<span style="font-family:var(--mono);font-size:12px;font-weight:700;">Açık Pozisyonlar</span>' +
-        '<button class="ad-btn ad-btn-success" onclick="document.getElementById(\'adMTF\').style.display=\'block\'">+ Manuel İşlem Aç</button>' +
-      '</div>' +
-      '<div id="adMTF" style="display:none;background:#181818;border:1px solid #333;border-radius:6px;padding:14px;margin-bottom:14px;">' +
-        '<div class="ad-section-title" style="margin-top:0;">Manuel İşlem</div>' +
-        '<div class="ad-grid3" style="margin-bottom:10px;">' +
-          '<div><label class="ad-label">Sembol</label><select class="ad-input" id="ad_tsym">'+symopts+'</select></div>' +
-          '<div><label class="ad-label">Yön</label><select class="ad-input" id="ad_tside"><option value="buy">▲ AL</option><option value="sell">▼ SAT</option></select></div>' +
-          '<div><label class="ad-label">Lot</label><input class="ad-input" id="ad_tlot" type="number" value="0.01" step="0.01"></div>' +
-        '</div>' +
-        '<div class="ad-grid3" style="margin-bottom:10px;">' +
-          '<div><label class="ad-label">Açılış Fiyatı</label><input class="ad-input" id="ad_tprice" type="number" step="any" placeholder="Mevcut fiyat"></div>' +
-          '<div><label class="ad-label">Stop Loss</label><input class="ad-input" id="ad_tsl" type="number" step="any" placeholder="Opsiyonel"></div>' +
-          '<div><label class="ad-label">Take Profit</label><input class="ad-input" id="ad_ttp" type="number" step="any" placeholder="Opsiyonel"></div>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="ad-btn ad-btn-success" onclick="adManualTrade()">İşlemi Aç</button>' +
-          '<button class="ad-btn ad-btn-secondary" onclick="document.getElementById(\'adMTF\').style.display=\'none\'">İptal</button>' +
-        '</div>' +
-      '</div>' +
-      '<div style="overflow-x:auto;"><table class="mgr-table" style="min-width:700px;">' +
-        '<thead><tr><th>#</th><th>Sembol</th><th>Yön</th><th>Lot</th><th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th><th>K/Z $</th><th>İşlem</th></tr></thead>' +
-        '<tbody id="adTradeBody"></tbody>' +
-      '</table></div>';
-    adRenderTrades();
 
-  } else if(tab === 'settings') {
-    cnt.innerHTML =
-      '<div class="ad-grid2" style="gap:20px;">' +
-        '<div>' +
-          '<div class="ad-section-title">Grup & Kaldıraç & Marjin</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Trading Grubu</label>' +
-              '<select class="ad-input" id="ad_sg" style="cursor:pointer;">' +
-                '<option value="standard">Standard</option>' +
-                '<option value="ecn">ECN</option>' +
-                '<option value="vip">VIP</option>' +
-                '<option value="zero">Zero Spread</option>' +
-              '</select>' +
-            '</div>' +
-            '<div><label class="ad-label">Kaldıraç</label>' +
-              '<select class="ad-input" id="ad_lev" style="cursor:pointer;">' +
-                '<option value="50">1:50</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1000</option>' +
-              '</select>' +
-            '</div>' +
-            '<div><label class="ad-label">Marjin Seviyesi (%)</label><input class="ad-input" id="ad_ml" type="number" placeholder="100" min="0" value="'+(a.marginLevelPct||100)+'"></div>' +
-            '<button class="ad-btn ad-btn-primary" onclick="adSaveSettings()">Kaydet</button>' +
-          '</div>' +
-          '<div class="ad-section-title" style="margin-top:20px;">İsim Güncelle</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Ad Soyad</label><input class="ad-input" id="ad_nm" value="'+a.name+'"></div>' +
-            '<button class="ad-btn ad-btn-secondary" onclick="adUpdateName()">Güncelle</button>' +
-          '</div>' +
-          '<div class="ad-section-title" style="margin-top:20px;">Şifre Değiştir</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Yeni Şifre</label><input class="ad-input" id="ad_pw1" type="password" placeholder="Yeni şifre..."></div>' +
-            '<div><label class="ad-label">Şifre Tekrar</label><input class="ad-input" id="ad_pw2" type="password" placeholder="Tekrar girin..."></div>' +
-            '<button class="ad-btn ad-btn-primary" onclick="adChangePassword()">🔑 Şifreyi Güncelle</button>' +
-          '</div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="ad-section-title">Hesap Durumu</div>' +
-          '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<button class="ad-btn '+(a.active?'ad-btn-danger':'ad-btn-success')+'" onclick="adToggleStatus()">'+(a.active?'⏸ Hesabı Durdur':'▶ Hesabı Aktif Et')+'</button>' +
-          '</div>' +
-          '<div class="ad-section-title" style="margin-top:20px;color:#ef5350;">Tehlikeli Alan</div>' +
-          '<div style="background:rgba(239,83,80,0.05);border:1px solid rgba(239,83,80,0.2);border-radius:6px;padding:14px;">' +
-            '<p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;">Bu hesabı silmek geri alınamaz.</p>' +
-            '<div style="display:flex;flex-direction:column;gap:8px;">' +
-            '<div><label class="ad-label">Doğrulama Kodu (4 karakter)</label>' +
-            '<input class="ad-input" id="ad_del_code" type="text" maxlength="4" placeholder="Örn: AB3X" style="letter-spacing:4px;font-size:14px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>' +
-            '<div id="ad_del_hint" style="font-family:monospace;font-size:10px;color:#f0b90b;"></div>' +
-            '<div style="display:flex;gap:8px;">' +
-            '<button class="ad-btn ad-btn-secondary" onclick="adGenDelCode()">Kod Oluştur</button>' +
-            '<button class="ad-btn ad-btn-danger" onclick="adDeleteAcc()">🗑 Hesabı Kalıcı Sil</button>' +
-            '</div></div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    setTimeout(function(){
-      var sg=document.getElementById('ad_sg'); if(sg) sg.value=a.spreadGroup||'standard';
-      var lv=document.getElementById('ad_lev'); if(lv) lv.value=String(a.leverage||100);
-    },30);
-  }
-}
 
-function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
 
-function adDeposit() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var amt = parseFloat((document.getElementById('ad_dep_amt')||{}).value);
-  if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  a.balance += amt; a.equity = (a.equity||a.balance-amt)+amt;
-  saveAccounts(); renderAccTable();
-  showToast('Para Yatırıldı ✓','$'+amt.toFixed(2)+' → '+a.name);
-  adRenderTab('finance');
-}
-
-function adWithdraw() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var amt = parseFloat((document.getElementById('ad_wd_amt')||{}).value);
-  if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  if(amt > a.balance){ showToast('Hata','Yetersiz bakiye! Mevcut: $'+a.balance.toFixed(2)); return; }
-  a.balance -= amt; a.equity = Math.max(0,(a.equity||a.balance+amt)-amt);
-  saveAccounts(); renderAccTable();
-  showToast('Para Çekildi ✓','$'+amt.toFixed(2)+' ← '+a.name);
-  adRenderTab('finance');
-}
-
-function adBonus(sign) {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var amt = parseFloat((document.getElementById('ad_bon_amt')||{}).value);
-  if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  var oldBonus = a.bonus || 0;
-  var newBonus = Math.max(0, oldBonus + sign * amt);
-  var diff = newBonus - oldBonus; // gerçek eklenen/çıkarılan miktar
-  a.bonus  = newBonus;
-  a.equity = Math.max(0, (a.equity || a.balance) + diff);
-  saveAccounts(); renderAccTable();
-  showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
-  adRenderTab('finance');
-}
-
-function adSaveSettings() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var sg  = (document.getElementById('ad_sg')||{}).value||'standard';
-  var lev = parseInt((document.getElementById('ad_lev')||{}).value)||100;
-  var ml  = parseFloat((document.getElementById('ad_ml')||{}).value)||100;
-  a.spreadGroup=sg; a.leverage=lev; a.marginLevelPct=ml;
-  saveAccounts(); renderAccTable();
-  showToast('Kaydedildi ✓',a.name);
-  openAccDetail(_adAccId);
-}
-
-function adUpdateName() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var n = ((document.getElementById('ad_nm')||{}).value||'').trim();
-  if(!n){ showToast('Hata','İsim boş olamaz!'); return; }
-  a.name=n; saveAccounts(); renderAccTable();
-  var el=document.getElementById('adName'); if(el) el.textContent=n;
-  showToast('İsim Güncellendi ✓',n);
-}
-
-function adToggleStatus() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  a.active=!a.active; saveAccounts(); renderAccTable(); openAccDetail(_adAccId);
-}
 
 var _adDelCode = '';
-function adGenDelCode() {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  _adDelCode = '';
-  for(var i=0;i<4;i++) _adDelCode += chars[Math.floor(Math.random()*chars.length)];
-  var hint = document.getElementById('ad_del_hint');
-  if(hint) hint.innerHTML = 'Doğrulama kodu: <span style="color:#ef5350;font-weight:700;font-size:13px;letter-spacing:3px;">'+_adDelCode+'</span> — yukarıya girin';
-  var inp = document.getElementById('ad_del_code');
-  if(inp) { inp.value=''; inp.focus(); }
-}
-function adDeleteAcc() {
-  var inp = document.getElementById('ad_del_code');
-  var entered = inp ? inp.value.trim().toUpperCase() : '';
-  if(!_adDelCode) { showToast('Hata', 'Önce "Kod Oluştur" butonuna basın!'); return; }
-  if(entered !== _adDelCode) { showToast('Hatalı Kod', 'Doğrulama kodu eşleşmiyor!'); if(inp) { inp.style.border='1px solid #ef5350'; setTimeout(function(){inp.style.border='';},1500); } return; }
-  _adDelCode = '';
-  var id = _adAccId;
-  closeAccDetail();
-  deleteAccount(id);
-  showToast('Hesap Silindi', 'Hesap kalıcı olarak silindi');
-}
 
-function adManualTrade() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var sym   = (document.getElementById('ad_tsym')||{}).value;
-  var side  = (document.getElementById('ad_tside')||{}).value||'buy';
-  var lot   = parseFloat((document.getElementById('ad_tlot')||{}).value)||0.01;
-  var op    = parseFloat((document.getElementById('ad_tprice')||{}).value)||(prices[sym]?prices[sym].price:0);
-  var sl    = parseFloat((document.getElementById('ad_tsl')||{}).value)||null;
-  var tp    = parseFloat((document.getElementById('ad_ttp')||{}).value)||null;
-  if(!op){ showToast('Hata','Açılış fiyatı girin!'); return; }
-  if(typeof positions==='undefined') window.positions=[];
-  var sc=symConfig.find(function(s){ return s.sym===sym; })||{};
-  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,manual:true});
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  showToast('İşlem Açıldı ✓',lot+' lot '+sym);
-  document.getElementById('adMTF').style.display='none';
-  adRenderTrades();
-}
 
-function adRenderTrades() {
-  var tb=document.getElementById('adTradeBody'); if(!tb) return;
-  var a=accounts.find(function(x){ return x.id===_adAccId; });
-  var pos=(typeof positions!=='undefined'?positions:[]).filter(function(p){ return !p.accId||p.accId===(a?a.id:''); });
-  if(!pos.length){ tb.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);">Açık pozisyon yok</td></tr>'; return; }
-  tb.innerHTML=pos.map(function(p){
-    var cp=prices[p.sym]?prices[p.sym].price:p.openPrice;
-    var pnl=(p.side==='buy'?cp-p.openPrice:p.openPrice-cp)*p.qty;
-    var pc=pnl>=0?'#2979ff':'#ef5350';
-    var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-    return '<tr id="posRow-'+p.id+'">'+
-      '<td style="font-family:var(--mono);">#'+p.id+'</td>'+
-      '<td style="font-weight:700;">'+p.sym+'</td>'+
-      '<td style="color:'+(p.side==='buy'?'#2979ff':'#ef5350')+';font-weight:700;">'+(p.side==='buy'?'▲AL':'▼SAT')+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.qty+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.openPrice.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);">'+cp.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);color:#ef5350;">'+(p.sl||'—')+'</td>'+
-      '<td style="font-family:var(--mono);color:#2979ff;">'+(p.tp||'—')+'</td>'+
-      '<td style="font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'</td>'+
-      '<td style="font-family:var(--mono);font-size:10px;">'+getDeviceIcon(p.device||'Web')+'</td>'+
-      '<td><button class="mgr-btn danger" onclick="adCloseTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Kapat</button> '+
-        '<button class="mgr-btn secondary" onclick="adEditTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Düzenle</button></td>'+
-    '</tr>';
-  }).join('');
-}
 
-function adCloseTrade(pid) {
-  
-  positions=positions.filter(function(x){ return x.id!==pid; });
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  adRenderTrades(); showToast('Kapatıldı','#'+pid);
-}
 
-function adEditTrade(pid) {
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var ex=document.getElementById('editRow-'+pid);
-  if(ex){ex.remove();return;}
-  var pr=document.getElementById('posRow-'+pid);
-  if(!pr){showToast('Hata','Satir bulunamadi');return;}
-  var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-  var tr=document.createElement('tr');
-  tr.id='editRow-'+pid; tr.style.background='#0d1a1a';
-  tr.innerHTML='<td colspan="10" style="padding:12px 16px;"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">'
-    +'<div><div class="ad-label">Yon</div><select id="erside'+pid+'" class="ad-input" style="width:90px;"><option value="buy">AL</option><option value="sell">SAT</option></select></div>'
-    +'<div><div class="ad-label">Lot</div><input id="erl'+pid+'" class="ad-input" type="number" step="0.01" value="'+p.qty+'" style="width:80px;"></div>'
-    +'<div><div class="ad-label">Acilis Fiyati</div><input id="erop'+pid+'" class="ad-input" type="number" step="any" value="'+p.openPrice.toFixed(dec)+'" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Stop Loss</div><input id="ersl'+pid+'" class="ad-input" type="number" step="any" value="'+(p.sl||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Take Profit</div><input id="ertp'+pid+'" class="ad-input" type="number" step="any" value="'+(p.tp||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<button class="ad-btn ad-btn-success" onclick="adSvTr('+pid+')" style="padding:7px 14px;">Kaydet</button>'
-    +'<button class="ad-btn ad-btn-secondary" onclick="adClEd('+pid+')" style="padding:7px 10px;">Iptal</button>'
-    +'</div></td>';
-  pr.insertAdjacentElement('afterend',tr);
-  var sEl=document.getElementById('erside'+pid); if(sEl) sEl.value=p.side||'buy';
-}
-function adClEd(pid){var r=document.getElementById('editRow-'+pid);if(r)r.remove();}
-function adSvTr(pid){
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var sd=(document.getElementById('erside'+pid)||{}).value; if(sd) p.side=sd;
-  var lv=parseFloat((document.getElementById('erl'+pid)||{}).value);
-  var ov=parseFloat((document.getElementById('erop'+pid)||{}).value);
-  var sv=(document.getElementById('ersl'+pid)||{}).value;
-  var tv=(document.getElementById('ertp'+pid)||{}).value;
-  if(lv>0) p.qty=lv; if(ov>0) p.openPrice=ov;
-  p.sl=sv?parseFloat(sv):null;
-  p.tp=tv?parseFloat(tv):null;
-  if(typeof save==='function') save();
-  adRenderTrades();
-  showToast('Pozisyon Guncellendi','#'+pid);
-}
 
 document.addEventListener('click', function(e){
-  var ov=document.getElementById('accDetailOverlay');
-  if(ov && e.target===ov) closeAccDetail();
+  // accDetailOverlay listener kaldırıldı (2026-04-20) — DOM + closeAccDetail silindi, no-op.
 });
 
-function renderAccCards() { renderAccTable(); }
-function renderAccTable() {
-  var tb  = document.getElementById('accTableBody');
-  var cnt = document.getElementById('accCount');
-  if(!tb) return;
-  var search  = ((document.getElementById('accSearch')||{}).value||'').toLowerCase();
-  var fType   = (document.getElementById('accFilterType')||{}).value||'all';
-  var fStatus = (document.getElementById('accFilterStatus')||{}).value||'all';
-  var filtered = accounts.filter(function(a){
-    if(fType !== 'all' && a.type !== fType) return false;
-    if(fStatus === 'active'   && !a.active) return false;
-    if(fStatus === 'inactive' &&  a.active) return false;
-    if(search && !(a.name||'').toLowerCase().includes(search) &&
-                 !(a.id||'').toLowerCase().includes(search) &&
-                 !(a.email||'').toLowerCase().includes(search)) return false;
-    return true;
-  });
-  if(cnt) cnt.textContent = filtered.length + ' / ' + accounts.length + ' hesap';
-  if(!filtered.length){
-    tb.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--muted);font-family:var(--mono);padding:20px;">Hesap bulunamadı</td></tr>';
-    return;
-  }
-  var sgCol = {standard:'#888',ecn:'#2979ff',vip:'#f5c518',zero:'#ef5350'};
-  var sgLbl = {standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero Spread'};
-  tb.innerHTML = filtered.map(function(a){
-    var online   = a.online === true;
-    var equity   = typeof a.equity === 'number' ? a.equity : a.balance;
-    var bonus    = a.bonus || 0;
-    var sg       = a.spreadGroup || 'standard';
-    var lastSeen = a.lastSeen ? fmtDate(a.lastSeen) : '—';
-    var regDate  = a.regDate  ? fmtDateOnly(a.regDate) : (a.created||'—');
-    var tLbl     = a.type==='demo' ? 'DEMO' : 'GERÇEK';
-    var tBg      = a.type==='demo' ? '#2a2a2a' : '#1a3a2a';
-    var tCol     = a.type==='demo' ? '#aaa' : '#2979ff';
-    var eCol     = equity >= a.balance ? '#2979ff' : '#ef5350';
-    var onlineDot = '<span title="'+(online?'Çevrimiçi':'Çevrmdışı')+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(online?'#2979ff':'#444')+';'+(online?'box-shadow:0 0 5px #2979ff;':'')+'"></span>';
-    var aid = String(a.id);
-    var toggleBtn = '<button class="mgr-btn secondary" onclick="toggleAccount(this.dataset.id)" data-id="'+aid+'" style="padding:2px 7px;font-size:10px;margin-right:2px;">'+(a.active?'Durdur':'Aktif Et')+'</button>';
-    var deleteBtn = ''; // Silme butonu kaldırıldı - hesap detayından yapılacak
-    return '<tr style="opacity:'+(a.active?'1':'0.55')+'">' +
-      '<td style="text-align:center;">'+onlineDot+'</td>' +
-      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;">'+regDate+'</td>' +
-      '<td style="font-family:var(--mono);font-weight:700;font-size:11px;color:var(--accent);">'+aid+'</td>' +
-      '<td style="font-weight:600;white-space:nowrap;"><a href="#" onclick="openAccDetail(\'' + aid + '\');return false;" style="color:var(--accent);text-decoration:none;cursor:pointer;">'+a.name+'</a></td>' +
-      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);">'+a.email+'</td>' +
-      '<td><span style="background:'+tBg+';color:'+tCol+';font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:700;">'+tLbl+'</span></td>' +
-      '<td style="color:'+(sgCol[sg]||'#888')+';font-family:var(--mono);font-size:11px;font-weight:700;">'+(sgLbl[sg]||sg)+'</td>' +
-      '<td style="color:'+(a.active?'#2979ff':'#ef5350')+';font-family:var(--mono);font-size:11px;font-weight:700;">'+(a.active?'AKTİF':'PASİF')+'</td>' +
-      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;">'+lastSeen+'</td>' +
-      '<td style="text-align:right;font-family:var(--mono);font-weight:700;">$'+a.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>' +
-      '<td style="text-align:right;font-family:var(--mono);color:'+(bonus>0?'#f5c518':'var(--muted)')+'">'+(bonus>0?'$'+bonus.toFixed(2):'—')+'</td>' +
-      '<td style="text-align:right;font-family:var(--mono);font-weight:700;color:'+eCol+';">$'+equity.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>' +
-      '<td style="white-space:nowrap;">'+toggleBtn +'</td>' +
-    '</tr>';
-  }).join('');
-}
 
-function renderAccListSmall() {
-  const el = document.getElementById('accListSmall');
-  if (!accounts.length) { el.innerHTML='<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Hesap yok</div>'; return; }
-  el.innerHTML = `<table class="mgr-table">
-    <thead><tr><th>ID</th><th>Ad</th><th>Tip</th><th>Bakiye</th><th>Durum</th><th>İşlem</th></tr></thead>
-    <tbody>${accounts.map(a=>`
-      <tr>
-        <td style="color:var(--muted)">${a.id}</td>
-        <td style="font-weight:600">${a.name}</td>
-        <td style="color:var(--muted)">${a.type==='demo'?'Demo':'Gerçek'}</td>
-        <td>${a.currency} ${a.balance.toFixed(2)}</td>
-        <td><span class="${a.active?'badge-active':'badge-inactive'}">${a.active?'Aktif':'Pasif'}</span></td>
-        <td></td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
-}
 
-function toggleAccount(id) {
-  const a = accounts.find(x=>x.id===id);
-  if (a) { a.active = !a.active; saveAccounts(); renderAccCards(); }
-}
 
-function deleteAccount(id) {
-  accounts = accounts.filter(function(a){ return a.id!==id; });
-  localStorage.setItem('tx_accounts', JSON.stringify(accounts));
-  fbSaveAccounts(); // Firebase'e kaydet
-  renderAccCards(); renderAccListSmall();
-}
 
-function loadSettingsForm() {
-  var _gc7a5e0=document.getElementById('st_balance'); if(_gc7a5e0) _gc7a5e0.value = settings.startBalance || 10000;
-  var _g8619bf=document.getElementById('st_title'); if(_g8619bf) _g8619bf.value = settings.title || 'TradeX Terminal';
-  var _g015372=document.getElementById('st_ticker'); if(_g015372) _g015372.checked = settings.ticker !== false;
-  var _g6cf2c8=document.getElementById('st_anim'); if(_g6cf2c8) _g6cf2c8.checked = settings.anim !== false;
-}
 
-function saveSettings() {
-  settings.startBalance = parseFloat(document.getElementById('st_balance').value) || 10000;
-  settings.leverage = parseInt(document.getElementById('st_leverage').value) || 20;
-  settings.title = document.getElementById('st_title').value || 'Commerz Terminal';
-  settings.currency = document.getElementById('st_currency').value;
-  settings.ticker = document.getElementById('st_ticker').checked;
-  settings.anim = document.getElementById('st_anim').checked;
-  saveSettingsData();
-  document.title = settings.title;
-  document.querySelector('.ticker-strip').style.display = settings.ticker ? '' : 'none';
-  showToast('Ayarlar Kaydedildi ✓', 'Değişiklikler uygulandı');
-}
 
 function resetAll() {
   
@@ -5950,83 +4597,14 @@ function resetAll() {
   location.reload();
 }
 
-function renderAlarmMgr() {
-  const tb = document.getElementById('alarmMgrBody');
-  if (!alarms.length) { tb.innerHTML='<tr><td colspan="5" class="empty-msg">Alarm yok</td></tr>'; return; }
-  tb.innerHTML = alarms.map(a => {
-    const up = a.dir==='above';
-    return `<tr>
-      <td><span class="${a.active?'badge-active':'badge-inactive'}">${a.active?'Aktif':'Tetiklendi'}</span></td>
-      <td style="font-weight:700">${a.sym}</td>
-      <td class="${up?'up':'down'}">${up?'▲ Geçerse':'▼ Düşerse'}</td>
-      <td class="${up?'up':'down'}">$${a.target}</td>
-      <td><button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="mgrDelAlarm(${a.id})">Sil</button></td>
-    </tr>`;
-  }).join('');
-}
 
-function mgrDelAlarm(id) { delAlarm(id); renderAlarmMgr(); }
 
-function mgrAddAlarm() {
-  const sym = document.getElementById('mal_sym').value;
-  const dir = document.getElementById('mal_dir').value;
-  const t = parseFloat(document.getElementById('mal_price').value);
-  if (!t||t<=0) { showToast('Hata','Hedef fiyat girin!'); return; }
-  alarms.push({ sym, dir, target:t, id:Date.now(), active:true });
-  save(); renderAlarmMgr(); renderAlarms();
-  var _g10136a=document.getElementById('mal_price'); if(_g10136a) _g10136a.value = '';
-  showToast('Alarm Eklendi ✓', `${sym} $${t}`);
-}
 
-function clearAllAlarms() {
-  
-  alarms = []; triggered.clear(); save(); renderAlarmMgr(); renderAlarms();
-}
 
-function renderPortMgr() {
-  const tb = document.getElementById('portMgrBody');
-  if (!portfolio.length) { tb.innerHTML='<tr><td colspan="7" class="empty-msg">Portföy boş</td></tr>'; return; }
-  tb.innerHTML = portfolio.map(item => {
-    const p = prices[item.sym+'USDT'];
-    const cur = p ? p.price : 0;
-    const val = cur * item.amount;
-    const cost = item.buyPrice * item.amount;
-    const pnl = val - cost;
-    const pnlPct = cost > 0 ? pnl/cost*100 : 0;
-    const cls = pnl >= 0 ? 'up' : 'down';
-    return `<tr>
-      <td style="font-weight:700">${item.sym}</td>
-      <td>${item.amount}</td>
-      <td>$${fp(item.buyPrice)}</td>
-      <td>${cur>0?'$'+fp(cur):'—'}</td>
-      <td>${cur>0?'$'+fp(val):'—'}</td>
-      <td class="${cls}">${cur>0?(pnl>=0?'+':'')+'$'+fp(Math.abs(pnl)):'—'} ${cur>0?'('+( pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%)':''}</td>
-      <td><button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="mgrDelPort(${item.id})">Sil</button></td>
-    </tr>`;
-  }).join('');
-}
 
-function mgrDelPort(id) { delPort(id); renderPortMgr(); }
 
-function mgrAddPortfolio() {
-  const sym = document.getElementById('mp_sym').value;
-  const amt = parseFloat(document.getElementById('mp_amt').value);
-  const buy = parseFloat(document.getElementById('mp_buy').value);
-  if (!amt||!buy||amt<=0||buy<=0) { showToast('Hata','Tüm alanları doldurun!'); return; }
-  const ex = portfolio.find(p=>p.sym===sym);
-  if (ex) { const tot=ex.amount+amt; ex.buyPrice=(ex.buyPrice*ex.amount+buy*amt)/tot; ex.amount=tot; }
-  else portfolio.push({ sym, amount:amt, buyPrice:buy, id:Date.now() });
-  save(); renderPortMgr();
-  var _gfbb74f=document.getElementById('mp_amt'); if(_gfbb74f) _gfbb74f.value ='';
-  var _g052ef5=document.getElementById('mp_buy'); if(_g052ef5) _g052ef5.value ='';
-  showToast('Eklendi ✓', `${amt} ${sym} portföye eklendi`);
-}
 
-function clearPortfolio() {
-  
-  portfolio = []; save(); renderPortMgr(); }
 
-function savePayMethods() { localStorage.setItem('tx_paymethods', JSON.stringify(payMethods)); }
 
 function saveRequests() {
   localStorage.setItem('tx_wreqs', JSON.stringify(withdrawRequests));
@@ -6381,140 +4959,18 @@ function copyText(txt) {
   });
 }
 
-function pmTypeChange() {
-  const t = document.getElementById('pm_type').value;
-  var _st_pm_bank_fields=document.getElementById('pm_bank_fields'); if(_st_pm_bank_fields) _st_pm_bank_fields.style.display   = t==='bank'   ? 'block':'none';
-  var _st_pm_crypto_fields=document.getElementById('pm_crypto_fields'); if(_st_pm_crypto_fields) _st_pm_crypto_fields.style.display = t==='crypto' ? 'block':'none';
-}
 
-function renderPayMethodList() {
-  const el = document.getElementById('payMethodList');
-  if(!payMethods.length) { el.innerHTML='<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Yöntem yok</div>'; return; }
-  el.innerHTML = `<table class="mgr-table">
-    <thead><tr><th>Aktif</th><th>İkon</th><th>Ad</th><th>Tür</th><th>Para Birimi</th><th>Detay</th><th>Sil</th></tr></thead>
-    <tbody>${payMethods.map((m,i)=>`
-      <tr>
-        <td><label class="toggle-switch"><input type="checkbox" ${m.active?'checked':''} onchange="togglePayMethod(${i},this.checked)"><div class="toggle-track"></div></label></td>
-        <td style="font-size:18px">${m.icon}</td>
-        <td style="font-weight:700">${m.name}</td>
-        <td style="color:var(--muted)">${m.type==='bank'?'Banka':'Kripto'}</td>
-        <td>${m.currency}</td>
-        <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${m.type==='bank'?(m.iban||'—').slice(0,20)+'...':( m.wallet||'—').slice(0,16)+'...'}</td>
-        <td><button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="delPayMethod(${i})">Sil</button></td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
-}
 
-function togglePayMethod(i, val) { payMethods[i].active=val; savePayMethods(); renderPayMethodList(); }
 
-function delPayMethod(i) { payMethods.splice(i,1); savePayMethods(); renderPayMethodList(); showToast('Silindi','Ödeme yöntemi kaldırıldı'); }
 
-function addPayMethod() {
-  const type = document.getElementById('pm_type').value;
-  const name = document.getElementById('pm_name').value.trim();
-  const icon = document.getElementById('pm_icon').value.trim() || (type==='bank'?'🏦':'₮');
-  const currency = document.getElementById('pm_currency').value;
-  const note = document.getElementById('pm_note').value.trim();
-  const min = parseFloat(type==='bank'?document.getElementById('pm_min').value:document.getElementById('pm_crypto_min').value)||0;
 
-  if(!name) { showToast('Hata','Yöntem adı girin!'); return; }
 
-  let m = { id:'pm'+Date.now(), type, name, icon, currency, min, note, active:true };
-  if(type==='bank') {
-    m.bankName = document.getElementById('pm_bank_name').value.trim();
-    m.holder   = document.getElementById('pm_holder').value.trim();
-    m.iban     = document.getElementById('pm_iban').value.trim();
-    m.ref      = document.getElementById('pm_ref').value.trim();
-    if(!m.iban) { showToast('Hata','IBAN girin!'); return; }
-  } else {
-    m.network = document.getElementById('pm_network').value.trim();
-    m.wallet  = document.getElementById('pm_wallet').value.trim();
-    if(!m.wallet) { showToast('Hata','Cüzdan adresi girin!'); return; }
-  }
-  payMethods.push(m);
-  savePayMethods();
-  renderPayMethodList();
-  showToast('Eklendi ✓', name+' ödeme yöntemi eklendi');
-  ['pm_name','pm_icon','pm_bank_name','pm_holder','pm_iban','pm_ref','pm_network','pm_wallet','pm_note','pm_min','pm_crypto_min'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-}
 
-function renderWithdrawReqs() {
-  const filter = (document.getElementById('reqFilter') ? document.getElementById('reqFilter').value : 'all');
-  const list = filter==='all' ? withdrawRequests : withdrawRequests.filter(r=>r.status===filter);
-  const pending = withdrawRequests.filter(r=>r.status==='pending').length;
-  const pc = document.getElementById('pendingCount');
-  const rt = document.getElementById('reqTotal');
-  if(pc) pc.textContent = pending>0 ? pending+' bekleyen talep':'';
-  if(rt) rt.textContent = list.length;
 
-  const tb = document.getElementById('withdrawReqBody');
-  if(!tb) return;
-  if(!list.length) { tb.innerHTML=`<tr><td colspan="8" class="empty-msg">${filter==='all'?'Henüz çekim talebi yok':'Bu filtrede kayıt yok'}</td></tr>`; return; }
-  tb.innerHTML = list.map(r=>`
-    <tr>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:10px">${r.id}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${fmtDate(r.date)}</td>
-      <td style="font-family:var(--mono);font-size:11px">${r.account||'—'}</td>
-      <td>${r.method}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.address}</td>
-      <td style="font-weight:700;font-family:var(--mono)">${r.amount} ${r.currency}</td>
-      <td><span class="req-badge ${r.status}">${r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandı':'Reddedildi'}</span></td>
-      <td style="display:flex;gap:4px">
-        ${r.status==='pending'?`
-          <button class="mgr-btn success" style="font-size:10px;padding:2px 8px" onclick="approveReq('${r.id}')">✓ Onayla</button>
-          <button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="rejectReq('${r.id}')">✕ Reddet</button>
-        `:`<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px" onclick="deleteReq('${r.id}')">Sil</button>`}
-      </td>
-    </tr>
-  `).join('');
 
-  const dtb = document.getElementById('depositReqBody');
-  if(!dtb) return;
-  if(!depositRequests.length) { dtb.innerHTML='<tr><td colspan="7" class="empty-msg">Henüz para yatırma bildirimi yok</td></tr>'; return; }
-  dtb.innerHTML = depositRequests.map(r=>`
-    <tr>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:10px">${r.id}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${fmtDate(r.date)}</td>
-      <td>${r.method}</td>
-      <td style="font-weight:700;font-family:var(--mono)">${r.amount} ${r.currency}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${r.note||'—'}</td>
-      <td><span class="req-badge ${r.status}">${r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandı':'Reddedildi'}</span></td>
-      <td style="display:flex;gap:4px">
-        ${r.status==='pending'?`
-          <button class="mgr-btn success" style="font-size:10px;padding:2px 8px" onclick="approveDepReq('${r.id}')">✓ Onayla</button>
-          <button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="rejectDepReq('${r.id}')">✕ Reddet</button>
-        `:`<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px" onclick="deleteDepReq('${r.id}')">Sil</button>`}
-      </td>
-    </tr>
-  `).join('');
-}
 
-function approveReq(id) {
-  const r = withdrawRequests.find(x=>x.id===id);
-  if(r) { r.status='approved'; saveRequests(); renderWithdrawReqs(); showToast('Onaylandı ✓','#'+id+' çekim talebi onaylandı'); }
-}
 
-function rejectReq(id) {
-  const r = withdrawRequests.find(x=>x.id===id);
-  if(r) { r.status='rejected'; saveRequests(); renderWithdrawReqs(); showToast('Reddedildi','#'+id+' talebi reddedildi'); }
-}
 
-function deleteReq(id) { withdrawRequests=withdrawRequests.filter(x=>x.id!==id); saveRequests(); renderWithdrawReqs(); }
-
-function clearAllRequests() {  withdrawRequests=[]; depositRequests=[]; saveRequests(); renderWithdrawReqs(); }
-
-function approveDepReq(id) {
-  const r = depositRequests.find(x=>x.id===id);
-  if(r) { r.status='approved'; balance+=r.amount; saveRequests(); updateAccount(); renderWithdrawReqs(); showToast('Onaylandı ✓','Bakiyeye +'+r.amount+' '+r.currency+' eklendi'); }
-}
-
-function rejectDepReq(id) {
-  const r = depositRequests.find(x=>x.id===id);
-  if(r) { r.status='rejected'; saveRequests(); renderWithdrawReqs(); }
-}
-
-function deleteDepReq(id) { depositRequests=depositRequests.filter(x=>x.id!==id); saveRequests(); renderWithdrawReqs(); }
 
 function initMwPrices() {
   if(typeof MARKET_GROUPS !== 'undefined') {
@@ -6884,13 +5340,8 @@ function toggleQuickTrade() {
 
 function tickMockPrices() {  }
 
-function openApiKeyModal() {
-  showToast('Bilgi', 'Forex verileri otomatik yükleniyor, API key gerekmez.');
-}
 
-function closeApiKeyModal() {}
 
-function saveApiKey() {}
 
 symConfig = null;
 accounts = [];
@@ -7066,7 +5517,7 @@ setTimeout(function(){
 selectedDepositMethod = null;
 selectedWithdrawMethod = null;
 
-var _origMgrTab = mgrTab;
+// _origMgrTab kaldırıldı (2026-04-20) — mgrTab fonksiyonu silindi, kullanılmayan yedekti.
 
 if(typeof MARKET_GROUPS !== 'undefined' && MARKET_GROUPS) {
   MARKET_GROUPS.forEach(function(g) { g.items.forEach(function(it) { MW_MAP[it.sym] = it; }); });
@@ -7115,33 +5566,8 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window._mainInit = _mainInit;
   window.saveSymConfig = saveSymConfig;
   window.saveAccounts = saveAccounts;
-  window.saveSettingsData = saveSettingsData;
-  window.toggleManager = toggleManager;
-  window.overlayClose = overlayClose;
-  window.mgrTab = mgrTab;
-  window.renderSymMgr = renderSymMgr;
-  window.toggleSym = toggleSym;
-  window.updateSym = updateSym;
-  window.removeSym = removeSym;
-  window.addSymbolMgr = addSymbolMgr;
   window.applySymConfig = applySymConfig;
-  window.createAccount = createAccount;
-  window.renderAccCards = renderAccCards;
-  window.renderAccListSmall = renderAccListSmall;
-  window.toggleAccount = toggleAccount;
-  window.deleteAccount = deleteAccount;
-  window.loadSettingsForm = loadSettingsForm;
-  window.saveSettings = saveSettings;
   window.resetAll = resetAll;
-  window.renderAlarmMgr = renderAlarmMgr;
-  window.mgrDelAlarm = mgrDelAlarm;
-  window.mgrAddAlarm = mgrAddAlarm;
-  window.clearAllAlarms = clearAllAlarms;
-  window.renderPortMgr = renderPortMgr;
-  window.mgrDelPort = mgrDelPort;
-  window.mgrAddPortfolio = mgrAddPortfolio;
-  window.clearPortfolio = clearPortfolio;
-  window.savePayMethods = savePayMethods;
   window.saveRequests = saveRequests;
   window.openWallet = openWallet;
   window.closeWallet = closeWallet;
@@ -7156,19 +5582,6 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.setWithdrawAmt = setWithdrawAmt;
   window.submitWithdraw = submitWithdraw;
   window.copyText = copyText;
-  window.pmTypeChange = pmTypeChange;
-  window.renderPayMethodList = renderPayMethodList;
-  window.togglePayMethod = togglePayMethod;
-  window.delPayMethod = delPayMethod;
-  window.addPayMethod = addPayMethod;
-  window.renderWithdrawReqs = renderWithdrawReqs;
-  window.approveReq = approveReq;
-  window.rejectReq = rejectReq;
-  window.deleteReq = deleteReq;
-  window.clearAllRequests = clearAllRequests;
-  window.approveDepReq = approveDepReq;
-  window.rejectDepReq = rejectDepReq;
-  window.deleteDepReq = deleteDepReq;
   window.initMwPrices = initMwPrices;
   window.updateUI = updateUI;
   window.updateMwRow = updateMwRow;
@@ -7575,21 +5988,9 @@ window.stopRealFeed  = stopRealFeed;
 
 
 window.startLiveFeed = startLiveFeed;
-  window.openApiKeyModal = openApiKeyModal;
 
   // Trading Groups (A sistemi)
   window.sgLoad             = sgLoad;
-  window.sgSave             = sgSave;
-  window.sgRender           = sgRender;
-  window.selectSgTab        = selectSgTab;
-  window.sgSubTab           = sgSubTab;
-  window.saveSgGeneral      = saveSgGeneral;
-  window.saveSgSpreads      = saveSgSpreads;
-  window.sgAddGroup         = sgAddGroup;
-  window.sgDeleteGroup      = sgDeleteGroup;
-  window.sgRefreshSelects   = sgRefreshSelects;
-  window.addSpreadGroup     = addSpreadGroup;
-  window.deleteSpreadGroup  = deleteSpreadGroup;
 
   window.toggleUserDropdown = toggleUserDropdown;
   window.closeUserDropdown = closeUserDropdown;
@@ -7877,130 +6278,13 @@ function sgLoad() {
   if(!found) _activeSgId = tradingGroups[0].id;
 }
 
-function sgSave() {
-  try { localStorage.setItem('tx_sg', JSON.stringify(tradingGroups)); } catch(e){}
-}
-
-function sgRender() {
-  sgLoad();
-
-  // --- GRUP BUTONLARI ---
-  var bar = document.getElementById('sgTabBar');
-  if(bar) {
-    bar.innerHTML = '';
-    for(var gi=0; gi<tradingGroups.length; gi++) {
-      (function(g){
-        var btn = document.createElement('button');
-        btn.textContent = g.name;
-        var act = g.id === _activeSgId;
-        btn.style.cssText = 'padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
-        btn.onclick = function(){ _activeSgId = g.id; sgRender(); };
-        bar.appendChild(btn);
-      })(tradingGroups[gi]);
-    }
-  }
-
-  var g = null;
-  for(var gi2=0; gi2<tradingGroups.length; gi2++) {
-    if(tradingGroups[gi2].id === _activeSgId) { g = tradingGroups[gi2]; break; }
-  }
-  if(!g && tradingGroups.length) { g = tradingGroups[0]; _activeSgId = g.id; }
-  if(!g) return;
-
-  var del = document.getElementById('sgDeleteBtn');
-  if(del) del.style.display = g.deletable ? 'inline-block' : 'none';
-
-  var mc = document.getElementById('sg_mc');    if(mc) mc.value = g.marginCall||80;
-  var so = document.getElementById('sg_so');    if(so) so.value = g.stopOut||50;
-  var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLev||100);
-  var dc = document.getElementById('sg_desc');  if(dc) dc.value = g.desc||'';
-
-  var tb = document.getElementById('sgSymBody');
-  if(!tb) return;
-
-  // window._symConfig sayfa yüklenince set ediliyor
-  var _syms = window._symConfig || [];
-  if(!_syms.length) { try { _syms = JSON.parse(localStorage.getItem('tx_syms')||'[]'); } catch(e){ _syms=[]; } }
-  if(!_syms.length && typeof symConfig !== 'undefined' && symConfig) { _syms = symConfig; }
-
-  if(!_syms.length) {
-    tb.innerHTML = '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Yükleniyor...</td></tr>';
-    setTimeout(sgRender, 300);
-    return;
-  }
-
-  var cats = {crypto:'🪙 Kripto', forex:'💱 Forex', commodity:'🏅 Emtia', index:'📈 Endeks'};
-  var html = '';
-  for(var si=0; si<_syms.length; si++) {
-    var s = _syms[si];
-    if(!s.active) continue;
-    var ds  = s.spread||0;
-    var gs  = (g.spreads && g.spreads[s.sym]!==undefined) ? g.spreads[s.sym] : '';
-    var swb = (g.swaps && g.swaps[s.sym] && g.swaps[s.sym].buy!==undefined)  ? g.swaps[s.sym].buy  : '';
-    var sws = (g.swaps && g.swaps[s.sym] && g.swaps[s.sym].sell!==undefined) ? g.swaps[s.sym].sell : '';
-    var star = gs!=='' || swb!=='' || sws!=='';
-    html += '<tr style="'+(star?'background:rgba(240,185,11,0.04)':'')+'">'
-      +'<td style="font-family:monospace;font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
-      +'<td style="font-size:11px;color:#c0c0c0;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
-      +'<td style="font-family:monospace;color:#c0c0c0;">'+ds+'</td>'
-      +'<td><input class="mgr-input" id="sgs_'+s.sym+'" type="number" step="any" value="'+gs+'" placeholder="'+ds+'" style="width:120px;padding:3px 7px;"></td>'
-      +'<td><input class="mgr-input" id="sgb_'+s.sym+'" type="number" step="any" value="'+swb+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
-      +'<td><input class="mgr-input" id="sgsl_'+s.sym+'" type="number" step="any" value="'+sws+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
-      +'</tr>';
-  }
-  tb.innerHTML = html || '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Aktif sembol yok</td></tr>';
-}
 
 
-function sgSaveGeneral() {
-  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
-  var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||80;
-  var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||50;
-  var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLev     = parseInt(ml.value)||100;
-  var dc = document.getElementById('sg_desc');  if(dc)  g.desc       = dc.value||'';
-  sgSave(); showToast('Kaydedildi ✓', g.name);
-}
 
-function sgSaveSpreads() {
-  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
-  var n=0;
-  symConfig.filter(function(s){ return s.active; }).forEach(function(s){
-    var sv = document.getElementById('sgs_'+s.sym); var spVal = sv ? sv.value.trim() : '';
-    var bv = document.getElementById('sgb_'+s.sym);  var bVal  = bv ? bv.value.trim() : '';
-    var sv2= document.getElementById('sgsl_'+s.sym); var sVal  = sv2? sv2.value.trim(): '';
-    if(spVal!=='') { g.spreads[s.sym]=parseFloat(spVal); n++; } else { delete g.spreads[s.sym]; }
-    if(bVal!==''||sVal!=='') { g.swaps[s.sym]={buy:bVal!==''?parseFloat(bVal):0, sell:sVal!==''?parseFloat(sVal):0}; n++; } else { delete g.swaps[s.sym]; }
-  });
-  sgSave(); sgRender(); showToast('Kaydedildi ✓', g.name+' — '+n+' değer');
-}
 
-function sgAddGroup() {
-  var el = document.getElementById('sg_new_name'); if(!el) return;
-  var name = el.value.trim(); if(!name){ showToast('Hata','Grup adı girin!'); return; }
-  var id = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if(tradingGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
-  tradingGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
-  _activeSgId=id; el.value='';
-  sgSave(); sgRender(); sgRefreshSelects(); showToast('Grup Eklendi ✓',name);
-}
 
-function sgDeleteGroup() {
-  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; });
-  if(!g||!g.deletable){ showToast('Hata','Bu grup silinemez!'); return; }
-  if(accounts.some(function(a){ return a.spreadGroup===_activeSgId; })){ showToast('Hata','Hesaplarda kullanılıyor!'); return; }
-  
-  tradingGroups = tradingGroups.filter(function(x){ return x.id!==_activeSgId; });
-  _activeSgId = tradingGroups[0].id;
-  sgSave(); sgRender(); sgRefreshSelects(); showToast('Silindi',g.name);
-}
 
-function sgRefreshSelects() {
-  document.querySelectorAll('#ad_sg,#na_spreadGroup').forEach(function(sel){
-    var cur=sel.value;
-    sel.innerHTML=tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
-    sel.value=cur||'standard';
-  });
-}
+
 
 function getEffectiveSpread(sym,groupId) {
   var g=tradingGroups.find(function(x){ return x.id===groupId; });
@@ -8014,12 +6298,6 @@ function getSwap(sym,groupId,side) {
 }
 
 // Eski isimleri yönlendir (yaşayan wrapper'lar)
-function saveSgGeneral() { sgSaveGeneral(); }
-function saveSgSpreads() { sgSaveSpreads(); }
-function addSpreadGroup() { sgAddGroup(); }
-function deleteSpreadGroup() { sgDeleteGroup(); }
-function selectSgTab(id) { _activeSgId=id; sgRender(); }
-function sgSubTab() {}
 
 
 // ═══════════════════════════════════════
@@ -8272,19 +6550,6 @@ function symUnpin(sym){
   buildSymTabs(); showToast('Kaldirildi',sym+' ust bardan kaldirildi');
 }
 
-function adChangePassword() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var pw1 = (document.getElementById('ad_pw1')||{}).value||'';
-  var pw2 = (document.getElementById('ad_pw2')||{}).value||'';
-  if(!pw1) { showToast('Hata','Yeni şifre boş olamaz!'); return; }
-  if(pw1 !== pw2) { showToast('Hata','Şifreler eşleşmiyor!'); return; }
-  if(pw1.length < 4) { showToast('Hata','Şifre en az 4 karakter olmalı!'); return; }
-  a.password = pw1;
-  saveAccounts();
-  showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi');
-  var p1=document.getElementById('ad_pw1'); if(p1) p1.value='';
-  var p2=document.getElementById('ad_pw2'); if(p2) p2.value='';
-}
 </script>
 
 <!-- KYC MODAL -->
@@ -8365,27 +6630,7 @@ function adChangePassword() {
   z-index:9999; pointer-events:none;
 "></div>
 
-<div id="accDetailOverlay" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
-  <div style="background:#181818;border:1px solid #333;border-radius:8px;width:1200px;max-width:98vw;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #2a2a2a;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span id="adOnlineDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;"></span>
-        <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);" id="adAccId">—</span>
-        <span style="font-size:14px;font-weight:700;" id="adName">—</span>
-        <span style="font-family:var(--mono);font-size:10px;background:#222;padding:2px 8px;border-radius:3px;color:#aaa;" id="adType">—</span>
-        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;" id="adStatus">—</span>
-      </div>
-      <button onclick="closeAccDetail()" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;line-height:1;">✕</button>
-    </div>
-    <div style="display:flex;border-bottom:1px solid #2a2a2a;flex-shrink:0;background:#141414;">
-      <button class="ad-tab" data-tab="info"     onclick="adTab('info',this)"     style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">BİLGİLER</button>
-      <button class="ad-tab" data-tab="finance"  onclick="adTab('finance',this)"  style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">FİNANS</button>
-      <button class="ad-tab" data-tab="trades"   onclick="adTab('trades',this)"   style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">İŞLEMLER</button>
-      <button class="ad-tab" data-tab="settings" onclick="adTab('settings',this)" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">AYARLAR</button>
-    </div>
-    <div style="flex:1;overflow-y:auto;padding:20px;" id="adContent"></div>
-  </div>
-</div>
+<!-- accDetailOverlay DOM kaldırıldı (2026-04-20) — trader'daki admin hesap-detay modalı trader-admin birleşikken kalmıştı. Admin dosyasında aktif kullanılıyor. -->
 
   <!-- Lightweight Charts: body sonunda yükle — Firebase/app script'lerinden sonra -->
   <script>
