@@ -1537,7 +1537,8 @@ console.log('Firebase bağlandı ✓');
             delete na.equity;
             delete na.marginLevelPct;
             // UI cache'leri koru (eski accounts array'inden)
-            var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
+            // 2026-04-20: typeof guard kaldırıldı — 'accounts' artık L1059'da declared (top-level var)
+            var _accs = accounts || [];
             var old=_accs.find(function(x){return x.id===na.id;});
             if(old){
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
@@ -1545,8 +1546,8 @@ console.log('Firebase bağlandı ✓');
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
-          window.accounts=newAccs;
-          if(typeof accounts!=='undefined')accounts=newAccs;
+          // 2026-04-20: iki-slot pattern kaldırıldı — var accounts top-level, window.accounts otomatik aynı slot
+          accounts = newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
           // ⚠️ Canonical listener başlat — accounts yüklendikten sonra
           if(typeof startAccCanonListeners === 'function') startAccCanonListeners();
