@@ -1059,196 +1059,13 @@ var _authType = 'demo';
 var accounts = [];
 try { accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(!Array.isArray(accounts)) accounts = []; } catch(e){ accounts = []; }
 
-function _authShow(sec) {
-  var l = document.getElementById('sec-login');
-  var r = document.getElementById('sec-register');
-  var tl = document.getElementById('tab-login');
-  var tr = document.getElementById('tab-register');
-  if(sec === 'login') {
-    if(l) l.style.display='block';
-    if(r) r.style.display='none';
-    if(tl){ tl.style.color='#f0b90b'; tl.style.borderBottomColor='#f0b90b'; }
-    if(tr){ tr.style.color='#999999'; tr.style.borderBottomColor='transparent'; }
-  } else {
-    if(l) l.style.display='none';
-    if(r) r.style.display='block';
-    if(tl){ tl.style.color='#999999'; tl.style.borderBottomColor='transparent'; }
-    if(tr){ tr.style.color='#f0b90b'; tr.style.borderBottomColor='#f0b90b'; }
-  }
-}
-function authAccType(t) {
-  _authType = t;
-  var d = document.getElementById('opt-demo');
-  var l = document.getElementById('opt-live');
-  if(t==='demo') {
-    if(d){ d.style.border='1px solid #f0b90b'; d.style.background='rgba(240,185,11,.07)'; }
-    if(l){ l.style.border='1px solid #333'; l.style.background='#111'; }
-  } else {
-    if(l){ l.style.border='1px solid #f0b90b'; l.style.background='rgba(240,185,11,.07)'; }
-    if(d){ d.style.border='1px solid #333'; d.style.background='#111'; }
-  }
-}
-function _authClose() {
-  var el = document.getElementById('authOverlay');
-  if(el) el.style.display='none';
-}
-function _authOpen(sec) {
-  var el = document.getElementById('authOverlay');
-  if(el) el.style.display='flex';
-  _authShow(sec||'login');
-}
-function _authErr(id, msg) {
-  var el = document.getElementById(id);
-  if(!el) return;
-  el.textContent=msg; el.style.display='block';
-  setTimeout(function(){ el.style.display='none'; }, 4000);
-}
-function _authSuccess(user) {
-  _cu = user;
-  try { localStorage.setItem('tx_current_user', JSON.stringify(user)); } catch(e){}
-  // lastSeen ve online güncelle
-  try {
-    var _lsNow = new Date().toISOString();
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts)) {
-      accounts = accounts.map(function(a){ return a.id===user.id ? Object.assign({},a,{lastSeen:_lsNow,online:true}) : a; });
-      fbSaveAccount(accounts);
-    }
-  } catch(e){}
-  // Firebase'den kullanıcı verisini yükle
-  fbLoadUserData(user.id, function(data) {
-    if(data) {
-      try { if(data.positions) {
-        positions = Array.isArray(data.positions) ? data.positions : JSON.parse(data.positions);
-      }} catch(e){}
-      try { if(data.tradeHistory) { var _rt=data.tradeHistory; tradeHistory=Array.isArray(_rt)?_rt:JSON.parse(_rt); }} catch(e){}
-      try { if(data.portfolio) portfolio = JSON.parse(data.portfolio); } catch(e){}
-      try { if(data.alarms) alarms = JSON.parse(data.alarms); } catch(e){}
-      if(data.balance !== undefined && typeof balance !== 'undefined') balance = data.balance;
-      renderPositions(); renderHistory(); updateAccount();
-    }
-  });
-  _authClose();
-  var lb = document.getElementById('tbLoginBtn');
-  var ub = document.getElementById('tbUserBadge');
-  if(lb) lb.style.display='none';
-  if(ub) ub.style.display='flex';
-  var av = document.getElementById('tbUserAvatar');
-  var un = document.getElementById('tbUserName');
-  var ut = document.getElementById('tbUserType');
-  if(av) av.textContent=(user.name||'?')[0].toUpperCase();
-  if(un) un.textContent=user.name+(user.surname?' '+user.surname:'');
-  if(ut) ut.textContent=user.type==='demo'?'Demo Hesap':'Gerçek Hesap';
-  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
-  try { if(typeof showToast==='function') showToast('Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } catch(e){}
-}
-function _doLogin() {
-  var loginVal = (document.getElementById('inp-email')||{}).value||'';
-  var pass     = (document.getElementById('inp-pass')||{}).value||'';
-  loginVal = loginVal.trim(); pass = pass.trim();
-  if(!loginVal||!pass){ _authErr('err-login','Login no/e-posta ve şifre gerekli!'); return; }
-  _authErr('err-login',''); // hata temizle
-  // Önce Firebase'den yükle, sonra localStorage fallback
-  function tryLogin(accs) {
-    // localStorage ile de merge et
-    var localAccs = [];
-    try { localAccs = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); } catch(e){}
-    // Firebase'den gelenleri localStorage'a ekle
-    if(accs.length) {
-      localStorage.setItem('tx_accounts', JSON.stringify(accs));
-      accounts = accs;
-    } else {
-      accs = localAccs;
-    }
-    var found = null;
-    for(var i=0;i<accs.length;i++){
-      var a = accs[i];
-      var matchLogin = (a.login && String(a.login)===loginVal) || (a.id && String(a.id)===loginVal);
-      var matchEmail = a.email && a.email.toLowerCase()===loginVal.toLowerCase();
-      if((matchLogin||matchEmail) && a.password===pass){ found=a; break; }
-    }
-    if(!found){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
-    _authSuccess(found);
-  }
-  // Firebase'den hesapları çek
-  fbLoadAccounts(function(fbAccs) {
-    tryLogin(fbAccs && fbAccs.length ? fbAccs : []);
-  });
-}
-function _doDemo() {
-  _authSuccess({id:'DEMO-001',name:'Demo',surname:'Kullanıcı',email:'demo@tradex.com',type:'demo',balance:10000,active:true});
-}
-function _doRegister() {
-  var name    = (document.getElementById('inp-name')||{}).value||'';
-  var surname = (document.getElementById('inp-surname')||{}).value||'';
-  var phone   = (document.getElementById('inp-phone')||{}).value||'';
-  var email   = (document.getElementById('inp-remail')||{}).value||'';
-  var pass    = (document.getElementById('inp-rpass')||{}).value||'';
-  var pass2   = (document.getElementById('inp-rpass2')||{}).value||'';
-  name=name.trim();surname=surname.trim();phone=phone.trim();email=email.trim();pass=pass.trim();pass2=pass2.trim();
-  if(!name){_authErr('err-register','Ad gerekli!');return;}
-  if(!surname){_authErr('err-register','Soyad gerekli!');return;}
-  if(!phone){_authErr('err-register','Telefon gerekli!');return;}
-  if(!email){_authErr('err-register','E-posta gerekli!');return;}
-  if(pass.length<6){_authErr('err-register','Şifre en az 6 karakter!');return;}
-  if(pass!==pass2){_authErr('err-register','Şifreler eşleşmiyor!');return;}
-  // Firebase'den güncel hesap listesini çek, sonra kaydet
-  fbLoadAccounts(function(fbAccs) {
-    if(fbAccs && fbAccs.length) { accounts = fbAccs; try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){} }
-    var accs = accounts.length ? accounts : [];
-    try{ if(!accs.length) accs=JSON.parse(localStorage.getItem('tx_accounts')||'[]'); }catch(e){}
-    for(var i=0;i<accs.length;i++){
-      if(accs[i].email && accs[i].email.toLowerCase()===email.toLowerCase()){_authErr('err-register','Bu e-posta zaten kayıtlı!');return;}
-    }
-    // Login numarası 10000'den başlar
-    var _allIds = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
-    var _nextLogin = _allIds.length ? Math.max.apply(null,_allIds)+1 : 10000;
-    if(_nextLogin < 10000) _nextLogin = 10000;
-    var now2 = new Date();
-    var acc = {
-      id: String(_nextLogin), login: String(_nextLogin),
-      name: name, surname: surname, phone: phone, email: email, password: pass,
-      type: _authType, balance: _authType==='demo'?10000:0, equity: _authType==='demo'?10000:0,
-      currency: 'USD', leverage: 100, active: true,
-      created: now2.toISOString(), regDate: now2.toISOString(),
-      spreadGroup: 'standard', bonus: 0, lastSeen: null, online: false
-    };
-    accs.push(acc);
-    // Transaction ile güvenli kaydet
-    fbAddAccount(acc, function(err, savedAcc) {
-      if(err === 'EMAIL_EXISTS') { _authErr('err-register','Bu e-posta zaten kayıtlı!'); return; }
-      if(err) { _authErr('err-register','Kayıt hatası: '+err); return; }
-      var finalAcc = savedAcc || acc;
-      accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
-      if(typeof renderAccCards==='function') renderAccCards();
-      if(typeof renderAccListSmall==='function') renderAccListSmall();
-      var ok=document.getElementById('ok-register');
-      if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
-      setTimeout(function(){_authSuccess(finalAcc);},1200);
-    });
-  });
-}
-function logoutUser() {
-  _cu=null;
-  try{localStorage.removeItem('tx_current_user');}catch(e){}
-  var lb=document.getElementById('tbLoginBtn');
-  var ub=document.getElementById('tbUserBadge');
-  if(lb)lb.style.display='flex';
-  if(ub)ub.style.display='none';
-  _authOpen('login');
-}
-function openAuth(tab){ _authOpen(tab); }
-function closeAuth(){ _authClose(); }
-function demoLogin(){ _doDemo(); }
-function doLogin(){ _doLogin(); }
-function doRegister(){ _doRegister(); }
-function updateUserBadge(){}
 function initAuth(){
   if(!_cu || !_cu.name) {
     var el = document.getElementById('authOverlay');
     if(el) el.style.display = 'flex';
   }
   if(_cu && _cu.name) {
-    _authClose();
+    // _authClose() çağrısı kaldırıldı (2026-04-20) — fonksiyon silindi, DOM'u da yoktu.
     var lb=document.getElementById('tbLoginBtn');
     var ub=document.getElementById('tbUserBadge');
     if(lb)lb.style.display='none';
@@ -1405,30 +1222,11 @@ function startAccCanonListeners() {
 }
 
 // Yeni hesap eklendiğinde de listener bağla
-function attachCanonListener(accId) {
-  if(!accId || !db) return;
-  var key = String(accId);
-  if(_accCanon[key] && _accCanon[key]._unsub) return;
-  _accCanon[key] = _accCanon[key] || {};
-  _accCanon[key]._unsub = db.collection('users').doc(key).onSnapshot(function(doc){
-    if(!doc.exists) return;
-    var d = doc.data() || {};
-    _accCanon[key].balance      = parseFloat(d.balance)||0;
-    _accCanon[key].bonus        = parseFloat(d.bonus)||0;
-    _accCanon[key].positions    = Array.isArray(d.positions) ? d.positions : [];
-    _accCanon[key].tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : [];
-    _accCanon[key].finlog       = Array.isArray(d.finlog) ? d.finlog : [];
-    _accCanon[key].marginLevelPct = parseFloat(d.marginLevelPct)||null;
-    _accCanon[key].lastUpdate   = d.updatedAt || '';
-    _accCanon[key].ready        = true;
-  });
-}
 
 // Canonical read API — tüm render/hesap fonksiyonları buradan okur
 function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
 function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
 function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
-function getAccHist(accId)     { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.tradeHistory))?c.tradeHistory:[]; }
 function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
 function getAccEquity(accId)   {
   // equity = balance + bonus + ∑ floating P&L
@@ -1508,57 +1306,7 @@ function fbSaveAccounts() {
     }
 
     // Güvenli hesap ekleme - race condition önler
-    function fbAddAccount(newAcc, callback) {
-      if(!db) { callback && callback(); return; }
-      var ref = db.collection('broker').doc('accounts');
-      db.runTransaction(function(tx) {
-        return tx.get(ref).then(function(doc) {
-          var accs = [];
-          if(doc.exists) {
-            try { accs = JSON.parse(doc.data().data||'[]'); } catch(e){}
-          }
-          // E-posta zaten var mı?
-          for(var i=0;i<accs.length;i++) {
-            if(accs[i].email && accs[i].email.toLowerCase()===newAcc.email.toLowerCase()) {
-              throw new Error('EMAIL_EXISTS');
-            }
-          }
-          // Login numarasını yeniden hesapla (race condition önle)
-          var maxId = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
-          var nextId = maxId.length ? Math.max.apply(null,maxId)+1 : 10000;
-          if(nextId < 10000) nextId = 10000;
-          newAcc.id = String(nextId);
-          newAcc.login = String(nextId);
-          // ⚠️ broker/accounts'a sadece META yaz
-          accs.push(accSanitizeForBroker(newAcc));
-          tx.set(ref, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
-          return newAcc;
-        });
-      }).then(function(acc) {
-        accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
-        accounts.push(acc);
-        localStorage.setItem('tx_accounts', JSON.stringify(accounts));
-        // ⚠️ users/{id}'ye initial balance/bonus/finlog yaz (canonical tek kaynak)
-        var _initBal = parseFloat(acc.balance)||0;
-        db.collection('users').doc(String(acc.id)).set({
-          name: acc.name||'', surname: acc.surname||'', email: acc.email||'',
-          login: acc.login||acc.id, type: acc.type||'live',
-          spreadGroup: acc.spreadGroup||'standard', leverage: acc.leverage||100,
-          active: true, created: acc.created||'', phone: acc.phone||'',
-          password: acc.password||'', currency: acc.currency||'USD',
-          balance: _initBal, bonus: 0, finlog: [],
-          positions: [], tradeHistory: [], pendingOrders: [],
-          _balanceSource: 'system',
-          updatedAt: new Date().toISOString()
-        }).catch(function(e){ console.warn('fbAddAccount users write:', e); });
-        // Canonical listener bağla
-        if(typeof attachCanonListener === 'function') attachCanonListener(acc.id);
-        callback && callback(null, acc);
-      }).catch(function(e) {
-        callback && callback(e.message==='EMAIL_EXISTS' ? 'EMAIL_EXISTS' : e.message);
-      });
-    }
-
+    
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
       // ⚠️ broker/accounts'tan gelen veriden balance/positions/bonus/finlog TEMİZLENİR
@@ -1720,15 +1468,7 @@ function parseFinlogDate(input) {
   return d || new Date(0);
 }
 
-    function fmtDateOnly(d) {
-      if(!d) return '—';
-      var dt=(d instanceof Date)?d:new Date(d);
-      if(isNaN(dt)) return String(d);
-      var p=function(n){return String(n).padStart(2,'0');};
-      return p(dt.getDate())+'.'+p(dt.getMonth()+1)+'.'+dt.getFullYear();
-    }
-    function nowFmt(){ return fmtDate(new Date()); }
-
+        
 
     function fbLoadRequests(callback) {
       if(typeof db==='undefined'||!db){callback&&callback();return;}
@@ -3356,13 +3096,6 @@ function switchSym(sym) {
   if (p) updateOrderTicket(p.price);
 }
 
-function setInt(intv, btn) {
-  curInt = intv;
-  document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadKlines(curSym, intv);
-  startCandleWs(curSym, intv);
-}
 
 function updateOrderTicket(price) {
   const sym = SYMS.find(s=>s.sym===curSym);
@@ -3374,12 +3107,6 @@ function updateOrderTicket(price) {
   var _el_otSpread=document.getElementById('otSpread'); if(_el_otSpread) _el_otSpread.textContent = 'Spread: '+spread.toFixed(price>100?2:5);
 }
 
-function setOrdType(type, btn) {
-  ordType = type;
-  document.querySelectorAll('.ot-type-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  var _st_limitPriceRow=document.getElementById('limitPriceRow'); if(_st_limitPriceRow) _st_limitPriceRow.style.display = (type==='limit'||type==='stop') ? 'flex' : 'none';
-}
 
 // placeOrder() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
 // Sadece qtOrder() çağırıyordu; o da ölü kod olarak silindi.
@@ -3590,10 +3317,6 @@ function updateAccount() {
   // updateAccount() burada stop out tetiklememeli — sonsuz döngü oluşur.
 }
 
-function toggleAlarmForm() {
-  const f = document.getElementById('alarmForm');
-  f.style.display = f.style.display==='none' ? 'flex' : 'none';
-}
 
 // addAlarm() kaldırıldı (2026-04-19) — trader kopyası. Admin mgrAddAlarm() kullanıyor.
 
@@ -4033,7 +3756,6 @@ function adRecalcAllEquities() {
   if(secAcc && secAcc.style.display!=='none') renderAccTable();
 }
 
-function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
 function adCalcStats(account, positions) {
@@ -4401,7 +4123,7 @@ function adListenOverrides() {
   });
 }
 
-function adListenFirebasePrices() {} // eski uyumluluk — artık kullanılmıyor
+ // eski uyumluluk — artık kullanılmıyor
 
 var MARKET_GROUPS = [
   {
@@ -4841,16 +4563,6 @@ function editSymForm(i) {
   if(title) title.textContent = 'SEMBOL DÜZENLE: ' + s.sym;
 }
 
-function resetSymForm() {
-  ['ns_editIdx','ns_sym','ns_label','ns_short','ns_spread','ns_contractSize','ns_margin','ns_decimals','ns_minlot'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.value = id==='ns_editIdx' ? -1 : '';
-  });
-  document.getElementById('ns_color').value        = '#f0b90b';
-  document.getElementById('ns_category').value     = 'crypto';
-  document.getElementById('symFormTitle').textContent = 'YENİ SEMBOL EKLE';
-  document.getElementById('symSaveBtn').textContent   = '+ SEMBOL EKLE';
-}
 
 function filterSymCat(cat) { renderSymMgr(cat); }
 function addSymbolMgr() { saveSymbolMgr(); }
@@ -5320,27 +5032,6 @@ function adWithdraw() {
   adRenderTab('finance');
 }
 
-function adBonus(sign) {
-  if(typeof hasPerm==='function'&&!hasPerm('finance.bonus')){showAdminToast('Yetkisiz','Bonus işlemi yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var amt = parseFloat((document.getElementById('ad_bon_amt')||{}).value);
-  if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  // Canonical okuma — bonus users/{id}'den
-  var oldBonus = getAccBonus(a.id);
-  var newBonus = Math.max(0, oldBonus + sign * amt);
-  // ⚠️ a.bonus'a dokunmuyoruz — canonical tek kaynak
-  // users/{id}'ye bonus yaz - trader + admin canon listener anlık görür
-  if(typeof db!=='undefined' && db && _adAccId) {
-    db.collection('users').doc(String(_adAccId)).set({
-      bonus: newBonus,
-      updatedAt: new Date().toISOString()
-    }, {merge:true}).catch(function(e){ console.warn('bonus sync err:', e); });
-  }
-  renderAccTable();
-  adAudit(sign>0 ? 'finance.bonus_in' : 'finance.bonus_out', 'users/'+a.id, {bonus: oldBonus}, {bonus: newBonus, amount: amt});
-  showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
-  adRenderTab('finance');
-}
 
 function adRenderFinlog() {
   var a = accounts.find(function(x){ return x.id === _adAccId; });
@@ -5451,32 +5142,6 @@ function adEditFinlog(idx) {
 // ── Finlog tarih parse helper - locale (DD.MM.YYYY) ve ISO her ikisini de destekler ──
 
 // ── users/{id} sync helper ──
-function fbSyncUserFinance(a) {
-  if(!a || !a.id) return;
-  if(typeof db === 'undefined' || !db) return;
-  function _doSync() {
-    db.collection('users').doc(String(a.id)).set({
-      balance:  getAccBal(a.id),
-      bonus:    getAccBonus(a.id),
-      finlog:   getAccFinlog(a.id),
-      updatedAt: new Date().toISOString()
-    }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
-  }
-  // Auth yoksa bekle — permissions hatası önle
-  var _auth = (typeof firebase!=='undefined') ? firebase.auth() : null;
-  if(_auth && !_auth.currentUser) {
-    var _waited = 0;
-    var _wInt = setInterval(function(){
-      _waited += 200;
-      if(_auth.currentUser || _waited >= 3000) {
-        clearInterval(_wInt);
-        _doSync();
-      }
-    }, 200);
-  } else {
-    _doSync();
-  }
-}
 function adSaveFinlog() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; });
@@ -5651,52 +5316,6 @@ function adDeleteAcc() {
   showToast('Hesap Silindi', 'Hesap kalıcı olarak silindi');
 }
 
-function adManualTrade() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var sym   = (document.getElementById('ad_tsym')||{}).value;
-  var side  = (document.getElementById('ad_tside')||{}).value||'buy';
-  var lot   = parseFloat((document.getElementById('ad_tlot')||{}).value)||0.01;
-  var op    = parseFloat((document.getElementById('ad_tprice')||{}).value)||(prices[sym]?prices[sym].price:0);
-  var sl    = parseFloat((document.getElementById('ad_tsl')||{}).value)||null;
-  var tp    = parseFloat((document.getElementById('ad_ttp')||{}).value)||null;
-  if(!op){ showToast('Hata','Açılış fiyatı girin!'); return; }
-
-  // Whitelist — admin OVERRIDE edebilir (blok değil, confirm)
-  if(typeof canTradeSymbol === 'function' && !canTradeSymbol(a.spreadGroup||'standard', sym)) {
-    if(!confirm(sym+' bu hesabın grubunda ('+(a.spreadGroup||'standard')+') whitelist dışı.\n\nYine de açmak istiyor musunuz?\n(Audit log\'a düşecektir.)')) return;
-  }
-
-  // Commission — trader'dakiyle aynı mantık (lot başına × lot miktarı)
-  var _comm = 0;
-  if(typeof getCommission === 'function') {
-    _comm = getCommission(a.spreadGroup||'standard', lot);
-  }
-
-  if(typeof positions==='undefined') window.positions=[];
-  var sc=symConfig.find(function(s){ return s.sym===sym; })||{};
-  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,commission:_comm,manual:true});
-
-  // Commission hesabın balance'ından kesilir (MT5 pattern — açılışta)
-  if(_comm > 0 && typeof getAccBal === 'function') {
-    var _curBal = getAccBal(a.id);
-    var _newBal = _curBal - _comm;
-    if(typeof fbSaveUserData === 'function') {
-      fbSaveUserData(a.id, { balance: _newBal, _balanceSource: 'manager', updatedAt: new Date().toISOString() });
-    }
-    // Manager tarafı manuel işlem kaydı için audit
-    if(typeof adAudit === 'function') {
-      adAudit('position.manual_open', 'users/'+a.id,
-        {balance: _curBal},
-        {sym:sym, side:side, qty:lot, openPrice:op, commission:_comm, balance:_newBal});
-    }
-  }
-
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  showToast('İşlem Açıldı ✓', lot+' lot '+sym+(_comm>0?' (komisyon: $'+_comm.toFixed(2)+')':''));
-  document.getElementById('adMTF').style.display='none';
-  adRenderTrades();
-}
 
 function adRenderTrades() {
   var tb=document.getElementById('adTradeBody'); if(!tb) return;
@@ -6028,17 +5647,6 @@ document.addEventListener('click',function(){
   var p=document.getElementById('accColPicker');
   if(p&&p.style.display==='block')p.style.display='none';
 });
-function _timeAgo(ds){
-  if(!ds)return '—';
-  var d=Date.now()-new Date(ds).getTime();
-  if(isNaN(d)||d<0)return '—';
-  var s=Math.floor(d/1000),mi=Math.floor(s/60),h=Math.floor(mi/60),dy=Math.floor(h/24);
-  if(s<60)return s+'sn';
-  if(mi<60)return mi+'dk';
-  if(h<24)return h+'sa';
-  if(dy<30)return dy+'g';
-  return fmtDateShort(ds);
-}
 
 
 function renderAccListSmall() {
@@ -6658,9 +6266,7 @@ function openApiKeyModal() {
   showToast('Bilgi', 'Forex verileri otomatik yükleniyor, API key gerekmez.');
 }
 
-function closeApiKeyModal() {}
 
-function saveApiKey() {}
 
 symConfig = null;
 // accounts = []; // KALDIRILDI
@@ -7015,70 +6621,16 @@ function calcRSI(data, p) {
   }
   return result;
 }
-function calcMACD(data, fast, slow, sig) {
-  const ef=calcEMA(data,fast), es=calcEMA(data,slow);
-  const sm=new Map(es.map(d=>[d.time,d.value]));
-  const ml=ef.filter(d=>sm.has(d.time)).map(d=>({time:d.time,value:+(d.value-sm.get(d.time)).toFixed(4)}));
-  const k=2/(sig+1); let ema=null;
-  const signal=ml.map((d,i)=>{
-    if(i<sig-1) return null;
-    if(i===sig-1) ema=ml.slice(0,sig).reduce((s,x)=>s+x.value,0)/sig;
-    else ema=d.value*k+ema*(1-k);
-    return {time:d.time,value:+ema.toFixed(4)};
-  }).filter(Boolean);
-  const sigM=new Map(signal.map(d=>[d.time,d.value]));
-  const hist=ml.filter(d=>sigM.has(d.time)).map(d=>({
-    time:d.time, value:+(d.value-sigM.get(d.time)).toFixed(4),
-    color:d.value>=sigM.get(d.time)?'rgba(38,166,154,.7)':'rgba(239,83,80,.7)'
-  }));
-  return {macdLine:ml,signal,hist};
-}
 
 function initSubCharts() {  }
 
-function drawIndicators(data) {
-  if(data && data.length > 1) _chartCandles = data;
-  drawChart(); // canvas chart indikatörleri drawChart içinde çiziyor
-}
 
-function toggleInd(id, btn) {
-  indActive[id]=!indActive[id];
-  btn.classList.toggle('active',indActive[id]);
-  if(id==='vol')  document.getElementById('subVol').classList.toggle('active',indActive.vol);
-  if(id==='macd') document.getElementById('subMacd').classList.toggle('active',indActive.macd);
-  if(id==='rsi')  document.getElementById('subRsi').classList.toggle('active',indActive.rsi);
-  drawIndicators(_chartCandles);
-}
 
-function toggleIndPopup() {
-  var popup = document.getElementById('indPopup');
-  var btn = document.querySelector('.ind-settings-btn');
-  if(popup && btn) {
-    var rect = btn.getBoundingClientRect();
-    popup.style.top = (rect.bottom + 4) + 'px';
-    popup.style.right = (window.innerWidth - rect.right) + 'px';
-  }
-  if(popup) popup.classList.toggle('open');
-}
 document.addEventListener('click', e=>{
   const p=document.getElementById('indPopup');
   if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.ind-settings-btn'))
     p.classList.remove('open');
 });
-function applyIndSettings() {
-  indCfg.ma=+document.getElementById('cfg_ma').value||20;
-  indCfg.ema=+document.getElementById('cfg_ema').value||9;
-  indCfg.bb=+document.getElementById('cfg_bb').value||20;
-  indCfg.bb_std=+document.getElementById('cfg_bb_std').value||2;
-  indCfg.rsi=+document.getElementById('cfg_rsi').value||14;
-  indCfg.macd_fast=+document.getElementById('cfg_macd_fast').value||12;
-  indCfg.macd_slow=+document.getElementById('cfg_macd_slow').value||26;
-  indCfg.macd_sig=+document.getElementById('cfg_macd_sig').value||9;
-  document.querySelector('#subRsi .sub-chart-label').textContent='RSI('+indCfg.rsi+')';
-  drawIndicators(_chartCandles);
-  toggleIndPopup();
-  showToast('İndikatörler Güncellendi ✓','Yeni ayarlar uygulandı');
-}
 
 try { 
   /* admin */ 
@@ -7630,16 +7182,6 @@ function sgRefreshSelects() {
   });
 }
 
-function getEffectiveSpread(sym,groupId) {
-  var g=tradingGroups.find(function(x){ return x.id===groupId; });
-  if(g&&g.spreads&&g.spreads[sym]!==undefined) return g.spreads[sym];
-  var sc=symConfig.find(function(x){ return x.sym===sym; }); return sc?sc.spread:0;
-}
-function getSwap(sym,groupId,side) {
-  var g=tradingGroups.find(function(x){ return x.id===groupId; });
-  if(!g||!g.swaps||!g.swaps[sym]) return 0;
-  return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
-}
 
 // Eski isimleri yönlendir
 // Eski isimleri yönlendir (yaşayan wrapper'lar — altta gerçek tanım yok)
@@ -8162,17 +7704,6 @@ function deviceIcon(d) {
 
 
 // Cihaz tespiti
-function detectDevice() {
-  var ua = navigator.userAgent || '';
-  if(/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
-  if(/Android/i.test(ua)) return 'Android';
-  if(/Windows Phone/i.test(ua)) return 'Windows Phone';
-  if(/Mac/i.test(ua) && navigator.maxTouchPoints > 1) return 'iOS';
-  if(/Windows/i.test(ua)) return 'Windows';
-  if(/Mac/i.test(ua)) return 'macOS';
-  if(/Linux/i.test(ua)) return 'Linux';
-  return 'Web';
-}
 function getDeviceIcon(d) {
   var icons = {'iOS':'🍎','Android':'🤖','Windows':'🖥','macOS':'🖥','Linux':'🖥','Web':'🌐','Broker':'⚙️'};
   return (icons[d]||'🌐') + ' ' + d;
@@ -8865,17 +8396,6 @@ function loadAllPositionsAndUpdate() {
   });
 }
 
-function updateReportsWithPositions(allPositions) {
-  // accounts array'e pozisyonları geçici olarak ekle
-  accounts.forEach(function(a) {
-    if(allPositions[a.id]) {
-      a._repPositions = allPositions[a.id].positions;
-    }
-  });
-  updateReports();
-  // Temizle
-  accounts.forEach(function(a){ delete a._repPositions; });
-}
 function loadInitialData(){
   fbLoadAccounts(function(accs){
     accounts = accs || [];
@@ -8952,7 +8472,6 @@ function _loadAllEquities(cb){
     });
   });
 }
-function filterAccTable(){renderAccTable();}
 
 function updateReports(){
   var ptEl = document.getElementById('rep-posTable');
@@ -9500,23 +9019,7 @@ function staffAction(btn, action) {
 }
 
 
-function closeAssignModal() {
-  var m = document.getElementById('assignModal');
-  if(m) m.style.display = 'none';
-}
 
-function saveAssign(id) {
-  if(id && id.dataset) id = id.dataset.id;
-  var s = _staffList.find(function(x){ return x.id===id; });
-  if(!s) return;
-  var selected = [];
-  document.querySelectorAll('.assign-cb-'+id+':checked').forEach(function(cb){ selected.push(cb.dataset.acc); });
-  s.assignedAccounts = selected;
-  fbSaveStaff(_staffList);
-  renderStaffTable();
-  document.getElementById('assignModal').style.display = 'none';
-  showAdminToast('Kaydedildi', s.name+' için '+selected.length+' hesap atandı', 'success');
-}
 
 function toggleStaffStatus(id){var s=_staffList.find(function(x){return x.id===id;});if(!s)return;s.active=!s.active;fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Güncellendi',s.name+' '+(s.active?'aktif':'pasif'),'info');}
 
