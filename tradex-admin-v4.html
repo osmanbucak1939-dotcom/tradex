@@ -1059,26 +1059,10 @@ var _authType = 'demo';
 var accounts = [];
 try { accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(!Array.isArray(accounts)) accounts = []; } catch(e){ accounts = []; }
 
-function initAuth(){
-  if(!_cu || !_cu.name) {
-    var el = document.getElementById('authOverlay');
-    if(el) el.style.display = 'flex';
-  }
-  if(_cu && _cu.name) {
-    // _authClose() çağrısı kaldırıldı (2026-04-20) — fonksiyon silindi, DOM'u da yoktu.
-    var lb=document.getElementById('tbLoginBtn');
-    var ub=document.getElementById('tbUserBadge');
-    if(lb)lb.style.display='none';
-    if(ub)ub.style.display='flex';
-    var av=document.getElementById('tbUserAvatar');
-    var un=document.getElementById('tbUserName');
-    var ut=document.getElementById('tbUserType');
-    if(av)av.textContent=(_cu.name||'?')[0].toUpperCase();
-    if(un)un.textContent=_cu.name+(_cu.surname?' '+_cu.surname:'');
-    if(ut)ut.textContent=_cu.type==='demo'?'Demo Hesap':'Gerçek Hesap';
-    try{if(_cu.balance&&typeof balance!=='undefined'){balance=parseFloat(_cu.balance);}}catch(e){}
-  }
-}
+// initAuth() kaldırıldı (2026-04-20, 4. pass) — no-op fonksiyon.
+// Admin'de DOM elementleri (authOverlay, tbLoginBtn, tbUserBadge, tbUserAvatar, tbUserName, tbUserType) yok.
+// `_cu` admin'de çoğunlukla null (manager `_mgr` kullanır). Tüm guard'lar false, hiçbir şey yapmıyordu.
+// Çağrı yeri de kaldırıldı (L6479).
 </script>
   
   
@@ -2541,13 +2525,12 @@ var curSym = 'BTCUSDT';
 var curInt = '15m';
 var ordType = 'market';
 var balance = 10000;
-var positions, tradeHistory, portfolio, alarms;
-try { positions = JSON.parse(localStorage.getItem('tx_pos') || '[]'); } catch(e) { positions = []; }
-try { tradeHistory  = JSON.parse(localStorage.getItem('tx_hist') || '[]'); } catch(e) { tradeHistory = []; }
+// 2026-04-20, 5. pass: top-level 'positions', 'tradeHistory' kaldırıldı (trader kopyası state).
+// Admin canonical akışı: _adPositions + _adHistory + users/{id}.
+// 'portfolio' ve 'alarms' manager panel için canlı, tutuluyor.
+var portfolio, alarms;
 try { portfolio= JSON.parse(localStorage.getItem('tx_pf') || '[]'); } catch(e) { portfolio = []; }
 try { alarms   = JSON.parse(localStorage.getItem('tx_al') || '[]'); } catch(e) { alarms = []; }
-if(!Array.isArray(positions)) positions = [];
-if(!Array.isArray(tradeHistory))   tradeHistory = [];
 if(!Array.isArray(portfolio))  portfolio = [];
 if(!Array.isArray(alarms))    alarms = [];
 var triggered = new Set();
@@ -2557,15 +2540,13 @@ var posCounter = Date.now();
 
 var fp = (p, d=2) => p === undefined ? '—' : (p > 10 ? p.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : p.toFixed(p<0.01?5:d));
 var save = () => {
-  localStorage.setItem('tx_pos', JSON.stringify(positions));
-  localStorage.setItem('tx_hist', JSON.stringify(tradeHistory));
+  // 2026-04-20, 5. pass: tx_pos/tx_hist ve positions/tradeHistory Firebase yazımı kaldırıldı (trader kopyası).
+  // Admin canonical akışı adSaveUserTrades() kullanır. save() artık sadece portfolio/alarms için.
   localStorage.setItem('tx_pf', JSON.stringify(portfolio));
   localStorage.setItem('tx_al', JSON.stringify(alarms));
-  // Firebase'e kaydet (giriş yapmışsa) — positions/tradeHistory ARRAY olarak kaydet
+  // Firebase'e kaydet (giriş yapmışsa) — sadece portfolio/alarms
   if(typeof _cu !== 'undefined' && _cu && _cu.id) {
     fbSaveUserData(_cu.id, {
-      positions:    Array.isArray(positions) ? positions : [],
-      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory : [],
       portfolio:    JSON.stringify(portfolio),
       alarms:       JSON.stringify(alarms),
       balance:      typeof balance !== 'undefined' ? balance : 0,
@@ -2842,58 +2823,9 @@ function drawChart() {
     ctx.fillText(label, tx, H-PAD_BOTTOM+11);
   }
 
-  if(typeof positions !== 'undefined' && positions.length > 0) {
-    for(var pi=0; pi<positions.length; pi++) {
-      var pos = positions[pi];
-      if(pos.sym !== _chartSym) continue;
-      var isBuy = pos.side === 'buy';
-      var col = isBuy ? '#26a69a' : '#ef5350';
-
-      var oy = toY(pos.openPrice);
-      if(oy >= PAD_TOP && oy <= PAD_TOP + chartH) {
-        ctx.strokeStyle = col;
-        ctx.setLineDash([6,3]);
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(PAD_LEFT, oy); ctx.lineTo(W-PAD_RIGHT, oy); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = col;
-        ctx.fillRect(W-PAD_RIGHT, oy-9, PAD_RIGHT, 18);
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-        var dec = pos.openPrice > 100 ? 2 : pos.openPrice > 1 ? 4 : 6;
-        ctx.fillText((isBuy ? '▲' : '▼') + pos.openPrice.toFixed(dec), W-PAD_RIGHT+2, oy+4);
-        ctx.fillStyle = col;
-        ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-        ctx.fillText('#'+pos.id+' '+(isBuy?'AL':'SAT'), PAD_LEFT+4, oy-3);
-      }
-
-      if(pos.tp) {
-        var ty = toY(pos.tp);
-        if(ty >= PAD_TOP && ty <= PAD_TOP + chartH) {
-          ctx.strokeStyle = '#26a69a';
-          ctx.setLineDash([3,3]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(PAD_LEFT, ty); ctx.lineTo(W-PAD_RIGHT, ty); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(38,166,154,0.15)';
-          ctx.fillRect(PAD_LEFT, ty, chartW, oy-ty);
-          ctx.fillStyle = '#26a69a'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-          ctx.fillText('TP '+pos.tp.toFixed(pos.tp>100?2:4), PAD_LEFT+4, ty+10);
-        }
-      }
-
-      if(pos.sl) {
-        var sy = toY(pos.sl);
-        if(sy >= PAD_TOP && sy <= PAD_TOP + chartH) {
-          ctx.strokeStyle = '#ef5350';
-          ctx.setLineDash([3,3]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(PAD_LEFT, sy); ctx.lineTo(W-PAD_RIGHT, sy); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#ef5350'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-          ctx.fillText('SL '+pos.sl.toFixed(pos.sl>100?2:4), PAD_LEFT+4, sy-3);
-        }
-      }
-    }
-  }
+  // drawChart pozisyon çizim bloğu kaldırıldı (2026-04-20, 5. pass) — top-level 'positions' array
+  // trader kopyasıydı, admin'de hiç doldurulmuyordu. Admin'in canonical akışı _adPositions kullanıyor
+  // ama chart'ta gösterim yapılmıyor. Gelecekte pozisyon çizgileri istenirse _adPositions'a bağla.
 
   ctx.fillStyle='rgba(255,255,255,0.03)';
   ctx.fillRect(W-PAD_RIGHT, 0, PAD_RIGHT, H);
@@ -3112,152 +3044,10 @@ function updateOrderTicket(price) {
 // placeOrder() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
 // Sadece qtOrder() çağırıyordu; o da ölü kod olarak silindi.
 
-function updatePositions() {
-  if(!Array.isArray(positions)) positions = [];
-  positions.forEach(function(pos) {
-    const p = prices[pos.sym];
-    if (!p) return;
-    const cur = p.price;
-    const pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * pos.qty * (pos.contractSize||1);
-    if (pos.tp && ((pos.side==='buy' && cur>=pos.tp) || (pos.side==='sell' && cur<=pos.tp))) {
-      closePosition(pos.id, 'tp');
-    } else if (pos.sl && ((pos.side==='buy' && cur<=pos.sl) || (pos.side==='sell' && cur>=pos.sl))) {
-      closePosition(pos.id, 'sl');
-    }
-  });
-  renderPositions();
-  updateAccount();
-}
-
-function renderPositions() {
-  const tb = document.getElementById('posBody');
-  if (!tb) return; // Manager kendi sekmesinde değilse çık
-  if (!positions.length) { tb.innerHTML = '<tr><td colspan="10" class="empty-msg">Açık pozisyon yok</td></tr>'; return; }
-  tb.innerHTML = positions.map(pos => {
-    const p = prices[pos.sym];
-    const cur = p ? p.price : pos.openPrice;
-    const pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * pos.qty * (pos.contractSize||1);
-    const pnlPct = (pnl/pos.cost)*100;
-    const cls = pnl>=0?'up':'down';
-    return `<tr>
-      <td style="color:var(--muted)">#${pos.id}</td>
-      <td>${pos.label}</td>
-      <td><span class="${pos.side==='buy'?'badge-buy':'badge-sell'}">${pos.side==='buy'?'AL':'SAT'}</span></td>
-      <td>${pos.qty}</td>
-      <td>$${fp(pos.openPrice)}</td>
-      <td>$${fp(cur)}</td>
-      <td class="${cls}">${pnl>=0?'+':''}$${fp(Math.abs(pnl))}</td>
-      <td class="${cls}">${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%</td>
-      <td style="font-size:10px;color:var(--muted);white-space:nowrap">${deviceIcon(pos.device||'web')}</td>
-      <td><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function closePosition(id, reason='') {
-  if(!reason && typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
-  var _cArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
-  // ID tip güvencesi: number veya string olabilir
-  const idx=_cArr.findIndex(p=>String(p.id)===String(id));
-  if(idx===-1)return;
-  const pos=_cArr[idx];
-
-  // Admin: adGetPrice kullan (bid/ask doğru), trader: prices kullan
-  var closePrice;
-  if(typeof adGetPrice==='function') {
-    closePrice = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
-  } else {
-    var _p = prices&&prices[pos.sym]; closePrice = _p?_p.price:pos.openPrice;
-  }
-
-  const _swapC = parseFloat(pos.swapTotal)||0;
-  const _cs = parseFloat(pos.contractSize)||1;
-  const _qty = parseFloat(pos.qty)||0;
-  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qty * _cs + _swapC;
-
-  // Hesabın balance'ını güncelle (admin: _adAcc, trader: global balance)
-  var _adAcc = (_adAccId&&typeof accounts!=='undefined') ? accounts.find(function(a){return String(a.id)===String(_adAccId);}) : null;
-  // Bakiye güncelleme: açılışta cost düşüldü → kapanınca cost+pnl iade et
-  if(_adAcc) {
-    _adAcc.balance = parseFloat(_adAcc.balance||0) + (parseFloat(pos.cost)||0) + pnl;
-    balance = _adAcc.balance; // senkronize et
-  } else {
-    balance += (parseFloat(pos.cost)||0) + pnl;
-  }
-
-  _cArr.splice(idx, 1);
-
-  // _allAccountPositions güncelle - hesaplar listesi doğru görünsün
-  if(_adAccId && typeof _allAccountPositions!=='undefined') {
-    _allAccountPositions[_adAccId] = _cArr.slice();
-  }
-
-  var _closeTime = new Date().toISOString();
-  tradeHistory.unshift(Object.assign({}, pos, {closePrice:closePrice, pnl:pnl, swapTotal:_swapC, closeTime:_closeTime, closeReason:reason||'manuel'}));
-  if(tradeHistory.length > 50) tradeHistory.pop();
-
-  // Admin context'inde accounts dolu olduğunda kaydet; trader context'inde save() kullan
-  if(typeof accounts!=='undefined' && Array.isArray(accounts) && accounts.length > 0) {
-    saveAccounts();
-  } else if(typeof save==='function') {
-    save(); // trader tarafı localStorage kayıt
-  }
-
-  // Firebase users/{id}'ye yaz — trader anında görsün
-  if(typeof db!=='undefined' && db && _adAccId) {
-    var _newBal = _adAcc ? _adAcc.balance : balance;
-    db.collection('users').doc(String(_adAccId)).set({
-      positions: _cArr,
-      tradeHistory: tradeHistory.slice(0,50),
-      balance: _newBal,
-      updatedAt: _closeTime
-    }, { merge: true }).catch(function(e){ console.warn('closePos FB err:', e); });
-  }
-
-  renderPositions();
-  renderHistory();
-  // updateAccount burada çağrılmıyor — çağıran (updatePositions/manuel) zaten çağırır
-  // Aksi halde closePosition → updateAccount → closePosition döngüsü oluşur
-
-  // Audit: manuel kapama (stop_out/sl/tp otomatik, reason varsa sistem)
-  if(!reason || reason === 'manuel') {
-    adAudit('position.close.manual', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, side:pos.side, qty:pos.qty, openPrice:pos.openPrice}, {closePrice:closePrice, pnl:pnl, reason:reason||'manuel'});
-  } else if(reason === 'stop_out') {
-    adAudit('position.close.stopout', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, qty:pos.qty}, {closePrice:closePrice, pnl:pnl});
-  }
-
-  if(reason) {
-    var _tAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
-    var _tName=_tAcc?('#'+(_tAcc.login||_tAcc.id)+' '+(_tAcc.name||'')):'';
-    var _tType=reason==='stop_out'?'danger':pnl>=0?'success':'error';
-    var _tTitle=reason==='stop_out'?'STOP OUT':reason==='tp'?'Take Profit':reason==='sl'?'Stop Loss':'Kapatıldı';
-    showAdminToast(_tTitle,(_tName?_tName+' — ':'')+pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl),_tType);
-  } else {
-    showAdminToast('Kapatıldı', pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl), pnl>=0?'success':'error');
-  }
-}
-
-function renderHistory() {
-  const tb = document.getElementById('histBody');
-  if (!tb) return;
-  if (!tradeHistory.length) { tb.innerHTML = '<tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr>'; return; }
-  var _reasonMap = {'manuel':'<span style="color:#a0a0a0;font-size:10px">Manuel</span>','stop_out':'<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>','sl':'<span style="color:#ef5350;font-size:10px">Stop Loss</span>','tp':'<span style="color:#26a69a;font-size:10px">Take Profit</span>','margin':'<span style="color:#ff9800;font-size:10px">Margin Call</span>'};
-  tb.innerHTML = tradeHistory.slice(0,30).map(function(h) {
-    var cls = h.pnl>=0?'up':'down';
-    var r = h.closeReason||'manuel';
-    var rl = _reasonMap[r]||('<span style="color:#a0a0a0;font-size:10px">'+r+'</span>');
-    return '<tr>'
-      +'<td style="color:var(--muted);font-size:10px;white-space:nowrap">'+(h.closeTime?fmtDate(h.closeTime):'—')+'</td>'
-      +'<td>'+h.label+'</td>'
-      +'<td><span class="'+(h.side==='buy'?'badge-buy':'badge-sell')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></td>'
-      +'<td>'+h.qty+'</td>'
-      +'<td>$'+fp(h.openPrice)+'</td>'
-      +'<td>$'+fp(h.closePrice)+'</td>'
-      +'<td class="'+cls+'">'+(h.pnl>=0?'+':'')+'$'+fp(h.pnl)+'</td>'
-      +'<td>'+rl+'</td>'
-      +'</tr>';
-  }).join('');
-}
+// updatePositions, renderPositions, closePosition, renderHistory kaldırıldı (2026-04-20, 5. pass).
+// Trader kopyası ölü kod: top-level 'positions' array kullanıyorlardı, admin'de posBody/histBody DOM'u yoktu.
+// Admin'in kendi canonical kapatma akışı: adClosePos + _adPositions + users/{id} — bu DOKUNULMADI.
+// closePosition sadece updatePositions ve renderPositions tarafından çağrılıyordu (SL/TP tetik) — ikisi de silindi.
 
 function renderPortfolio() {
   const tb = document.getElementById('portBody');
@@ -3285,11 +3075,11 @@ function renderPortfolio() {
 function delPort(id) { portfolio = portfolio.filter(p=>p.id!==id); save(); renderPortfolio(); }
 
 function updateAccount() {
-  if(!Array.isArray(positions)) positions = [];
+  // 2026-04-20, 5. pass: top-level 'positions' array'ine fallback kaldırıldı. Admin canonical akışı sadece _adPositions kullanır.
 
   var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return x.id===_adAccId;}):null;
   var _defLev=typeof leverage!=='undefined'?leverage:((typeof settings!=='undefined'&&settings&&settings.leverage)?settings.leverage:100);
-  var _posArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
+  var _posArr=(typeof _adPositions!=='undefined'&&Array.isArray(_adPositions))?_adPositions:[];
   var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},_posArr);
   var openPL=_ua.openPnl, marginUsed=_ua.margin, equity=_ua.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
@@ -3423,7 +3213,8 @@ function startLiveFeed() {
       if(sym===curSym){updateOrderTicket(np);}
       checkAlarms(sym,np);
     }
-    updatePositions(); buildTicker();
+    // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi, admin'de DOM yoktu.
+    buildTicker();
   }, 800);
 
   setInterval(function() {
@@ -3608,7 +3399,7 @@ function adReceiveRawPrice(sym, rawMid) {
   updateMwRow(sym, bid, prev);
   if(sym===curSym) updateOrderTicket(bid);
   if(typeof checkAlarms==='function') checkAlarms(sym, bid);
-  if(typeof updatePositions==='function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   // Hesap detayı açıksa pozisyon tablosu ve badge'leri güncelle
   if(_adAccId && document.getElementById('accDetailOverlay') &&
      document.getElementById('accDetailOverlay').style.display !== 'none') {
@@ -3703,7 +3494,7 @@ function adApplyOverride(sym, price) {
   if(typeof SIM_PRICES!=='undefined'&&SIM_PRICES[sym]) SIM_PRICES[sym].p=price;
   updateMwRow(sym,price,prev);
   if(sym===curSym) updateOrderTicket(price);
-  if(typeof updatePositions==='function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   // _FX writeBuf'a ekle - throttle ile yazılacak
   if(typeof _FX!=='undefined') {
     _FX.writeBuf[sym] = price;
@@ -5318,80 +5109,10 @@ function adDeleteAcc() {
 }
 
 
-function adRenderTrades() {
-  var tb=document.getElementById('adTradeBody'); if(!tb) return;
-  var a=accounts.find(function(x){ return x.id===_adAccId; });
-  var pos=(typeof positions!=='undefined'?positions:[]).filter(function(p){ return !p.accId||p.accId===(a?a.id:''); });
-  if(!pos.length){ tb.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);">Açık pozisyon yok</td></tr>'; return; }
-  tb.innerHTML=pos.map(function(p){
-    var cp=prices[p.sym]?prices[p.sym].price:p.openPrice;
-    var pnl=(p.side==='buy'?cp-p.openPrice:p.openPrice-cp)*p.qty;
-    var pc=pnl>=0?'#26a69a':'#ef5350';
-    var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-    return '<tr id="posRow-'+p.id+'">'+
-      '<td style="font-family:var(--mono);">#'+p.id+'</td>'+
-      '<td style="font-weight:700;">'+p.sym+'</td>'+
-      '<td style="color:'+(p.side==='buy'?'#26a69a':'#ef5350')+';font-weight:700;">'+(p.side==='buy'?'▲AL':'▼SAT')+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.qty+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.openPrice.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);">'+cp.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);color:#ef5350;">'+(p.sl||'—')+'</td>'+
-      '<td style="font-family:var(--mono);color:#26a69a;">'+(p.tp||'—')+'</td>'+
-      '<td style="font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'-')+Math.abs(pnl).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
-      '<td style="font-family:var(--mono);font-size:10px;">'+getDeviceIcon(p.device||'Web')+'</td>'+
-      '<td>'
-        +(hasPerm&&hasPerm('trades.close')?'<button class="mgr-btn danger" onclick="adCloseTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Kapat</button> ':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="mgr-btn secondary" onclick="adEditTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Düzenle</button>':'')
-      +'</td>'+
-    '</tr>';
-  }).join('');
-}
-
-function adCloseTrade(pid) {
-  
-  positions=positions.filter(function(x){ return x.id!==pid; });
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  adRenderTrades(); showToast('Kapatıldı','#'+pid);
-}
-
-function adEditTrade(pid) {
-  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','SL/TP düzenleme yetkiniz yok','danger');return;}
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var ex=document.getElementById('editRow-'+pid);
-  if(ex){ex.remove();return;}
-  var pr=document.getElementById('posRow-'+pid);
-  if(!pr){showToast('Hata','Satir bulunamadi');return;}
-  var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-  var tr=document.createElement('tr');
-  tr.id='editRow-'+pid; tr.style.background='#0d1a1a';
-  tr.innerHTML='<td colspan="10" style="padding:12px 16px;"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">'
-    +'<div><div class="ad-label">Yon</div><select id="erside'+pid+'" class="ad-input" style="width:90px;"><option value="buy">AL</option><option value="sell">SAT</option></select></div>'
-    +'<div><div class="ad-label">Lot</div><input id="erl'+pid+'" class="ad-input" type="number" step="0.01" value="'+p.qty+'" style="width:80px;"></div>'
-    +'<div><div class="ad-label">Acilis Fiyati</div><input id="erop'+pid+'" class="ad-input" type="number" step="any" value="'+p.openPrice.toFixed(dec)+'" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Stop Loss</div><input id="ersl'+pid+'" class="ad-input" type="number" step="any" value="'+(p.sl||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Take Profit</div><input id="ertp'+pid+'" class="ad-input" type="number" step="any" value="'+(p.tp||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<button class="ad-btn ad-btn-success" onclick="adSvTr('+pid+')" style="padding:7px 14px;">Kaydet</button>'
-    +'<button class="ad-btn ad-btn-secondary" onclick="adClEd('+pid+')" style="padding:7px 10px;">Iptal</button>'
-    +'</div></td>';
-  pr.insertAdjacentElement('afterend',tr);
-  var sEl=document.getElementById('erside'+pid); if(sEl) sEl.value=p.side||'buy';
-}
-function adClEd(pid){var r=document.getElementById('editRow-'+pid);if(r)r.remove();}
-function adSvTr(pid){
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var sd=(document.getElementById('erside'+pid)||{}).value; if(sd) p.side=sd;
-  var lv=parseFloat((document.getElementById('erl'+pid)||{}).value);
-  var ov=parseFloat((document.getElementById('erop'+pid)||{}).value);
-  var sv=(document.getElementById('ersl'+pid)||{}).value;
-  var tv=(document.getElementById('ertp'+pid)||{}).value;
-  if(lv>0) p.qty=lv; if(ov>0) p.openPrice=ov;
-  p.sl=sv?parseFloat(sv):null;
-  p.tp=tv?parseFloat(tv):null;
-  if(typeof save==='function') save();
-  adRenderTrades();
-  showToast('Pozisyon Guncellendi','#'+pid);
-}
+// Eski ad trade cluster kaldırıldı (2026-04-20, 5. pass):
+// adRenderTrades, adCloseTrade, adEditTrade, adClEd, adSvTr — hepsi top-level 'positions' array
+// kullanıyordu (trader kopyası), adTradeBody DOM'u admin'de yoktu, dış çağıran yoktu.
+// Yeni canonical akış: adOpenTrade/adClosePos/adSaveUserTrades — _adPositions + users/{id} kullanır.
 
 document.addEventListener('click', function(e){
   var ov=document.getElementById('accDetailOverlay');
@@ -6404,8 +6125,7 @@ for(var _di=0; _di<_dkeys.length; _di++) {
   }
 }
 buildTicker();
-renderPositions();
-renderHistory();
+// renderPositions() / renderHistory() çağrıları kaldırıldı (2026-04-20, 5. pass) — fonksiyonlar silindi, admin'de posBody/histBody DOM'u yoktu.
 renderPortfolio();
 renderAlarms();
 updateAccount();
@@ -6476,7 +6196,7 @@ var _origTickMock = tickMockPrices;
 applySymConfig();
 initMwPrices();
 startLiveFeed();  // fiyatları başlat ve renderMarketWatch içinde çağrılıyor
-try { initAuth(); } catch(e) { console.error('initAuth:', e); }
+// initAuth() çağrısı kaldırıldı (2026-04-20, 4. pass) — fonksiyon silindi, DOM elementleri admin'de yoktu, no-op.
 
   window._mainInit = _mainInit;
   window.saveSymConfig = saveSymConfig;
@@ -7560,7 +7280,7 @@ function pcApplyPrice(sym, price) {
     if(typeof updateTopSym === 'function') updateTopSym(sym, price, chg);
   }
   if(typeof checkAlarms === 'function') checkAlarms(sym, price);
-  if(typeof updatePositions === 'function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   if(typeof buildTicker === 'function') buildTicker();
   if(typeof pcRenderOverrides === 'function') pcRenderOverrides();
   if(typeof pcRefresh === 'function') pcRefresh();
