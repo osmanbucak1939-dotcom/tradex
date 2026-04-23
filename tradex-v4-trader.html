@@ -1335,11 +1335,6 @@ function logoutUser() {
   _authOpen('login');
 }
 function openAuth(tab){ _authOpen(tab); }
-function closeAuth(){ _authClose(); }
-function demoLogin(){ _doDemo(); }
-function doLogin(){ _doLogin(); }
-function doRegister(){ _doRegister(); }
-function updateUserBadge(){}
 function initAuth(){
   if(!_cu || !_cu.name) {
     var el = document.getElementById('authOverlay');
@@ -2185,33 +2180,17 @@ function fmtDate(input) {
   var min=String(d.getMinutes()).padStart(2,'0');
   return dd+'.'+mm+'.'+yy+' '+hh+':'+min;
 }
-function fmtDateShort(input) {
-  if(!input) return '—';
-  var d = _parseDate(input);
-  if(!d) return String(input);
-  return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
-}
 function parseFinlogDate(input) {
   var d = _parseDate(input);
   return d || new Date(0);
 }
 
 // Sadece tarih: DD.MM.YYYY
-function fmtDateOnly(input) {
-  try {
-    var d = input ? new Date(input) : new Date();
-    if(isNaN(d.getTime())) return input || '—';
-    return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
-  } catch(e) { return input || '—'; }
-}
 // Şu anki zamanı DD.MM.YYYY HH:MM olarak döndür
 
 // ── Finlog tarih parse helper - locale (DD.MM.YYYY) ve ISO her ikisini de destekler ──
 
 function nowFmt() { return fmtDate(new Date()); }
-function loadKlines(sym, interval) {
-  // startCandleWs zaten generateDemoCandles'ı çağırıyor — burada tekrar çağırma
-}
 
 (function() {
   try {
@@ -3060,7 +3039,6 @@ function lwTickUpdate() {
 
 /* ── drawChart: uyumluluk alias ─────────────────── */
 function drawChart() { lwTickUpdate(); }
-function generateDemoCandles(sym) { startCandleWs(sym, curInt); }
 function resizeCanvas() {
   if(!_lw) return;
   var wrap=document.getElementById('lwChart');
@@ -3880,29 +3858,6 @@ function renderHistory() {
   }).join('');
 }
 
-function renderPortfolio() {
-  const tb = document.getElementById('portBody');
-  if (!portfolio.length) { tb.innerHTML = '<tr><td colspan="8" class="empty-msg">Portföy boş — Varlık eklemek için "Portföy" sekmesine tıklayın</td></tr>'; return; }
-  tb.innerHTML = portfolio.map(item => {
-    const p = prices[item.sym+'USDT'];
-    const cur = p ? p.price : 0;
-    const val = cur * item.amount;
-    const cost = item.buyPrice * item.amount;
-    const pnl = val - cost;
-    const pnlPct = cost > 0 ? pnl/cost*100 : 0;
-    const cls = pnl>=0?'up':'down';
-    return `<tr>
-      <td style="font-weight:600">${item.sym}</td>
-      <td>${item.amount}</td>
-      <td>$${fp(item.buyPrice)}</td>
-      <td>$${cur>0?fp(cur):'—'}</td>
-      <td>$${cur>0?fp(val):'—'}</td>
-      <td class="${cls}">${cur>0?((pnl>=0?'+':'')+'$'+fp(Math.abs(pnl))):'—'}</td>
-      <td class="${cls}">${cur>0?((pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%'):'—'}</td>
-      <td><button class="close-ord" onclick="delPort(${item.id})">Sil</button></td>
-    </tr>`;
-  }).join('');
-}
 function delPort(id) { portfolio = portfolio.filter(p=>p.id!==id); save(); }
 
 function updateAccount() {
@@ -6223,14 +6178,6 @@ function getTradingGroup(groupId) {
   if(!g) g = tradingGroups[0];
   return sgNormalizeGroup(g);
 }
-function getMaxLeverage(groupId) {
-  var g = getTradingGroup(groupId);
-  return g ? (g.maxLeverage || 100) : 100;
-}
-function getDefaultLeverage(groupId) {
-  var g = getTradingGroup(groupId);
-  return g ? (g.defaultLeverage || g.maxLeverage || 100) : 100;
-}
 function getCommission(groupId, lots) {
   var g = getTradingGroup(groupId);
   var per = g ? (g.commissionPerLot || 0) : 0;
@@ -6240,10 +6187,6 @@ function getCommission(groupId, lots) {
 function getMinDeposit(groupId) {
   var g = getTradingGroup(groupId);
   return g ? (g.minDeposit || 0) : 0;
-}
-function getMarginMode(groupId) {
-  var g = getTradingGroup(groupId);
-  return g ? (g.marginMode || 'hedging') : 'hedging';
 }
 function canTradeSymbol(groupId, sym) {
   if(!sym) return false;
@@ -6286,16 +6229,6 @@ function sgLoad() {
 
 
 
-function getEffectiveSpread(sym,groupId) {
-  var g=tradingGroups.find(function(x){ return x.id===groupId; });
-  if(g&&g.spreads&&g.spreads[sym]!==undefined) return g.spreads[sym];
-  var sc=symConfig.find(function(x){ return x.sym===sym; }); return sc?sc.spread:0;
-}
-function getSwap(sym,groupId,side) {
-  var g=tradingGroups.find(function(x){ return x.id===groupId; });
-  if(!g||!g.swaps||!g.swaps[sym]) return 0;
-  return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
-}
 
 // Eski isimleri yönlendir (yaşayan wrapper'lar)
 
@@ -6307,43 +6240,9 @@ var _pcOverrides  = {}; // {sym: targetPrice}
 var _pcGradTimer  = null;
 var _pcRefTimer   = null;
 
-function pcInit() {
-  // Sembol dropdown statik HTML'de tanımlı
-  pcLoadSym();
-  // Canlı fiyat güncelleme
-  if(_pcRefTimer) clearInterval(_pcRefTimer);
-  _pcRefTimer = setInterval(pcRefresh, 500);
-  pcRenderOverrides();
-}
 
-function pcLoadSym() {
-  pcRefresh();
-}
 
-function pcRefresh() {
-  var sel = document.getElementById('pc_sym');
-  if(!sel) return;
-  var sym = sel.value;
-  var cur = document.getElementById('pc_current');
-  if(cur && prices[sym]) {
-    var p = prices[sym].price;
-    var dec = p > 100 ? 2 : p > 1 ? 4 : 6;
-    cur.textContent = p.toFixed(dec);
-    cur.style.color = _pcOverrides[sym] ? '#f0b90b' : 'var(--accent)';
-  }
-}
 
-function pcSetPrice() {
-  var sel = document.getElementById('pc_sym');
-  var inp = document.getElementById('pc_price');
-  if(!sel || !inp) return;
-  var sym = sel.value;
-  var val = parseFloat(inp.value);
-  if(!val || val <= 0) { showToast('Hata', 'Geçerli fiyat girin!'); return; }
-  pcApplyPrice(sym, val);
-  inp.value = '';
-  showToast('Fiyat Ayarlandı ✓', sym + ' → ' + val);
-}
 
 // pcApplyPrice — geriye dönük uyumluluk, txApplyPrice'a yönlendir
 function pcApplyPrice(sym, price) { txApplyPrice(sym, price); }
@@ -6388,91 +6287,10 @@ function txCalcStats(account, posArr) {
   };
 }
 
-function pcMove(pct) {
-  var sel = document.getElementById('pc_sym');
-  if(!sel) return;
-  var sym = sel.value;
-  if(!prices[sym]) return;
-  var cur = prices[sym].price;
-  var newP = cur * (1 + pct/100);
-  var dec = cur > 100 ? 2 : cur > 1 ? 4 : 6;
-  newP = parseFloat(newP.toFixed(dec));
-  window._skipCandleReset = true;
-  pcApplyPrice(sym, newP);
-  window._skipCandleReset = false;
-  showToast((pct>0?'+':'')+pct+'%', sym + ' → ' + newP);
-}
 
-function pcReset() {
-  var sel = document.getElementById('pc_sym');
-  if(!sel) return;
-  var sym = sel.value;
-  delete _pcOverrides[sym];
-  // SIM_PRICES'ı orijinal değere döndür
-  if(SIM_PRICES[sym]) {
-    var orig = SIM_PRICES[sym]._orig || SIM_PRICES[sym].p;
-    SIM_PRICES[sym].p = orig;
-  }
-  showToast('Sıfırlandı', sym + ' — simülasyon devam ediyor');
-  pcRenderOverrides();
-}
 
-function pcGradual() {
-  var sel  = document.getElementById('pc_sym');
-  var tEl  = document.getElementById('pc_target');
-  var dEl  = document.getElementById('pc_duration');
-  if(!sel||!tEl||!dEl) return;
-  var sym      = sel.value;
-  var target   = parseFloat(tEl.value);
-  var duration = parseFloat(dEl.value) || 10;
-  if(!target || target<=0) { showToast('Hata','Hedef fiyat girin!'); return; }
-  if(!prices[sym]) return;
 
-  pcStopGradual();
-  var start     = prices[sym].price;
-  var steps     = Math.round(duration * 2); // Her 500ms bir adım
-  var stepSize  = (target - start) / steps;
-  var step      = 0;
-  var btn       = document.getElementById('pc_grad_btn');
-  if(btn) btn.textContent = '⏳ Hareket Ediyor...';
 
-  _pcGradTimer = setInterval(function() {
-    step++;
-    var newP = start + stepSize * step;
-    var dec  = newP > 100 ? 2 : newP > 1 ? 4 : 6;
-    newP = parseFloat(newP.toFixed(dec));
-    pcApplyPrice(sym, newP);
-    if(step >= steps) {
-      pcStopGradual();
-      showToast('Tamamlandı ✓', sym + ' → ' + target);
-    }
-  }, 500);
-}
-
-function pcStopGradual() {
-  if(_pcGradTimer) { clearInterval(_pcGradTimer); _pcGradTimer = null; }
-  var btn = document.getElementById('pc_grad_btn');
-  if(btn) btn.textContent = '▶ Kademeli Hareket';
-}
-
-function pcRenderOverrides() {
-  var el = document.getElementById('pc_override_list');
-  if(!el) return;
-  var keys = Object.keys(_pcOverrides);
-  if(!keys.length) { el.innerHTML = '<span style="color:var(--muted)">Henüz override yok</span>'; return; }
-  var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
-  for(var i=0; i<keys.length; i++) {
-    var sym = keys[i];
-    var p   = _pcOverrides[sym];
-    html += '<div style="background:#181818;border:1px solid var(--accent);border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;">'
-      +'<span style="color:var(--accent);font-weight:700;">'+sym+'</span>'
-      +'<span>'+p+'</span>'
-      +'<button onclick="delete _pcOverrides[\''+sym+'\']; pcRenderOverrides();" style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:14px;line-height:1;">×</button>'
-      +'</div>';
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
 
 
 // Cihaz tespiti
@@ -6487,62 +6305,7 @@ function detectDevice() {
   if(/Linux/i.test(ua)) return 'Linux';
   return 'Web';
 }
-function getDeviceIcon(d) {
-  var icons = {'iOS':'🍎','Android':'🤖','Windows':'🖥','macOS':'🖥','Linux':'🖥','Web':'🌐','Broker':'⚙️'};
-  return (icons[d]||'🌐') + ' ' + d;
-}
 
-function symSearchOpen(){var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');var d=document.getElementById('symDropdown');if(d)d.style.display='block';}
-function symSearchClose(){var d=document.getElementById('symDropdown');if(d)d.style.display='none';}
-function symSearchFilter(q){
-  var dd=document.getElementById('symDropdown');if(!dd)return;
-  var _all=(typeof symConfig!=='undefined'&&Array.isArray(symConfig)&&symConfig.length)?symConfig:SYMS;
-  var _active=_all.filter(function(s){return s.active;});
-  var _pinned=[];try{_pinned=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var q2=(q||'').toLowerCase();
-  var filtered=q2?_active.filter(function(s){return s.sym.toLowerCase().indexOf(q2)>=0||(s.label&&s.label.toLowerCase().indexOf(q2)>=0);}):_active;
-  dd.innerHTML='';
-  if(!filtered.length){
-    var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#b0b0b0;font-family:monospace;font-size:11px;';
-    empty.textContent='Sembol bulunamadi';
-    dd.appendChild(empty);
-    dd.style.display='block'; return;
-  }
-  filtered.forEach(function(s){
-    var isPinned=_pinned.indexOf(s.sym)>=0;
-    var p=prices[s.sym];
-    var dec=p?(p.price>100?2:p.price>1?4:6):2;
-    var priceStr=p?('$'+p.price.toFixed(dec)):'—';
-    var chgStr=p?((p.chg>=0?'+':'')+p.chg.toFixed(2)+'%'):'';
-    var chgCol=p?(p.chg>=0?'#2979ff':'#ef5350'):'#888';
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#e2e2e2;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#b0b0b0;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="color:#a0a0a0;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
-      +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
-      +'<span class="sym-pin-star" style="color:'+(isPinned?'#f0b90b':'#444')+';font-size:16px;cursor:pointer;">&#9733;</span>'
-      +'</div>';
-    row.onmouseover=function(){this.style.background='#252525';};
-    row.onmouseout=function(){this.style.background='transparent';};
-    row.onclick=(function(sym){return function(){symSearchSelect(sym);};})(s.sym);
-    var star=row.querySelector('.sym-pin-star');
-    if(star) star.onclick=(function(sym,el){return function(e){e.stopPropagation();symTogglePin(sym);};})(s.sym,star);
-    dd.appendChild(row);
-  });
-  dd.style.display='block';
-}
-function symSearchSelect(sym){switchSym(sym);var s=document.getElementById('symSearch');if(s)s.value='';symSearchClose();}
-function symTogglePin(sym){
-  var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var i=_p.indexOf(sym);
-  if(i>=0){_p.splice(i,1);showToast('Kaldirildi',sym+' ust bardan kaldirildi');}
-  else{_p.push(sym);showToast('Eklendi',sym+' ust bara eklendi');}
-  try{localStorage.setItem('tx_pinned_syms',JSON.stringify(_p));}catch(e){}
-  buildSymTabs();
-  var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');
-}
 function symUnpin(sym){
   var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
   _p=_p.filter(function(s){return s!==sym;});
