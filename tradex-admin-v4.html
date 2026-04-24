@@ -6261,10 +6261,7 @@ startLiveFeed();  // fiyatları başlat ve renderMarketWatch içinde çağrılı
   window.sgLoad             = sgLoad;
   window.sgSave             = sgSave;
   window.sgRender           = sgRender;
-  // selectSgTab export kaldırıldı (2026-04-19) — fonksiyon silindi.
-  window.sgSubTab           = sgSubTab;
-  window.saveSgGeneral      = saveSgGeneral;
-  window.saveSgSpreads      = saveSgSpreads;
+  // 2026-04-23: 5 ölü export silindi — sgSubTab, saveSgGeneral, saveSgSpreads, addSpreadGroup, deleteSpreadGroup (hepsi ölü wrapper/no-op idi, fonksiyonları da silindi)
   window.sgAddGroup         = sgAddGroup;
   window.sgDeleteGroup      = sgDeleteGroup;
   window.sgRefreshSelects   = sgRefreshSelects;
@@ -6272,8 +6269,6 @@ startLiveFeed();  // fiyatları başlat ve renderMarketWatch içinde çağrılı
   window.sgSaveSpreads      = sgSaveSpreads;
   window.sgSaveWhitelist    = sgSaveWhitelist;
   window.sgWhitelistToggleAll = sgWhitelistToggleAll;
-  window.addSpreadGroup     = addSpreadGroup;   // wrapper → sgAddGroup
-  window.deleteSpreadGroup  = deleteSpreadGroup; // wrapper → sgDeleteGroup
   // Trading Groups Public API
   window.getTradingGroup    = getTradingGroup;
   window.getMaxLeverage     = getMaxLeverage;
@@ -6904,14 +6899,13 @@ function sgRefreshSelects() {
 }
 
 
-// Eski isimleri yönlendir
-// Eski isimleri yönlendir (yaşayan wrapper'lar — altta gerçek tanım yok)
-function saveSgGeneral() { sgSaveGeneral(); }
-function saveSgSpreads() { sgSaveSpreads(); }
-function addSpreadGroup() { sgAddGroup(); }
-function deleteSpreadGroup() { sgDeleteGroup(); }
+// 2026-04-23 temizliği: 5 ölü wrapper silindi
+// - saveSgGeneral() → HTML direkt sgSaveGeneral() çağırıyor
+// - saveSgSpreads() → HTML direkt sgSaveSpreads() çağırıyor
+// - addSpreadGroup() → HTML direkt sgAddGroup() çağırıyor
+// - deleteSpreadGroup() → HTML direkt sgDeleteGroup() çağırıyor
+// - sgSubTab() → boş gövde, hiçbir yerden çağrılmıyor
 // selectSgTab kaldırıldı (2026-04-19) — çağıran yok, ölü kod.
-function sgSubTab() {}
 
 
 // ═══════════════════════════════════════
@@ -7412,23 +7406,7 @@ function pcClearOverride(sym) {
 }
 
 
-// Cihaz tespiti
-function deviceIcon(d) {
-  var icons = {
-    'android': '🤖',
-    'ios': '🍎',
-    'web': '🌐',
-    'windows-phone': '📱'
-  };
-  return (icons[d]||'🌐') + ' ' + (d==='android'?'Android':d==='ios'?'iOS':d==='windows-phone'?'Win Phone':'Web');
-}
-
-
-// Cihaz tespiti
-function getDeviceIcon(d) {
-  var icons = {'iOS':'🍎','Android':'🤖','Windows':'🖥','macOS':'🖥','Linux':'🖥','Web':'🌐','Broker':'⚙️'};
-  return (icons[d]||'🌐') + ' ' + d;
-}
+// 2026-04-24 temizliği: deviceIcon() ve getDeviceIcon() silindi (ikisi de trader kopyası, admin'de kimse çağırmıyor).
 
 // symSearchOpen/Close/Filter/Select + symTogglePin kaldırıldı (2026-04-19)
 // — trader kopyası. Kendi içinde kapalı ölü zincir, dış çağıranı yok.
