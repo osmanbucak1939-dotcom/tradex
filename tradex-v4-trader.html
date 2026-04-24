@@ -3858,7 +3858,7 @@ function renderHistory() {
   }).join('');
 }
 
-function delPort(id) { portfolio = portfolio.filter(p=>p.id!==id); save(); }
+// delPort() kaldırıldı (2026-04-24) — orphan helper, hiç çağrılmıyordu (portfolio silme UI yok).
 
 function updateAccount() {
   if(!Array.isArray(positions)) positions = [];
