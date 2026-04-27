@@ -5932,8 +5932,8 @@ function _txRenderBrokerInfo(d) {
 
 function stopRealFeed() {
   window._txFeedActive = false;
-  if(_txTdWs) { try{_txTdWs.close();}catch(e){} _txTdWs=null; }
-  if(_txBnWs) { try{_txBnWs.close();}catch(e){} _txBnWs=null; }
+  // 2026-04-24 fix: _txTdWs ve _txBnWs satırları kaldırıldı — declared değildi, ReferenceError fırlatıyordu.
+  // Eski WS implementasyonundan kalma referanslardı; trader artık WS'yi doğrudan yönetmiyor (txListenPrices Firebase okuyor).
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
   if(_txOverUnsub)  { try{_txOverUnsub();}catch(e){}  _txOverUnsub=null; }
 }
