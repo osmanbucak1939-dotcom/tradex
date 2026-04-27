@@ -5659,12 +5659,19 @@ function txApplyPrice(sym, rawMid) {
   var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
-    // Override varsa o fiyatı kullan, yoksa formül — her durumda güncellemeye devam et
-    var _factor = parseFloat(s.priceFactor)||1;
-    var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
-                  ? window._synthOffsets[s.sym]
-                  : (parseFloat(s.priceOffset)||0);
-    var _sp = rawMid * _factor + _offset;
+    // 2026-04-27 fix: Sentetik sembolün admin override'ı varsa onu kullan, yoksa formül
+    var _synthOv = (typeof _txAdminOverrides !== 'undefined' && _txAdminOverrides[s.sym]) ? parseFloat(_txAdminOverrides[s.sym]) : null;
+    var _sp;
+    if(_synthOv && _synthOv > 0) {
+      _sp = _synthOv;
+    } else {
+      // Override varsa o fiyatı kullan, yoksa formül — her durumda güncellemeye devam et
+      var _factor = parseFloat(s.priceFactor)||1;
+      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                    ? window._synthOffsets[s.sym]
+                    : (parseFloat(s.priceOffset)||0);
+      _sp = rawMid * _factor + _offset;
+    }
     var _sc2   = _txGetSymConf(s.sym);
     var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
     var _sh    = _ss / 2;
@@ -5746,9 +5753,10 @@ function txListenOverrides() {
         // Mutlak fiyat override
         var price = parseFloat(val);
         if(price > 0) {
-          // Sentetik sembol için override — yoksay, symConfig offset ile yönetiliyor
-          var _isSynth2 = (typeof symConfig!=='undefined'&&symConfig) && symConfig.some(function(s){return s.sym===sym&&s.priceSource;});
-          if(_isSynth2) return;
+          // 2026-04-27 fix: Sentetik sembol override'ları artık kabul ediliyor.
+          // Önceden 'symConfig offset ile yönetilir' diye yok sayılıyordu, ama admin pcApplyPrice
+          // sentetik için _pcOverrides + Firebase yazıyor. Trader da onu uygulamalı.
+          // _txAdminOverrides'a alındığında sentetik döngü (L5660) override fiyatı kullanır.
           _txAdminOverrides[sym] = price;
           prices[sym]   = { price:price, bid:price, ask:price, chg:0 };
           mwPrices[sym] = { price:price, prev:(mwPrices[sym]?mwPrices[sym].price:price), chg:0 };
