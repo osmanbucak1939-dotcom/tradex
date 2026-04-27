@@ -3353,11 +3353,18 @@ function adReceiveRawPrice(sym, rawMid) {
     // Sentetik bağlı semboller var — sadece onları güncelle
     _synthOnly.forEach(function(s) {
       if(s.priceSource !== sym || s.sym === sym) return;
-      var _factor = parseFloat(s.priceFactor)||1;
-      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
-                    ? window._synthOffsets[s.sym]
-                    : (parseFloat(s.priceOffset)||0);
-      var _sp = rawMid * _factor + _offset;
+      // 2026-04-27 fix: Override aktifse sentetik fiyatı override değerine sabitle (formül uygulama)
+      var _synthOv = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+      var _sp;
+      if(_synthOv && _synthOv > 0) {
+        _sp = _synthOv;
+      } else {
+        var _factor = parseFloat(s.priceFactor)||1;
+        var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                      ? window._synthOffsets[s.sym]
+                      : (parseFloat(s.priceOffset)||0);
+        _sp = rawMid * _factor + _offset;
+      }
       var _ss = _adGetSpread(s.sym), _sh = _ss/2;
       var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
       var _sObj = {mid:_sp,price:_sp,bid:_sp-_sh,ask:_sp+_sh,spread:_ss,chg:0,prev:_sPrev,ts:Date.now()};
@@ -3452,13 +3459,20 @@ function adReceiveRawPrice(sym, rawMid) {
   var _synthCfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg2.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
-    // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
-    var _factor = parseFloat(s.priceFactor)||1;
-    // _synthOffsets öncelikli, yoksa symConfig.priceOffset
-    var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
-                  ? window._synthOffsets[s.sym]
-                  : (parseFloat(s.priceOffset)||0);
-    var _sp = rawMid * _factor + _offset;
+    // 2026-04-27 fix: Override aktifse sentetik fiyatı override değerine sabitle (formül uygulama)
+    var _synthOverride = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+    var _sp;
+    if(_synthOverride && _synthOverride > 0) {
+      _sp = _synthOverride;
+    } else {
+      // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
+      var _factor = parseFloat(s.priceFactor)||1;
+      // _synthOffsets öncelikli, yoksa symConfig.priceOffset
+      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                    ? window._synthOffsets[s.sym]
+                    : (parseFloat(s.priceOffset)||0);
+      _sp = rawMid * _factor + _offset;
+    }
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -7283,8 +7297,16 @@ function pcApplyPrice(sym, price) {
   var _syms2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _syms2.forEach(function(s) {
     if(s.priceSource === sym && s.sym !== sym) {
-      // priceFactor varsa uygula
-      var _factor2 = parseFloat(s.priceFactor)||1; var _offset2 = parseFloat(s.priceOffset)||0; var _synthPrice = price * _factor2 + _offset2;
+      // 2026-04-27 fix: Sentetik sembolün kendi override'ı varsa onu kullan, yoksa formül
+      var _synthOv = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+      var _synthPrice;
+      if(_synthOv && _synthOv > 0) {
+        _synthPrice = _synthOv;
+      } else {
+        // priceFactor varsa uygula
+        var _factor2 = parseFloat(s.priceFactor)||1; var _offset2 = parseFloat(s.priceOffset)||0;
+        _synthPrice = price * _factor2 + _offset2;
+      }
       var _synthPrev  = (prices[s.sym] && prices[s.sym].price) ? prices[s.sym].price : _synthPrice;
       var _synthSpread = _adGetSpread(s.sym);
       var _synthChg   = window._adDayOpen && window._adDayOpen[s.sym]
