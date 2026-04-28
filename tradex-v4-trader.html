@@ -901,12 +901,102 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* Mobile nav hidden on desktop */
 
-.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
-.ct-type-btn.active { color:#fff; background:#181818; }
-.ct-type-btn:hover { color:#aaa; }
-.draw-tool-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
-.draw-tool-btn.active { color:#f0b90b; background:#181818; }
-.draw-tool-btn:hover { color:#aaa; }
+.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }
+
+/* ── Chart toolbar — grafik tipi & çizim araçları (rafine, TradingView havası) ── */
+.ct-type-btn, .draw-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  min-width: 28px;
+  padding: 0 9px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: #8a8a8a;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  user-select: none;
+}
+.ct-type-btn:hover, .draw-tool-btn:hover {
+  color: #e8e8e8;
+  background: rgba(255,255,255,0.035);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+  transform: translateY(-0.5px);
+}
+.ct-type-btn.active, .draw-tool-btn.active {
+  color: var(--accent);
+  background: rgba(240,185,11,0.08);
+  border-color: rgba(240,185,11,0.35);
+  box-shadow: 0 0 8px rgba(240,185,11,0.15), 0 1px 0 rgba(240,185,11,0.08) inset;
+  transform: translateY(0);
+}
+.ct-type-btn:active, .draw-tool-btn:active {
+  transform: translateY(0);
+  background: rgba(240,185,11,0.05);
+}
+/* Ikon karakterleri için ek ince ayar — bazı glyph'lar baseline'a oturmuyor */
+.draw-tool-btn[data-tool="hline"] { font-weight: 600; }
+.draw-tool-btn[data-tool="trendline"] { font-size: 14px; }
+.draw-tool-btn[data-tool="fibonacci"] { font-style: italic; font-weight: 500; }
+.ct-type-btn[data-type="bar"] { font-size: 11px; letter-spacing: 0; }
+.ct-type-btn[data-type="line"] { font-size: 14px; }
+
+/* Toolbar grup kapsayıcısı — sol tarafta ince ayırıcı, eşit padding, gap */
+.ct-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 8px;
+  height: 100%;
+  position: relative;
+}
+.ct-group::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
+}
+
+/* Çizimleri temizle butonu — kırmızı vurgu, ama aynı rafine dile uy */
+.ct-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  min-width: 28px;
+  padding: 0 9px;
+  font-size: 12px;
+  line-height: 1;
+  background: transparent;
+  color: #888;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  user-select: none;
+}
+.ct-clear-btn:hover {
+  color: #ef5350;
+  background: rgba(239,83,80,0.08);
+  border-color: rgba(239,83,80,0.3);
+  box-shadow: 0 0 8px rgba(239,83,80,0.12);
+  transform: translateY(-0.5px);
+}
+.ct-clear-btn:active {
+  transform: translateY(0);
+  background: rgba(239,83,80,0.05);
+}
+.draw-tool-btn { /* stiller ct-type-btn ile birleştirildi (yukarıda) */ }
 
 
 
@@ -1775,16 +1865,16 @@ function initAuth(){
         <button class="ct-btn active" onclick="setInt('4h',this)">H4</button>
         <button class="ct-btn" onclick="setInt('1d',this)">D1</button>
       </div>
-      <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid #2a2a2a">
+      <div class="ct-group">
         <button class="ct-type-btn active" data-type="candlestick" onclick="setChartType('candlestick')" title="Mum">🕯</button>
-        <button class="ct-type-btn" data-type="bar" onclick="setChartType('bar')" title="Bar">▐</button>
-        <button class="ct-type-btn" data-type="line" onclick="setChartType('line')" title="Çizgi">╱</button>
+        <button class="ct-type-btn" data-type="bar" onclick="setChartType('bar')" title="Bar">▌▍</button>
+        <button class="ct-type-btn" data-type="line" onclick="setChartType('line')" title="Çizgi">∿</button>
       </div>
-      <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid #2a2a2a">
+      <div class="ct-group">
         <button class="draw-tool-btn" data-tool="hline" onclick="setDrawTool('hline')" title="Yatay Çizgi (Destek/Direnç)">─</button>
-        <button class="draw-tool-btn" data-tool="trendline" onclick="setDrawTool('trendline')" title="Trend Çizgisi">╱</button>
+        <button class="draw-tool-btn" data-tool="trendline" onclick="setDrawTool('trendline')" title="Trend Çizgisi">⟋</button>
         <button class="draw-tool-btn" data-tool="fibonacci" onclick="setDrawTool('fibonacci')" title="Fibonacci">ϕ</button>
-        <button class="ct-btn" onclick="clearDrawings()" title="Aktif Sembolün Çizimlerini Temizle" style="color:#ef5350">✕</button>
+        <button class="ct-clear-btn" onclick="clearDrawings()" title="Aktif Sembolün Çizimlerini Temizle">✕</button>
       </div>
       <div class="ct-price-info">
         <span class="lbl">A:</span><span class="val" id="ctO">—</span>
@@ -6848,8 +6938,19 @@ function symUnpin(sym){
     touch-action: manipulation;
     border-radius: 0 !important;
   }
-  .chart-toolbar .ct-type-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
-  .chart-toolbar .draw-tool-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
+  .chart-toolbar .ct-type-btn,
+  .chart-toolbar .draw-tool-btn,
+  .chart-toolbar .ct-clear-btn {
+    font-size: 13px !important;
+    padding: 0 10px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex-shrink: 0 !important;
+    touch-action: manipulation;
+    border-radius: 4px !important;
+  }
+  .chart-toolbar .ct-group { padding: 0 6px !important; gap: 2px !important; }
+  .chart-toolbar .ct-group::before { top: 18% !important; bottom: 18% !important; }
   body             { padding-bottom: 62px; }
 
   /* ── Alt nav ── */
