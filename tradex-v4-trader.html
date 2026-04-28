@@ -1362,6 +1362,9 @@ function initAuth(){
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
+    // 2026-04-27: Konsoldaki "overriding the original host" uyarısı zararsız.
+    // Firestore SDK 9.x'te db.settings() default ayarları üzerine yazıyor — bu kasıtlı davranış,
+    // sadece bilgilendirme uyarısı. Uygulama davranışı etkilenmiyor, görmezden gel.
     db.settings({ ignoreUndefinedProperties: true });
 
     // ── FIREBASE YARDIMCI FONKSİYONLAR ──
