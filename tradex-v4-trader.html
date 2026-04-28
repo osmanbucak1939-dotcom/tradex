@@ -2320,6 +2320,10 @@ function initChart() {
     return;
   }
   if(_lw) { try{_lw.remove();}catch(e){} }
+  // 2026-04-28 fix: Chart yok edilince eski çizim referansları geçersiz —
+  // temizlemezsek lightweight-charts render döngüsünde "Value is null" patlar
+  if(typeof _lwDrawSeries !== 'undefined') _lwDrawSeries = [];
+  if(typeof _lwDrawPoints !== 'undefined') _lwDrawPoints = [];
 
   _lw = LightweightCharts.createChart(wrap, {
     width:  wrap.offsetWidth  || 800,
@@ -2732,6 +2736,12 @@ function lwRecreateSeries() {
 
   // Ana seriyi yeniden oluştur
   if(_lwSeries) try{_lw.removeSeries(_lwSeries);}catch(e){}
+  // 2026-04-28 fix: _lwSeries yenilenince ona bağlı çizimler (Fibonacci priceLine'ları
+  // _lwSeries.createPriceLine ile, trendline'lar ayrı serilerle) ölü referans olur.
+  // Trendline'lar zaten _lw.removeSeries ile temizlenebilir ama Fibonacci priceLine'lar
+  // eski seriye işaret ediyor — array'i sıfırlamak en güvenli.
+  _lwDrawSeries = [];
+  _lwDrawPoints = [];
   if(_lwChartType==='bar') {
     _lwSeries = _lw.addBarSeries({upColor:'#2979ff',downColor:'#ef5350'});
   } else if(_lwChartType==='line') {
@@ -3112,33 +3122,61 @@ function setDrawTool(tool) {
 }
 
 function _lwDrawClick(e) {
-  if(!_lwDrawMode || !_lw) return;
+  if(!_lwDrawMode || !_lw || !_lwSeries) return;
   var rect = e.currentTarget.getBoundingClientRect();
   var x = e.clientX - rect.left;
   var y = e.clientY - rect.top;
-  var price = _lwSeries ? _lwSeries.coordinateToPrice(y) : null;
-  var time  = _lw.timeScale().coordinateToTime(x);
-  if(!price || !time) return;
+  var price, time;
+  try {
+    price = _lwSeries.coordinateToPrice(y);
+    time  = _lw.timeScale().coordinateToTime(x);
+  } catch(err) { return; }
+  // 2026-04-28 fix: NaN/Infinity/null'u sıkı kontrol et — !price NaN'i yakalamaz
+  if(!Number.isFinite(price) || price <= 0) return;
+  if(time === null || time === undefined) return;
   _lwDrawPoints.push({price:price, time:time});
 
   if(_lwDrawMode === 'trendline' && _lwDrawPoints.length === 2) {
     var p1 = _lwDrawPoints[0], p2 = _lwDrawPoints[1];
-    var line = _lw.addLineSeries({color:'#f0b90b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-    line.setData([{time:p1.time,value:p1.price},{time:p2.time,value:p2.price}]);
-    _lwDrawSeries.push(line);
+    // 2026-04-28 fix: Aynı time iki kez veya ters sıra → lightweight-charts patlar
+    if(p1.time === p2.time) {
+      _lwDrawPoints = [];
+      showToast('Trend Çizgisi','İki nokta aynı zamana denk geldi, tekrar dene');
+      return;
+    }
+    // setData ascending time bekler — gerekirse swap
+    if(p1.time > p2.time) { var _tmp=p1; p1=p2; p2=_tmp; }
+    try {
+      var line = _lw.addLineSeries({color:'#f0b90b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+      line.setData([{time:p1.time,value:p1.price},{time:p2.time,value:p2.price}]);
+      _lwDrawSeries.push(line);
+      showToast('Trend Çizgisi','Çizildi. Silmek için: Çizimi Temizle');
+    } catch(err) {
+      console.warn('[trendline] çizim başarısız:', err.message);
+      showToast('Hata','Çizgi çizilemedi, tekrar dene');
+    }
     _lwDrawPoints = [];
-    showToast('Trend Çizgisi','Çizildi. Silmek için: Çizimi Temizle');
   }
 
   if(_lwDrawMode === 'fibonacci' && _lwDrawPoints.length === 2) {
     var fp1 = _lwDrawPoints[0], fp2 = _lwDrawPoints[1];
     var diff = fp2.price - fp1.price;
+    if(!Number.isFinite(diff) || diff === 0) {
+      _lwDrawPoints = [];
+      showToast('Fibonacci','İki nokta aynı fiyatta, tekrar dene');
+      return;
+    }
     var levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
     var colors  = ['#aaa','#FF9800','#2979ff','#2196F3','#9C27B0','#E91E63','#aaa'];
     levels.forEach(function(lvl, i) {
       var p = fp2.price - diff*lvl;
-      var s = _lwSeries.createPriceLine({price:p, color:colors[i], lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'Fib '+Math.round(lvl*100)+'%'});
-      _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:s});
+      if(!Number.isFinite(p) || p <= 0) return;
+      try {
+        var s = _lwSeries.createPriceLine({price:p, color:colors[i], lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'Fib '+Math.round(lvl*100)+'%'});
+        _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:s});
+      } catch(err) {
+        console.warn('[fibonacci] level çizilemedi:', err.message);
+      }
     });
     _lwDrawPoints = [];
     setDrawTool(null);
@@ -3226,6 +3264,18 @@ function updateTopSym(sym, price, chg) {
 }
 
 function switchSym(sym) {
+  // 2026-04-28 fix: Sembol değişince çizimler eski sembolün fiyat aralığına ait —
+  // yeni sembolün skalasında render edilirse hata olur. Otomatik temizle.
+  if(typeof _lwDrawSeries !== 'undefined' && _lwDrawSeries.length) {
+    _lwDrawSeries.forEach(function(s){
+      try {
+        if(s._isFibLine) { s.series.removePriceLine(s.ref); }
+        else if(_lw) { _lw.removeSeries(s); }
+      } catch(e){}
+    });
+    _lwDrawSeries = [];
+    _lwDrawPoints = [];
+  }
   curSym = sym;
   document.querySelectorAll('.tb-sym').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('tsym-'+sym);
@@ -3241,6 +3291,18 @@ function switchSym(sym) {
 }
 
 function setInt(intv, btn) {
+  // 2026-04-28 fix: Zaman aralığı değişince mum time'ları farklılaşır —
+  // eski çizimlerin time değerleri yeni mumlara hizalanmaz, render hatası olur.
+  if(typeof _lwDrawSeries !== 'undefined' && _lwDrawSeries.length) {
+    _lwDrawSeries.forEach(function(s){
+      try {
+        if(s._isFibLine) { s.series.removePriceLine(s.ref); }
+        else if(_lw) { _lw.removeSeries(s); }
+      } catch(e){}
+    });
+    _lwDrawSeries = [];
+    _lwDrawPoints = [];
+  }
   curInt = intv;
   document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
