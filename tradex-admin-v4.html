@@ -3252,7 +3252,7 @@ function startLiveFeed() {
 // KURAL: Admin yazar, trader sadece okur. Tek doğru kaynak Firebase.
 // ════════════════════════════════════════════════════════════════
 
-var _adTdKey  = '699ea91fdd9b4ad09e8bb2760b7f3663';
+var _adTdKey  = '6be463dd71664cc0b5db780dd0a189ab';
 var _adTdWs   = null, _adBnWs = null;
 var _adTdOk   = false, _adBnOk = false;
 var _adFeedOn = false;
@@ -3613,13 +3613,10 @@ function adCalcStats(account, positions) {
 
 // ── Binance WebSocket ─────────────────────────────────────────
 // ── FEED KONFİGÜRASYONU ─────────────────────────────────────
-var _adFfKey    = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
-var _adFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
-var _adFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
+// Forex/emtia/endeks → Twelve Data WS (sembol haritası: AD_TD_MAP / AD_TD_REV, ~L3260)
+// Kripto → Binance WS (_adBnSyms)
 var _adBnSyms   = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
 
-var _adFfTimer  = null;
 var _adBnTimer  = null;
 var _adBnIdx    = 0;
 
@@ -3704,78 +3701,116 @@ function _adStartBinance() {
   };
 }
 
-// ── FASTFOREX FOREX POLLING (3sn) ───────────────────────────
-// SAĞLIK TAKİBİ: window._adFfLastOk = son başarılı fetch zamanı, _adFfLastErr = son hata mesajı
-function _adStartForex() {
-  if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
-  window._adFfLastOk  = window._adFfLastOk  || 0;
-  window._adFfLastErr = null;
+// ── TWELVE DATA FOREX/EMTİA/ENDEKS WS ───────────────────────
+// Endpoint: wss://ws.twelvedata.com/v1/quotes/price?apikey=KEY
+// Subscribe: {"action":"subscribe","params":{"symbols":"EUR/USD,GBP/USD,..."}}
+// Gelen veri: {"event":"price","symbol":"EUR/USD","price":1.17314,"bid":...,"ask":...}
+// Sembol dönüşümü: gelen TD formatı (EUR/USD) → AD_TD_REV → TradeX (EURUSD)
+// SAĞLIK TAKİBİ: window._adTdLastOk = son başarılı tick, _adTdLastErr = son hata mesajı
+function _adStartTwelveData() {
+  if(window._adTdTimerClear) { window._adTdTimerClear(); }
+  window._adTdLastOk  = window._adTdLastOk  || 0;
+  window._adTdLastErr = null;
 
-  function _applyFx(data, tag) {
-    if(!data || !data.quotes) {
-      // Beklenmeyen format — API keyi geçersizse genelde {error:...} gelir
-      window._adFfLastErr = '['+tag+'] format beklenmedik: ' + JSON.stringify(data||{}).slice(0, 200);
-      console.warn('[forex feed]', window._adFfLastErr);
-      return;
-    }
+  // Abone olunacak semboller — TD formatında (AD_TD_MAP değerleri)
+  var _tdSymList = Object.keys(AD_TD_MAP).map(function(k){ return AD_TD_MAP[k]; }).join(',');
+
+  var _ws = null;
+  var _reconnectTimer = null;
+  var _wsBuf = {};
+  var _wsFlushTimer = null;
+
+  function _wsFlush() {
     var _applied = 0;
-    Object.keys(data.quotes).forEach(function(sym) {
-      var q = data.quotes[sym]; if(!q) return;
-      var mid = (parseFloat(q.bid) + parseFloat(q.ask)) / 2;
-      if(sym && mid > 0) { adReceiveRawPrice(sym, mid); _applied++; }
+    Object.keys(_wsBuf).forEach(function(sym) {
+      adReceiveRawPrice(sym, _wsBuf[sym]);
+      _applied++;
     });
+    _wsBuf = {};
+    _wsFlushTimer = null;
     if(_applied > 0) {
-      window._adFfLastOk = Date.now();
-      window._adFfLastErr = null;
+      window._adTdLastOk  = Date.now();
+      window._adTdLastErr = null;
     }
   }
 
-  function _fetchOne(pairs, tag) {
-    return fetch('https://api.fastforex.io/fx/quote?pairs='+pairs+'&api_key='+_adFfKey)
-      .then(function(r){
-        if(!r.ok) {
-          window._adFfLastErr = '['+tag+'] HTTP ' + r.status + ' ' + r.statusText;
-          console.warn('[forex feed]', window._adFfLastErr);
-          return null;
+  function _connect() {
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _ws = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey=' + _adTdKey);
+    _adTdWs = _ws;
+
+    _ws.onopen = function() {
+      try {
+        _ws.send(JSON.stringify({ action:'subscribe', params:{ symbols:_tdSymList } }));
+      } catch(e) {
+        window._adTdLastErr = 'subscribe gönderilemedi: ' + e.message;
+        console.warn('[forex feed]', window._adTdLastErr);
+      }
+    };
+
+    _ws.onmessage = function(e) {
+      try {
+        var msg = JSON.parse(e.data);
+        // Abonelik durumu — hangi semboller kabul/red edildi (emtia/endeks adı kontrolü için kritik)
+        if(msg.event === 'subscribe-status') {
+          var fails = msg.fails || (msg.data && msg.data.fails) || [];
+          var succ  = msg.success || (msg.data && msg.data.success) || [];
+          if(fails && fails.length) {
+            console.warn('[forex feed] ⚠ Twelve Data REDDETTİ (' + fails.length + ' sembol):',
+                         fails.map(function(f){ return f.symbol || f; }).join(', '),
+                         '— bu sembol isimleri TD planında geçersiz, AD_TD_MAP düzeltilmeli.');
+          }
+          console.log('[forex feed] Twelve Data abonelik: ' + (succ.length||0) + ' başarılı, ' + (fails.length||0) + ' başarısız');
+          return;
         }
-        return r.json();
-      })
-      .then(function(data){ if(data) _applyFx(data, tag); })
-      .catch(function(e){
-        window._adFfLastErr = '['+tag+'] ' + e.message;
-        console.warn('[forex feed]', window._adFfLastErr);
-      });
+        if(msg.event !== 'price') return; // heartbeat vb. atla
+        var tradexSym = AD_TD_REV[msg.symbol];
+        var mid = parseFloat(msg.price);
+        if(!tradexSym || !(mid > 0)) return;
+        _wsBuf[tradexSym] = mid;
+        if(!_wsFlushTimer) {
+          _wsFlushTimer = setTimeout(_wsFlush, 200);
+        }
+      } catch(ex){}
+    };
+
+    _ws.onclose = function() {
+      _reconnectTimer = setTimeout(_connect, 3000);
+    };
+
+    _ws.onerror = function() {
+      window._adTdLastErr = 'WS bağlantı hatası';
+      try{_ws.close();}catch(e){}
+    };
   }
 
-  function _poll() {
-    // NOT: market hours check kaldırıldı. Forex piyasası kapalı olsa bile
-    // FastForex son bilinen fiyatı döndürüyor (cuma kapanış). Bu değer admin/trader
-    // için hâlâ AD_SIM sabitinden (1.085 gibi) çok daha doğru.
-    _fetchOne(_adFfForex1, 'FF1');
-    _fetchOne(_adFfForex2, 'FF2');
-    if(_adFfForex3) _fetchOne(_adFfForex3, 'FF3');
-  }
-  _poll();
-  _adFfTimer = setInterval(_poll, 3000);
+  _connect();
+
+  window._adTdTimerClear = function() {
+    if(_reconnectTimer) clearTimeout(_reconnectTimer);
+    if(_wsFlushTimer) clearTimeout(_wsFlushTimer);
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _adTdWs = null;
+  };
 
   // Sağlık kontrolü: 30sn'dir taze forex fiyatı gelmediyse uyar
-  if(window._adFfHealthTimer) clearInterval(window._adFfHealthTimer);
-  window._adFfHealthTimer = setInterval(function(){
-    // Piyasa kapalıysa atla
+  if(window._adTdHealthTimer) clearInterval(window._adTdHealthTimer);
+  window._adTdHealthTimer = setInterval(function(){
+    // Piyasa kapalıysa atla (forex/emtia hafta sonu kapalı, tick gelmez — normal)
     if(typeof _marketHours !== 'undefined' && !_marketHours.forexOpen()) return;
-    var ageMs = window._adFfLastOk ? (Date.now() - window._adFfLastOk) : Infinity;
+    var ageMs = window._adTdLastOk ? (Date.now() - window._adTdLastOk) : Infinity;
     if(ageMs > 30000) {
       // Feed ölü — simülasyonu durdur ve konsola sürekli uyar
       window._adForexFeedDead = true;
       if(!window._adForexFeedWarned || (Date.now() - window._adForexFeedWarned) > 60000) {
         console.error('[forex feed] ⚠ Forex fiyat feed\'i ÖLÜ. Son başarılı tick: ' +
-                      (window._adFfLastOk ? new Date(window._adFfLastOk).toISOString() : 'HİÇ') +
-                      '. Son hata: ' + (window._adFfLastErr || 'bilinmiyor') +
-                      '. Simülasyon fiyatları Firebase\'e YAZILMIYOR — TD/FF keyini kontrol et!');
+                      (window._adTdLastOk ? new Date(window._adTdLastOk).toISOString() : 'HİÇ') +
+                      '. Son hata: ' + (window._adTdLastErr || 'bilinmiyor') +
+                      '. Simülasyon fiyatları Firebase\'e YAZILMIYOR — Twelve Data keyini/bağlantısını kontrol et!');
         window._adForexFeedWarned = Date.now();
         // UI'da görünür uyarı
         if(typeof showAdminToast === 'function') {
-          showAdminToast('⚠ Forex Feed Yok', 'FastForex API yanıt vermiyor. API key veya network problemi olabilir.', 'danger');
+          showAdminToast('⚠ Forex Feed Yok', 'Twelve Data WS yanıt vermiyor. API key, WS credit limiti veya network problemi olabilir.', 'danger');
         }
       }
     } else {
@@ -3785,8 +3820,8 @@ function _adStartForex() {
 }
 
 function adStartTwelvedataFeed() {
-  _adStartBinance();
-  _adStartForex();
+  _adStartBinance();      // Kripto → Binance WS
+  _adStartTwelveData();   // Forex/emtia/endeks → Twelve Data WS
   _adTdOk = true;
   _adBnOk = true;
 }
@@ -3822,8 +3857,8 @@ function _feedHealthTick() {
   }
   _setDot('fhCrypto', cryptoAge);
 
-  // Forex (FastForex): _adFfLastOk'dan hesapla
-  var forexAge = window._adFfLastOk ? (now - window._adFfLastOk) : Infinity;
+  // Forex (Twelve Data WS): _adTdLastOk'dan hesapla
+  var forexAge = window._adTdLastOk ? (now - window._adTdLastOk) : Infinity;
   _setDot('fhForex', forexAge);
 
   // Firebase (yazım): son başarılı yazım zamanı
@@ -7003,8 +7038,6 @@ function pcInit() {
 }
 
 // ── ADMIN FEED DURUM KONTROLÜ ─────────────────────────────────────────────
-var _adTdWsTest = null, _adBnWsTest = null;
-
 function adFeedSetDot(side, connected, label) {
   var col = connected ? '#26a69a' : '#ef5350';
   if(side === 'td') {
@@ -7021,45 +7054,47 @@ function adFeedSetDot(side, connected, label) {
 }
 
 function adFeedCheckConnections() {
-  // FastForex REST test
-  adFeedSetDot('td', false, 'Bağlanıyor...');
-  fetch('https://api.fastforex.io/fx/quote?pairs=EURUSD&api_key=' + _adFfKey)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.quotes && d.quotes['EURUSD']) {
-        adFeedSetDot('td', true, 'Bağlı ✓');
-        _adTdOk = true;
-      } else {
-        adFeedSetDot('td', false, 'Veri yok');
-      }
-    })
-    .catch(function(){ adFeedSetDot('td', false, 'Bağlantı hatası'); });
+  // Twelve Data WS + Binance WS — REST testi yok, canlı feed tazeliğine bakılır.
+  function _check() {
+    // ── Twelve Data (forex/emtia/endeks) ──
+    var tdWsOpen = !!(_adTdWs && _adTdWs.readyState === 1);
+    var tdAge = window._adTdLastOk ? (Date.now() - window._adTdLastOk) : Infinity;
+    var forexClosed = (typeof _marketHours !== 'undefined' && !_marketHours.forexOpen());
+    if(tdAge < 60000) {
+      adFeedSetDot('td', true, 'Bağlı ✓'); _adTdOk = true;
+    } else if(tdWsOpen && forexClosed) {
+      // WS açık ama piyasa kapalı — tick gelmemesi normal
+      adFeedSetDot('td', true, 'Bağlı (piyasa kapalı)'); _adTdOk = true;
+    } else if(tdWsOpen) {
+      adFeedSetDot('td', false, 'Veri bekleniyor...'); _adTdOk = false;
+    } else {
+      adFeedSetDot('td', false, 'Bağlantı yok'); _adTdOk = false;
+    }
 
-  // FF Kripto test
-  adFeedSetDot('bn', false, 'Bağlanıyor...');
-  fetch('https://api.fastforex.io/crypto/fetch-prices?pairs=BTC%2FUSDT&api_key=' + _adFfKey)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.prices && d.prices['BTC/USDT']) {
-        adFeedSetDot('bn', true, 'Bağlı ✓');
-        _adBnOk = true;
-      } else {
-        adFeedSetDot('bn', false, 'Veri yok');
-      }
-    })
-    .catch(function(){ adFeedSetDot('bn', false, 'Bağlantı hatası'); });
+    // ── Binance (kripto) ──
+    var bnP = _FX.prices['BTCUSDT'];
+    var bnAge = (bnP && bnP.ts) ? (Date.now() - bnP.ts) : Infinity;
+    if(bnAge < 60000) {
+      adFeedSetDot('bn', true, 'Bağlı ✓'); _adBnOk = true;
+    } else {
+      adFeedSetDot('bn', false, 'Veri bekleniyor...'); _adBnOk = false;
+    }
+  }
+  adFeedSetDot('td', false, 'Kontrol ediliyor...');
+  adFeedSetDot('bn', false, 'Kontrol ediliyor...');
+  _check();
+  // WS henüz ısınıyor olabilir — 2.5sn sonra tekrar bak
+  setTimeout(_check, 2500);
 }
 
-var TD_SYM_MAP_AD = {
-  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
-  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
-  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY'
-};
+// NOT: Forex/emtia/endeks kaynak haritası artık tek yerde — AD_TD_MAP (~L3260).
+// adFeedGetSource onu kullanır; bu panele özel ayrı harita tutulmuyor.
 var BN_SYMS_AD = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'];
 
 function adFeedGetSource(sym) {
-  if(BN_SYMS_AD.indexOf(sym)>=0) return {src:'FF Kripto', col:'#26a69a'};
-  if(TD_SYM_MAP_AD[sym]) return {src:'FastForex', col:'#8888ff'};
+  if((typeof BN_SYMS_AD!=='undefined' && BN_SYMS_AD.indexOf(sym)>=0) || (sym && sym.endsWith && sym.endsWith('USDT')))
+    return {src:'Binance', col:'#26a69a'};
+  if(typeof AD_TD_MAP!=='undefined' && AD_TD_MAP[sym]) return {src:'Twelve Data', col:'#8888ff'};
   return {src:'Simülasyon', col:'#f0b90b'};
 }
 
@@ -7077,7 +7112,7 @@ function adFeedRenderSymTable() {
     return;
   }
 
-  var groups = {'FF Kripto':[], FastForex:[], 'Simülasyon':[]};
+  var groups = {'Binance':[], 'Twelve Data':[], 'Simülasyon':[]};
   allSyms.forEach(function(it){
     var info = adFeedGetSource(it.sym);
     groups[info.src].push({sym:it.sym, name:it.name||it.sym, col:info.col, spread:it.spread||0, decimals:it.decimals||2});
@@ -7089,7 +7124,7 @@ function adFeedRenderSymTable() {
     Object.keys(groups).forEach(function(grpName){
       var items = groups[grpName];
       if(!items.length) return;
-      var col = grpName==='FF Kripto'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
+      var col = grpName==='Binance'?'#26a69a':grpName==='Twelve Data'?'#8888ff':'#f0b90b';
       html += '<div style="grid-column:1/-1;font-family:monospace;font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
               '● '+grpName.toUpperCase()+' ('+items.length+' sembol)</div>';
       items.forEach(function(it){
@@ -7109,12 +7144,12 @@ function adFeedRenderSymTable() {
   if(!el2) return;
   var html2 = '';
   // Önce TD + Binance, sonra Sim
-  ['FF Kripto','FastForex','Simülasyon'].forEach(function(grpName){
+  ['Binance','Twelve Data','Simülasyon'].forEach(function(grpName){
     var items = groups[grpName];
     if(!items.length) return;
-    var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
-    var srcLabel = grpName==='FF Kripto'?'FF-K':grpName==='FastForex'?'FF':'SİM';
-    var srcDesc  = grpName==='FF Kripto'?'FastForex Kripto Polling':grpName==='FastForex'?'FastForex REST Polling':'Simülasyon';
+    var col = grpName==='Binance'?'#26a69a':grpName==='Twelve Data'?'#8888ff':'#f0b90b';
+    var srcLabel = grpName==='Binance'?'BN':grpName==='Twelve Data'?'TD':'SİM';
+    var srcDesc  = grpName==='Binance'?'Binance Kripto WS':grpName==='Twelve Data'?'Twelve Data WS':'Simülasyon';
     html2 += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:4px;">'+
              '<span style="font-family:monospace;font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
              '</div>';
