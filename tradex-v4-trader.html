@@ -5553,8 +5553,23 @@ function _txGetSymConf(sym) {
   _txSymIdx[sym] = sc || null;
   return _txSymIdx[sym];
 }
-// symConfig değişince cache'i temizle
-window._txClearSymIdx = function() { _txSymIdx = {}; };
+// Sentetik sembolleri kaynağa göre grupla (kaynak sembol → ona bağlı sentetik config'ler).
+// Böylece txApplyPrice her tick'te tüm symConfig'i taramak yerine O(1) erişir.
+var _txSynthBySrc = null;
+function _txGetSynthFor(srcSym) {
+  if(_txSynthBySrc === null) {
+    _txSynthBySrc = {};
+    var cfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
+    cfg.forEach(function(s){
+      if(s.priceSource && s.sym !== s.priceSource) {
+        (_txSynthBySrc[s.priceSource] = _txSynthBySrc[s.priceSource] || []).push(s);
+      }
+    });
+  }
+  return _txSynthBySrc[srcSym] || null;
+}
+// symConfig değişince cache'leri temizle
+window._txClearSymIdx = function() { _txSymIdx = {}; _txSynthBySrc = null; };
 
 // ── Tek fiyat uygulama noktası ────────────────────────────────
 function txApplyPrice(sym, rawMid) {
@@ -5634,9 +5649,9 @@ function txApplyPrice(sym, rawMid) {
     }, 500);
   }
 
-  // Sentetik semboller — priceSource bu sembol olan tüm sembolleri güncelle
-  var _synthCfg = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
-  _synthCfg.forEach(function(s) {
+  // Sentetik semboller — priceSource bu sembol olan sembolleri güncelle (O(1) indeks)
+  var _synthList = _txGetSynthFor(sym);
+  if(_synthList) _synthList.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
     // 2026-04-27 fix: Sentetik sembolün admin override'ı varsa onu kullan, yoksa formül
     var _synthOv = (typeof _txAdminOverrides !== 'undefined' && _txAdminOverrides[s.sym]) ? parseFloat(_txAdminOverrides[s.sym]) : null;
@@ -5802,19 +5817,25 @@ function txListenPrices() {
     console.log('[prices eager] Firebase\'den '+_loaded+' forex/diğer fiyat yüklendi');
   }).catch(function(e){ console.warn('[prices eager]', e.message); });
 
+  if(!window._txLastFbPrice) window._txLastFbPrice = {};
   _FB.sub('prices', db.collection('broker').doc('prices').onSnapshot(function(doc) {
     if(!doc.exists) return;
     var pd = doc.data(); if(!pd) return;
-    Object.keys(pd).forEach(function(sym) {
-      if(sym.charAt(0) === '_') return;
-      var isCrypto = sym.endsWith('USDT');
-      if(isCrypto) return; // kripto Binance WS'den geliyor
+    // Firestore tüm dökümanı döndürür; sadece DEĞİŞEN sembolleri işle.
+    // (Eskiden 25+ sembolün hepsi her snapshot'ta yeniden işleniyordu → ~1sn handler kilidi.)
+    var keys = Object.keys(pd);
+    for(var i=0;i<keys.length;i++) {
+      var sym = keys[i];
+      if(sym.charAt(0) === '_') continue;
+      if(sym.endsWith('USDT')) continue;        // kripto Binance WS'den
       var price = parseFloat(pd[sym]);
-      if(!price || price <= 0) return;
+      if(!price || price <= 0) continue;
+      if(window._txLastFbPrice[sym] === price) continue;  // değişmemiş → atla
+      window._txLastFbPrice[sym] = price;
       var sc = _txGetSymConf(sym);
-      if(sc && sc.priceSource) return;
+      if(sc && sc.priceSource) continue;        // sentetik → kaynak sembolden türetilir
       txApplyPrice(sym, price);
-    });
+    }
   }, function(e) { console.warn('[prices snap]', e.message); }));
 
   // 2) Binance WebSocket — kripto (anlık, düşük gecikme)
