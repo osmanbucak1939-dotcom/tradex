@@ -3262,9 +3262,13 @@ var AD_TD_MAP = {
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'SPX500X':'SPX',     'NAS100X':'NDX',      'DJ30X':'DJI',
-  'FTSE100X':'FTSE',   'DAX40X':'DAX',
-  'USOIL':'WTI/USD',   'BRTUSD':'BRENT/USD'
+  'DAX40X':'DAX',
+  'USOIL':'WTI/USD'
+  // ── TD'de bu plana KAPALI/GEÇERSİZ olduğu için çıkarıldı (2026-06-01) ──
+  // Bunlar FastForex döneminde de canlı değildi (FF sadece forex veriyordu) → simülasyonda kalıyor, regresyon yok.
+  //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks değeri lisanslı, standart planda yok.
+  //     İstenirse ETF proxy ile yaklaşık gösterilebilir: SPY×~10≈S&P500, DIA×~100≈Dow, QQQ×~41≈Nasdaq100 (oran sabit değil, kayar).
+  //   BRTUSD (BRENT) → TD 'BRENT' fiyatı spot ile uyuşmuyordu (bayat/farklı enstrüman), doğrulanana dek bağlanmadı.
 };
 var AD_TD_REV = {};
 Object.keys(AD_TD_MAP).forEach(function(k){ AD_TD_REV[AD_TD_MAP[k]] = k; });
