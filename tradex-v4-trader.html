@@ -1139,8 +1139,16 @@ function _authSuccess(user) {
   scheduleSwap();
 
   // Gerçek zamanlı veri senkronizasyonu başlat
+  // try/catch: bu listener Firestore 404/transport hatası verse bile _authSuccess
+  // zincirini KIRMAMALI — yoksa arkadan gelen startRealFeed (fiyat feed'i) hiç çalışmaz.
   if(typeof fbListenUserData==='function' && _cu && _cu.id) {
-    fbListenUserData(_cu.id);
+    try { fbListenUserData(_cu.id); } catch(e) { console.warn('[fbListenUserData]', e); }
+  }
+
+  // GÜVENCE: fiyat feed'i kesinlikle başlasın (user-data listener'ından bağımsız).
+  // Auth sonrası _afterFirebaseAuth da çağırır ama _txFeedActive guard'ı çift çalışmayı önler.
+  if(typeof startRealFeed === 'function' && !window._txFeedActive) {
+    try { startRealFeed(); } catch(e) { console.warn('[startRealFeed/authSuccess]', e); }
   }
 
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
@@ -8205,18 +8213,6 @@ function _checkMarketStatus() {
 // ── Piyasa Saatleri Modülü Sonu ─────────────────────────────────
 
 </script>
-<script>
-if('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log('SW registered');
-    }).catch(function(err) {
-      console.log('SW error:', err);
-    });
-  });
-}
-</script>
 
-</script>
 </body>
 </html>
