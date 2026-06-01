@@ -1070,6 +1070,7 @@ try { accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(!Arra
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
@@ -1079,10 +1080,12 @@ try { accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(!Arra
       projectId: "tradex-4571e",
       storageBucket: "tradex-4571e.firebasestorage.app",
       messagingSenderId: "66853453105",
-      appId: "1:66853453105:web:df85eda2cad5d4ce204410"
+      appId: "1:66853453105:web:df85eda2cad5d4ce204410",
+      databaseURL: "https://tradex-4571e-default-rtdb.europe-west1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
+    var rtdb = firebase.database();   // Realtime DB — yüksek frekanslı fiyat akışı için
 
     // ── FIREBASE YARDIMCI FONKSİYONLAR ──
     var _fbReady = false;
@@ -3634,15 +3637,33 @@ function _adFbWrite(sym, price) {
   window._adWriteBuf[sym] = price;
   if(!window._adWriteTimer) {
     window._adWriteTimer = setTimeout(function() {
-      if(typeof db === 'undefined' || !db) { window._adWriteBuf={}; window._adWriteTimer=null; return; }
       var buf = window._adWriteBuf;
       window._adWriteBuf  = {};
       window._adWriteTimer = null;
       if(!Object.keys(buf).length) return;
-      buf._ts = Date.now();
-      db.collection('broker').doc('prices').set(buf, {merge:true})
-        .then(function(){ window._adLastFbWrite = Date.now(); })
-        .catch(function(e){ console.warn('[FB write]', e.message); });
+
+      // ── BİRİNCİL: RTDB — anlık push, coalescing yok (trader bunu dinler) ──
+      // Tek multi-path update; her sembol prices/{SYM} altına yazılır.
+      if(typeof rtdb !== 'undefined' && rtdb) {
+        var upd = {};
+        Object.keys(buf).forEach(function(s){ upd['prices/'+s] = buf[s]; });
+        upd['prices/_ts'] = firebase.database.ServerValue.TIMESTAMP;
+        rtdb.ref().update(upd)
+          .then(function(){ window._adLastFbWrite = Date.now(); })
+          .catch(function(e){ console.warn('[RTDB write]', e.message); });
+      }
+
+      // ── İKİNCİL: Firestore — geriye dönük uyum (admin panelleri/kill-switch hâlâ okuyabilir) ──
+      // Daha seyrek yaz (her ~2sn), Firestore kotasını yormasın. Sadece snapshot amaçlı.
+      if(typeof db !== 'undefined' && db) {
+        if(!window._adFsLast || (Date.now() - window._adFsLast) > 2000) {
+          window._adFsLast = Date.now();
+          var fsBuf = {}; Object.keys(buf).forEach(function(s){ fsBuf[s]=buf[s]; });
+          fsBuf._ts = Date.now();
+          db.collection('broker').doc('prices').set(fsBuf, {merge:true})
+            .catch(function(e){ /* sessiz — RTDB birincil */ });
+        }
+      }
     }, 200);
   }
 }
