@@ -11,6 +11,8 @@
   <meta name="theme-color" content="#1565c0">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAEkUlEQVR4nO3UUZLbIBQF0Xw7+19MdpUlpFIzCZYsy4AQzYM+pQWYd3vmxw9JkiRJkiRJktTBoxz9kwWpaMWqlnZrMfY0LbCbV/QxlIfuJAt9JL2gk6hEn01h03lGn3BV9O6N0edcBj307egDz4tetiv62HOh18TQh58CPSKMPn9k9HYDoaeIht5rUPQsQdAzDY0eZ2z0OmHQQw2JHiUYeq7B0HOERI82BnqF8OgBUfTxJ0HPCKHPPhV6zO7og0+InrQX+s6To+e9GX3eJdAj34Y+7ELoqW/w7qm/f/30u/It0dDJ3wo+QPRv/v9D5/9s8QGif+fnpce/7Px5BnR3QOEbMiADqvfxbQbUIaCoDeU8zID6BBSvocxXGVC3gCI1lP8kA+oZUJiGDMiA6hW9x4A6BzR6Q6WPMaD+AY3bUMVLDAgJaNCGDMiA6tU9w4CogMZqqPoNBgQGNFBDBmRA9a48wIDYgIZoyIAMCKvHgPCAyIau//SHAQ0Q0INqqMlPxweI/jVZIWo9DwMaI6BH/4Za/W58gOhfqyFC1vMwoGECevRsqOGPxgeI/jXcwoBW/BpuEa+e/mIt2p8BfWBA56znAwP6yIDOGNBH1nPGgHIY0FsGlMOA3jKgHNbzlgFlMqBjBpTJgI4ZUCYDOmZAmaznmAHlM6ADBpTPgA4YUD7rOWBARQxoz4CKGNCeARUxoD0DKmJAewZUxHr2DKiUAW0YUCkD2jCgUga0YUClDGjDgEoZ0IYBlTKgDQMqZT0bBlTBgBIDqmBAiQFVMKDEgCoYUGJAFQwoMaAKBpQYUAUDSgyoggElBlTBgBIDqmBAiQFVMKDEgCoYUGJAFQwoMaAKBpQYUAUDSgyoggElBlShPqD5GjKgUpfqMSADMqANAyplQBsGVMqANgyolAFtGFApA9owoFJXA5qsIQMq0qAeAzIgA0oMqIgB7RlQEQPaM6AibQKaqSEDytesHgMyIAP6ZkD5WgY0TUMGlKlxPQZkQAb0lwFlMqBjBpSpfUBzNGRAOW6px4AMyIAMKMtdAU3QkAF9dGM9BmRAqzdkQOdur8eADGjphgzoRKd6DMiADMiADvQLKG5DBvRO13oMyIAWbciADgH1GJABrdiQAb3C6onYkAHtwPUYkAE1QB+hgAE9o8P5h75DAQN6RofzhD5FLgP6j07mBX2QLAb0hY7lCH2TLAb0hY7lDfosnxnQY9h6vtDH+cCA6EAy0Cc6s3hAdBp56CudMaAY6EO9tXJAdBSF6HMdWzYgOocq9NEOrBkQHcIF9On2FgyITuAa+np7BhQPfcCN1QKix2+EPmOyVED07E3Rx/y2TkD04DegT7oQeurb0IddAj3yzejzTo6etxf6zhOiJ+2OPvhU6DEh9NknQc+Ioo8fHj3gGOgVQqJHGww9RzD0XEOiRwmDHmps9DpDo8cJgp5pUPQs0dB7DYSeIjJ6Oxh9/inQI2Low8+FXrMr+tjzope9HX3gZdBDN0afc1X07g3QJ1TYjOiz6QWdRBb6SMpDd7JBH0MX2I1ashi1ZyuSJEmSJEmSdJM/pyVHHWNfrJcAAAAASUVORK5CYII=">
+  <meta name="theme-color" content="#1565c0">
+  <link rel="manifest" href="/manifest.json">
 <title>Commerz Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -901,102 +903,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* Mobile nav hidden on desktop */
 
-.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }
-
-/* ── Chart toolbar — grafik tipi & çizim araçları (rafine, TradingView havası) ── */
-.ct-type-btn, .draw-tool-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  min-width: 28px;
-  padding: 0 9px;
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: 0.5px;
-  background: transparent;
-  color: #8a8a8a;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-  user-select: none;
-}
-.ct-type-btn:hover, .draw-tool-btn:hover {
-  color: #e8e8e8;
-  background: rgba(255,255,255,0.035);
-  border-color: rgba(255,255,255,0.08);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
-  transform: translateY(-0.5px);
-}
-.ct-type-btn.active, .draw-tool-btn.active {
-  color: var(--accent);
-  background: rgba(240,185,11,0.08);
-  border-color: rgba(240,185,11,0.35);
-  box-shadow: 0 0 8px rgba(240,185,11,0.15), 0 1px 0 rgba(240,185,11,0.08) inset;
-  transform: translateY(0);
-}
-.ct-type-btn:active, .draw-tool-btn:active {
-  transform: translateY(0);
-  background: rgba(240,185,11,0.05);
-}
-/* Ikon karakterleri için ek ince ayar — bazı glyph'lar baseline'a oturmuyor */
-.draw-tool-btn[data-tool="hline"] { font-weight: 600; }
-.draw-tool-btn[data-tool="trendline"] { font-size: 14px; }
-.draw-tool-btn[data-tool="fibonacci"] { font-style: italic; font-weight: 500; }
-.ct-type-btn[data-type="bar"] { font-size: 11px; letter-spacing: 0; }
-.ct-type-btn[data-type="line"] { font-size: 14px; }
-
-/* Toolbar grup kapsayıcısı — sol tarafta ince ayırıcı, eşit padding, gap */
-.ct-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 0 8px;
-  height: 100%;
-  position: relative;
-}
-.ct-group::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
-}
-
-/* Çizimleri temizle butonu — kırmızı vurgu, ama aynı rafine dile uy */
-.ct-clear-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  min-width: 28px;
-  padding: 0 9px;
-  font-size: 12px;
-  line-height: 1;
-  background: transparent;
-  color: #888;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  cursor: pointer;
-  margin-left: 2px;
-  transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-  user-select: none;
-}
-.ct-clear-btn:hover {
-  color: #ef5350;
-  background: rgba(239,83,80,0.08);
-  border-color: rgba(239,83,80,0.3);
-  box-shadow: 0 0 8px rgba(239,83,80,0.12);
-  transform: translateY(-0.5px);
-}
-.ct-clear-btn:active {
-  transform: translateY(0);
-  background: rgba(239,83,80,0.05);
-}
-.draw-tool-btn { /* stiller ct-type-btn ile birleştirildi (yukarıda) */ }
+.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
+.ct-type-btn.active { color:#fff; background:#181818; }
+.ct-type-btn:hover { color:#aaa; }
+.draw-tool-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
+.draw-tool-btn.active { color:#f0b90b; background:#181818; }
+.draw-tool-btn:hover { color:#aaa; }
 
 
 
@@ -1865,16 +1777,15 @@ function initAuth(){
         <button class="ct-btn active" onclick="setInt('4h',this)">H4</button>
         <button class="ct-btn" onclick="setInt('1d',this)">D1</button>
       </div>
-      <div class="ct-group">
+      <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid #2a2a2a">
         <button class="ct-type-btn active" data-type="candlestick" onclick="setChartType('candlestick')" title="Mum">🕯</button>
-        <button class="ct-type-btn" data-type="bar" onclick="setChartType('bar')" title="Bar">▌▍</button>
-        <button class="ct-type-btn" data-type="line" onclick="setChartType('line')" title="Çizgi">∿</button>
+        <button class="ct-type-btn" data-type="bar" onclick="setChartType('bar')" title="Bar">▐</button>
+        <button class="ct-type-btn" data-type="line" onclick="setChartType('line')" title="Çizgi">╱</button>
       </div>
-      <div class="ct-group">
-        <button class="draw-tool-btn" data-tool="hline" onclick="setDrawTool('hline')" title="Yatay Çizgi (Destek/Direnç)">─</button>
-        <button class="draw-tool-btn" data-tool="trendline" onclick="setDrawTool('trendline')" title="Trend Çizgisi">⟋</button>
+      <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid #2a2a2a">
+        <button class="draw-tool-btn" data-tool="trendline" onclick="setDrawTool('trendline')" title="Trend Çizgisi">╱</button>
         <button class="draw-tool-btn" data-tool="fibonacci" onclick="setDrawTool('fibonacci')" title="Fibonacci">ϕ</button>
-        <button class="ct-clear-btn" onclick="clearDrawings()" title="Aktif Sembolün Çizimlerini Temizle">✕</button>
+        <button class="ct-btn" onclick="clearDrawings()" title="Çizimleri Temizle" style="color:#ef5350">✕</button>
       </div>
       <div class="ct-price-info">
         <span class="lbl">A:</span><span class="val" id="ctO">—</span>
@@ -2342,13 +2253,12 @@ var save = () => {
   if(typeof _cu !== 'undefined' && _cu && _cu.id) {
     var _saveTs = new Date().toISOString();
     window._lastSyncAt = _saveTs; // kendi yazdığımızı tekrar okuyup ezmeyelim
-    // 2026-04-28: finlog gönderilmiyor — sadece admin yazar (mimari karar).
-    // fbSaveUserData içinde de koruma katmanı var (savunmacı kod).
     fbSaveUserData(_cu.id, {
       positions: Array.isArray(positions) ? positions : [],
       tradeHistory: Array.isArray(tradeHistory) ? tradeHistory.slice(0,100) : [],
       portfolio: Array.isArray(portfolio) ? portfolio : [],
       alarms: Array.isArray(alarms) ? alarms : [],
+      finlog: Array.isArray(finlog) ? finlog : [],
       updatedAt: _saveTs
     });
   }
@@ -2410,11 +2320,6 @@ function initChart() {
     return;
   }
   if(_lw) { try{_lw.remove();}catch(e){} }
-  // 2026-04-28 (Option D): Chart yok edilince eski ekran referansları geçersiz —
-  // _lwDrawSeries detach edilmeli (state'teki _lwDrawings KORUNUR).
-  // Yeni chart oluşunca lwRenderCandles → _lwRedrawForCurSym zinciri çizimleri geri getirir.
-  if(typeof _lwDrawSeries !== 'undefined') _lwDrawSeries = [];
-  if(typeof _lwDrawPoints !== 'undefined') _lwDrawPoints = [];
 
   _lw = LightweightCharts.createChart(wrap, {
     width:  wrap.offsetWidth  || 800,
@@ -2579,8 +2484,8 @@ function lwLoadKlines(sym, interval, cb) {
       });
       return;
     }
-    // Forex/emtia/endeks — Twelvedata REST klines
-    lwLoadFastForexKlines(sym, interval, cb);
+    // Forex/emtia/endeks — Twelve Data REST klines
+    lwLoadTwelveDataKlines(sym, interval, cb);
     return;
   }
 
@@ -2619,92 +2524,68 @@ function lwLoadKlines(sym, interval, cb) {
     });
 }
 
-/* ── FastForex OHLC klines (forex/emtia/endeks) ── */
-var _FF_KEY = '81e05712b4-8c68c7d36a-tcvv6a';
-var FF_SYM_MAP = {
-  'EURUSD':'EURUSD',  'GBPUSD':'GBPUSD',  'USDJPY':'USDJPY',
-  'USDCHF':'USDCHF',  'AUDUSD':'AUDUSD',  'USDCAD':'USDCAD',
-  'NZDUSD':'NZDUSD',  'USDTRY':'USDTRY',  'EURTRY':'EURTRY',
-  'XAUUSD':'XAUUSD',  'XAGUSD':'XAGUSD',
-  'EURCAD':'EURCAD',  'EURGBP':'EURGBP',  'EURJPY':'EURJPY',
-  'GBPJPY':'GBPJPY',  'GBPAUD':'GBPAUD',  'AUDCAD':'AUDCAD',
-  'GBPCHF':'GBPCHF',  'AUDNZD':'AUDNZD',  'CADCHF':'CADCHF',
-  'USDMXN':'USDMXN',  'USDZAR':'USDZAR',  'USDSGD':'USDSGD',
-  'USDHKD':'USDHKD',  'USDPLN':'USDPLN',  'USDSEK':'USDSEK',
-  'USDNOK':'USDNOK'
+/* ── Twelve Data OHLC klines (forex/emtia/endeks) ── */
+// Canlı fiyat admin → Firebase üzerinden gelir; grafik mumları buradan (TD REST time_series).
+// Admin tarafındaki AD_TD_MAP ile aynı sembol seti — TradeX sembolü → TD slash formatı (EUR/USD).
+var _TD_KEY = '699ea91fdd9b4ad09e8bb2760b7f3663';
+var TD_KLINE_MAP = {
+  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
+  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
+  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
+  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
+  'USOIL':'WTI/USD',
+  'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
+  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD',
+  'GBPCHF':'GBP/CHF',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
+  'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
+  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK',
+  'USDNOK':'USD/NOK',  'EURCHF':'EUR/CHF',  'EURAUD':'EUR/AUD'
 };
-function lwLoadFastForexKlines(sym, interval, cb) {
-  var ffSym = FF_SYM_MAP[sym] || null;
-  if(!ffSym) { cb([]); return; }
+// TradeX interval → Twelve Data interval (TD tüm bunları birebir destekler)
+var TD_KLINE_INT = {
+  '1m':'1min', '5m':'5min', '15m':'15min', '30m':'30min',
+  '1h':'1h',   '4h':'4h',   '1d':'1day'
+};
+function lwLoadTwelveDataKlines(sym, interval, cb) {
+  var tdSym = TD_KLINE_MAP[sym] || null;
+  if(!tdSym) { cb([]); return; }   // Bu plana kapalı semboller (endeksler vb.) → mum yok
 
-  // FastForex sadece 3 interval: PT1M, PT1H, P1D (max 100 per request)
-  // 4h/30m/15m/5m → PT1H ile yaklaşık
-  var FF_INT = {
-    '1m':'PT1M',  '5m':'PT1M',  '15m':'PT1H', '30m':'PT1H',
-    '1h':'PT1H',  '4h':'P1D',   '1d':'P1D'
-  };
-  var ffInt = FF_INT[(interval||'4h').toLowerCase()] || 'P1D';
+  var tdInt = TD_KLINE_INT[(interval||'4h').toLowerCase()] || '1h';
+  var url = 'https://api.twelvedata.com/time_series'
+    + '?symbol='   + encodeURIComponent(tdSym)
+    + '&interval='  + tdInt
+    + '&outputsize=300'
+    + '&order=ASC'
+    + '&apikey='    + _TD_KEY;
 
-  // Birden fazla istek atarak 300 mum topla (3 × 100)
-  var allCandles = [];
-  var now = new Date();
-  var requests = [];
-
-  // Her istek için end tarihi hesapla (100'er mum geriye git)
-  var msPerCandle = ffInt === 'PT1M' ? 60000 : ffInt === 'PT1H' ? 3600000 : 86400000;
-  var batchSize = 100;
-  var totalCandles = 300;
-  var batches = Math.ceil(totalCandles / batchSize);
-
-  var pending = batches;
-  var endTime = now.getTime();
-
-  for(var i = 0; i < batches; i++) {
-    (function(endTs) {
-      var endDate = new Date(endTs).toISOString().slice(0,10);
-      var url = 'https://api.fastforex.io/fx/ohlc/time-series'
-        + '?pair=' + ffSym
-        + '&interval=' + ffInt
-        + '&end=' + endDate
-        + '&limit=100'
-        + '&api_key=' + _FF_KEY;
-
-      fetch(url)
-        .then(function(r){ return r.json(); })
-        .then(function(data) {
-          if(data && data.results && Array.isArray(data.results)) {
-            data.results.forEach(function(v) {
-              allCandles.push({
-                time:   Math.floor(new Date(v.dtm).getTime() / 1000),
-                open:   parseFloat(v.o),
-                high:   parseFloat(v.h),
-                low:    parseFloat(v.l),
-                close:  parseFloat(v.c),
-                volume: 0
-              });
-            });
-          }
-          pending--;
-          if(pending === 0) {
-            allCandles.sort(function(a,b){ return a.time - b.time; });
-            var uniq = [], lastT = -1;
-            allCandles.forEach(function(c){ if(c.time !== lastT){ uniq.push(c); lastT = c.time; } });
-            _klineData = uniq;
-            cb(uniq);
-          }
-        })
-        .catch(function(e) {
-          console.warn('[FF Klines]', e.message);
-          pending--;
-          if(pending === 0) {
-            allCandles.sort(function(a,b){ return a.time - b.time; });
-            _klineData = allCandles;
-            cb(allCandles);
-          }
-        });
-    })(endTime);
-    endTime -= batchSize * msPerCandle;
-  }
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if(!data || data.status === 'error' || !Array.isArray(data.values)) {
+        console.warn('[TD Klines]', sym, '→', (data && data.message) ? data.message : 'veri yok');
+        cb([]);
+        return;
+      }
+      var seen = {};
+      var candles = [];
+      data.values.forEach(function(v) {
+        // datetime: "2026-06-01 14:30:00" (UTC) veya "2026-06-01" (günlük)
+        var t = Math.floor(new Date(v.datetime.replace(' ', 'T') + 'Z').getTime() / 1000);
+        if(!isFinite(t) || seen[t]) return;   // tekrarları ele
+        seen[t] = 1;
+        var o = parseFloat(v.open), h = parseFloat(v.high),
+            l = parseFloat(v.low),  c = parseFloat(v.close);
+        if(!(c > 0)) return;
+        candles.push({ time:t, open:o, high:h, low:l, close:c, volume: parseFloat(v.volume)||0 });
+      });
+      candles.sort(function(a,b){ return a.time - b.time; });   // order=ASC ama garanti olsun
+      _klineData = candles;
+      cb(candles);
+    })
+    .catch(function(e) {
+      console.warn('[TD Klines]', sym, e.message);
+      cb([]);
+    });
 }
 
 /* ── Ana yükleme: sembol + interval ─────────────── */
@@ -2794,10 +2675,6 @@ function lwRenderCandles(candles, sym) {
   // SL/TP/Pozisyon çizgileri
   lwDrawPositionLines();
 
-  // 2026-04-28 (Option D): Aktif sembolün kalıcı çizimlerini yeniden render et.
-  // _lwSeries.setData yapıldıktan sonra çağrıldığı için _klineData ve _lwSeries hazır.
-  _lwRedrawForCurSym();
-
   // Son mumu sağ kenara getir ve fiyat aralığını otomatik ayarla
   _lw.timeScale().scrollToRealTime();
   _lw.timeScale().applyOptions({rightOffset: 10});
@@ -2831,12 +2708,6 @@ function lwRecreateSeries() {
 
   // Ana seriyi yeniden oluştur
   if(_lwSeries) try{_lw.removeSeries(_lwSeries);}catch(e){}
-  // 2026-04-28 (Option D): _lwSeries yenilenince ona bağlı priceLine'lar (HLine + Fibonacci)
-  // ölü referans olur. Trendline'lar ayrı serilerle çizilir, onlar da yenilenmeli.
-  // Ekran referansları detach (state DOKUNULMAZ) — ardından lwRenderCandles içinde
-  // _lwRedrawForCurSym yeniden çizecek.
-  _lwDrawSeries = [];
-  _lwDrawPoints = [];
   if(_lwChartType==='bar') {
     _lwSeries = _lw.addBarSeries({upColor:'#2979ff',downColor:'#ef5350'});
   } else if(_lwChartType==='line') {
@@ -3203,73 +3074,9 @@ function setChartType(type) {
 }
 
 /* ── Çizim Araçları ─────────────────────────────── */
-var _lwDrawMode   = null;  // 'hline' | 'trendline' | 'fibonacci' | null
+var _lwDrawMode   = null;  // 'trendline' | 'fibonacci' | null
 var _lwDrawPoints = [];    // [{price,time}, ...]
-var _lwDrawSeries = [];    // Aktif sembolde ekranda görünen çizim referansları (geçici)
-
-// 2026-04-28 (Option D): Çizimler kalıcı — sembol bazlı state, localStorage'da persist edilir.
-// Trendline/Fibonacci için "price + normalize edilmiş index (0..1)" saklanır. Sembol/aralık
-// değişse bile çizim aynı oransal konumda kalır (time'a kilitlenmez).
-var _lwDrawings = {};                // { 'BTCUSDT': [drawing, ...], ... }
-var MAX_DRAWINGS_PER_SYM = 1000;     // Şimdilik enforce edilmiyor, ileride lazım olur
-var _LW_DRAW_LS_KEY = 'tx_drawings'; // localStorage anahtarı
-
-function _lwDrawingsLoad() {
-  try {
-    var raw = localStorage.getItem(_LW_DRAW_LS_KEY);
-    if(!raw) { _lwDrawings = {}; return; }
-    var obj = JSON.parse(raw);
-    _lwDrawings = (obj && typeof obj === 'object') ? obj : {};
-  } catch(e) {
-    console.warn('[drawings] load başarısız:', e.message);
-    _lwDrawings = {};
-  }
-}
-
-function _lwDrawingsSave() {
-  try {
-    localStorage.setItem(_LW_DRAW_LS_KEY, JSON.stringify(_lwDrawings));
-  } catch(e) {
-    // QuotaExceededError vs — sessizce geç, kullanıcıyı bunaltma
-    console.warn('[drawings] save başarısız:', e.message);
-  }
-}
-
-function _lwDrawingsAdd(d) {
-  if(!curSym) return;
-  if(!_lwDrawings[curSym]) _lwDrawings[curSym] = [];
-  d.id = d.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,6));
-  _lwDrawings[curSym].push(d);
-  _lwDrawingsSave();
-}
-
-// Normalize index (0..1) → gerçek mum time'ına çevir.
-// Hangi sembolde olursak olalım, candles dizisinde göreli konum aynı kalır.
-function _lwResolveTime(t01) {
-  if(!_klineData || !_klineData.length) return null;
-  if(!Number.isFinite(t01)) return null;
-  var idx = Math.round(t01 * (_klineData.length - 1));
-  if(idx < 0) idx = 0;
-  if(idx >= _klineData.length) idx = _klineData.length - 1;
-  var c = _klineData[idx];
-  return (c && c.time !== undefined) ? c.time : null;
-}
-
-// Gerçek time → normalize index (0..1). Çizim oluşturulurken kaydetmek için.
-function _lwTimeToNorm(time) {
-  if(!_klineData || !_klineData.length) return 0;
-  // En yakın mumun index'ini bul (binary search yerine basit linear — mum sayısı ~500)
-  var bestIdx = 0, bestDiff = Infinity;
-  for(var i=0; i<_klineData.length; i++) {
-    var diff = Math.abs(_klineData[i].time - time);
-    if(diff < bestDiff) { bestDiff = diff; bestIdx = i; }
-  }
-  return _klineData.length > 1 ? (bestIdx / (_klineData.length - 1)) : 0;
-}
-
-// Sayfa yüklenirken localStorage'dan çizimleri oku.
-// İlk lwRenderCandles çağrısında _lwRedrawForCurSym bu state'i kullanacak.
-try { _lwDrawingsLoad(); } catch(e) { console.warn('[drawings] init load skipped:', e.message); }
+var _lwDrawSeries = [];    // Tüm çizim serileri
 
 function setDrawTool(tool) {
   _lwDrawMode = (_lwDrawMode===tool) ? null : tool;
@@ -3281,105 +3088,33 @@ function setDrawTool(tool) {
 }
 
 function _lwDrawClick(e) {
-  if(!_lwDrawMode || !_lw || !_lwSeries) return;
+  if(!_lwDrawMode || !_lw) return;
   var rect = e.currentTarget.getBoundingClientRect();
   var x = e.clientX - rect.left;
   var y = e.clientY - rect.top;
-  var price, time;
-  try {
-    price = _lwSeries.coordinateToPrice(y);
-    time  = _lw.timeScale().coordinateToTime(x);
-  } catch(err) { return; }
-  // 2026-04-28 fix: NaN/Infinity/null'u sıkı kontrol et — !price NaN'i yakalamaz
-  if(!Number.isFinite(price) || price <= 0) return;
-  if(time === null || time === undefined) return;
+  var price = _lwSeries ? _lwSeries.coordinateToPrice(y) : null;
+  var time  = _lw.timeScale().coordinateToTime(x);
+  if(!price || !time) return;
   _lwDrawPoints.push({price:price, time:time});
-
-  // 2026-04-28: Yatay çizgi (Destek/Direnç) — tek tıklama ile çizilir
-  if(_lwDrawMode === 'hline' && _lwDrawPoints.length === 1) {
-    var hp = _lwDrawPoints[0];
-    try {
-      // Fiyat ondalık hassasiyetini sembol konfigürasyonundan al
-      var dec = 2;
-      try {
-        var sc = (typeof symConfig !== 'undefined' && symConfig)
-          ? symConfig.find(function(s){return s.sym === curSym;}) : null;
-        if(sc && sc.decimals) dec = parseInt(sc.decimals) || 2;
-      } catch(e) {}
-      var hl = _lwSeries.createPriceLine({
-        price: hp.price,
-        color: '#f0b90b',
-        lineWidth: 1,
-        lineStyle: 0, // solid (Fibonacci dashed kullanır, biz solid)
-        axisLabelVisible: true,
-        title: hp.price.toFixed(dec)
-      });
-      _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:hl});
-      // 2026-04-28 (Option D): Kalıcı state'e ekle
-      _lwDrawingsAdd({ type:'hline', price: hp.price });
-      showToast('Yatay Çizgi','Çizildi. Silmek için: Çizimi Temizle');
-    } catch(err) {
-      console.warn('[hline] çizim başarısız:', err.message);
-      showToast('Hata','Çizgi çizilemedi, tekrar dene');
-    }
-    _lwDrawPoints = [];
-    setDrawTool(null);
-    return;
-  }
 
   if(_lwDrawMode === 'trendline' && _lwDrawPoints.length === 2) {
     var p1 = _lwDrawPoints[0], p2 = _lwDrawPoints[1];
-    // 2026-04-28 fix: Aynı time iki kez veya ters sıra → lightweight-charts patlar
-    if(p1.time === p2.time) {
-      _lwDrawPoints = [];
-      showToast('Trend Çizgisi','İki nokta aynı zamana denk geldi, tekrar dene');
-      return;
-    }
-    // setData ascending time bekler — gerekirse swap
-    if(p1.time > p2.time) { var _tmp=p1; p1=p2; p2=_tmp; }
-    try {
-      var line = _lw.addLineSeries({color:'#f0b90b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-      line.setData([{time:p1.time,value:p1.price},{time:p2.time,value:p2.price}]);
-      _lwDrawSeries.push(line);
-      // 2026-04-28 (Option D): Kalıcı state'e ekle (time yerine normalize index sakla)
-      _lwDrawingsAdd({
-        type: 'trendline',
-        p1: { price: p1.price, t: _lwTimeToNorm(p1.time) },
-        p2: { price: p2.price, t: _lwTimeToNorm(p2.time) }
-      });
-      showToast('Trend Çizgisi','Çizildi. Silmek için: Çizimi Temizle');
-    } catch(err) {
-      console.warn('[trendline] çizim başarısız:', err.message);
-      showToast('Hata','Çizgi çizilemedi, tekrar dene');
-    }
+    var line = _lw.addLineSeries({color:'#f0b90b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+    line.setData([{time:p1.time,value:p1.price},{time:p2.time,value:p2.price}]);
+    _lwDrawSeries.push(line);
     _lwDrawPoints = [];
+    showToast('Trend Çizgisi','Çizildi. Silmek için: Çizimi Temizle');
   }
 
   if(_lwDrawMode === 'fibonacci' && _lwDrawPoints.length === 2) {
     var fp1 = _lwDrawPoints[0], fp2 = _lwDrawPoints[1];
     var diff = fp2.price - fp1.price;
-    if(!Number.isFinite(diff) || diff === 0) {
-      _lwDrawPoints = [];
-      showToast('Fibonacci','İki nokta aynı fiyatta, tekrar dene');
-      return;
-    }
     var levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
     var colors  = ['#aaa','#FF9800','#2979ff','#2196F3','#9C27B0','#E91E63','#aaa'];
     levels.forEach(function(lvl, i) {
       var p = fp2.price - diff*lvl;
-      if(!Number.isFinite(p) || p <= 0) return;
-      try {
-        var s = _lwSeries.createPriceLine({price:p, color:colors[i], lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'Fib '+Math.round(lvl*100)+'%'});
-        _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:s});
-      } catch(err) {
-        console.warn('[fibonacci] level çizilemedi:', err.message);
-      }
-    });
-    // 2026-04-28 (Option D): Kalıcı state'e ekle (sadece 2 ucu sakla, level'lar render'da hesaplanır)
-    _lwDrawingsAdd({
-      type: 'fib',
-      p1: { price: fp1.price, t: _lwTimeToNorm(fp1.time) },
-      p2: { price: fp2.price, t: _lwTimeToNorm(fp2.time) }
+      var s = _lwSeries.createPriceLine({price:p, color:colors[i], lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'Fib '+Math.round(lvl*100)+'%'});
+      _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:s});
     });
     _lwDrawPoints = [];
     setDrawTool(null);
@@ -3388,10 +3123,6 @@ function _lwDrawClick(e) {
 }
 
 function clearDrawings() {
-  // 2026-04-28 (Option D): Sadece AKTIF SEMBOLÜN çizimlerini siler.
-  // Diğer sembollerdeki çizimler korunur (kullanıcı tercihi).
-  // _isFibLine flag: createPriceLine ile çizilen çizgileri (Fibonacci + HLine) işaret eder.
-  // İsim Fibonacci'den kalma; HLine de aynı API'yi (createPriceLine/removePriceLine) kullanır.
   _lwDrawSeries.forEach(function(s){
     try {
       if(s._isFibLine) { s.series.removePriceLine(s.ref); }
@@ -3400,85 +3131,8 @@ function clearDrawings() {
   });
   _lwDrawSeries = [];
   _lwDrawPoints = [];
-  // Aktif sembolün state'ini de temizle ve persist et
-  if(curSym && _lwDrawings[curSym]) {
-    delete _lwDrawings[curSym];
-    _lwDrawingsSave();
-  }
   setDrawTool(null);
-  showToast('Temizlendi', curSym + ' çizimleri kaldırıldı');
-}
-
-/* ── Yeniden Çizim (Option D) ───────────────────── */
-// Ekrandaki çizim referanslarını temizler ve aktif sembol için state'teki
-// çizimleri yeniden render eder. lwRenderCandles sonunda çağrılır.
-function _lwRedrawForCurSym() {
-  if(!_lw || !_lwSeries) return;
-  // Önce ekrandaki eski referansları sil (state DOKUNULMAZ)
-  _lwDrawSeries.forEach(function(s){
-    try {
-      if(s._isFibLine) { s.series.removePriceLine(s.ref); }
-      else { _lw.removeSeries(s); }
-    } catch(e){}
-  });
-  _lwDrawSeries = [];
-
-  if(!curSym) return;
-  var list = _lwDrawings[curSym];
-  if(!list || !list.length) return;
-
-  // Sembol konfigürasyonundan ondalık hassasiyet
-  var dec = 2;
-  try {
-    var sc = (typeof symConfig !== 'undefined' && symConfig)
-      ? symConfig.find(function(s){return s.sym === curSym;}) : null;
-    if(sc && sc.decimals) dec = parseInt(sc.decimals) || 2;
-  } catch(e) {}
-
-  list.forEach(function(d) {
-    try {
-      if(d.type === 'hline') {
-        if(!Number.isFinite(d.price) || d.price <= 0) return;
-        var hl = _lwSeries.createPriceLine({
-          price: d.price, color: '#f0b90b', lineWidth: 1, lineStyle: 0,
-          axisLabelVisible: true, title: d.price.toFixed(dec)
-        });
-        _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:hl});
-      }
-      else if(d.type === 'trendline') {
-        var t1 = _lwResolveTime(d.p1.t), t2 = _lwResolveTime(d.p2.t);
-        if(t1 == null || t2 == null || t1 === t2) return;
-        if(!Number.isFinite(d.p1.price) || !Number.isFinite(d.p2.price)) return;
-        if(d.p1.price <= 0 || d.p2.price <= 0) return;
-        var pp1 = {time:t1, value:d.p1.price}, pp2 = {time:t2, value:d.p2.price};
-        // setData ascending bekler
-        if(t1 > t2) { var _t=pp1; pp1=pp2; pp2=_t; }
-        var line = _lw.addLineSeries({color:'#f0b90b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-        line.setData([pp1, pp2]);
-        _lwDrawSeries.push(line);
-      }
-      else if(d.type === 'fib') {
-        // Fibonacci priceLine'ları yatay olduğu için time'a ihtiyaç yok — sadece price yeter.
-        // Yine de p1/p2'nin geçerli olduğunu kontrol edelim.
-        if(!Number.isFinite(d.p1.price) || !Number.isFinite(d.p2.price)) return;
-        if(d.p1.price <= 0 || d.p2.price <= 0) return;
-        var diff = d.p2.price - d.p1.price;
-        if(!Number.isFinite(diff) || diff === 0) return;
-        var levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
-        var colors  = ['#aaa','#FF9800','#2979ff','#2196F3','#9C27B0','#E91E63','#aaa'];
-        levels.forEach(function(lvl, i) {
-          var p = d.p2.price - diff*lvl;
-          if(!Number.isFinite(p) || p <= 0) return;
-          try {
-            var s = _lwSeries.createPriceLine({price:p, color:colors[i], lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'Fib '+Math.round(lvl*100)+'%'});
-            _lwDrawSeries.push({_isFibLine:true, series:_lwSeries, ref:s});
-          } catch(err) {}
-        });
-      }
-    } catch(err) {
-      console.warn('[redraw] çizim atlandı:', d.type, err.message);
-    }
-  });
+  showToast('Temizlendi','Tüm çizimler kaldırıldı');
 }
 
 /* ── İndikatör hesaplama fonksiyonları ─────────── */
@@ -3548,19 +3202,6 @@ function updateTopSym(sym, price, chg) {
 }
 
 function switchSym(sym) {
-  // 2026-04-28 (Option D): Sembol değişiminde ekrandaki çizim referanslarını detach et.
-  // State'teki çizimler korunur — yeni sembolde lwRenderCandles → _lwRedrawForCurSym
-  // zinciri o sembolün çizimlerini render edecek.
-  if(typeof _lwDrawSeries !== 'undefined' && _lwDrawSeries.length) {
-    _lwDrawSeries.forEach(function(s){
-      try {
-        if(s._isFibLine) { s.series.removePriceLine(s.ref); }
-        else if(_lw) { _lw.removeSeries(s); }
-      } catch(e){}
-    });
-    _lwDrawSeries = [];
-    _lwDrawPoints = [];
-  }
   curSym = sym;
   document.querySelectorAll('.tb-sym').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('tsym-'+sym);
@@ -3576,19 +3217,6 @@ function switchSym(sym) {
 }
 
 function setInt(intv, btn) {
-  // 2026-04-28 (Option D): Aralık değişiminde ekrandaki çizim referanslarını detach et.
-  // State'teki çizimler korunur — yeni mum verisi gelince lwRenderCandles → _lwRedrawForCurSym
-  // zinciri normalize index'leri yeni mum dizisine map'leyerek yeniden çizecek.
-  if(typeof _lwDrawSeries !== 'undefined' && _lwDrawSeries.length) {
-    _lwDrawSeries.forEach(function(s){
-      try {
-        if(s._isFibLine) { s.series.removePriceLine(s.ref); }
-        else if(_lw) { _lw.removeSeries(s); }
-      } catch(e){}
-    });
-    _lwDrawSeries = [];
-    _lwDrawPoints = [];
-  }
   curInt = intv;
   document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -4083,8 +3711,8 @@ function renderPositions() {
       <td style="font-size:10px;color:${_posSortCol==='time'?'#aaa':'var(--muted)'};white-space:nowrap">${pos.time ? fmtDate(pos.time) : '—'}</td>
       <td>$${fp(pos.openPrice, pos.decimals||2)}</td>
       <td data-cur="${pos.id}">$${fp(cur, pos.decimals||2)}</td>
-      <td style="font-size:10px;color:#ef5350;cursor:pointer" onclick="dPosEditSltp(${pos.id})" title="SL/TP düzenle">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style=\'color:#666\'>+ SL</span>'}</td>
-      <td style="font-size:10px;color:#2979ff;cursor:pointer" onclick="dPosEditSltp(${pos.id})" title="SL/TP düzenle">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style=\'color:#666\'>+ TP</span>'}</td>
+      <td style="font-size:10px;color:#ef5350">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '—'}</td>
+      <td style="font-size:10px;color:#2979ff">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '—'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#2979ff':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor};text-align:right">${pnlSign}$${fp(Math.abs(pnl))}</td>
       <td><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
@@ -6938,19 +6566,8 @@ function symUnpin(sym){
     touch-action: manipulation;
     border-radius: 0 !important;
   }
-  .chart-toolbar .ct-type-btn,
-  .chart-toolbar .draw-tool-btn,
-  .chart-toolbar .ct-clear-btn {
-    font-size: 13px !important;
-    padding: 0 10px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    flex-shrink: 0 !important;
-    touch-action: manipulation;
-    border-radius: 4px !important;
-  }
-  .chart-toolbar .ct-group { padding: 0 6px !important; gap: 2px !important; }
-  .chart-toolbar .ct-group::before { top: 18% !important; bottom: 18% !important; }
+  .chart-toolbar .ct-type-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
+  .chart-toolbar .draw-tool-btn { font-size: 12px !important; padding: 0 8px !important; height: 34px !important; flex-shrink: 0 !important; touch-action: manipulation; border-radius: 0 !important; }
   body             { padding-bottom: 62px; }
 
   /* ── Alt nav ── */
@@ -8115,73 +7732,6 @@ function symUnpin(sym){
     mPosModalClose();
     setTimeout(mFP,200);
   };
-
-  // ── MASAÜSTÜ SL/TP DÜZENLE (2026-04-28 eklendi) ──────────
-  // Mobil mPosUpdate mantığının aynısı, masaüstü modal için.
-  var _dSltpId = null;
-
-  window.dPosEditSltp = function(id) {
-    var pos = (typeof positions!=='undefined'?positions:[]).find(function(p){return String(p.id)===String(id);});
-    if(!pos) return;
-    _dSltpId = id;
-    var sc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===pos.sym;}):null;
-    var dec = sc?parseInt(sc.decimals)||2:(pos.decimals||2);
-    var cur = (typeof prices!=='undefined'&&prices[pos.sym])?prices[pos.sym].price:pos.openPrice;
-    var fp2 = function(n,d){return parseFloat(n||0).toFixed(d||2);};
-    var setT = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
-    setT('dSltpSym', (pos.label||pos.sym) + '  ' + (pos.side==='buy'?'▲ AL':'▼ SAT'));
-    setT('dSltpInfo', '#'+pos.id+' · '+pos.qty+' lot');
-    setT('dSltpOpen', fp2(pos.openPrice,dec));
-    setT('dSltpCur', fp2(cur,dec));
-    var slIn = document.getElementById('dSltpSLInput'); if(slIn) slIn.value = pos.sl||'';
-    var tpIn = document.getElementById('dSltpTPInput'); if(tpIn) tpIn.value = pos.tp||'';
-    var modal = document.getElementById('dSltpModal');
-    if(modal) modal.style.display = 'flex';
-    // İlk inputa focus
-    setTimeout(function(){ if(slIn) slIn.focus(); }, 50);
-  };
-
-  window.dPosSltpClose = function() {
-    var modal = document.getElementById('dSltpModal');
-    if(modal) modal.style.display = 'none';
-    _dSltpId = null;
-  };
-
-  window.dPosSltpClear = function() {
-    var slIn = document.getElementById('dSltpSLInput'); if(slIn) slIn.value = '';
-    var tpIn = document.getElementById('dSltpTPInput'); if(tpIn) tpIn.value = '';
-  };
-
-  window.dPosSltpSave = function() {
-    if(!_dSltpId) return;
-    if(window._readOnly) { if(typeof showToast==='function') showToast('İzleyici Modu','Bu modda SL/TP değiştirilemez.'); return; }
-    var slRaw = (document.getElementById('dSltpSLInput')||{}).value;
-    var tpRaw = (document.getElementById('dSltpTPInput')||{}).value;
-    var slVal = (slRaw === '' || slRaw === null || slRaw === undefined) ? null : parseFloat(slRaw);
-    var tpVal = (tpRaw === '' || tpRaw === null || tpRaw === undefined) ? null : parseFloat(tpRaw);
-    if(slVal !== null && (!Number.isFinite(slVal) || slVal <= 0)) { if(typeof showToast==='function') showToast('Hata','Geçersiz SL değeri'); return; }
-    if(tpVal !== null && (!Number.isFinite(tpVal) || tpVal <= 0)) { if(typeof showToast==='function') showToast('Hata','Geçersiz TP değeri'); return; }
-    var pos = (typeof positions!=='undefined'?positions:[]).find(function(p){return String(p.id)===String(_dSltpId);});
-    if(!pos) { dPosSltpClose(); return; }
-    pos.sl = slVal;
-    pos.tp = tpVal;
-    if(typeof save==='function') save();
-    if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
-      fbSaveUserData(_cu.id, {positions:positions});
-    }
-    if(typeof showToast==='function') showToast('Güncellendi ✓','SL/TP kaydedildi');
-    if(typeof renderPositions==='function') renderPositions();
-    dPosSltpClose();
-  };
-
-  // ESC ile kapat
-  document.addEventListener('keydown', function(e) {
-    if(e.key === 'Escape') {
-      var modal = document.getElementById('dSltpModal');
-      if(modal && modal.style.display !== 'none') dPosSltpClose();
-    }
-  });
-  // ──────────────────────────────────────────────────
   // ──────────────────────────────────────────────────
 
   window.mCancelPending=function(i){
@@ -8547,55 +8097,6 @@ function symUnpin(sym){
   </div>
 </div>
 
-<!-- MASAÜSTÜ SL/TP DÜZENLE MODAL (2026-04-28 eklendi) -->
-<div id="dSltpModal" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,.65);align-items:center;justify-content:center" onclick="if(event.target===this)dPosSltpClose()">
-  <div style="width:340px;max-width:92vw;background:#181818;border:1px solid #2a2a2a;border-radius:8px;display:flex;flex-direction:column">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a1a">
-      <div style="flex:1">
-        <div style="font-family:monospace;font-size:13px;font-weight:700;color:#e0e0e0" id="dSltpSym">—</div>
-        <div style="font-family:monospace;font-size:10px;color:#888;margin-top:2px" id="dSltpInfo">—</div>
-      </div>
-      <button onclick="dPosSltpClose()" style="background:transparent;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">✕</button>
-    </div>
-    <!-- Body -->
-    <div style="padding:14px 16px">
-      <!-- Mevcut fiyat -->
-      <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:11px;margin-bottom:14px;padding:8px 10px;background:#0f0f0f;border-radius:5px">
-        <span style="color:#888">Açılış</span>
-        <span style="color:#e0e0e0;font-weight:600" id="dSltpOpen">—</span>
-        <span style="color:#888;margin-left:14px">Mevcut</span>
-        <span style="color:#e0e0e0;font-weight:600" id="dSltpCur">—</span>
-      </div>
-      <!-- SL Input -->
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-family:monospace;font-size:10px;color:#ef5350;margin-bottom:5px;font-weight:600">STOP LOSS</label>
-        <input id="dSltpSLInput" type="number" placeholder="—" step="any"
-          style="width:100%;padding:9px 11px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:5px;color:#e0e0e0;font-family:monospace;font-size:13px;outline:none"
-          onfocus="this.style.borderColor='#ef5350'" onblur="this.style.borderColor='#2a2a2a'">
-      </div>
-      <!-- TP Input -->
-      <div style="margin-bottom:14px">
-        <label style="display:block;font-family:monospace;font-size:10px;color:#2979ff;margin-bottom:5px;font-weight:600">TAKE PROFIT</label>
-        <input id="dSltpTPInput" type="number" placeholder="—" step="any"
-          style="width:100%;padding:9px 11px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:5px;color:#e0e0e0;font-family:monospace;font-size:13px;outline:none"
-          onfocus="this.style.borderColor='#2979ff'" onblur="this.style.borderColor='#2a2a2a'">
-      </div>
-      <!-- Butonlar -->
-      <div style="display:flex;gap:8px">
-        <button onclick="dPosSltpClear()"
-          style="flex:1;padding:10px;background:transparent;border:1px solid #2a2a2a;border-radius:5px;color:#888;font-family:monospace;font-size:11px;font-weight:600;cursor:pointer">
-          Temizle
-        </button>
-        <button onclick="dPosSltpSave()"
-          style="flex:2;padding:10px;background:#1a1400;border:1px solid #f0b90b;border-radius:5px;color:#f0b90b;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer">
-          Kaydet
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 
 <script>
@@ -8684,16 +8185,17 @@ function _checkMarketStatus() {
 
 </script>
 <script>
-// Service Worker kullanılmıyor — eski kayıtları temizle (2026-04-28)
-// TradeX gerçek-zamanlı veri kullanıyor, offline cache mantıksız.
-// Daha önce kayıt olmuş SW'ler bazı kullanıcı tarayıcılarında duruyor olabilir;
-// bu blok onları kaldırır, gelecekte hiçbir şey kayıt etmez.
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(r) { r.unregister(); });
-  }).catch(function(){});
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('SW registered');
+    }).catch(function(err) {
+      console.log('SW error:', err);
+    });
+  });
 }
 </script>
 
+</script>
 </body>
 </html>
