@@ -1357,6 +1357,7 @@ function initAuth(){
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
@@ -1366,10 +1367,12 @@ function initAuth(){
       projectId: "tradex-4571e",
       storageBucket: "tradex-4571e.firebasestorage.app",
       messagingSenderId: "66853453105",
-      appId: "1:66853453105:web:df85eda2cad5d4ce204410"
+      appId: "1:66853453105:web:df85eda2cad5d4ce204410",
+      databaseURL: "https://tradex-4571e-default-rtdb.europe-west1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
+    var rtdb = firebase.database();   // Realtime DB — yüksek frekanslı fiyat akışı için
     // 2026-04-27: Konsoldaki "overriding the original host" uyarısı zararsız.
     // Firestore SDK 9.x'te db.settings() default ayarları üzerine yazıyor — bu kasıtlı davranış,
     // sadece bilgilendirme uyarısı. Uygulama davranışı etkilenmiyor, görmezden gel.
@@ -5800,51 +5803,56 @@ function txListenOverrides() {
 
 // ── TRADER FEED: Binance WS (kripto) + Firebase onSnapshot (forex) ──
 function txListenPrices() {
-  if(typeof db === 'undefined' || !db) return;
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
-  // 1) Firebase onSnapshot — forex + emtia + endeks (3sn admin günceller)
-  // İlk açılışta Firebase'den son bilinen fiyatları hemen çek (snapshot'tan önce)
-  // Aksi halde seed'deki '1' gibi sabit varsayılanlar bir süre prices'ta kalıyor
-  // ve trader yanlış P&L gösteriyor.
-  db.collection('broker').doc('prices').get().then(function(doc){
-    if(!doc.exists) return;
-    var pd = doc.data(); if(!pd) return;
-    var _loaded = 0;
-    Object.keys(pd).forEach(function(sym) {
-      if(sym.charAt(0) === '_') return;
-      var isCrypto = sym.endsWith('USDT');
-      if(isCrypto) return;
-      var price = parseFloat(pd[sym]);
-      if(!price || price <= 0) return;
-      var sc = _txGetSymConf(sym);
-      if(sc && sc.priceSource) return;
-      txApplyPrice(sym, price);
-      _loaded++;
-    });
-    console.log('[prices eager] Firebase\'den '+_loaded+' forex/diğer fiyat yüklendi');
-  }).catch(function(e){ console.warn('[prices eager]', e.message); });
-
+  // 1) RTDB — forex + emtia + endeks (admin RTDB'ye anlık yazar, coalescing yok)
+  //    Firestore yerine RTDB: yüksek frekanslı, düşük gecikmeli push. Crypto kadar akıcı.
   if(!window._txLastFbPrice) window._txLastFbPrice = {};
-  _FB.sub('prices', db.collection('broker').doc('prices').onSnapshot(function(doc) {
-    if(!doc.exists) return;
-    var pd = doc.data(); if(!pd) return;
-    // Firestore tüm dökümanı döndürür; sadece DEĞİŞEN sembolleri işle.
-    // (Eskiden 25+ sembolün hepsi her snapshot'ta yeniden işleniyordu → ~1sn handler kilidi.)
-    var keys = Object.keys(pd);
-    for(var i=0;i<keys.length;i++) {
-      var sym = keys[i];
-      if(sym.charAt(0) === '_') continue;
-      if(sym.endsWith('USDT')) continue;        // kripto Binance WS'den
-      var price = parseFloat(pd[sym]);
-      if(!price || price <= 0) continue;
-      if(window._txLastFbPrice[sym] === price) continue;  // değişmemiş → atla
+
+  if(typeof rtdb !== 'undefined' && rtdb) {
+    var _pricesRef = rtdb.ref('prices');
+
+    // İlk açılışta son bilinen fiyatları hemen çek (seed'deki sabit '1' değerleri P&L'i bozmasın)
+    _pricesRef.once('value').then(function(snap){
+      var pd = snap.val() || {};
+      var _loaded = 0;
+      Object.keys(pd).forEach(function(sym){
+        if(sym.charAt(0) === '_') return;
+        if(sym.endsWith('USDT')) return;          // kripto Binance WS'den
+        var price = parseFloat(pd[sym]);
+        if(!price || price <= 0) return;
+        var sc = _txGetSymConf(sym);
+        if(sc && sc.priceSource) return;
+        window._txLastFbPrice[sym] = price;
+        txApplyPrice(sym, price);
+        _loaded++;
+      });
+      console.log('[prices eager] RTDB\'den '+_loaded+' forex/diğer fiyat yüklendi');
+    }).catch(function(e){ console.warn('[prices eager]', e.message); });
+
+    // Anlık güncellemeler — her sembol kendi child'ında, sadece DEĞİŞEN tetiklenir.
+    // child_changed + child_added: admin bir sembolü güncelleyince sadece o gelir (granüler, hızlı).
+    function _onChild(snap){
+      var sym = snap.key;
+      if(!sym || sym.charAt(0) === '_') return;
+      if(sym.endsWith('USDT')) return;            // kripto Binance WS'den
+      var price = parseFloat(snap.val());
+      if(!price || price <= 0) return;
+      if(window._txLastFbPrice[sym] === price) return;
       window._txLastFbPrice[sym] = price;
       var sc = _txGetSymConf(sym);
-      if(sc && sc.priceSource) continue;        // sentetik → kaynak sembolden türetilir
+      if(sc && sc.priceSource) return;            // sentetik → kaynaktan türetilir
       txApplyPrice(sym, price);
     }
-  }, function(e) { console.warn('[prices snap]', e.message); }));
+    _pricesRef.on('child_changed', _onChild);
+    _pricesRef.on('child_added',   _onChild);
+
+    // Temizleyici (stopRealFeed çağırır)
+    _txPriceUnsub = function(){
+      try { _pricesRef.off('child_changed', _onChild); } catch(e){}
+      try { _pricesRef.off('child_added',   _onChild); } catch(e){}
+    };
+  }
 
   // 2) Binance WebSocket — kripto (anlık, düşük gecikme)
   var _bnSyms = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
