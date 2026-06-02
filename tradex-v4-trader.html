@@ -5809,6 +5809,7 @@ function txListenOverrides() {
 // MAJOR LİSTESİ: her zaman tam akar (kullanıcı bakmasa da). Sadece admin'in canlı yazdıkları (AD_TD_MAP).
 var TX_MAJORS = ['EURUSD','XAUUSD','XAGUSD','USOIL','GBPUSD','USDJPY'];
 var _txDedRefs = {};   // { listenSym: {ref, handler} }
+var _txRtdbCleanup = null;   // RTDB listener temizleyici (birleşik _txPriceUnsub çağırır)
 function _txDedStop(sym){
   var d = _txDedRefs[sym];
   if(d){ try { d.ref.off('value', d.handler); } catch(e){} delete _txDedRefs[sym]; }
@@ -5893,7 +5894,9 @@ function txListenPrices() {
     _pricesRef.on('child_added',   _onChild);
 
     // Temizleyici (stopRealFeed çağırır)
-    _txPriceUnsub = function(){
+    // RTDB temizleme mantığı — _txPriceUnsub'a doğrudan atama YAPMA (Binance bloğu
+    // sonda onu eziyordu). Bunun yerine _txRtdbCleanup'ta sakla; birleşik unsub çağırır.
+    _txRtdbCleanup = function(){
       try { _pricesRef.off('child_changed', _onChild); } catch(e){}
       try { _pricesRef.off('child_added',   _onChild); } catch(e){}
       _txDedStopAll();
@@ -5936,8 +5939,10 @@ function txListenPrices() {
   }
   _wsOpen();
 
+  // BİRLEŞİK temizleyici: hem RTDB (child + major listener'lar) hem Binance WS.
+  // (Eskiden bu blok RTDB temizleyicisini eziyordu; _FB.unsub('prices') de ölü koddu — RTDB'ye geçtik.)
   _txPriceUnsub = function() {
-    _FB.unsub('prices');
+    if(typeof _txRtdbCleanup === 'function') { try { _txRtdbCleanup(); } catch(e){} }
     if(_ws) { try{_ws.close();}catch(e){} }
     if(_wsTimer) clearTimeout(_wsTimer);
   };
