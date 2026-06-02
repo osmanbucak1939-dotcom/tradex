@@ -3642,12 +3642,13 @@ function _adFbWrite(sym, price) {
       window._adWriteTimer = null;
       if(!Object.keys(buf).length) return;
 
-      // ── BİRİNCİL: RTDB — anlık push, coalescing yok (trader bunu dinler) ──
-      // Tek multi-path update; her sembol prices/{SYM} altına yazılır.
+      // ── BİRİNCİL: RTDB — her sembol kendi path'ine (prices/{SYM}).
+      // _ts AYRI node'da (prices_meta) — prices child'ları sadece fiyat olur,
+      // böylece trader child_changed sadece GERÇEK fiyat değişiminde tetiklenir (gereksiz tetik yok).
       if(typeof rtdb !== 'undefined' && rtdb) {
         var upd = {};
         Object.keys(buf).forEach(function(s){ upd['prices/'+s] = buf[s]; });
-        upd['prices/_ts'] = firebase.database.ServerValue.TIMESTAMP;
+        upd['prices_meta/ts'] = firebase.database.ServerValue.TIMESTAMP;
         rtdb.ref().update(upd)
           .then(function(){ window._adLastFbWrite = Date.now(); })
           .catch(function(e){ console.warn('[RTDB write]', e.message); });
