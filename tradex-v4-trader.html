@@ -5833,27 +5833,28 @@ function txListenPrices() {
     // Anlık güncellemeler — tüm 'prices' node'unu tek 'value' listener ile dinle.
     // (child_changed aynı child'a hızlı ardışık yazımları coalesce edip tick yutuyordu;
     //  value listener admin'in her update()'inde tetiklenir, değişeni biz filtreleriz.)
-    function _onPrices(snap){
-      var pd = snap.val(); if(!pd) return;
-      var keys = Object.keys(pd);
-      for(var i=0;i<keys.length;i++){
-        var sym = keys[i];
-        if(sym.charAt(0) === '_') continue;
-        if(sym.endsWith('USDT')) continue;        // kripto Binance WS'den
-        var price = parseFloat(pd[sym]);
-        if(!price || price <= 0) continue;
-        if(window._txLastFbPrice[sym] === price) continue;  // değişmemiş → atla
-        window._txLastFbPrice[sym] = price;
-        var sc = _txGetSymConf(sym);
-        if(sc && sc.priceSource) continue;        // sentetik → kaynaktan türetilir
-        txApplyPrice(sym, price);
-      }
+    // Anlık güncellemeler — her sembol kendi child path'inden (child_changed/child_added).
+    // _ts artık prices_meta'da olduğu için child eventi SADECE gerçek fiyat değişiminde gelir.
+    // RTDB tek-child değişimini tüm-node value'dan çok daha az birleştirir → daha fazla tick geçer.
+    function _onChild(snap){
+      var sym = snap.key;
+      if(!sym || sym.charAt(0) === '_') return;
+      if(sym.endsWith('USDT')) return;            // kripto Binance WS'den
+      var price = parseFloat(snap.val());
+      if(!price || price <= 0) return;
+      if(window._txLastFbPrice[sym] === price) return;
+      window._txLastFbPrice[sym] = price;
+      var sc = _txGetSymConf(sym);
+      if(sc && sc.priceSource) return;            // sentetik → kaynaktan türetilir
+      txApplyPrice(sym, price);
     }
-    _pricesRef.on('value', _onPrices);
+    _pricesRef.on('child_changed', _onChild);
+    _pricesRef.on('child_added',   _onChild);
 
     // Temizleyici (stopRealFeed çağırır)
     _txPriceUnsub = function(){
-      try { _pricesRef.off('value', _onPrices); } catch(e){}
+      try { _pricesRef.off('child_changed', _onChild); } catch(e){}
+      try { _pricesRef.off('child_added',   _onChild); } catch(e){}
     };
   }
 
