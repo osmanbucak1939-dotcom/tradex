@@ -3214,6 +3214,7 @@ function updateTopSym(sym, price, chg) {
 
 function switchSym(sym) {
   curSym = sym;
+  if(window._txOnSymChange) window._txOnSymChange(sym);
   document.querySelectorAll('.tb-sym').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('tsym-'+sym);
   if (el) el.classList.add('active');
@@ -5134,6 +5135,7 @@ function mwSelect(sym, groupId) {
 
   _lwUserScrolled = false; // Yeni sembol seçilince auto-scroll aktif et
   curSym = sym;
+  if(window._txOnSymChange) window._txOnSymChange(sym);
 
   var rows = document.querySelectorAll('.mw-row');
   for(var i=0;i<rows.length;i++) rows[i].classList.remove('active-sym');
@@ -5802,6 +5804,45 @@ function txListenOverrides() {
 // Tek kaynak: Admin → Firebase broker/prices → Trader
 
 // ── TRADER FEED: Binance WS (kripto) + Firebase onSnapshot (forex) ──
+// Ayrılmış tek-path RTDB listener'ları — major ürünler + aktif sembol TAM hızda aksın.
+// Bu semboller kendi 'prices/{SYM}' path'lerinden dinlenir (RTDB tek-path'i neredeyse hiç birleştirmez).
+// MAJOR LİSTESİ: her zaman tam akar (kullanıcı bakmasa da). Sadece admin'in canlı yazdıkları (AD_TD_MAP).
+var TX_MAJORS = ['EURUSD','XAUUSD','XAGUSD','USOIL','GBPUSD','USDJPY'];
+var _txDedRefs = {};   // { listenSym: {ref, handler} }
+function _txDedStop(sym){
+  var d = _txDedRefs[sym];
+  if(d){ try { d.ref.off('value', d.handler); } catch(e){} delete _txDedRefs[sym]; }
+}
+function _txDedStopAll(){
+  Object.keys(_txDedRefs).forEach(_txDedStop);
+}
+function _txDedStart(sym){
+  if(typeof rtdb === 'undefined' || !rtdb) return;
+  if(!sym || sym.endsWith('USDT')) return;          // kripto Binance WS'den
+  // Sentetik sembol ise kaynağını dinle (fiyat kaynaktan türetilir)
+  var sc = _txGetSymConf(sym);
+  var listenSym = (sc && sc.priceSource) ? sc.priceSource : sym;
+  if(_txDedRefs[listenSym]) return;                 // zaten dinliyoruz
+  if(!window._txLastFbPrice) window._txLastFbPrice = {};
+  var ref = rtdb.ref('prices/' + listenSym);
+  var handler = function(snap){
+    var price = parseFloat(snap.val());
+    if(!price || price <= 0) return;
+    if(window._txLastFbPrice[listenSym] === price) return;
+    window._txLastFbPrice[listenSym] = price;
+    txApplyPrice(listenSym, price);
+  };
+  ref.on('value', handler);
+  _txDedRefs[listenSym] = { ref:ref, handler:handler };
+}
+// Tüm major'ları + verilen aktif sembolü dinlemeye başla
+function _txDedRefresh(activeSym){
+  TX_MAJORS.forEach(_txDedStart);
+  if(activeSym) _txDedStart(activeSym);
+}
+// curSym değişince çağrılır (mwSelect / switchSym) — aktif sembolü de garantiye al
+window._txOnSymChange = function(sym){ try { _txDedStart(sym); } catch(e){} };
+
 function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
@@ -5855,7 +5896,11 @@ function txListenPrices() {
     _txPriceUnsub = function(){
       try { _pricesRef.off('child_changed', _onChild); } catch(e){}
       try { _pricesRef.off('child_added',   _onChild); } catch(e){}
+      _txDedStopAll();
     };
+
+    // MAJOR ürünler + aktif sembol — kendi tek path'lerinden TAM hızda dinle.
+    _txDedRefresh(typeof curSym!=='undefined'?curSym:null);
   }
 
   // 2) Binance WebSocket — kripto (anlık, düşük gecikme)
