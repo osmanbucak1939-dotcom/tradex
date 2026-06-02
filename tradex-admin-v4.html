@@ -3664,7 +3664,7 @@ function _adFbWrite(sym, price) {
             .catch(function(e){ /* sessiz — RTDB birincil */ });
         }
       }
-    }, 200);
+    }, 50);   // 200→50ms: trader gecikmesini azalt (RTDB sık yazımı rahat kaldırır)
   }
 }
 
