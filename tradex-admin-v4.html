@@ -3643,12 +3643,13 @@ function _adFbWrite(sym, price) {
       if(!Object.keys(buf).length) return;
 
       // ── BİRİNCİL: RTDB — her sembol kendi path'ine (prices/{SYM}).
-      // _ts AYRI node'da (prices_meta) — prices child'ları sadece fiyat olur,
-      // böylece trader child_changed sadece GERÇEK fiyat değişiminde tetiklenir (gereksiz tetik yok).
+      // _ts prices içinde (prices/_ts) — RTDB kuralı sadece 'prices'e izin veriyor,
+      // ayrı node (prices_meta) permission_denied verir ve update()'i komple iptal eder.
+      // Trader _ts'i zaten atlıyor (sym.charAt(0)==='_'), child_changed'a zararı yok.
       if(typeof rtdb !== 'undefined' && rtdb) {
         var upd = {};
         Object.keys(buf).forEach(function(s){ upd['prices/'+s] = buf[s]; });
-        upd['prices_meta/ts'] = firebase.database.ServerValue.TIMESTAMP;
+        upd['prices/_ts'] = firebase.database.ServerValue.TIMESTAMP;
         rtdb.ref().update(upd)
           .then(function(){ window._adLastFbWrite = Date.now(); })
           .catch(function(e){ console.warn('[RTDB write]', e.message); });
