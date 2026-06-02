@@ -5900,12 +5900,19 @@ function _txStartBridge(){
 function _txBridgeWatchdog(){
   if(window._txBrWatchTimer) return;
   window._txBrWatchTimer = setInterval(function(){
+    // 1) Köprü (forex/emtia/endeks)
     if(typeof TX_BRIDGE_URL === 'string' && TX_BRIDGE_URL.indexOf('REPLACE') < 0){
-      // readyState: 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
       var st = _txBrWs ? _txBrWs.readyState : 3;
-      if(st === 0 || st === 1) return;   // bağlanıyor veya bağlı → dokunma
-      _txBrActive = false;               // kopuk → guard'ı sıfırla, yeniden bağlan
-      try { _txStartBridge(); } catch(e){}
+      if(st !== 0 && st !== 1){           // bağlanıyor/bağlı değilse
+        _txBrActive = false;
+        try { _txStartBridge(); } catch(e){}
+      }
+    }
+    // 2) Kripto (Binance) — bağımsız, her zaman bağlı olmalı
+    var cst = (typeof _txBnWs !== 'undefined' && _txBnWs) ? _txBnWs.readyState : 3;
+    if(cst !== 0 && cst !== 1){
+      _txBnActive = false;
+      try { _txStartCrypto(); } catch(e){}
     }
   }, 5000);
 }
