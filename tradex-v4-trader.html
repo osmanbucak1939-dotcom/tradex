@@ -5865,9 +5865,9 @@ function _txApplyBridgePrice(sym, price){
   txApplyPrice(sym, price);
 }
 function _txStartBridge(){
-  if(_txBrActive) return;
+  if(_txBrActive && _txBrWs && _txBrWs.readyState <= 1) return;  // gerçekten bağlı/bağlanıyorsa çık
   if(!TX_BRIDGE_URL || TX_BRIDGE_URL.indexOf('REPLACE') >= 0){
-    console.warn('[köprü] TX_BRIDGE_URL ayarlanmamış — forex feed çalışmaz. Köprü adresini gir.');
+    // URL henüz hazır değil — guard'ı KİRLETME, watchdog tekrar dener
     return;
   }
   _txBrActive = true;
@@ -5893,6 +5893,21 @@ function _txStartBridge(){
     _txBrWs.onerror = function(){ try{_txBrWs.close();}catch(e){} };
   }
   _open();
+}
+
+// WATCHDOG — köprü bağlantısını sürekli garanti eder (init sırası ne olursa olsun).
+// Köprü bağlı değilse 5sn'de bir yeniden başlatmayı dener. Kullanıcı manuel müdahale etmez.
+function _txBridgeWatchdog(){
+  if(window._txBrWatchTimer) return;
+  window._txBrWatchTimer = setInterval(function(){
+    if(typeof TX_BRIDGE_URL === 'string' && TX_BRIDGE_URL.indexOf('REPLACE') < 0){
+      // readyState: 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
+      var st = _txBrWs ? _txBrWs.readyState : 3;
+      if(st === 0 || st === 1) return;   // bağlanıyor veya bağlı → dokunma
+      _txBrActive = false;               // kopuk → guard'ı sıfırla, yeniden bağlan
+      try { _txStartBridge(); } catch(e){}
+    }
+  }, 5000);
 }
 
 // ── Binance kripto WS — BAĞIMSIZ (admin/RTDB/auth/Firestore'a hiç bağlı değil) ──
@@ -5965,6 +5980,7 @@ function startRealFeed() {
   try { txListenSynthOffsets(); }  catch(e){ console.warn('[synthOffsets]', e); }
   try { txLoadBrokerInfo(); }      catch(e){ console.warn('[brokerInfo]', e); }
   try { txListenPrices(); }        catch(e){ console.warn('[listenPrices]', e); }
+  try { _txBridgeWatchdog(); }     catch(e){ console.warn('[bridgeWatchdog]', e); }
   if(typeof startMarketStatusChecker==='function') { try { startMarketStatusChecker(); } catch(e){} }
 }
 
