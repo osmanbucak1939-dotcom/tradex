@@ -5844,6 +5844,46 @@ function _txDedRefresh(activeSym){
 // curSym değişince çağrılır (mwSelect / switchSym) — aktif sembolü de garantiye al
 window._txOnSymChange = function(sym){ try { _txDedStart(sym); } catch(e){} };
 
+// ── Binance kripto WS — BAĞIMSIZ (admin/RTDB/auth/Firestore'a hiç bağlı değil) ──
+// Halka açık, ücretsiz, limitsiz Binance stream'i. Her trader doğrudan bağlanır.
+// startRealFeed'in EN BAŞINDA çağrılır → forex tarafı (RTDB/Firestore) patlasa bile kripto akar.
+var _txBnWs = null, _txBnTimer = null, _txBnBuf = {}, _txBnActive = false;
+function _txCryptoCleanup(){
+  _txBnActive = false;
+  if(_txBnWs){ try{_txBnWs.close();}catch(e){} _txBnWs=null; }
+  if(_txBnTimer){ clearTimeout(_txBnTimer); _txBnTimer=null; }
+}
+function _txStartCrypto(){
+  if(_txBnActive) return;            // zaten çalışıyor → çift bağlantı açma (Binance IP limiti!)
+  _txBnActive = true;
+  var bnSyms = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
+                'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt',
+                'cakeusdt','celousdt','chzusdt','compusdt'];
+  var bnUrl = 'wss://stream.binance.com:9443/stream?streams=' +
+              bnSyms.map(function(s){return s+'@bookTicker';}).join('/');
+  function _push(){
+    var syms = Object.keys(_txBnBuf);
+    for(var i=0;i<syms.length;i++){ try { txApplyPrice(syms[i], _txBnBuf[syms[i]]); } catch(e){} }
+    _txBnBuf = {}; _txBnTimer = null;
+  }
+  function _open(){
+    if(!_txBnActive) return;
+    if(_txBnWs){ try{_txBnWs.close();}catch(e){} }
+    _txBnWs = new WebSocket(bnUrl);
+    _txBnWs.onmessage = function(e){
+      try {
+        var d = JSON.parse(e.data).data || JSON.parse(e.data);
+        var sym = (d.s||'').toUpperCase();
+        var mid = (parseFloat(d.b)+parseFloat(d.a))/2;
+        if(sym && mid>0){ _txBnBuf[sym]=mid; if(!_txBnTimer) _txBnTimer=setTimeout(_push,300); }
+      } catch(ex){}
+    };
+    _txBnWs.onclose = function(){ if(_txBnActive) setTimeout(_open, 3000); };
+    _txBnWs.onerror = function(){ try{_txBnWs.close();}catch(e){} };
+  }
+  _open();
+}
+
 function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
@@ -5906,57 +5946,28 @@ function txListenPrices() {
     _txDedRefresh(typeof curSym!=='undefined'?curSym:null);
   }
 
-  // 2) Binance WebSocket — kripto (anlık, düşük gecikme)
-  var _bnSyms = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt',
-                 'adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt',
-                 'cakeusdt','celousdt','chzusdt','compusdt'];
-  var _bnUrl = 'wss://stream.binance.com:9443/stream?streams=' +
-               _bnSyms.map(function(s){return s+'@bookTicker';}).join('/');
-  var _ws = null, _wsTimer = null, _wsBuf = {};
+  // 2) Binance kripto WS — startRealFeed en başta _txStartCrypto() ile başlattı (idempotent).
+  //    Burada tekrar çağırmak gerekmez; guard zaten çift bağlantıyı engeller ama gereksiz.
 
-  function _wsPush() {
-    var syms = Object.keys(_wsBuf);
-    for(var i=0;i<syms.length;i++) txApplyPrice(syms[i], _wsBuf[syms[i]]);
-    _wsBuf = {}; _wsTimer = null;
-  }
-
-  function _wsOpen() {
-    if(_ws) { try{_ws.close();}catch(e){} }
-    _ws = new WebSocket(_bnUrl);
-    _ws.onmessage = function(e) {
-      try {
-        var d = JSON.parse(e.data).data || JSON.parse(e.data);
-        var sym = (d.s||'').toUpperCase();
-        var mid = (parseFloat(d.b)+parseFloat(d.a))/2;
-        if(sym && mid>0) {
-          _wsBuf[sym] = mid;
-          if(!_wsTimer) _wsTimer = setTimeout(_wsPush, 300);
-        }
-      } catch(ex){}
-    };
-    _ws.onclose = function() { setTimeout(_wsOpen, 3000); };
-    _ws.onerror = function() { try{_ws.close();}catch(e){} };
-  }
-  _wsOpen();
-
-  // BİRLEŞİK temizleyici: hem RTDB (child + major listener'lar) hem Binance WS.
-  // (Eskiden bu blok RTDB temizleyicisini eziyordu; _FB.unsub('prices') de ölü koddu — RTDB'ye geçtik.)
+  // BİRLEŞİK temizleyici: hem RTDB hem Binance WS.
   _txPriceUnsub = function() {
     if(typeof _txRtdbCleanup === 'function') { try { _txRtdbCleanup(); } catch(e){} }
-    if(_ws) { try{_ws.close();}catch(e){} }
-    if(_wsTimer) clearTimeout(_wsTimer);
+    if(typeof _txCryptoCleanup === 'function') { try { _txCryptoCleanup(); } catch(e){} }
   };
 }
 
 function startRealFeed() {
   if(window._txFeedActive) return;
   window._txFeedActive = true;
-  txListenPricesChg();
-  txListenOverrides();
-  txListenSynthOffsets();
-  txLoadBrokerInfo();
-  txListenPrices();
-  if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  // KRİPTO ÖNCE ve bağımsız — forex/Firestore başlatıcılardan biri patlasa bile kripto akar.
+  try { _txStartCrypto(); } catch(e){ console.warn('[crypto]', e); }
+  // Diğerleri ayrı ayrı korumalı — biri patlarsa kalanlar yine çalışsın.
+  try { txListenPricesChg(); }     catch(e){ console.warn('[pricesChg]', e); }
+  try { txListenOverrides(); }     catch(e){ console.warn('[overrides]', e); }
+  try { txListenSynthOffsets(); }  catch(e){ console.warn('[synthOffsets]', e); }
+  try { txLoadBrokerInfo(); }      catch(e){ console.warn('[brokerInfo]', e); }
+  try { txListenPrices(); }        catch(e){ console.warn('[listenPrices]', e); }
+  if(typeof startMarketStatusChecker==='function') { try { startMarketStatusChecker(); } catch(e){} }
 }
 
 function txLoadBrokerInfo() {
