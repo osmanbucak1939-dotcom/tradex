@@ -5844,6 +5844,57 @@ function _txDedRefresh(activeSym){
 // curSym değişince çağrılır (mwSelect / switchSym) — aktif sembolü de garantiye al
 window._txOnSymChange = function(sym){ try { _txDedStart(sym); } catch(e){} };
 
+// ── KÖPRÜ (Twelve Data forex/emtia/endeks) ──────────────────────
+// ⚠️ DEPLOY SONRASI BURAYI GÜNCELLE: köprü sunucunun WS adresi.
+// Railway/Render verdiği https adresini wss:// yap. Örn:
+//   https://tradex-bridge.up.railway.app  →  wss://tradex-bridge.up.railway.app
+var TX_BRIDGE_URL = 'wss://tradex-bridge-production.up.railway.app';
+var _txBrWs = null, _txBrTimer = null, _txBrActive = false;
+function _txBridgeCleanup(){
+  _txBrActive = false;
+  if(_txBrWs){ try{_txBrWs.close();}catch(e){} _txBrWs=null; }
+  if(_txBrTimer){ clearTimeout(_txBrTimer); _txBrTimer=null; }
+}
+function _txApplyBridgePrice(sym, price){
+  if(!sym || sym.charAt(0)==='_') return;
+  if(!(price>0)) return;
+  if(window._txLastFbPrice[sym] === price) return;
+  window._txLastFbPrice[sym] = price;
+  var sc = _txGetSymConf(sym);
+  if(sc && sc.priceSource) return;     // sentetik → kaynaktan türetilir
+  txApplyPrice(sym, price);
+}
+function _txStartBridge(){
+  if(_txBrActive) return;
+  if(!TX_BRIDGE_URL || TX_BRIDGE_URL.indexOf('REPLACE') >= 0){
+    console.warn('[köprü] TX_BRIDGE_URL ayarlanmamış — forex feed çalışmaz. Köprü adresini gir.');
+    return;
+  }
+  _txBrActive = true;
+  if(!window._txLastFbPrice) window._txLastFbPrice = {};
+  function _open(){
+    if(!_txBrActive) return;
+    if(_txBrWs){ try{_txBrWs.close();}catch(e){} }
+    _txBrWs = new WebSocket(TX_BRIDGE_URL);
+    _txBrWs.onopen = function(){ console.log('[köprü] bağlandı'); };
+    _txBrWs.onmessage = function(e){
+      var msg; try { msg = JSON.parse(e.data); } catch(ex){ return; }
+      if(msg.type === 'snapshot' && msg.prices){
+        // İlk bağlantıda son bilinen tüm fiyatlar — ekranı hemen doldur
+        var n=0;
+        Object.keys(msg.prices).forEach(function(s){ _txApplyBridgePrice(s, parseFloat(msg.prices[s])); n++; });
+        console.log('[köprü] snapshot: '+n+' fiyat yüklendi');
+        return;
+      }
+      // Tekil tick: {s:'EURUSD', p:1.16}
+      if(msg.s) _txApplyBridgePrice(msg.s, parseFloat(msg.p));
+    };
+    _txBrWs.onclose = function(){ if(_txBrActive){ _txBrTimer = setTimeout(_open, 3000); } };
+    _txBrWs.onerror = function(){ try{_txBrWs.close();}catch(e){} };
+  }
+  _open();
+}
+
 // ── Binance kripto WS — BAĞIMSIZ (admin/RTDB/auth/Firestore'a hiç bağlı değil) ──
 // Halka açık, ücretsiz, limitsiz Binance stream'i. Her trader doğrudan bağlanır.
 // startRealFeed'in EN BAŞINDA çağrılır → forex tarafı (RTDB/Firestore) patlasa bile kripto akar.
@@ -5887,71 +5938,18 @@ function _txStartCrypto(){
 function txListenPrices() {
   if(_txPriceUnsub) { try{_txPriceUnsub();}catch(e){} _txPriceUnsub=null; }
 
-  // 1) RTDB — forex + emtia + endeks (admin RTDB'ye anlık yazar, coalescing yok)
-  //    Firestore yerine RTDB: yüksek frekanslı, düşük gecikmeli push. Crypto kadar akıcı.
+  // 1) KÖPRÜ WS — forex + emtia + endeks (Twelve Data → köprü → trader, anlık broadcast)
+  //    Firebase relay'i KALDIRILDI. Köprü bir yayıncı (veritabanı değil) → crypto kadar hızlı.
+  //    Köprü mesaj formatı: tekil {s:'EURUSD', p:1.16} | ilk snapshot {type:'snapshot', prices:{...}}
   if(!window._txLastFbPrice) window._txLastFbPrice = {};
-
-  if(typeof rtdb !== 'undefined' && rtdb) {
-    var _pricesRef = rtdb.ref('prices');
-
-    // İlk açılışta son bilinen fiyatları hemen çek (seed'deki sabit '1' değerleri P&L'i bozmasın)
-    _pricesRef.once('value').then(function(snap){
-      var pd = snap.val() || {};
-      var _loaded = 0;
-      Object.keys(pd).forEach(function(sym){
-        if(sym.charAt(0) === '_') return;
-        if(sym.endsWith('USDT')) return;          // kripto Binance WS'den
-        var price = parseFloat(pd[sym]);
-        if(!price || price <= 0) return;
-        var sc = _txGetSymConf(sym);
-        if(sc && sc.priceSource) return;
-        window._txLastFbPrice[sym] = price;
-        txApplyPrice(sym, price);
-        _loaded++;
-      });
-      console.log('[prices eager] RTDB\'den '+_loaded+' forex/diğer fiyat yüklendi');
-    }).catch(function(e){ console.warn('[prices eager]', e.message); });
-
-    // Anlık güncellemeler — tüm 'prices' node'unu tek 'value' listener ile dinle.
-    // (child_changed aynı child'a hızlı ardışık yazımları coalesce edip tick yutuyordu;
-    //  value listener admin'in her update()'inde tetiklenir, değişeni biz filtreleriz.)
-    // Anlık güncellemeler — her sembol kendi child path'inden (child_changed/child_added).
-    // _ts artık prices_meta'da olduğu için child eventi SADECE gerçek fiyat değişiminde gelir.
-    // RTDB tek-child değişimini tüm-node value'dan çok daha az birleştirir → daha fazla tick geçer.
-    function _onChild(snap){
-      var sym = snap.key;
-      if(!sym || sym.charAt(0) === '_') return;
-      if(sym.endsWith('USDT')) return;            // kripto Binance WS'den
-      var price = parseFloat(snap.val());
-      if(!price || price <= 0) return;
-      if(window._txLastFbPrice[sym] === price) return;
-      window._txLastFbPrice[sym] = price;
-      var sc = _txGetSymConf(sym);
-      if(sc && sc.priceSource) return;            // sentetik → kaynaktan türetilir
-      txApplyPrice(sym, price);
-    }
-    _pricesRef.on('child_changed', _onChild);
-    _pricesRef.on('child_added',   _onChild);
-
-    // Temizleyici (stopRealFeed çağırır)
-    // RTDB temizleme mantığı — _txPriceUnsub'a doğrudan atama YAPMA (Binance bloğu
-    // sonda onu eziyordu). Bunun yerine _txRtdbCleanup'ta sakla; birleşik unsub çağırır.
-    _txRtdbCleanup = function(){
-      try { _pricesRef.off('child_changed', _onChild); } catch(e){}
-      try { _pricesRef.off('child_added',   _onChild); } catch(e){}
-      _txDedStopAll();
-    };
-
-    // MAJOR ürünler + aktif sembol — kendi tek path'lerinden TAM hızda dinle.
-    _txDedRefresh(typeof curSym!=='undefined'?curSym:null);
-  }
+  _txStartBridge();
 
   // 2) Binance kripto WS — startRealFeed en başta _txStartCrypto() ile başlattı (idempotent).
   //    Burada tekrar çağırmak gerekmez; guard zaten çift bağlantıyı engeller ama gereksiz.
 
-  // BİRLEŞİK temizleyici: hem RTDB hem Binance WS.
+  // BİRLEŞİK temizleyici: hem köprü (forex) hem Binance (kripto) WS.
   _txPriceUnsub = function() {
-    if(typeof _txRtdbCleanup === 'function') { try { _txRtdbCleanup(); } catch(e){} }
+    if(typeof _txBridgeCleanup === 'function') { try { _txBridgeCleanup(); } catch(e){} }
     if(typeof _txCryptoCleanup === 'function') { try { _txCryptoCleanup(); } catch(e){} }
   };
 }
