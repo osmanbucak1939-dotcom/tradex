@@ -4433,7 +4433,8 @@ var MARKET_GROUPS = [
 //  (DAX40X ve metaller XAU/XAG/XPT KALIR.) Geri getirmek için ilgili kodu bu listeden çıkar.
 var TX_HIDDEN = [
   'WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD',
-  'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','XU100X'
+  'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','XU100X',
+  'XPTUSD','XBRUSD','XBR'
 ];
 MARKET_GROUPS.forEach(function(g){
   if(g && g.items) g.items = g.items.filter(function(it){ return TX_HIDDEN.indexOf(it.sym)===-1; });
