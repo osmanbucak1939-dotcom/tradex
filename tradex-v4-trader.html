@@ -5078,17 +5078,22 @@ function _txPipUnit(dec){ dec = dec||2; return dec>=4 ? Math.pow(10,-(dec-1)) : 
 function _txJitterTick(){
   if(!TX_JITTER || typeof txApplyPrice!=='function') return;
   if(typeof MW_MAP==='undefined' || !MW_MAP) return;
-  var base = window._txBase || {};
+  if(!window._txBase) window._txBase = {};
+  var base = window._txBase;
   for(var sym in MW_MAP){
     if(!MW_MAP.hasOwnProperty(sym)) continue;
-    var b = base[sym];
-    if(!(b>0)) continue;                       // henüz gerçek fiyat gelmemiş → kıpırdatma
     // sentetik (priceSource'lu) semboller: kaynak sembol kıpırdayınca zaten kıpırdar
     var sc = (typeof _txGetSymConf==='function') ? _txGetSymConf(sym) : null;
     if(sc && sc.priceSource) continue;
-    // yalnızca ekranda görünenler + her tick'te bir kısmını atla (doğal/kademeli)
+    // yalnızca ekranda görünenler
     if(!(document.getElementById('mwr-'+sym) || document.getElementById('mmwb-'+sym))) continue;
-    if(Math.random() < 0.3) continue;
+    var b = base[sym];
+    if(!(b>0)){
+      // Taban henüz yok (yeni eklenen sembol / köprü dışı kaynak) → mevcut gerçek fiyattan başlat.
+      if(typeof prices!=='undefined' && prices[sym] && prices[sym].price>0){ b = prices[sym].price; base[sym] = b; }
+      else continue;   // fiyatı hiç yoksa kıpırdatma
+    }
+    if(Math.random() < 0.3) continue;   // her tick'te bir kısmını atla (doğal/kademeli)
     var dec = MW_MAP[sym].decimals || 2;
     var pip = _txPipUnit(dec);
     var cap = pip * (TX_JITTER_PIPS||2);
@@ -5968,7 +5973,7 @@ function _txStartBridge(){
   if(!window._txLastFbPrice) window._txLastFbPrice = {};
   function _open(){
     if(!_txBrActive) return;
-    if(_txBrWs){ try{_txBrWs.close();}catch(e){} }
+    if(_txBrWs){ try{ _txBrWs.onopen=_txBrWs.onmessage=_txBrWs.onclose=_txBrWs.onerror=null; if(_txBrWs.readyState===1) _txBrWs.close(); }catch(e){} }
     _txBrWs = new WebSocket(TX_BRIDGE_URL);
     _txBrWs.onopen = function(){ console.log('[köprü] bağlandı'); };
     _txBrWs.onmessage = function(e){
@@ -5984,7 +5989,7 @@ function _txStartBridge(){
       if(msg.s) _txApplyBridgePrice(msg.s, parseFloat(msg.p));
     };
     _txBrWs.onclose = function(){ if(_txBrActive){ _txBrTimer = setTimeout(_open, 3000); } };
-    _txBrWs.onerror = function(){ try{_txBrWs.close();}catch(e){} };
+    _txBrWs.onerror = function(){};   // onclose zaten yeniden dener; close() ÇAĞIRMA → "closed before established" uyarısı olmaz
   }
   _open();
 }
@@ -6035,7 +6040,7 @@ function _txStartCrypto(){
   }
   function _open(){
     if(!_txBnActive) return;
-    if(_txBnWs){ try{_txBnWs.close();}catch(e){} }
+    if(_txBnWs){ try{ _txBnWs.onmessage=_txBnWs.onclose=_txBnWs.onerror=null; if(_txBnWs.readyState===1) _txBnWs.close(); }catch(e){} }
     _txBnWs = new WebSocket(bnUrl);
     _txBnWs.onmessage = function(e){
       try {
@@ -6046,7 +6051,7 @@ function _txStartCrypto(){
       } catch(ex){}
     };
     _txBnWs.onclose = function(){ if(_txBnActive) setTimeout(_open, 3000); };
-    _txBnWs.onerror = function(){ try{_txBnWs.close();}catch(e){} };
+    _txBnWs.onerror = function(){};   // onclose yeniden dener; close() çağırma
   }
   _open();
 }
