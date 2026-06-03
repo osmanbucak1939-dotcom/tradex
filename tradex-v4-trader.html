@@ -4475,7 +4475,16 @@ function applyGroupSpreads() {
 }
 
 function applySymConfig() {
-  const active = symConfig.filter(s=>s.active);
+  // Eski/çift kodlar — yeni kanonik kodlarla değiştirildi (admin _obsolete ile aynı):
+  //   WTIUSD→USOIL, SPXUSD→SPX500X, NASUSD→NAS100X, DJUSD→DJ30X, DAXUSD→DAX40X
+  // Bunları gizle ki trader admin'le tutarlı olsun (kaynak Firebase olsa bile).
+  var TX_OBSOLETE = ['WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD'];
+  if(typeof MARKET_GROUPS!=='undefined' && MARKET_GROUPS){
+    MARKET_GROUPS.forEach(function(g){
+      if(g && g.items) g.items = g.items.filter(function(it){ return TX_OBSOLETE.indexOf(it.sym)===-1; });
+    });
+  }
+  const active = symConfig.filter(function(s){ return s.active && TX_OBSOLETE.indexOf(s.sym)===-1; });
   var activeSyms = active.map(function(s){ return s.sym; });
 
   var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks'};
