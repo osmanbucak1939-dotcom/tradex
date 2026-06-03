@@ -2003,6 +2003,7 @@ console.log('Firebase bağlandı ✓');
         <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;">📊 Endeks</button>
         <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;">📈 Hisse</button>
         <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="mgr-btn" onclick="txImportMarketGroups()" style="font-size:11px;padding:5px 14px;" title="Trader'da olup admin'de görünmeyen sabit sembolleri (BRENT, NAT GAS, endeksler vb.) symConfig'e ekler">⬇ Eksikleri içe aktar</button>
           <button class="mgr-btn success" onclick="openAddSymModal()" style="font-size:11px;padding:5px 14px;">+ Sembol Ekle</button>
         </div>
       </div>
@@ -4306,6 +4307,48 @@ function mgrTab(id, el) {
     sgRender();
   }
   if (id==='pricecontrol') { pcInit(); }
+}
+
+// Trader'ın MARKET_GROUPS'unda olup symConfig'te olmayan sembolleri içe aktar.
+// (Sistemin sabit listesindeki BRENT/NAT GAS/XPT/endeksler gibi semboller admin'de
+//  görünmüyordu çünkü symConfig'e hiç girmemişlerdi. Bu, onları symConfig'e ekleyip
+//  Firebase'e kaydeder → admin'de düzenlenebilir/silinebilir olur, kalıcılaşır.)
+function txImportMarketGroups(){
+  if(typeof MARKET_GROUPS==='undefined' || !Array.isArray(MARKET_GROUPS)){
+    _txTdToast('Hata','MARKET_GROUPS bulunamadı','danger'); return;
+  }
+  var grpCat={crypto:'crypto', forex:'forex', commodity:'commodity', indices:'index', stocks:'stock'};
+  var have={}; symConfig.forEach(function(s){ have[s.sym]=true; });
+  var added=0, names=[];
+  MARKET_GROUPS.forEach(function(g){
+    var cat=grpCat[g.id]||'crypto';
+    (g.items||[]).forEach(function(it){
+      if(!it || !it.sym || have[it.sym]) return;
+      symConfig.push({
+        sym: it.sym,
+        label: it.full || it.name || it.sym,
+        s: it.name || it.sym,
+        spread: (typeof it.spread==='number') ? it.spread : 0.1,
+        spreadType:'fixed', spreadVariance:20,
+        swapBuy:0, swapSell:0,
+        color: it.color || '#f0b90b',
+        minLot: 0.01,
+        active:true,
+        contractSize: (cat==='forex') ? 100000 : 1,
+        margin: (cat==='forex') ? 2 : 1,
+        decimals: parseInt(it.decimals)||2,
+        category: cat,
+        priceSource:'', priceOffset:0, priceFactor:1
+      });
+      have[it.sym]=true; added++; names.push(it.sym);
+    });
+  });
+  if(!added){ _txTdToast('Bilgi','Eksik sembol yok — hepsi zaten listede','info'); return; }
+  if(typeof saveSymConfig==='function') saveSymConfig();   // localStorage + Firebase (kalıcı)
+  window._symConfig = symConfig;
+  if(typeof applySymConfig==='function'){ try{ applySymConfig(); }catch(e){} }
+  renderSymMgr(window._symFilter||'all');
+  _txTdToast('İçe aktarıldı', added+' sembol eklendi: '+names.join(', '),'success');
 }
 
 function renderSymMgr(filterCat) {
