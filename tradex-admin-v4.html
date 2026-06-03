@@ -4172,20 +4172,11 @@ var MARKET_GROUPS = [
       {sym:'XAUUSD',  name:'XAU/USD',   full:'Altın / Dolar',  icon:'🥇', spread:0.30,   decimals:2, mockPrice:2318.50},
       {sym:'XAGUSD',  name:'XAG/USD',   full:'Gümüş / Dolar',  icon:'🥈', spread:0.015,  decimals:3, mockPrice:27.41},
       {sym:'XPTUSD',  name:'XPT/USD',   full:'Platin / Dolar', icon:'⬡',  spread:0.50,   decimals:2, mockPrice:964.20},
-      {sym:'USOIL',  name:'WTI/USD',   full:'Ham Petrol',      icon:'🛢', spread:0.03,   decimals:2, mockPrice:78.34},
-      {sym:'BRTUSD',  name:'BRENT/USD', full:'Brent Petrol',    icon:'⛽', spread:0.03,   decimals:2, mockPrice:82.61},
-      {sym:'NGAS',   name:'NatGas/USD',full:'Doğal Gaz',       icon:'🔥', spread:0.005,  decimals:3, mockPrice:2.143},
     ]
   },
   {
     id:'indices', label:'ENDEKSLer', open:false,
     items:[
-      {sym:'SPX500X',  name:'S&P 500',   full:'S&P 500 Endeksi',icon:'📈', spread:0.50,   decimals:2, mockPrice:5248.80},
-      {sym:'NAS100X',  name:'NASDAQ',    full:'NASDAQ 100',      icon:'📊', spread:0.80,   decimals:2, mockPrice:18320.40},
-      {sym:'DJ30X',    name:'DOW 30',    full:'Dow Jones 30',    icon:'🏛', spread:1.00,   decimals:2, mockPrice:39127.60},
-      {sym:'FTSE100X', name:'FTSE 100',  full:'FTSE 100 UK',     icon:'🇬🇧',spread:0.50,   decimals:2, mockPrice:8312.40},
-      {sym:'DAX40X',   name:'DAX 40',    full:'DAX Almanya',     icon:'🇩🇪',spread:0.80,   decimals:2, mockPrice:18642.20},
-      {sym:'XU100X',   name:'BIST 100',  full:'Borsa İstanbul',  icon:'🇹🇷',spread:2.00,   decimals:2, mockPrice:10841.60},
     ]
   },
   {
@@ -4309,10 +4300,19 @@ function mgrTab(id, el) {
   if (id==='pricecontrol') { pcInit(); }
 }
 
+// Admin'de TAMAMEN gizlenen/kaldırılan semboller — sembol tablosu, import ve init
+// filtresi bunları eler (kaynak Firebase olsa bile ekranda görünmezler).
+//   Eski/çift kodlar + talep üzerine kaldırılan emtia/endeksler:
+//   WTI(USOIL), BRENT(BRTUSD), NATGAS(NGAS), SP500(SPX500X), NASDAQ(NAS100X),
+//   DOW30(DJ30X), FTSE100(FTSE100X), DAX40(DAX40X), BIST100(XU100X)
+// Geri getirmek için ilgili kodu bu listeden çıkar.
+var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
+  'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','DAX40X','XU100X'];
+
 // Trader'ın MARKET_GROUPS'unda olup symConfig'te olmayan sembolleri içe aktar.
-// (Sistemin sabit listesindeki BRENT/NAT GAS/XPT/endeksler gibi semboller admin'de
-//  görünmüyordu çünkü symConfig'e hiç girmemişlerdi. Bu, onları symConfig'e ekleyip
-//  Firebase'e kaydeder → admin'de düzenlenebilir/silinebilir olur, kalıcılaşır.)
+// (Sistemin sabit listesindeki semboller admin'de görünmüyordu çünkü symConfig'e
+//  hiç girmemişlerdi. Bu, onları symConfig'e ekleyip Firebase'e kaydeder → admin'de
+//  düzenlenebilir/silinebilir olur. AD_HIDDEN'dakiler hariç tutulur.)
 function txImportMarketGroups(){
   if(typeof MARKET_GROUPS==='undefined' || !Array.isArray(MARKET_GROUPS)){
     _txTdToast('Hata','MARKET_GROUPS bulunamadı','danger'); return;
@@ -4323,7 +4323,7 @@ function txImportMarketGroups(){
   MARKET_GROUPS.forEach(function(g){
     var cat=grpCat[g.id]||'crypto';
     (g.items||[]).forEach(function(it){
-      if(!it || !it.sym || have[it.sym]) return;
+      if(!it || !it.sym || have[it.sym] || AD_HIDDEN.indexOf(it.sym)!==-1) return;
       symConfig.push({
         sym: it.sym,
         label: it.full || it.name || it.sym,
@@ -4364,7 +4364,7 @@ function renderSymMgr(filterCat) {
   var tb = document.getElementById('symMgrBody');
   if(!tb) return;
   var filtered = symConfig.map(function(s,i){ return {s:s,i:i}; })
-    .filter(function(x){ return filterCat==='all' || x.s.category===filterCat; });
+    .filter(function(x){ return (filterCat==='all' || x.s.category===filterCat) && AD_HIDDEN.indexOf(x.s.sym)===-1; });
   var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks', stock:'\u{1F4C8} Hisse'};
   tb.innerHTML = filtered.map(function(x){
     var s=x.s, i=x.i;
@@ -6338,8 +6338,8 @@ if (!symConfig) {
   for(var _j=0; _j<_defaults.length; _j++) {
     if(!_existing[_defaults[_j].sym]) symConfig.push(_defaults[_j]);
   }
-  // Eski/çift sembolleri temizle
-  var _obsolete = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
+  // Eski/çift + kaldırılan sembolleri temizle (AD_HIDDEN)
+  var _obsolete = (typeof AD_HIDDEN!=='undefined') ? AD_HIDDEN : ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
   symConfig = symConfig.filter(function(s){ return _obsolete.indexOf(s.sym) === -1; });
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
 }
