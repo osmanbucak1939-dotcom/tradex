@@ -4198,8 +4198,11 @@ function startFirebaseSnapshots() {
   _FB.sub('symbols', db.collection('broker').doc('symbols').onSnapshot(function(doc) {
     if(!doc.exists || !doc.data() || !doc.data().data) return;
     try {
+      var _del = []; try{ _del = doc.data().deleted ? JSON.parse(doc.data().deleted) : []; }catch(e2){}
+      window._txDeletedSyms = _del;
       var fbSyms = JSON.parse(doc.data().data);
       if(Array.isArray(fbSyms) && fbSyms.length) {
+        fbSyms = fbSyms.filter(function(s){ return _del.indexOf(s.sym)===-1; });   // silinenleri at
         localStorage.setItem('tx_syms', JSON.stringify(fbSyms));
         symConfig = fbSyms; window._symConfig = fbSyms;
         applySymConfig(); renderMarketWatch();
@@ -4489,8 +4492,11 @@ function applyGroupSpreads() {
 
 function applySymConfig() {
   // Gizlenen semboller (üstteki TX_HIDDEN) — hem MARKET_GROUPS'tan hem symConfig'ten elenir.
-  var TX_OBSOLETE = (typeof TX_HIDDEN !== 'undefined') ? TX_HIDDEN
+  var TX_OBSOLETE = (typeof TX_HIDDEN !== 'undefined') ? TX_HIDDEN.slice()
                     : ['WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD'];
+  if(window._txDeletedSyms && window._txDeletedSyms.length){
+    window._txDeletedSyms.forEach(function(d){ if(TX_OBSOLETE.indexOf(d)===-1) TX_OBSOLETE.push(d); });
+  }
   if(typeof MARKET_GROUPS!=='undefined' && MARKET_GROUPS){
     MARKET_GROUPS.forEach(function(g){
       if(g && g.items) g.items = g.items.filter(function(it){ return TX_OBSOLETE.indexOf(it.sym)===-1; });
