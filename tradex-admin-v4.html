@@ -8688,6 +8688,9 @@ function exportAccounts(){
 
 function renderSgSection(){ sgRender(); }
 function renderSymSection(){
+  // Semboller bölümü: düzenlenebilir tablo (#symMgrBody — düzenle/sil butonlu) +
+  // TD KÖPRÜ paneli (#tdBridgeBody). renderSymMgr ikisini de doldurur.
+  if(typeof renderSymMgr==='function'){ renderSymMgr(window._symFilter||'all'); return; }
   var cnt = document.getElementById('symContent');
   if(!cnt) return;
 
