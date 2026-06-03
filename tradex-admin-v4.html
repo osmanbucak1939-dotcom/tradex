@@ -2006,6 +2006,30 @@ console.log('Firebase bağlandı ✓');
         </div>
       </div>
 
+      <!-- TD KÖPRÜ SEMBOLLERİ (canlı forex/emtia/endeks beslemesi) -->
+      <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid #2a2a3a;border-radius:6px;background:#12121a;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;">🌉 TD KÖPRÜ SEMBOLLERİ</span>
+          <span style="font-size:10px;color:#8888ff;font-family:var(--mono);">(<span id="tdBridgeCount">0</span> canlı · köprü ~20sn'de alır)</span>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="txTdResetDefault()">↺ Varsayılana dön</button>
+        </div>
+        <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">
+          Forex/emtia/endeks <b>canlı fiyat</b> beslemesi. Sol kutuya TradeX sembol kodu (örn. <code>EURGBP</code>), sağ kutuya Twelve Data karşılığı (örn. <code>EUR/GBP</code>) yaz. Eklediğin sembolün <b>TD planında açık</b> olması gerekir; değilse köprü "subscribe fail" verir ve fiyat akmaz.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input class="mgr-input" id="tdb_sym" placeholder="EURGBP" style="width:130px;text-transform:uppercase;">
+          <span style="color:#666;">→</span>
+          <input class="mgr-input" id="tdb_td" placeholder="EUR/GBP" style="width:130px;text-transform:uppercase;">
+          <button class="mgr-btn success" style="font-size:11px;padding:5px 14px;" onclick="txTdAddSymbol()">+ Köprüye Ekle</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="mgr-table" style="min-width:360px;width:100%;">
+            <thead><tr><th>TradeX Sembol</th><th>TD Karşılığı</th><th style="text-align:right;">İşlem</th></tr></thead>
+            <tbody id="tdBridgeBody"><tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Sembol tablosu -->
       <div class="ad-sect" style="padding:0;overflow:hidden;">
         <div style="overflow-x:auto;">
@@ -3255,26 +3279,120 @@ function startLiveFeed() {
 // KURAL: Admin yazar, trader sadece okur. Tek doğru kaynak Firebase.
 // ════════════════════════════════════════════════════════════════
 
-var _adTdKey  = '699ea91fdd9b4ad09e8bb2760b7f3663';
+var _adTdKey  = '6be463dd71664cc0b5db780dd0a189ab';
 var _adTdWs   = null, _adBnWs = null;
 var _adTdOk   = false, _adBnOk = false;
 var _adFeedOn = false;
 
-var AD_TD_MAP = {
+// ── TD KÖPRÜ SEMBOLLERİ (admin panelinden yönetilir) ──────────────────
+// AD_TD_BUILTIN: fabrika varsayılanı (RTDB/localStorage boşsa kullanılır).
+// AD_TD_MAP    : CANLI liste — 'tx_tdmap' (localStorage) veya RTDB'den yüklenir.
+// Liste, Semboller bölümündeki "TD KÖPRÜ SEMBOLLERİ" panelinden değişir;
+// değişiklik RTDB '/bridgeConfig/tdMap' yoluna yazılır → köprü ~20sn içinde alır.
+// Sembol ekleme/çıkarma için artık kod düzenlemeye/köprü deploy'una GEREK YOK.
+var AD_TD_BUILTIN = {
   'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
   'DAX40X':'DAX',
   'USOIL':'WTI/USD'
-  // ── TD'de bu plana KAPALI/GEÇERSİZ olduğu için çıkarıldı (2026-06-01) ──
-  // Bunlar FastForex döneminde de canlı değildi (FF sadece forex veriyordu) → simülasyonda kalıyor, regresyon yok.
-  //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks değeri lisanslı, standart planda yok.
-  //     İstenirse ETF proxy ile yaklaşık gösterilebilir: SPY×~10≈S&P500, DIA×~100≈Dow, QQQ×~41≈Nasdaq100 (oran sabit değil, kayar).
-  //   BRTUSD (BRENT) → TD 'BRENT' fiyatı spot ile uyuşmuyordu (bayat/farklı enstrüman), doğrulanana dek bağlanmadı.
+  // TD planında KAPALI olanlar (eklersen köprü 'subscribe fail' verir, fiyat akmaz):
+  //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks lisanslı.
+  //   BRTUSD/BRENT → TD spot ile uyuşmadı, USOIL=WTI kullanıldı.
 };
+function _txLoadTdMap(){
+  try {
+    var s = JSON.parse(localStorage.getItem('tx_tdmap') || 'null');
+    if(s && typeof s==='object' && Object.keys(s).length) return s;
+  } catch(e){}
+  return Object.assign({}, AD_TD_BUILTIN);
+}
+var AD_TD_MAP = _txLoadTdMap();
 var AD_TD_REV = {};
-Object.keys(AD_TD_MAP).forEach(function(k){ AD_TD_REV[AD_TD_MAP[k]] = k; });
+function _txRebuildTdRev(){ AD_TD_REV = {}; Object.keys(AD_TD_MAP).forEach(function(k){ AD_TD_REV[AD_TD_MAP[k]] = k; }); }
+_txRebuildTdRev();
+
+// ── TD KÖPRÜ SEMBOL YÖNETİMİ (ekle / çıkar / sıfırla) ─────────────────
+function _txTdToast(t,m,k){
+  if(typeof showAdminToast==='function'){ showAdminToast(t,m,k||'success'); }
+  else if(typeof showToast==='function'){ showToast(t,m); }
+  else { console.log('['+t+'] '+m); }
+}
+function _txSaveTdMap(){
+  localStorage.setItem('tx_tdmap', JSON.stringify(AD_TD_MAP));
+  if(typeof rtdb!=='undefined' && rtdb){
+    try { rtdb.ref('bridgeConfig/tdMap').set(AD_TD_MAP)
+      .catch(function(e){ console.warn('[tdMap RTDB write]', e.message); }); }
+    catch(e){ console.warn('[tdMap RTDB write]', e.message); }
+  }
+}
+function _txApplyTdMap(){
+  _txRebuildTdRev();
+  _txSaveTdMap();
+  if(typeof _adStartTwelveData==='function'){ try { _adStartTwelveData(); } catch(e){} }
+  if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
+}
+function txTdAddSymbol(){
+  var symEl=document.getElementById('tdb_sym'), tdEl=document.getElementById('tdb_td');
+  if(!symEl||!tdEl) return;
+  var sym=(symEl.value||'').toUpperCase().replace(/\s+/g,'').trim();
+  var td =(tdEl.value||'').toUpperCase().replace(/\s+/g,'').trim();
+  if(!sym||!td){ _txTdToast('Hata','Sembol ve TD karşılığı zorunlu','danger'); return; }
+  AD_TD_MAP[sym]=td;
+  symEl.value=''; tdEl.value='';
+  _txApplyTdMap();
+  _txTdToast('Eklendi', sym+' \u2192 '+td+' (köprü ~20sn içinde alır)','success');
+}
+function txTdRemoveSymbol(sym){
+  if(!AD_TD_MAP[sym]) return;
+  if(!confirm(sym+' sembolünü köprü beslemesinden çıkar?\n(Trader sembol listesi / symConfig etkilenmez.)')) return;
+  delete AD_TD_MAP[sym];
+  _txApplyTdMap();
+  _txTdToast('Çıkarıldı', sym+' köprüden çıkarıldı','danger');
+}
+function txTdResetDefault(){
+  if(!confirm('TD köprü listesini fabrika varsayılanına (14 sembol) döndür?')) return;
+  AD_TD_MAP=Object.assign({}, AD_TD_BUILTIN);
+  _txApplyTdMap();
+  _txTdToast('Sıfırlandı','Varsayılan 14 sembol yüklendi','success');
+}
+function renderTdBridgeMgr(){
+  var body=document.getElementById('tdBridgeBody');
+  if(!body) return;
+  var keys=Object.keys(AD_TD_MAP).sort();
+  var cnt=document.getElementById('tdBridgeCount'); if(cnt) cnt.textContent=keys.length;
+  if(!keys.length){ body.innerHTML='<tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Liste boş</td></tr>'; return; }
+  body.innerHTML=keys.map(function(sym){
+    return '<tr>'+
+      '<td style="font-family:var(--mono);font-weight:600;">'+sym+'</td>'+
+      '<td style="font-family:var(--mono);color:#8888ff;">'+AD_TD_MAP[sym]+'</td>'+
+      '<td style="text-align:right;"><button class="mgr-btn danger" style="font-size:10px;padding:3px 10px;" onclick="txTdRemoveSymbol(\''+sym+'\')">\u2715 Çıkar</button></td>'+
+    '</tr>';
+  }).join('');
+}
+// Açılışta RTDB'deki listeyi (varsa) benimse — çoklu cihaz/oturum senkronu.
+function _txSyncTdMapFromRtdb(){
+  if(typeof rtdb==='undefined' || !rtdb) return;
+  try {
+    rtdb.ref('bridgeConfig/tdMap').once('value').then(function(snap){
+      var v=snap.val();
+      if(v && typeof v==='object' && Object.keys(v).length){
+        var m={};
+        Object.keys(v).forEach(function(k){ if(typeof v[k]==='string' && k.charAt(0)!=='_') m[k.toUpperCase()]=v[k]; });
+        var sigOld=Object.keys(AD_TD_MAP).sort().map(function(k){return k+'='+AD_TD_MAP[k];}).join('|');
+        var sigNew=Object.keys(m).sort().map(function(k){return k+'='+m[k];}).join('|');
+        AD_TD_MAP=m;
+        localStorage.setItem('tx_tdmap', JSON.stringify(AD_TD_MAP));
+        _txRebuildTdRev();
+        if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
+        if(sigOld!==sigNew && typeof _adStartTwelveData==='function'){ try{ _adStartTwelveData(); }catch(e){} }
+      } else {
+        _txSaveTdMap();   // RTDB boş → mevcut listeyi oraya yaz (ilk kurulum)
+      }
+    }).catch(function(){});
+  } catch(e){}
+}
 var AD_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt','adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 // ── Merkezi fiyat deposu ──────────────────────────────────────
@@ -3847,6 +3965,7 @@ function _adStartTwelveData() {
 }
 
 function adStartTwelvedataFeed() {
+  if(typeof _txSyncTdMapFromRtdb==='function') _txSyncTdMapFromRtdb();   // RTDB'deki köprü listesini benimse
   _adStartBinance();      // Kripto → Binance WS
   _adStartTwelveData();   // Forex/emtia/endeks → Twelve Data WS
   _adTdOk = true;
@@ -4184,6 +4303,7 @@ function mgrTab(id, el) {
 }
 
 function renderSymMgr(filterCat) {
+  if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
   filterCat = filterCat || window._symFilter || 'all';
   window._symFilter = filterCat;
   ['all','crypto','forex','commodity'].forEach(function(k){
