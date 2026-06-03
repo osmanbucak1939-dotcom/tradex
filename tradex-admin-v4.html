@@ -4237,9 +4237,10 @@ function saveBrokerInfo() {
 
 function saveSymConfig(){
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+  try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){}
   // Firebase'e yaz
   if(typeof db!=='undefined'&&db){
-    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true})
+    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),deleted:JSON.stringify(_txDeleted),_ts:Date.now()},{merge:true})
       .catch(function(e){console.warn('saveSymConfig FB err:',e);});
   }
 }
@@ -4308,6 +4309,19 @@ function mgrTab(id, el) {
 // Geri getirmek için ilgili kodu bu listeden çıkar.
 var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
   'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','DAX40X','XU100X'];
+
+// Kullanıcının SİLDİĞİ semboller (tombstone). Tohumlama (_defaults) bunları geri
+// EKLEMEZ → silinen sembol bir süre sonra geri gelmez. localStorage + Firebase'de tutulur.
+var _txDeleted = (function(){ try{ return JSON.parse(localStorage.getItem('tx_deleted')||'[]'); }catch(e){ return []; } })();
+function _txMarkDeleted(sym){
+  if(!sym) return;
+  if(_txDeleted.indexOf(sym)===-1) _txDeleted.push(sym);
+  try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){}
+}
+function _txUnmarkDeleted(sym){
+  var i=_txDeleted.indexOf(sym);
+  if(i!==-1){ _txDeleted.splice(i,1); try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){} }
+}
 
 // Trader'ın MARKET_GROUPS'unda olup symConfig'te olmayan sembolleri içe aktar.
 // (Sistemin sabit listesindeki semboller admin'de görünmüyordu çünkü symConfig'e
@@ -4404,7 +4418,9 @@ function updateSym(i, key, val) {
 
 function removeSym(i) {
   if (symConfig.length <= 1) { showToast('Hata','En az 1 sembol olmalı!'); return; }
+  var sym = symConfig[i] ? symConfig[i].sym : '';
   symConfig.splice(i, 1);
+  _txMarkDeleted(sym);
   saveSymConfig();
   renderSymMgr();
   applySymConfig();
@@ -4415,9 +4431,11 @@ function deleteSymMgr(i) {
   if(!confirm('Bu sembolü silmek istediğinizden emin misiniz?')) return;
   var sym = symConfig[i] ? symConfig[i].sym : '';
   symConfig.splice(i, 1);
-  localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+  _txMarkDeleted(sym);               // tohumlama bir daha geri eklemesin
   window._symConfig = symConfig;
+  saveSymConfig();                   // localStorage + Firebase (deleted dahil) → trader'da da kalkar
   renderSymMgr();
+  if(typeof applySymConfig==='function'){ try{ applySymConfig(); }catch(e){} }
   showAdminToast('Silindi', sym + ' sembolü silindi', 'danger');
 }
 function saveSymbolMgr() {
@@ -4457,6 +4475,7 @@ function saveSymbolMgr() {
     symConfig.push(obj);
     showToast('Eklendi', label + ' eklendi');
   }
+  _txUnmarkDeleted(sym);   // tekrar eklenen sembol "silinmiş" sayılmasın
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
   window._symConfig = symConfig;
   // MW_MAP güncelle - yeni/düzenlenen sembol için
@@ -4485,6 +4504,7 @@ function saveSymbolMgr() {
     try {
       db.collection('broker').doc('symbols').set({
         data: JSON.stringify(symConfig),
+        deleted: JSON.stringify(_txDeleted),
         updatedAt: new Date().toISOString()
       }).catch(function(e){ console.warn('symbols save:', e); });
     } catch(e){}
@@ -6336,7 +6356,7 @@ if (!symConfig) {
   var _existing = {};
   for(var _i=0; _i<symConfig.length; _i++) _existing[symConfig[_i].sym] = true;
   for(var _j=0; _j<_defaults.length; _j++) {
-    if(!_existing[_defaults[_j].sym]) symConfig.push(_defaults[_j]);
+    if(!_existing[_defaults[_j].sym] && _txDeleted.indexOf(_defaults[_j].sym)===-1) symConfig.push(_defaults[_j]);
   }
   // Eski/çift + kaldırılan sembolleri temizle (AD_HIDDEN)
   var _obsolete = (typeof AD_HIDDEN!=='undefined') ? AD_HIDDEN : ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
