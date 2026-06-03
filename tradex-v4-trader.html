@@ -2557,8 +2557,28 @@ var TD_KLINE_INT = {
   '1m':'1min', '5m':'5min', '15m':'15min', '30m':'30min',
   '1h':'1h',   '4h':'4h',   '1d':'1day'
 };
+// Admin'in "TD KÖPRÜ SEMBOLLERİ" panelinden yönettiği harita (RTDB /bridgeConfig/tdMap).
+// Grafik geçmişi (TD REST time_series) bunu da kullanır → panelden eklenen YENİ
+// semboller için de mum yüklenir (artık TD_KLINE_MAP'e elle eklemeye gerek yok).
+window._txTdMap = window._txTdMap || {};
+function _txWatchTdMap(){
+  if(typeof rtdb==='undefined' || !rtdb) return;
+  try {
+    rtdb.ref('bridgeConfig/tdMap').on('value', function(snap){
+      var v = snap.val(), m = {};
+      if(v && typeof v==='object'){
+        Object.keys(v).forEach(function(k){
+          if(typeof v[k]==='string' && k.charAt(0)!=='_') m[k.toUpperCase()] = v[k];
+        });
+      }
+      window._txTdMap = m;
+    }, function(){});
+  } catch(e){}
+}
+_txWatchTdMap();
+
 function lwLoadTwelveDataKlines(sym, interval, cb) {
-  var tdSym = TD_KLINE_MAP[sym] || null;
+  var tdSym = TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]) || null;
   if(!tdSym) { cb([]); return; }   // Bu plana kapalı semboller (endeksler vb.) → mum yok
 
   var tdInt = TD_KLINE_INT[(interval||'4h').toLowerCase()] || '1h';
