@@ -4400,6 +4400,10 @@ var MARKET_GROUPS = [
       {sym:'DAX40X',   name:'DAX 40',   full:'DAX Almanya',            icon:'🇩🇪',spread:0.80,   decimals:2},
       {sym:'XU100X',   name:'BIST 100', full:'Borsa İstanbul',         icon:'🇹🇷',spread:2.00,   decimals:2},
     ]
+  },
+  {
+    id:'stocks', label:'HİSSELER', open:false,
+    items:[]   // Hisseler admin'de category:'stock' ile eklenince symConfig'ten buraya akar
   }
 ];
 
@@ -4454,7 +4458,7 @@ function applySymConfig() {
   const active = symConfig.filter(s=>s.active);
   var activeSyms = active.map(function(s){ return s.sym; });
 
-  var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto'};
+  var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks'};
 
   // Sadece spread/label güncelle — MARKET_GROUPS ikonları ve yapısı korunur
   active.forEach(function(s) {
