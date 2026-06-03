@@ -4427,6 +4427,18 @@ var MARKET_GROUPS = [
   }
 ];
 
+// Trader'da GİZLENECEK semboller (hem sabit MARKET_GROUPS'tan hem symConfig'ten elenir).
+//  - Eski/çift kodlar: WTIUSD, SPXUSD, NASUSD, DJUSD, DAXUSD (USOIL/SPX500X/... ile değişti)
+//  - Talep üzerine kaldırılanlar: US OIL, BRENT, NAT GAS, S&P500, NASDAQ, DOW30, FTSE100, BIST
+//  (DAX40X ve metaller XAU/XAG/XPT KALIR.) Geri getirmek için ilgili kodu bu listeden çıkar.
+var TX_HIDDEN = [
+  'WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD',
+  'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','XU100X'
+];
+MARKET_GROUPS.forEach(function(g){
+  if(g && g.items) g.items = g.items.filter(function(it){ return TX_HIDDEN.indexOf(it.sym)===-1; });
+});
+
 var MW_MAP = {};
 var mwPrices = {};
 var mwGroupState = {};
@@ -4475,10 +4487,9 @@ function applyGroupSpreads() {
 }
 
 function applySymConfig() {
-  // Eski/çift kodlar — yeni kanonik kodlarla değiştirildi (admin _obsolete ile aynı):
-  //   WTIUSD→USOIL, SPXUSD→SPX500X, NASUSD→NAS100X, DJUSD→DJ30X, DAXUSD→DAX40X
-  // Bunları gizle ki trader admin'le tutarlı olsun (kaynak Firebase olsa bile).
-  var TX_OBSOLETE = ['WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD'];
+  // Gizlenen semboller (üstteki TX_HIDDEN) — hem MARKET_GROUPS'tan hem symConfig'ten elenir.
+  var TX_OBSOLETE = (typeof TX_HIDDEN !== 'undefined') ? TX_HIDDEN
+                    : ['WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD'];
   if(typeof MARKET_GROUPS!=='undefined' && MARKET_GROUPS){
     MARKET_GROUPS.forEach(function(g){
       if(g && g.items) g.items = g.items.filter(function(it){ return TX_OBSOLETE.indexOf(it.sym)===-1; });
