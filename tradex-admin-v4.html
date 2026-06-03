@@ -2001,6 +2001,7 @@ console.log('Firebase bağlandı ✓');
         <button class="mgr-btn" id="scf-forex"     onclick="filterSymCat('forex')"     style="font-size:10px;padding:4px 12px;">💱 Forex</button>
         <button class="mgr-btn" id="scf-commodity" onclick="filterSymCat('commodity')" style="font-size:10px;padding:4px 12px;">🏅 Emtia</button>
         <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;">📊 Endeks</button>
+        <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;">📈 Hisse</button>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <button class="mgr-btn success" onclick="openAddSymModal()" style="font-size:11px;padding:5px 14px;">+ Sembol Ekle</button>
         </div>
@@ -2075,6 +2076,7 @@ console.log('Firebase bağlandı ✓');
                 <option value="forex">Forex</option>
                 <option value="commodity">Emtia</option>
                 <option value="index">Endeks</option>
+                <option value="stock">Hisse</option>
               </select>
             </div>
             <div>
@@ -4184,6 +4186,10 @@ var MARKET_GROUPS = [
       {sym:'DAX40X',   name:'DAX 40',    full:'DAX Almanya',     icon:'🇩🇪',spread:0.80,   decimals:2, mockPrice:18642.20},
       {sym:'XU100X',   name:'BIST 100',  full:'Borsa İstanbul',  icon:'🇹🇷',spread:2.00,   decimals:2, mockPrice:10841.60},
     ]
+  },
+  {
+    id:'stocks', label:'HİSSELER', open:false,
+    items:[]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
   }
 ];
 
@@ -4306,7 +4312,7 @@ function renderSymMgr(filterCat) {
   if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
   filterCat = filterCat || window._symFilter || 'all';
   window._symFilter = filterCat;
-  ['all','crypto','forex','commodity'].forEach(function(k){
+  ['all','crypto','forex','commodity','index','stock'].forEach(function(k){
     var b = document.getElementById('scf-'+k);
     if(!b) return;
     b.style.borderColor = (k===filterCat) ? 'var(--accent)' : '';
@@ -4316,7 +4322,7 @@ function renderSymMgr(filterCat) {
   if(!tb) return;
   var filtered = symConfig.map(function(s,i){ return {s:s,i:i}; })
     .filter(function(x){ return filterCat==='all' || x.s.category===filterCat; });
-  var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks'};
+  var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks', stock:'\u{1F4C8} Hisse'};
   tb.innerHTML = filtered.map(function(x){
     var s=x.s, i=x.i;
     return '<tr>' +
@@ -4421,7 +4427,7 @@ function saveSymbolMgr() {
       _adPrices[s.sym]=bp;
       mwPrices[s.sym]={price:bp,prev:bp,chg:0};
     }
-    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto'};
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks'};
     var grpId=catMap[s.category]||'crypto';
     var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
     if(!grp.items.find(function(it){return it.sym===s.sym;})){
@@ -4455,7 +4461,7 @@ function saveSymbolMgr() {
       mwPrices[s.sym] = {price: bp, prev: bp, chg: 0};
     }
     // MARKET_GROUPS'a ekle
-    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto'};
+    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks'};
     var grpId = catMap[s.category] || 'crypto';
     var grp = MARKET_GROUPS.find(function(g){ return g.id === grpId; }) || MARKET_GROUPS[0];
     if(!grp.items.find(function(it){ return it.sym === s.sym; })) {
@@ -9029,7 +9035,7 @@ var AD_SIM={
   if(typeof symConfig !== 'undefined' && Array.isArray(symConfig)) {
     symConfig.forEach(function(s) {
       if(!s.active) return;
-      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto'};
+      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks'};
       var grp=MARKET_GROUPS.find(function(g){return g.id===(catMap[s.category]||'crypto');})||MARKET_GROUPS[0];
       if(!grp.items.find(function(it){return it.sym===s.sym;})){
         var item={sym:s.sym,name:s.label||s.sym,full:'',icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
