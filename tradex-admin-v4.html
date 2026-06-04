@@ -3298,8 +3298,8 @@ var AD_TD_BUILTIN = {
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'DAX40X':'DAX',
   'USOIL':'WTI/USD'
+  // DAX40X TD'den çıkarıldı → köprü artık DAX'ı Yahoo'dan çekiyor.
   // TD planında KAPALI olanlar (eklersen köprü 'subscribe fail' verir, fiyat akmaz):
   //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks lisanslı.
   //   BRTUSD/BRENT → TD spot ile uyuşmadı, USOIL=WTI kullanıldı.
@@ -4307,7 +4307,7 @@ function mgrTab(id, el) {
 //   DOW30(DJ30X), FTSE100(FTSE100X), DAX40(DAX40X), BIST100(XU100X)
 // Geri getirmek için ilgili kodu bu listeden çıkar.
 var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
-  'USOIL','BRTUSD','NGAS','SPX500X','NAS100X','DJ30X','FTSE100X','DAX40X','XU100X','XPTUSD'];
+  'USOIL','BRTUSD','NGAS','FTSE100X','XU100X','XPTUSD'];
 
 // Kullanıcının SİLDİĞİ semboller (tombstone). Tohumlama (_defaults) bunları geri
 // EKLEMEZ → silinen sembol bir süre sonra geri gelmez. localStorage + Firebase'de tutulur.
