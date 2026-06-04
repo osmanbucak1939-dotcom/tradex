@@ -5152,6 +5152,8 @@ function _txJitterTick(){
       if(typeof prices!=='undefined' && prices[sym] && prices[sym].price>0){ b = prices[sym].price; base[sym] = b; }
       else continue;   // fiyatı hiç yoksa kıpırdatma
     }
+    // Override aktifse: titreme override etrafında kıpırdasın (gerçek fiyata zıplamasın).
+    if(typeof _txAdminOverrides!=='undefined' && _txAdminOverrides[sym] > 0) b = _txAdminOverrides[sym];
     if(Math.random() < 0.3) continue;   // her tick'te bir kısmını atla (doğal/kademeli)
     var dec = MW_MAP[sym].decimals || 2;
     var unit = Math.max(_txPipUnit(dec), b * (TX_JITTER_PCT||0.00006));  // endeks/kripto gibi yüksek fiyatlarda orantılı
@@ -5742,6 +5744,14 @@ window._txClearSymIdx = function() { _txSymIdx = {}; _txSynthBySrc = null; };
 // ── Tek fiyat uygulama noktası ────────────────────────────────
 function txApplyPrice(sym, rawMid, _synthetic) {
   if(!sym || !rawMid || rawMid <= 0) return;
+  // Override aktifse: GERÇEK feed (köprü/RTDB tick) ekrana YAZILMAZ → override ile gerçek fiyat
+  // arasında titreme/flicker olmaz. Gerçek fiyat yalnızca tabana saklanır (override kalkınca oraya döner).
+  // Sentetik (titreme) çağrıları geçer; titreme override etrafında kıpırdar (bkz. _txJitterTick).
+  if(!_synthetic && typeof _txAdminOverrides !== 'undefined' && _txAdminOverrides[sym] > 0){
+    if(!window._txBase) window._txBase = {};
+    window._txBase[sym] = rawMid;
+    return;
+  }
   // Titreme tabanı: yalnızca GERÇEK (sentetik olmayan) tick'lerde güncellenir.
   // Sentetik titreme bu taban etrafında ±1-2 pip salınır, sürüklenmez.
   if(!_synthetic){ if(!window._txBase) window._txBase = {}; window._txBase[sym] = rawMid; }
