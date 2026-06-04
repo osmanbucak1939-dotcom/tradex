@@ -6170,7 +6170,7 @@ function _txRenderBrokerInfo(d) {
     {k:'company',    label:'Şirket'},
     {k:'website',    label:'Web Sitesi', link:true},
     {k:'email',      label:'E-posta',    link:'mailto:'},
-    {k:'phone',      label:'Telefon'},
+    {k:'phone',      label:'Telefon',   link:'tel:'},
     {k:'license',    label:'Lisans'},
     {k:'regulator',  label:'Düzenleyici'},
     {k:'address',    label:'Adres'},
@@ -6181,9 +6181,13 @@ function _txRenderBrokerInfo(d) {
     var val = d[f.k];
     var valHtml;
     if(f.link===true) {
-      valHtml = '<a href="'+val+'" target="_blank" style="color:#f0b90b;text-decoration:none;word-break:break-all">'+val+'</a>';
+      var _u = String(val).trim();
+      if(!/^https?:\/\//i.test(_u)) _u = 'https://' + _u.replace(/^\/+/, '');   // şema yoksa ekle → göreli yol/GitHub 404 olmasın
+      valHtml = '<a href="'+_u+'" target="_blank" rel="noopener noreferrer" style="color:#f0b90b;text-decoration:none;word-break:break-all">'+val+'</a>';
     } else if(f.link) {
-      valHtml = '<a href="'+f.link+val+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
+      var _hv = String(val).trim();
+      if(f.link==='tel:') _hv = _hv.replace(/[^\d+]/g,'');   // tel: için boşluk/sembol temizle
+      valHtml = '<a href="'+f.link+_hv+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
     } else if(f.small) {
       valHtml = '<span style="color:#b0b0b0;font-size:9px;line-height:1.4">'+val+'</span>';
     } else {
