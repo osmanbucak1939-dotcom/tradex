@@ -2463,6 +2463,22 @@ function _lwPriceFormat(sym) {
 }
 
 /* ── Binance REST klines çek ─────────────────────── */
+// Köprüden beslenen endeksler (Yahoo) — grafik geçmişi de köprünün /klines proxy'sinden gelir.
+var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY'];
+function lwLoadIndexKlines(sym, interval, cb) {
+  var base = (typeof TX_BRIDGE_URL!=='undefined' ? TX_BRIDGE_URL : '')
+               .replace(/^wss:/i,'https:').replace(/^ws:/i,'http:').replace(/\/+$/,'');
+  if(!base){ cb([]); return; }
+  var url = base + '/klines?sym=' + encodeURIComponent(sym) + '&interval=' + encodeURIComponent(interval||'1h');
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !Array.isArray(d.candles) || !d.candles.length){ cb([]); return; }
+      _klineData = d.candles;
+      cb(d.candles);
+    })
+    .catch(function(e){ console.warn('[endeks klines]', sym, e && e.message); cb([]); });
+}
 function lwLoadKlines(sym, interval, cb) {
   if(_klineAbort) { try{_klineAbort.abort();}catch(e){} }
   _klineAbort = (typeof AbortController!=='undefined') ? new AbortController() : null;
@@ -2495,6 +2511,8 @@ function lwLoadKlines(sym, interval, cb) {
       });
       return;
     }
+    // Endeksler — köprünün /klines (Yahoo) proxy'sinden
+    if(TX_INDEX_SYMS.indexOf(sym) !== -1){ lwLoadIndexKlines(sym, interval, cb); return; }
     // Forex/emtia/endeks — Twelve Data REST klines
     lwLoadTwelveDataKlines(sym, interval, cb);
     return;
@@ -2577,6 +2595,38 @@ function _txWatchTdMap(){
 }
 _txWatchTdMap();
 
+// Kapalı piyasada (canlı tick yokken) sembolün son fiyatını TD /price ile çekip
+// market watch'a yazar → "1" görünmez, son kapanışta durur. Grafiği bozmaz (kline'a dokunmaz).
+function _txFetchLastPrice(sym){
+  var tdSym = TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]);
+  if(!tdSym || typeof _TD_KEY==='undefined') return;
+  fetch('https://api.twelvedata.com/price?symbol='+encodeURIComponent(tdSym)+'&apikey='+_TD_KEY)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var p = d && parseFloat(d.price);
+      if(p>0 && !(window._txLive && window._txLive[sym])){   // canlı gelmediyse uygula
+        txApplyPrice(sym, p);
+      }
+    }).catch(function(){});
+}
+function _txSeedClosedPrices(){
+  if(typeof symConfig==='undefined' || !symConfig) return;
+  var n=0;
+  for(var i=0;i<symConfig.length && n<25;i++){
+    var s=symConfig[i]; if(!s || !s.active) continue;
+    var sym=s.sym;
+    if(window._txLive && window._txLive[sym]) continue;                 // zaten canlı
+    var cur=(typeof prices!=='undefined' && prices[sym]) ? prices[sym].price : null;
+    if(cur && cur>1.0001) continue;                                     // zaten gerçek fiyatı var
+    if(!(TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]))) continue;  // TD karşılığı yoksa çekemeyiz
+    (function(sm, idx){ setTimeout(function(){ _txFetchLastPrice(sm); }, idx*500); })(sym, n);
+    n++;
+  }
+}
+// symConfig Firebase'den geç gelebilir → birkaç kez dene.
+setTimeout(_txSeedClosedPrices, 6000);
+setTimeout(_txSeedClosedPrices, 30000);
+
 function lwLoadTwelveDataKlines(sym, interval, cb) {
   var tdSym = TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]) || null;
   if(!tdSym) { cb([]); return; }   // Bu plana kapalı semboller (endeksler vb.) → mum yok
@@ -2611,6 +2661,12 @@ function lwLoadTwelveDataKlines(sym, interval, cb) {
       });
       candles.sort(function(a,b){ return a.time - b.time; });   // order=ASC ama garanti olsun
       _klineData = candles;
+      // Kapalı piyasa / canlı tick yoksa: market watch'ı son kapanışa çek → "1" görünmesin.
+      var _live = window._txLive && window._txLive[sym];
+      if(!_live && candles.length && typeof txApplyPrice==='function'){
+        var _lastC = candles[candles.length-1].close;
+        if(_lastC > 0) txApplyPrice(sym, _lastC);   // canlı tick gelince zaten üzerine yazılır
+      }
       cb(candles);
     })
     .catch(function(e) {
@@ -4161,9 +4217,10 @@ var SIM_PRICES = {
   'USOIL':   {p:71.85, v:0.0005, d:2}, 'BRTUSD':  {p:75.42, v:0.0005, d:2},
   'NGAS':    {p:2.85,  v:0.0008, d:3},
   // Endeksler — TD'den canlı gelir, simülasyon yedek
-  'SPX500X': {p:5800,  v:0.0003, d:2}, 'NAS100X': {p:20500, v:0.0004, d:2},
-  'DJ30X':   {p:42000, v:0.0003, d:2}, 'FTSE100X':{p:8200,  v:0.0003, d:2},
-  'DAX40X':  {p:19500, v:0.0003, d:2}, 'XU100X':  {p:9800,  v:0.0004, d:2}
+  'SPX500X': {p:7550,  v:0.0003, d:2}, 'NAS100X': {p:30570, v:0.0004, d:2},
+  'DJ30X':   {p:50690, v:0.0003, d:2}, 'FTSE100X':{p:8200,  v:0.0003, d:2},
+  'DAX40X':  {p:24800, v:0.0003, d:2}, 'XU100X':  {p:9800,  v:0.0004, d:2},
+  'DXY':     {p:99.4,  v:0.0002, d:3}
 };
 
 
@@ -4421,6 +4478,7 @@ var MARKET_GROUPS = [
       {sym:'DJ30X',    name:'DOW 30',   full:'Dow Jones 30',           icon:'🏛', spread:1.00,   decimals:2},
       {sym:'FTSE100X', name:'FTSE 100', full:'FTSE 100 UK',            icon:'🇬🇧',spread:0.50,   decimals:2},
       {sym:'DAX40X',   name:'DAX 40',   full:'DAX Almanya',            icon:'🇩🇪',spread:0.80,   decimals:2},
+      {sym:'DXY',      name:'DXY',      full:'Dolar Endeksi',          icon:'💵', spread:0.030,  decimals:3},
       {sym:'XU100X',   name:'BIST 100', full:'Borsa İstanbul',         icon:'🇹🇷',spread:2.00,   decimals:2},
     ]
   },
@@ -5073,6 +5131,7 @@ function updateMwRow(sym, price, prev) {
 var TX_JITTER = true;          // açık/kapalı
 var TX_JITTER_MS = 1200;       // titreme aralığı (ms)
 var TX_JITTER_PIPS = 2;        // maksimum sapma (pip)
+var TX_JITTER_PCT = 0.00006;   // fiyatın yüzdesi olarak min genlik (yüksek fiyatlı endeks/kripto görünür kıpırdar)
 var _txJit = {};               // sym -> mevcut ofset
 function _txPipUnit(dec){ dec = dec||2; return dec>=4 ? Math.pow(10,-(dec-1)) : Math.pow(10,-dec); }
 function _txJitterTick(){
@@ -5095,9 +5154,9 @@ function _txJitterTick(){
     }
     if(Math.random() < 0.3) continue;   // her tick'te bir kısmını atla (doğal/kademeli)
     var dec = MW_MAP[sym].decimals || 2;
-    var pip = _txPipUnit(dec);
-    var cap = pip * (TX_JITTER_PIPS||2);
-    var amp = pip * (0.5 + Math.random()*(TX_JITTER_PIPS||2));
+    var unit = Math.max(_txPipUnit(dec), b * (TX_JITTER_PCT||0.00006));  // endeks/kripto gibi yüksek fiyatlarda orantılı
+    var cap = unit * (TX_JITTER_PIPS||2);
+    var amp = unit * (0.5 + Math.random()*(TX_JITTER_PIPS||2));
     var off = (_txJit[sym]||0)*0.5 + (Math.random()*2-1)*amp;   // sönümle + gürültü → salınım
     if(off >  cap) off =  cap;
     if(off < -cap) off = -cap;
@@ -5959,6 +6018,8 @@ function _txApplyBridgePrice(sym, price){
   if(!(price>0)) return;
   if(window._txLastFbPrice[sym] === price) return;
   window._txLastFbPrice[sym] = price;
+  if(!window._txLive) window._txLive = {};
+  window._txLive[sym] = true;          // gerçek (canlı) tick geldi → kline seed üzerine yazmasın
   var sc = _txGetSymConf(sym);
   if(sc && sc.priceSource) return;     // sentetik → kaynaktan türetilir
   txApplyPrice(sym, price);
