@@ -3697,9 +3697,9 @@ function adRecalcAllEquities() {
       a._openCount = st.openCount;
     }
   });
-  // Hesaplar sekmesi açıksa yenile
+  // Hesaplar sekmesi açıksa yenile — TÜM varlıklar hesaplandı, doğru sırala ve dondur.
   var secAcc = document.getElementById('sec-accounts');
-  if(secAcc && secAcc.style.display!=='none') renderAccTable();
+  if(secAcc && secAcc.style.display!=='none'){ window._accResortPending = true; renderAccTable(); }
 }
 
 
@@ -5423,6 +5423,15 @@ function renderAccTable(){
     if(fSg&&(a.spreadGroup||'standard')!==fSg)return false;
     if(fOnline){var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;var on=(a.online===true)&&ms&&(now-ms)<300000;if(fOnline==='online'&&!on)return false;if(fOnline==='offline'&&on)return false;}
     return true;
+  });
+
+  // Sıralamadan ÖNCE tüm satırların varlığını TAZE hesapla → sıra, hücrede gösterilen
+  // değerle birebir uyuşsun (önbellek gecikmesi kaynaklı tutarsızlık olmasın).
+  rows.forEach(function(a){
+    var _p = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
+      ? _allAccountPositions[a.id] : getAccPos(a.id);
+    var _s = (typeof adCalcStats==='function') ? adCalcStats(a, _p) : null;
+    a._liveEquity = _s ? _s.equity : (getAccBal(a.id)+getAccBonus(a.id));
   });
 
   var sc=_accSort.col,sd=_accSort.dir;
