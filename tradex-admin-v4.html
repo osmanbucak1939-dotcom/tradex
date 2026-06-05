@@ -1214,11 +1214,23 @@ function startAccCanonListeners() {
 function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
 function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
 function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
+// Yalnızca GERÇEKTEN AÇIK pozisyon mu? Kapanmış/eski (hayalet) kayıtlar users/{id}.positions
+// dizisinde kalmış olabilir → equity'yi yanlış hareket ettirir. Equity hesaplarında bunları eler.
+function _adIsOpenPos(p){
+  if(!p) return false;
+  var st = (p.status!=null) ? String(p.status).toLowerCase() : '';
+  if(st==='closed' || p.closed===true) return false;
+  if(parseFloat(p.closePrice)>0) return false;
+  if(p.closeTime || p.closedAt) return false;
+  if(!(parseFloat(p.qty)>0)) return false;
+  if(!(parseFloat(p.openPrice)>0)) return false;
+  return true;
+}
 function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
 function getAccEquity(accId)   {
   // equity = balance + bonus + ∑ floating P&L
   var bal = getAccBal(accId) + getAccBonus(accId);
-  var poses = getAccPos(accId);
+  var poses = getAccPos(accId).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları sayma
   var fp = 0;
   var _missing = 0;
   for(var i=0;i<poses.length;i++){
@@ -3694,6 +3706,7 @@ function adRecalcAllEquities() {
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
 function adCalcStats(account, positions) {
   // ⚠️ CANONICAL: balance/bonus users/{id}'den (_accCanon)
+  positions = (positions||[]).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları equity'ye katma
   var bal   = getAccBal(account.id);
   var bonus = getAccBonus(account.id);
   var lev   = parseFloat(account.leverage||100);
