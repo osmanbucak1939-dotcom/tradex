@@ -5426,17 +5426,33 @@ function renderAccTable(){
   });
 
   var sc=_accSort.col,sd=_accSort.dir;
-  if(sc){rows.sort(function(a,b){
-    var va,vb;
-    if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
-    else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
-    else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
-    else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
-    else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
-    else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
-    else return 0;
-    return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
-  });}
+  // Sıralama kararlılığı: trader'lar dokümanını güncelledikçe (snapshot) tablo sık yeniden
+  // render edilir. Her seferinde canlı equity'ye göre yeniden sıralarsak liste oynar (işlemsiz
+  // hesaplar bile satır atlar). Bu yüzden YENİDEN SIRALAMA yalnızca kullanıcı sütuna tıklayınca
+  // veya bölüm açılınca yapılır (_accResortPending). Otomatik render'larda son sıra KORUNUR.
+  if(sc && (window._accResortPending || !Array.isArray(window._accOrder))){
+    rows.sort(function(a,b){
+      var va,vb;
+      if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
+      else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
+      else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
+      else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
+      else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
+      else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
+      else return 0;
+      return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+    });
+    window._accOrder = rows.map(function(a){ return String(a.id); });   // sırayı sabitle
+    window._accResortPending = false;
+  } else if(Array.isArray(window._accOrder)) {
+    // Otomatik render → son sırayı koru (yeni hesaplar sona)
+    var _ord = window._accOrder;
+    rows.sort(function(a,b){
+      var ia=_ord.indexOf(String(a.id)); if(ia<0) ia=1e9;
+      var ib=_ord.indexOf(String(b.id)); if(ib<0) ib=1e9;
+      return ia-ib;
+    });
+  }
 
   var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
   var cols=_accCols;
@@ -5622,6 +5638,7 @@ var _accCols=['reg','name','email','online','seen','status','type','group','bala
 function _accSortBy(col){
   _accSort.dir=_accSort.col===col?(_accSort.dir==='asc'?'desc':'asc'):'desc';
   _accSort.col=col;
+  window._accResortPending = true;   // kullanıcı sıraladı → yeniden sırala
   renderAccTable();
 }
 function _accToggleCol(id,show){
@@ -8085,6 +8102,7 @@ function adminNav(sec,btn){
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
   if(sec==='accounts'){
+    window._accResortPending = true;   // bölüm açılışında bir kez sırala (sonra otomatik render'lar sırayı korur)
     if(typeof accounts==='undefined'||!Array.isArray(accounts)){renderAccTable();return;}
     // Tüm hesapları cache'e yükle
     accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
