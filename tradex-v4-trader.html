@@ -2590,6 +2590,8 @@ function _txWatchTdMap(){
         });
       }
       window._txTdMap = m;
+      // Harita (geç) geldiğinde TD karşılığı çözülen kapalı-piyasa sembollerini tohumla
+      if(typeof _txSeedClosedPrices==='function') setTimeout(_txSeedClosedPrices, 600);
     }, function(){});
   } catch(e){}
 }
@@ -2600,31 +2602,39 @@ _txWatchTdMap();
 function _txFetchLastPrice(sym){
   var tdSym = TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]);
   if(!tdSym || typeof _TD_KEY==='undefined') return;
-  fetch('https://api.twelvedata.com/price?symbol='+encodeURIComponent(tdSym)+'&apikey='+_TD_KEY)
+  if(!window._txSeeded) window._txSeeded = {};
+  window._txSeeded[sym] = true;   // tekrar tekrar çekme
+  // /quote → hem son fiyat (close) hem günlük yüzde değişim (percent_change)
+  fetch('https://api.twelvedata.com/quote?symbol='+encodeURIComponent(tdSym)+'&apikey='+_TD_KEY)
     .then(function(r){ return r.json(); })
     .then(function(d){
-      var p = d && parseFloat(d.price);
-      if(p>0 && !(window._txLive && window._txLive[sym])){   // canlı gelmediyse uygula
-        txApplyPrice(sym, p);
-      }
-    }).catch(function(){});
+      if(!d) return;
+      var p = parseFloat(d.close);
+      var pc = parseFloat(d.percent_change);
+      if(window._txLive && window._txLive[sym]) return;   // bu arada canlı geldiyse dokunma
+      if(!isNaN(pc)){ if(!window._fbChg) window._fbChg={}; window._fbChg[sym]=pc; }
+      if(p>0) txApplyPrice(sym, p);                        // market watch + açık pozisyon K/Z düzelir
+    }).catch(function(){ if(window._txSeeded) delete window._txSeeded[sym]; });  // hata → tekrar denenebilsin
 }
 function _txSeedClosedPrices(){
-  if(typeof symConfig==='undefined' || !symConfig) return;
-  var n=0;
-  for(var i=0;i<symConfig.length && n<25;i++){
-    var s=symConfig[i]; if(!s || !s.active) continue;
-    var sym=s.sym;
-    if(window._txLive && window._txLive[sym]) continue;                 // zaten canlı
-    var cur=(typeof prices!=='undefined' && prices[sym]) ? prices[sym].price : null;
-    if(cur && cur>1.0001) continue;                                     // zaten gerçek fiyatı var
-    if(!(TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]))) continue;  // TD karşılığı yoksa çekemeyiz
-    (function(sm, idx){ setTimeout(function(){ _txFetchLastPrice(sm); }, idx*500); })(sym, n);
+  if(!window._txSeeded) window._txSeeded = {};
+  // Aday semboller: aktif semboller + AÇIK pozisyonu olanlar (yanlış K/Z'yi önlemek için öncelikli).
+  var cand = {};
+  if(typeof symConfig!=='undefined' && symConfig) symConfig.forEach(function(s){ if(s&&s.active&&s.sym) cand[s.sym]=true; });
+  if(typeof positions!=='undefined' && Array.isArray(positions)) positions.forEach(function(p){ if(p&&p.sym) cand[p.sym]=true; });
+  var list = Object.keys(cand), n=0;
+  for(var i=0;i<list.length && n<30;i++){
+    var sym = list[i];
+    if(window._txLive && window._txLive[sym]) continue;     // canlı tick var → dokunma
+    if(window._txSeeded[sym]) continue;                      // zaten tohumlandı
+    if(!(TD_KLINE_MAP[sym] || (window._txTdMap && window._txTdMap[sym]))) continue;  // TD karşılığı yok → çekemeyiz
+    (function(sm, idx){ setTimeout(function(){ _txFetchLastPrice(sm); }, idx*350); })(sym, n);
     n++;
   }
 }
-// symConfig Firebase'den geç gelebilir → birkaç kez dene.
-setTimeout(_txSeedClosedPrices, 6000);
+// symConfig/pozisyonlar ve TD haritası geç gelebilir → birkaç kez dene.
+setTimeout(_txSeedClosedPrices, 3000);
+setTimeout(_txSeedClosedPrices, 10000);
 setTimeout(_txSeedClosedPrices, 30000);
 
 function lwLoadTwelveDataKlines(sym, interval, cb) {
@@ -5744,6 +5754,9 @@ window._txClearSymIdx = function() { _txSymIdx = {}; _txSynthBySrc = null; };
 // ── Tek fiyat uygulama noktası ────────────────────────────────
 function txApplyPrice(sym, rawMid, _synthetic) {
   if(!sym || !rawMid || rawMid <= 0) return;
+  // Gerçek (sentetik olmayan) herhangi bir fiyat geldiyse "canlı" işaretle → tohumlayıcı bir daha dokunmaz,
+  // kline son-kapanış tohumu üzerine yazmaz. (Köprü/RTDB/seed hepsi buradan geçer.)
+  if(!_synthetic){ if(!window._txLive) window._txLive = {}; window._txLive[sym] = true; }
   // Override aktifse: GERÇEK feed (köprü/RTDB tick) ekrana YAZILMAZ → override ile gerçek fiyat
   // arasında titreme/flicker olmaz. Gerçek fiyat yalnızca tabana saklanır (override kalkınca oraya döner).
   // Sentetik (titreme) çağrıları geçer; titreme override etrafında kıpırdar (bkz. _txJitterTick).
@@ -6023,9 +6036,16 @@ function _txBridgeCleanup(){
   if(_txBrWs){ try{_txBrWs.close();}catch(e){} _txBrWs=null; }
   if(_txBrTimer){ clearTimeout(_txBrTimer); _txBrTimer=null; }
 }
-function _txApplyBridgePrice(sym, price){
+function _txApplyBridgePrice(sym, price, chg){
   if(!sym || sym.charAt(0)==='_') return;
   if(!(price>0)) return;
+  // Günlük değişim (köprü endeksler için gönderir) → fiyat aynı kalsa bile güncelle
+  if(chg!==undefined && chg!==null && !isNaN(parseFloat(chg))){
+    if(!window._fbChg) window._fbChg = {};
+    window._fbChg[sym] = parseFloat(chg);
+    if(typeof prices!=='undefined' && prices[sym]) prices[sym].chg = parseFloat(chg);
+    if(typeof mwPrices!=='undefined' && mwPrices[sym]) mwPrices[sym].chg = parseFloat(chg);
+  }
   if(window._txLastFbPrice[sym] === price) return;
   window._txLastFbPrice[sym] = price;
   if(!window._txLive) window._txLive = {};
@@ -6052,12 +6072,12 @@ function _txStartBridge(){
       if(msg.type === 'snapshot' && msg.prices){
         // İlk bağlantıda son bilinen tüm fiyatlar — ekranı hemen doldur
         var n=0;
-        Object.keys(msg.prices).forEach(function(s){ _txApplyBridgePrice(s, parseFloat(msg.prices[s])); n++; });
+        Object.keys(msg.prices).forEach(function(s){ _txApplyBridgePrice(s, parseFloat(msg.prices[s]), msg.chgs && msg.chgs[s]); n++; });
         console.log('[köprü] snapshot: '+n+' fiyat yüklendi');
         return;
       }
-      // Tekil tick: {s:'EURUSD', p:1.16}
-      if(msg.s) _txApplyBridgePrice(msg.s, parseFloat(msg.p));
+      // Tekil tick: {s:'EURUSD', p:1.16, c:0.42}
+      if(msg.s) _txApplyBridgePrice(msg.s, parseFloat(msg.p), msg.c);
     };
     _txBrWs.onclose = function(){ if(_txBrActive){ _txBrTimer = setTimeout(_open, 3000); } };
     _txBrWs.onerror = function(){};   // onclose zaten yeniden dener; close() ÇAĞIRMA → "closed before established" uyarısı olmaz
