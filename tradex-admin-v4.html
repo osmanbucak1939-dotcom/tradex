@@ -1521,6 +1521,7 @@ console.log('Firebase bağlandı ✓');
     window.startAdminSnapshots = function() {
       if(window._adminSnapshotsStarted || typeof db==='undefined' || !db) return;
       window._adminSnapshotsStarted = true;
+      if(typeof _adLoadSymbolsFromFb==='function') _adLoadSymbolsFromFb();   // Firebase'deki eksik sembolleri admin'e yükle
       db.collection('broker').doc('accounts').onSnapshot(function(doc){
         if(!doc.exists)return;
         try{
@@ -4333,6 +4334,46 @@ function _txMarkDeleted(sym){
 function _txUnmarkDeleted(sym){
   var i=_txDeleted.indexOf(sym);
   if(i!==-1){ _txDeleted.splice(i,1); try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){} }
+}
+
+// Firebase'deki (broker/symbols) sembolleri admin'e yükle — başka oturumda/cihazda eklenen
+// ya da trader'da görünüp admin localStorage'ında olmayan sembolleri sembol listesi + market
+// watch'a getirir. (Admin daha önce symConfig'i SADECE localStorage'dan okuyordu.)
+function _adLoadSymbolsFromFb(){
+  if(typeof db==='undefined' || !db) return;
+  db.collection('broker').doc('symbols').get().then(function(doc){
+    if(!doc.exists) return;
+    var d = doc.data()||{};
+    try{ var fbDel = d.deleted ? JSON.parse(d.deleted) : []; if(Array.isArray(fbDel)) fbDel.forEach(function(s){ if(_txDeleted.indexOf(s)===-1) _txDeleted.push(s); }); }catch(e){}
+    var fbSyms; try{ fbSyms = d.data ? JSON.parse(d.data) : []; }catch(e){ return; }
+    if(!Array.isArray(fbSyms) || !fbSyms.length) return;
+    var have={}; symConfig.forEach(function(s){ if(s&&s.sym) have[s.sym]=true; });
+    var added=0;
+    fbSyms.forEach(function(s){
+      if(!s || !s.sym || have[s.sym]) return;
+      if(_txDeleted.indexOf(s.sym)!==-1) return;     // silinmiş (tombstone)
+      if(AD_HIDDEN.indexOf(s.sym)!==-1) return;      // admin'de gizli
+      symConfig.push(s); have[s.sym]=true; added++;
+    });
+    if(!added) return;
+    // symConfig → AD_SIM + MARKET_GROUPS senkronu (yeni eklenenler market watch'ta da görünsün)
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto',stock:'stocks'};
+    symConfig.forEach(function(s){
+      if(!s||!s.active||!s.sym) return;
+      if(!AD_SIM[s.sym]){ var bp=(s.priceSource&&AD_SIM[s.priceSource])?AD_SIM[s.priceSource].p:1; AD_SIM[s.sym]={p:bp,v:0.002}; _adPrices[s.sym]=bp; mwPrices[s.sym]={price:bp,prev:bp,chg:0}; }
+      var grpId=catMap[s.category]||'crypto';
+      var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
+      if(grp && !grp.items.find(function(it){return it.sym===s.sym;})){
+        var item={sym:s.sym,name:s.label||s.sym,full:s.label||s.sym,icon:s.s||'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+        grp.items.push(item); MW_MAP[s.sym]=item;
+      }
+    });
+    try{ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }catch(e){}
+    window._symConfig = symConfig;
+    if(typeof renderSymMgr==='function'){ try{ renderSymMgr(window._symFilter||'all'); }catch(e){} }
+    if(typeof renderMarketWatch==='function'){ try{ renderMarketWatch(); }catch(e){} }
+    console.log('[admin] Firebase\'den '+added+' eksik sembol yüklendi');
+  }).catch(function(e){ console.warn('symbols load err', e); });
 }
 
 // Trader'ın MARKET_GROUPS'unda olup symConfig'te olmayan sembolleri içe aktar.
@@ -9351,6 +9392,17 @@ var _adHistSort  = {col:'closeTime', dir:-1};
 var _adEditId    = null;
 var _adEditHistIdx = 0;
 
+// İşlem ID'sine göre _adHistory indeksini bul (tablo sıralaması değişse de doğru kaydı hedefler).
+// data-hid yoksa/eşleşmezse eski data-hidx davranışına düşer.
+function _adFindHistIdx(btn){
+  var hid = btn && (btn.dataset.hid || btn.getAttribute('data-hid'));
+  if(hid){
+    var i = _adHistory.findIndex(function(x){ return String(x.id)===String(hid); });
+    if(i>=0) return i;
+  }
+  return parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+}
+
 // Yardımcı: sayı formatla
 function adFpDec(sym) {
   // Sembol için doğru decimal sayısını döndür
@@ -9638,8 +9690,9 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);font-weight:700;color:'+pc+';">'
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
-        +'<button class="ad-btn" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
-        +'<button class="ad-btn ad-btn-danger" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
+        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="font-size:10px;padding:2px 6px;margin-right:2px;">⟳</button>'
+        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
+        +'<button class="ad-btn ad-btn-danger" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
       +'</td>'
     +'</tr>';
   }).join('');
@@ -9855,7 +9908,7 @@ function adSaveUserTrades(){
 
 // ── Geçmiş düzenle ────────────────────────────────────────────
 function adEditHistory(btn){
-  var hidx = parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+  var hidx = _adFindHistIdx(btn);
   var h    = _adHistory[hidx];
   if(!h) return;
   _adEditHistIdx = hidx;
@@ -9884,7 +9937,8 @@ function adEditHistory(btn){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:16px;">'
       +'<button class="ad-btn ad-btn-success" onclick="adSaveHistEdit()" style="flex:1;">Kaydet</button>'
-      +'<button class="ad-btn ad-btn-danger" onclick="adDeleteHistory(this)" data-hidx="'+hidx+'" style="flex:1;">Sil</button>'
+      +'<button class="ad-btn" onclick="adReopenHistory(this)" data-hid="'+h.id+'" title="Pozisyonu yeniden aç" style="flex:1;">⟳ Yeniden Aç</button>'
+      +'<button class="ad-btn ad-btn-danger" onclick="adDeleteHistory(this)" data-hid="'+h.id+'" style="flex:1;">Sil</button>'
       +'<button class="ad-btn" onclick="document.getElementById(\'adHistEditModal\').style.display=\'none\'" style="flex:1;">Kapat</button>'
     +'</div>'
   +'</div>';
@@ -9909,13 +9963,60 @@ function adSaveHistEdit(){
 }
 
 function adDeleteHistory(btn){
-  var hidx = parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+  var hidx = _adFindHistIdx(btn);
   if(!confirm('Bu geçmiş kaydı silinsin mi?')) return;
+  if(hidx<0 || !_adHistory[hidx]) return;
   _adHistory.splice(hidx, 1);
   adSaveUserTrades();
   adRenderHistoryTable();
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
   showAdminToast('Silindi','Geçmiş kayıt kaldırıldı','info');
+}
+
+// ── Kapalı pozisyonu YENİDEN AÇ (reopen) ──────────────────────
+// Kapalı kaydı açık pozisyonlara geri koyar ve kapanışta bakiyeye eklenen
+// (cost + K/Z) tutarını geri alır → pozisyon hiç kapanmamış gibi aktif olur.
+function adReopenHistory(btn){
+  if(typeof hasPerm==='function' && !hasPerm('trades.edit')){ showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger'); return; }
+  var hidx = _adFindHistIdx(btn);
+  var h = _adHistory[hidx];
+  if(!h) return;
+  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  if(!a) return;
+  if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' pozisyonu YENİDEN AÇILSIN mı?\n\nKapanışta bakiyeye eklenen K/Z geri alınır, pozisyon açık (aktif) duruma döner.')) return;
+
+  var cost = parseFloat(h.cost)||0;
+  var pnl  = parseFloat(h.pnl)||0;
+  // Kapanışta bakiye += cost + pnl yapılmıştı → reopen: bakiye -= cost + pnl
+  var _newBal = getAccBal(a.id) - cost - pnl;
+
+  // Kapalı kaydı açık pozisyona çevir — kapanış alanlarını temizle
+  var pos = Object.assign({}, h);
+  ['closePrice','closeTime','closeDate','closeReason','closeDevice','pnl','status','closed','_accName','_accId'].forEach(function(k){ delete pos[k]; });
+  if(!pos.id) pos.id = Date.now();
+  if(pos.status) pos.status = 'open';
+
+  _adPositions.push(pos);
+  _adHistory.splice(hidx, 1);
+  if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id] = _adPositions;
+  // Canonical balance'ı anında güncelle (UI tutarlı olsun; snapshot da teyit eder)
+  if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
+
+  if(typeof db!=='undefined' && db){
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      positions: _adPositions,
+      tradeHistory: _adHistory.slice(0,100),
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adReopenHistory:', e); });
+  }
+
+  var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
+  if(typeof adRenderOpenTable==='function') adRenderOpenTable();
+  adRenderHistoryTable();
+  if(typeof adRefreshBadges==='function') adRefreshBadges();
+  showAdminToast('Yeniden açıldı','#'+String(h.id).slice(-6)+' '+h.sym+' tekrar aktif', 'success');
 }
 
 // ── MTF fiyat güncelle ────────────────────────────────────────
