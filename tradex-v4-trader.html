@@ -4348,12 +4348,16 @@ function startFirebaseSnapshots() {
 
 
 function startLiveFeed() {
+  // Önceki oturumun SON GERÇEK fiyatları (localStorage) — açılışta "1"/eski seed görünmesin.
+  var _saved = {}; try{ _saved = JSON.parse(localStorage.getItem('tx_lastp')||'{}'); }catch(e){}
   // Simüle fiyatları yükle (UI hemen gösterilsin)
   var keys = Object.keys(SIM_PRICES);
   for(var i=0; i<keys.length; i++) {
     var sym = keys[i]; var cfg = SIM_PRICES[sym];
-    mwPrices[sym] = {price:cfg.p, prev:cfg.p, chg:0};
-    prices[sym]   = {price:cfg.p, chg:0, bid:cfg.p, ask:cfg.p};
+    var p0 = (_saved[sym]>0) ? _saved[sym] : cfg.p;
+    if(_saved[sym]>0) cfg.p = _saved[sym];
+    mwPrices[sym] = {price:p0, prev:p0, chg:0};
+    prices[sym]   = {price:p0, chg:0, bid:p0, ask:p0};
   }
   applySymConfig();
   renderMarketWatch();
@@ -4598,7 +4602,8 @@ function applySymConfig() {
     }
     // SIM_PRICES ve prices'a da ekle
     if(!SIM_PRICES[s.sym]) {
-      var bp = (s.priceSource && SIM_PRICES[s.priceSource]) ? SIM_PRICES[s.priceSource].p : 1;
+      var _sv = 0; try{ var _o = window._txPersist || JSON.parse(localStorage.getItem('tx_lastp')||'{}'); _sv = _o[s.sym]||0; }catch(e){}
+      var bp = (_sv>0) ? _sv : ((s.priceSource && SIM_PRICES[s.priceSource]) ? SIM_PRICES[s.priceSource].p : 1);
       SIM_PRICES[s.sym] = {p: bp, v: 0.001, d: parseInt(s.decimals)||2};
     }
     if(!prices[s.sym]) {
@@ -5801,6 +5806,16 @@ function txApplyPrice(sym, rawMid, _synthetic) {
   // mwPrices artık prices'ın alias'ı - Market Watch bid gösterir
   mwPrices[sym] = prices[sym];
   if(SIM_PRICES && SIM_PRICES[sym]) SIM_PRICES[sym].p = rawMid;
+  // Son GERÇEK fiyatları kalıcı sakla (sayfa açılışında "1" görünmesin) — 5sn'de bir topluca yaz.
+  if(!_synthetic){
+    if(!window._txPersist){ try{ window._txPersist = JSON.parse(localStorage.getItem('tx_lastp')||'{}'); }catch(e){ window._txPersist = {}; } }
+    window._txPersist[sym] = rawMid;
+    var _nw = Date.now();
+    if(!window._txLastSave || _nw - window._txLastSave > 5000){
+      window._txLastSave = _nw;
+      try{ localStorage.setItem('tx_lastp', JSON.stringify(window._txPersist)); }catch(e){}
+    }
+  }
 
   // İlk gerçek fiyat gelince grafik yenile
   if(!window._txPriceInit) window._txPriceInit = {};
