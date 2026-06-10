@@ -3814,12 +3814,12 @@ function renderPositions() {
       <td style="font-size:10px;color:#2979ff">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '—'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#2979ff':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor};text-align:right">${pnlSign}$${fp(Math.abs(pnl))}</td>
-      <td><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
+      <td><button class="close-ord" onclick="txPartialClose(${pos.id})" title="Parçalı kapat" style="margin-right:4px">◐</button><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
     </tr>`;
   }).join('');
 }
 
-function closePosition(id, reason='') {
+function closePosition(id, reason='', closeQty) {
   if(window._readOnly && reason==='') { showToast('İzleyici Modu','Bu modda pozisyon kapatamazsınız.'); return; }
   // ID tip güvencesi: number veya string olabilir (Date.now() veya Firebase'den string gelebilir)
   const idx = positions.findIndex(p=>String(p.id)===String(id));
@@ -3830,9 +3830,42 @@ function closePosition(id, reason='') {
   const _csC = parseFloat(pos.contractSize)||1;
   const _qtyC = parseFloat(pos.qty)||0;
   const _costC = parseFloat(pos.cost)||0;
+  const _swapC = parseFloat(pos.swapTotal)||0;
+
+  // ── PARÇALI KAPATMA ─────────────────────────────────────────
+  // closeQty verildi ve toplam lottan küçükse: o oranda K/Z + marj (cost) + swap
+  // serbest bırakılır, kalan lot açık kalır. Geçmişe parça için AYRI kayıt düşülür.
+  const _pq = parseFloat(closeQty)||0;
+  if(_pq > 0 && _pq < _qtyC - 1e-9){
+    const _r = _pq/_qtyC;
+    const _costPart = Math.round(_costC*_r*100)/100;
+    const _swapPart = Math.round(_swapC*_r*100)/100;
+    let pnlPart = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _pq * _csC;
+    if(isNaN(pnlPart)) pnlPart = 0;
+    pnlPart += _swapPart;
+    balance += _costPart + pnlPart;
+    // Kalan pozisyon: lot/cost/swap azalt (açılış fiyatı ve TP/SL aynen kalır)
+    pos.qty = Math.round((_qtyC - _pq)*1e6)/1e6;
+    pos.cost = Math.round((_costC - _costPart)*100)/100;
+    pos.swapTotal = Math.round((_swapC - _swapPart)*100)/100;
+    // Geçmişe parça kaydı — YENİ id (açık pozisyonla çakışmasın), izlenebilirlik için parentId
+    tradeHistory.unshift({ ...pos, id: Date.now(), parentId: pos.id, qty: _pq, cost: _costPart, swapTotal: _swapPart,
+      closePrice, pnl: pnlPart, closeTime: new Date().toISOString(), closeReason: reason||'parçalı' });
+    if (tradeHistory.length > 50) tradeHistory.pop();
+    save();
+    if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
+      fbSaveUserData(_cu.id, {balance:balance, positions:positions});
+    }
+    renderPositions();
+    renderHistory();
+    updateAccount();
+    if(typeof window.mFPRefresh==='function') try{ window.mFPRefresh(); }catch(e){}
+    showToast('Parçalı Kapatıldı', `#${id} — ${_pq} lot, ${pnlPart>=0?'+':''}$${fp(pnlPart)} (kalan ${pos.qty} lot)`);
+    return;
+  }
+
   let pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qtyC * _csC;
   if(isNaN(pnl)) pnl = 0;
-  const _swapC = parseFloat(pos.swapTotal)||0;
   pnl += _swapC; // birikmiş swap balance'a dahil
   balance += _costC + pnl;
   positions.splice(idx, 1);
@@ -3851,6 +3884,19 @@ function closePosition(id, reason='') {
 }
 
 var _histSortCol = 'time', _histSortDir = -1;
+
+// Parçalı kapatma girişi (desktop) — lot sor, doğrula, closePosition'a ilet.
+function txPartialClose(id){
+  var pos = positions.find(function(p){ return String(p.id)===String(id); });
+  if(!pos) return;
+  var maxQ = parseFloat(pos.qty)||0;
+  var v = prompt('Kapatılacak lot miktarı (maks. '+maxQ+'):', '');
+  if(v===null) return;
+  v = parseFloat(String(v).replace(',','.'));
+  if(!(v>0)){ showToast('Hata','Geçerli bir lot girin'); return; }
+  if(v >= maxQ - 1e-9){ closePosition(id); return; }   // tamamı → normal kapatma
+  closePosition(id, '', v);
+}
 
 function sortHist(col) {
   if (_histSortCol === col) { _histSortDir *= -1; }
@@ -7866,6 +7912,22 @@ function symUnpin(sym){
     }
   }
   window.mCP=function(id){ if(typeof closePosition==='function') closePosition(id); setTimeout(mFP,200); };
+  window.mFPRefresh = mFP;   // closePosition (parçalı) mobil listeyi tazeleyebilsin
+
+  window.mPosPartial = function(){
+    if(!_mPosId) return;
+    var pos = (typeof positions!=='undefined') ? positions.find(function(p){ return String(p.id)===String(_mPosId); }) : null;
+    if(!pos) return;
+    var inp = document.getElementById('mPMPartialQty');
+    var v = parseFloat(String((inp&&inp.value)||'').replace(',','.'));
+    var maxQ = parseFloat(pos.qty)||0;
+    if(!(v>0)){ if(typeof showToast==='function') showToast('Hata','Geçerli bir lot girin'); return; }
+    if(v >= maxQ - 1e-9){ window.mPosClose(); return; }   // tamamı → normal kapatma
+    if(typeof closePosition==='function') closePosition(_mPosId, '', v);
+    if(inp) inp.value='';
+    mPosModalClose();
+    setTimeout(mFP, 200);
+  };
   // ── DİL SİSTEMİ ──────────────────────────────────────
   var _LANGS = {
     tr: {
@@ -8023,6 +8085,7 @@ function symUnpin(sym){
     // Kapat butonu gizle, güncelle butonu gizle
     var closeBtn=document.getElementById('mPMCloseBtn');
     if(closeBtn) closeBtn.style.display='none';
+    var _prow=document.getElementById('mPMPartialRow'); if(_prow) _prow.style.display='none';
     var modal=document.getElementById('mPosModal');
     if(modal){ modal.style.display='flex'; }
   };
@@ -8429,6 +8492,14 @@ function symUnpin(sym){
     </div>
     <!-- Kapat butonu kompakt -->
     <div style="padding:8px;flex-shrink:0;border-top:1px solid #1a1a1a">
+      <div id="mPMPartialRow" style="display:flex;gap:6px;margin-bottom:6px">
+        <input id="mPMPartialQty" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Lot (örn 0.03)"
+          style="flex:1;padding:10px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;color:#e8e8e8;font-family:monospace;font-size:13px">
+        <button onclick="mPosPartial()"
+          style="padding:10px 14px;background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.35);border-radius:8px;color:#f0b90b;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+          ◐ Parçalı Kapat
+        </button>
+      </div>
       <button onclick="mPosClose()" id="mPMCloseBtn"
         style="width:100%;padding:11px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;color:#ef5350;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">
         ✕ Pozisyonu Kapat
