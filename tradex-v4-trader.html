@@ -1553,11 +1553,12 @@ function initAuth(){
         if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
 
         // Her değişiklikte render — guard yok, Firebase zaten sadece gerçek değişikliklerde tetikler
-        if(typeof renderPositions === 'function') renderPositions();
-        if(typeof renderHistory === 'function') renderHistory();
-        if(typeof updateAccount === 'function') updateAccount();
-        if(typeof mFP === 'function') mFP();
-        if(typeof renderPendingOrders === 'function') renderPendingOrders();
+        // Her çağrı yalıtıldı: biri hata verirse diğerleri (özellikle mobil mFP) yine çalışsın.
+        if(typeof renderPositions === 'function') try{ renderPositions(); }catch(e){ console.warn('[sync renderPositions]', e); }
+        if(typeof renderHistory === 'function') try{ renderHistory(); }catch(e){ console.warn('[sync renderHistory]', e); }
+        if(typeof updateAccount === 'function') try{ updateAccount(); }catch(e){ console.warn('[sync updateAccount]', e); }
+        if(typeof mFP === 'function') try{ mFP(); }catch(e){ console.warn('[sync mFP]', e); }
+        if(typeof renderPendingOrders === 'function') try{ renderPendingOrders(); }catch(e){ console.warn('[sync renderPendingOrders]', e); }
         var _finEl = document.getElementById('bp-finans-content');
         if(_finEl && typeof _renderBpFinansTable === 'function') _renderBpFinansTable(_finEl);
       }, function(e){ console.warn('fbListenUserData err:', e); }));
