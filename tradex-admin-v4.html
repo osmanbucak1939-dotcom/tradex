@@ -3864,6 +3864,67 @@ function _adStartBinance() {
 }
 
 // ── TWELVE DATA FOREX/EMTİA/ENDEKS WS ───────────────────────
+// ── KÖPRÜ İSTEMCİSİ (admin) ─────────────────────────────────────────────
+// Admin de köprüye bağlanır: endeksler (Yahoo) + TD forex tick'leri tek kaynaktan gelir.
+// Böylece admin market watch / equity / margin hesapları gerçek fiyatla çalışır
+// (endeks-hisselerin "1" veya eski seed'de kalması sorununu çözer).
+var AD_BRIDGE_URL = 'wss://tradex-bridge-production.up.railway.app';
+var _adBrWs = null;
+function _adApplyBridge(sym, price, chg){
+  if(!sym || !(price>0)) return;
+  if(!window._adLive) window._adLive = {};
+  window._adLive[sym] = true;
+  adReceiveRawPrice(sym, price);
+  if(chg!==undefined && chg!==null && !isNaN(parseFloat(chg)) && prices[sym]) prices[sym].chg = parseFloat(chg);
+}
+function _adStartBridge(){
+  try{
+    if(_adBrWs){ try{ _adBrWs.onopen=_adBrWs.onmessage=_adBrWs.onclose=_adBrWs.onerror=null; if(_adBrWs.readyState===1) _adBrWs.close(); }catch(e){} }
+    _adBrWs = new WebSocket(AD_BRIDGE_URL);
+    _adBrWs.onmessage = function(e){
+      var msg; try{ msg = JSON.parse(e.data); }catch(ex){ return; }
+      if(msg.type==='snapshot' && msg.prices){
+        Object.keys(msg.prices).forEach(function(s){ _adApplyBridge(s, parseFloat(msg.prices[s]), msg.chgs && msg.chgs[s]); });
+        return;
+      }
+      if(msg.s) _adApplyBridge(msg.s, parseFloat(msg.p), msg.c);
+    };
+    _adBrWs.onerror = function(){};
+    _adBrWs.onclose = function(){ setTimeout(_adStartBridge, 4000); };
+  }catch(e){ setTimeout(_adStartBridge, 8000); }
+}
+setTimeout(_adStartBridge, 1500);
+
+// ── KAPALI PİYASA TOHUMLAMA (admin) ────────────────────────────────────
+// Gerçek tick'i olmayan (hisse vb.) sembollerin son fiyatını TD /quote ile çek.
+function _adFetchLastPrice(sym){
+  var tdSym = AD_TD_MAP[sym];
+  if(!tdSym || typeof _adTdKey==='undefined') return;
+  if(!window._adSeeded) window._adSeeded = {};
+  window._adSeeded[sym] = true;
+  fetch('https://api.twelvedata.com/quote?symbol='+encodeURIComponent(tdSym)+'&apikey='+_adTdKey)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d) return;
+      var p = parseFloat(d.close), pc = parseFloat(d.percent_change);
+      if(window._adLive && window._adLive[sym]) return;
+      if(p>0){ adReceiveRawPrice(sym, p); if(!isNaN(pc) && prices[sym]) prices[sym].chg = pc; }
+    }).catch(function(){ if(window._adSeeded) delete window._adSeeded[sym]; });
+}
+function _adSeedClosedPrices(){
+  if(!window._adSeeded) window._adSeeded = {};
+  var list = Object.keys(AD_TD_MAP||{}), n=0;
+  for(var i=0;i<list.length && n<30;i++){
+    var sym = list[i];
+    if(window._adLive && window._adLive[sym]) continue;
+    if(window._adSeeded[sym]) continue;
+    (function(sm, idx){ setTimeout(function(){ _adFetchLastPrice(sm); }, idx*350); })(sym, n);
+    n++;
+  }
+}
+setTimeout(_adSeedClosedPrices, 5000);
+setTimeout(_adSeedClosedPrices, 25000);
+
 // Endpoint: wss://ws.twelvedata.com/v1/quotes/price?apikey=KEY
 // Subscribe: {"action":"subscribe","params":{"symbols":"EUR/USD,GBP/USD,..."}}
 // Gelen veri: {"event":"price","symbol":"EUR/USD","price":1.17314,"bid":...,"ask":...}
