@@ -9994,7 +9994,10 @@ function adReopenHistory(btn){
   var pos = Object.assign({}, h);
   ['closePrice','closeTime','closeDate','closeReason','closeDevice','pnl','status','closed','_accName','_accId'].forEach(function(k){ delete pos[k]; });
   if(!pos.id) pos.id = Date.now();
-  if(pos.status) pos.status = 'open';
+  // Render'ın beklediği alanları garanti et (eski kayıtlarda isimler farklı olabilir)
+  if(!pos.openDate) pos.openDate = pos.time || pos.openTime || new Date().toISOString();
+  if(!pos.qty) pos.qty = parseFloat(h.qty)||parseFloat(h.lot)||0;
+  if(!pos.openPrice) pos.openPrice = parseFloat(h.openPrice)||parseFloat(h.price)||0;
 
   _adPositions.push(pos);
   _adHistory.splice(hidx, 1);
@@ -10015,7 +10018,13 @@ function adReopenHistory(btn){
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
   if(typeof adRenderOpenTable==='function') adRenderOpenTable();
   adRenderHistoryTable();
-  if(typeof adRefreshBadges==='function') adRefreshBadges();
+  if(typeof adRefreshBadges==='function') try{ adRefreshBadges(); }catch(e){}
+  // Kullanıcı pozisyonu hemen görsün: AÇIK alt-sekmesine otomatik geç
+  try{ var _ob = document.querySelector('[data-subtab="open"]'); if(_ob && typeof adSubTab==='function') adSubTab(_ob); }catch(e){}
+  // Firebase yazma yankısı (snapshot) sonrası emniyet render'ı
+  setTimeout(function(){
+    try{ if(document.getElementById('adOpenBody')) adRenderOpenTable(); }catch(e){}
+  }, 1200);
   showAdminToast('Yeniden açıldı','#'+String(h.id).slice(-6)+' '+h.sym+' tekrar aktif', 'success');
 }
 
