@@ -8165,6 +8165,13 @@ function symUnpin(sym){
   // Pozisyon K/Z canlı güncelle - sekme bağımsız
   function _mTickPos(){
     var pos=typeof positions!=='undefined'?positions:[];
+    // SENKRON EMNİYETİ: liste görünüyorsa ve karttaki pozisyon sayısı gerçek pozisyon
+    // sayısından farklıysa (admin reopen/yeni işlem senkronu) listeyi yeniden çiz.
+    var _pl=document.getElementById('mPL');
+    if(_pl && _ptab==='open'){
+      var _cards=_pl.querySelectorAll('[data-mp]').length;
+      if(_cards!==pos.length){ try{ mFP(); }catch(e){} }
+    }
     var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
     pos.forEach(function(p){
       var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===p.sym;}):null;
