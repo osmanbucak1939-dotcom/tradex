@@ -4674,6 +4674,11 @@ function applySymConfig() {
       grp = {id: grpId, label: grpId.toUpperCase(), open: true, items: []};
       MARKET_GROUPS.push(grp);
     }
+    // Kategori değişmişse sembolü DİĞER gruplardan çıkar — kopya görünmesin
+    MARKET_GROUPS.forEach(function(g){
+      if(g.id===grpId || !g.items) return;
+      for(var _i=g.items.length-1;_i>=0;_i--){ if(g.items[_i].sym===s.sym) g.items.splice(_i,1); }
+    });
     var existing = grp.items.find(function(it){ return it.sym === s.sym; });
     if(existing) {
       // KISA AD (name) korunur — uzun ad full'a yazılır (MW'de "Destek Faktoring" gibi tam ad görünmesin)
