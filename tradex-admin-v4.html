@@ -1228,13 +1228,15 @@ function _adIsOpenPos(p){
 }
 function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
 function getAccEquity(accId)   {
-  // equity = balance + bonus + ∑ floating P&L
+  // equity = balance + bonus + ∑ kilitli marj (cost) + ∑ floating P&L
+  // (Açılışta balance -= cost yapılır; cost geri sayılmazsa varlık marj kadar eksik görünür.)
   var bal = getAccBal(accId) + getAccBonus(accId);
   var poses = getAccPos(accId).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları sayma
   var fp = 0;
   var _missing = 0;
   for(var i=0;i<poses.length;i++){
     var po = poses[i];
+    fp += parseFloat(po.cost)||0;   // kilitli marj varlığa geri sayılır
     var pr = (typeof adGetPrice==='function') ? adGetPrice(po.sym) : 0;
     // ⚠️ Fiyat yoksa pozisyonu ATLAMA — openPrice'i kullan (P&L=0 gibi davran).
     // Eski davranış `continue`'ydu: büyük zarardaki pozisyonlar fiyat feed'i kopunca
@@ -3715,8 +3717,10 @@ function adCalcStats(account, positions) {
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
+  var lockedCost=0;   // açılışta bakiyeden düşülen kilitli marj — varlığa GERİ sayılmalı (MT mantığı)
   var _missingPrices = 0;
   (positions||[]).forEach(function(pos){
+    lockedCost += parseFloat(pos.cost)||0;
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
     var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || adGetPrice(pos.sym);
     // ⚠️ Fiyat yoksa pozisyonu atlamak yerine openPrice kullan (P&L=0 gibi davran).
@@ -3733,7 +3737,8 @@ function adCalcStats(account, positions) {
     console.warn('[adCalcStats] #'+account.id+' '+_missingPrices+' pozisyonda fiyat yok — openPrice fallback');
     window._calcStatsMissingLog = account.id;
   }
-  var equity=bal+bonus+openPnl;
+  // Varlık = bakiye + bonus + kilitli marj + açık K/Z (kapanışta zıplama olmasın — trader ile aynı formül)
+  var equity=bal+bonus+lockedCost+openPnl;
   var nets={};
   (positions||[]).forEach(function(pos){
     if(!nets[pos.sym]) nets[pos.sym]={buy:0,sell:0,price:0};
