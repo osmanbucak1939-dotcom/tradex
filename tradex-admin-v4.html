@@ -4434,6 +4434,15 @@ function _txUnmarkDeleted(sym){
   if(i!==-1){ _txDeleted.splice(i,1); try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){} }
 }
 
+// Sembolü hedef grup DIŞINDAKİ tüm gruplardan kaldır — kategori değişince kopya kalmasın.
+function _adRemoveSymFromOtherGroups(sym, grpId){
+  if(typeof MARKET_GROUPS==='undefined') return;
+  MARKET_GROUPS.forEach(function(g){
+    if(g.id===grpId || !g.items) return;
+    for(var i=g.items.length-1;i>=0;i--){ if(g.items[i].sym===sym) g.items.splice(i,1); }
+  });
+}
+
 // Firebase'deki (broker/symbols) sembolleri admin'e yükle — başka oturumda/cihazda eklenen
 // ya da trader'da görünüp admin localStorage'ında olmayan sembolleri sembol listesi + market
 // watch'a getirir. (Admin daha önce symConfig'i SADECE localStorage'dan okuyordu.)
@@ -4460,9 +4469,10 @@ function _adLoadSymbolsFromFb(){
       if(!s||!s.active||!s.sym) return;
       if(!AD_SIM[s.sym]){ var bp=(s.priceSource&&AD_SIM[s.priceSource])?AD_SIM[s.priceSource].p:1; AD_SIM[s.sym]={p:bp,v:0.002}; _adPrices[s.sym]=bp; mwPrices[s.sym]={price:bp,prev:bp,chg:0}; }
       var grpId=catMap[s.category]||'crypto';
-      var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
+      _adRemoveSymFromOtherGroups(s.sym, grpId);   // kategori değişmişse eski gruptan çıkar (kopya olmasın)
+    var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
       if(grp && !grp.items.find(function(it){return it.sym===s.sym;})){
-        var item={sym:s.sym,name:s.label||s.sym,full:s.label||s.sym,icon:s.s||'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+        var item={sym:s.sym,name:s.sym,full:s.label||s.sym,icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
         grp.items.push(item); MW_MAP[s.sym]=item;
       }
     });
@@ -4643,10 +4653,11 @@ function saveSymbolMgr() {
     }
     var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId=catMap[s.category]||'crypto';
+    _adRemoveSymFromOtherGroups(s.sym, grpId);
     var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
     if(!grp.items.find(function(it){return it.sym===s.sym;})){
-      var item={sym:s.sym,name:s.label||s.sym,full:s.label||s.sym,
-        icon:s.s||'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+      var item={sym:s.sym,name:s.sym,full:s.label||s.sym,
+        icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
       grp.items.push(item);
       MW_MAP[s.sym]=item;
     }
@@ -4678,20 +4689,20 @@ function saveSymbolMgr() {
     // MARKET_GROUPS'a ekle
     var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId = catMap[s.category] || 'crypto';
+    _adRemoveSymFromOtherGroups(s.sym, grpId);
     var grp = MARKET_GROUPS.find(function(g){ return g.id === grpId; }) || MARKET_GROUPS[0];
     if(!grp.items.find(function(it){ return it.sym === s.sym; })) {
       var newItem = {
-        sym: s.sym, name: s.label || s.sym, full: '',
+        sym: s.sym, name: s.sym, full: s.label || s.sym,
         icon: '', spread: s.spread || 0.1, decimals: parseInt(s.decimals) || 2
       };
       grp.items.push(newItem);
       MW_MAP[s.sym] = newItem;
     } else {
-      // Varsa güncelle
+      // Varsa güncelle — KISA AD (name) korunur; uzun ad full'a yazılır
       var existing = grp.items.find(function(it){ return it.sym === s.sym; });
       if(existing) {
-        existing.name = s.label || s.sym;
-        existing.full = s.label || s.sym;
+        existing.full = s.label || existing.full || s.sym;
         existing.spread = s.spread || 0.1;
         existing.decimals = parseInt(s.decimals) || 2;
         MW_MAP[s.sym] = existing;
@@ -6539,6 +6550,22 @@ if (!symConfig) {
   // Eski/çift + kaldırılan sembolleri temizle (AD_HIDDEN)
   var _obsolete = (typeof AD_HIDDEN!=='undefined') ? AD_HIDDEN : ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
   symConfig = symConfig.filter(function(s){ return _obsolete.indexOf(s.sym) === -1; });
+  // GEÇİŞ: Eski sürümle import edilen BIST hisseleri 'crypto' kategorisiyle kaydedilmişti → 'bist'e çevir.
+  (function(){
+    var _bist = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
+                 'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
+                 'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF'];
+    var _fixed = 0;
+    symConfig.forEach(function(s){
+      if(s && _bist.indexOf(s.sym)!==-1 && s.category!=='bist'){ s.category='bist'; _fixed++; }
+    });
+    if(_fixed){
+      try{ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }catch(e){}
+      // Firebase'e de yansıt (db hazır olduğunda)
+      setTimeout(function(){ try{ if(typeof saveSymConfig==='function') saveSymConfig(); }catch(e){} }, 3000);
+      console.log('[admin] '+_fixed+' BIST sembolünün kategorisi düzeltildi (crypto→bist)');
+    }
+  })();
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
 }
 window._symConfig = symConfig;
@@ -9278,9 +9305,10 @@ var AD_SIM={
     symConfig.forEach(function(s) {
       if(!s.active) return;
       var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
+      _adRemoveSymFromOtherGroups(s.sym, catMap[s.category]||'crypto');
       var grp=MARKET_GROUPS.find(function(g){return g.id===(catMap[s.category]||'crypto');})||MARKET_GROUPS[0];
       if(!grp.items.find(function(it){return it.sym===s.sym;})){
-        var item={sym:s.sym,name:s.label||s.sym,full:'',icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+        var item={sym:s.sym,name:s.sym,full:s.label||s.sym,icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
         grp.items.push(item); MW_MAP[s.sym]=item;
       }
       if(!AD_SIM[s.sym]){
