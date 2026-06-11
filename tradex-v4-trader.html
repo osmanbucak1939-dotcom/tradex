@@ -4676,12 +4676,13 @@ function applySymConfig() {
     }
     var existing = grp.items.find(function(it){ return it.sym === s.sym; });
     if(existing) {
-      existing.name    = s.label || existing.name || s.sym;
+      // KISA AD (name) korunur — uzun ad full'a yazılır (MW'de "Destek Faktoring" gibi tam ad görünmesin)
+      existing.full    = s.label || existing.full || s.sym;
       existing.spread  = s.spread || existing.spread || 0;
       existing.decimals= parseInt(s.decimals) || existing.decimals || 2;
     } else {
       grp.items.push({
-        sym: s.sym, name: s.label||s.sym, full: s.label||s.sym,
+        sym: s.sym, name: s.sym, full: s.label||s.sym,
         icon: s.icon||'', color: s.color||'#f0b90b',
         spread: s.spread||0.1, decimals: parseInt(s.decimals)||2
       });
