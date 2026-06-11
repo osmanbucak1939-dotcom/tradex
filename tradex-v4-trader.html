@@ -3644,12 +3644,15 @@ function placeOrder(side) {
   }
   // Açık PL hesapla
   var _chkPL = 0;
+  var _chkCost = 0;   // mevcut pozisyonların kilitli marjı (varlığa dahil)
   for(var _ck=0; _ck<positions.length; _ck++) {
     var _cpos = positions[_ck];
+    _chkCost += parseFloat(_cpos.cost)||0;
     var _cp2 = prices[_cpos.sym];
     if(_cp2) _chkPL += (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1);
   }
-  var _newEquity = _newBalance + _chkPL;
+  // Varlık = (işlem sonrası bakiye) + kilitli marjlar (mevcut + yeni) + açık K/Z
+  var _newEquity = _newBalance + _chkCost + netCost + _chkPL;
   var _newMarginLvl = _newMarginUsed > 0 ? (_newEquity / _newMarginUsed * 100) : null;
 
   if(_newMarginLvl !== null && _newMarginLvl <= _stopOutLvl) {
@@ -6665,7 +6668,9 @@ function txCalcStats(account, posArr) {
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl = 0;
+  var lockedCost = 0;   // açılışta bakiyeden düşülen kilitli marj — varlığa GERİ sayılmalı (MT mantığı)
   (posArr||[]).forEach(function(pos){
+    lockedCost += parseFloat(pos.cost)||0;
     var p = prices[pos.sym];
     if(!p) return;
     var cs = parseFloat(pos.contractSize)||1;
@@ -6674,7 +6679,10 @@ function txCalcStats(account, posArr) {
     openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP) * (parseFloat(pos.qty)||0) * cs;
     openPnl += parseFloat(pos.swapTotal)||0;
   });
-  var equity = bal + bonus + openPnl;
+  // Varlık = bakiye + bonus + kilitli marj + açık K/Z.
+  // (Açılışta balance -= cost yapıldığı için cost geri sayılmazsa pozisyon açıkken varlık
+  //  marj kadar EKSİK görünür ve kapanışta aniden zıplar — düzeltildi.)
+  var equity = bal + bonus + lockedCost + openPnl;
   var nets = {};
   (posArr||[]).forEach(function(pos){
     if(!nets[pos.sym]) nets[pos.sym]={buy:0,sell:0,price:0};
