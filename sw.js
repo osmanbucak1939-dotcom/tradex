@@ -1054,210 +1054,15 @@ select { color-scheme: dark; }
 var _cu = null;
 try { _cu = JSON.parse(localStorage.getItem('tx_current_user')||'null'); } catch(e){}
 var _authType = 'demo';
+// 2026-04-19: accounts top-level declaration — daha önce implicit global idi (199 bare use).
+// Aşağıdaki tüm 'accounts = ...' atamaları bu tek slot'a yazıyor.
+var accounts = [];
+try { accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); if(!Array.isArray(accounts)) accounts = []; } catch(e){ accounts = []; }
 
-function _authShow(sec) {
-  var l = document.getElementById('sec-login');
-  var r = document.getElementById('sec-register');
-  var tl = document.getElementById('tab-login');
-  var tr = document.getElementById('tab-register');
-  if(sec === 'login') {
-    if(l) l.style.display='block';
-    if(r) r.style.display='none';
-    if(tl){ tl.style.color='#f0b90b'; tl.style.borderBottomColor='#f0b90b'; }
-    if(tr){ tr.style.color='#999999'; tr.style.borderBottomColor='transparent'; }
-  } else {
-    if(l) l.style.display='none';
-    if(r) r.style.display='block';
-    if(tl){ tl.style.color='#999999'; tl.style.borderBottomColor='transparent'; }
-    if(tr){ tr.style.color='#f0b90b'; tr.style.borderBottomColor='#f0b90b'; }
-  }
-}
-function authAccType(t) {
-  _authType = t;
-  var d = document.getElementById('opt-demo');
-  var l = document.getElementById('opt-live');
-  if(t==='demo') {
-    if(d){ d.style.border='1px solid #f0b90b'; d.style.background='rgba(240,185,11,.07)'; }
-    if(l){ l.style.border='1px solid #333'; l.style.background='#111'; }
-  } else {
-    if(l){ l.style.border='1px solid #f0b90b'; l.style.background='rgba(240,185,11,.07)'; }
-    if(d){ d.style.border='1px solid #333'; d.style.background='#111'; }
-  }
-}
-function _authClose() {
-  var el = document.getElementById('authOverlay');
-  if(el) el.style.display='none';
-}
-function _authOpen(sec) {
-  var el = document.getElementById('authOverlay');
-  if(el) el.style.display='flex';
-  _authShow(sec||'login');
-}
-function _authErr(id, msg) {
-  var el = document.getElementById(id);
-  if(!el) return;
-  el.textContent=msg; el.style.display='block';
-  setTimeout(function(){ el.style.display='none'; }, 4000);
-}
-function _authSuccess(user) {
-  _cu = user;
-  try { localStorage.setItem('tx_current_user', JSON.stringify(user)); } catch(e){}
-  // lastSeen ve online güncelle
-  try {
-    var _lsNow = new Date().toISOString();
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts)) {
-      accounts = accounts.map(function(a){ return a.id===user.id ? Object.assign({},a,{lastSeen:_lsNow,online:true}) : a; });
-      fbSaveAccount(accounts);
-    }
-  } catch(e){}
-  // Firebase'den kullanıcı verisini yükle
-  fbLoadUserData(user.id, function(data) {
-    if(data) {
-      try { if(data.positions) {
-        positions = Array.isArray(data.positions) ? data.positions : JSON.parse(data.positions);
-      }} catch(e){}
-      try { if(data.tradeHistory) { var _rt=data.tradeHistory; tradeHistory=Array.isArray(_rt)?_rt:JSON.parse(_rt); }} catch(e){}
-      try { if(data.portfolio) portfolio = JSON.parse(data.portfolio); } catch(e){}
-      try { if(data.alarms) alarms = JSON.parse(data.alarms); } catch(e){}
-      if(data.balance !== undefined && typeof balance !== 'undefined') balance = data.balance;
-      renderPositions(); renderHistory(); updateAccount();
-    }
-  });
-  _authClose();
-  var lb = document.getElementById('tbLoginBtn');
-  var ub = document.getElementById('tbUserBadge');
-  if(lb) lb.style.display='none';
-  if(ub) ub.style.display='flex';
-  var av = document.getElementById('tbUserAvatar');
-  var un = document.getElementById('tbUserName');
-  var ut = document.getElementById('tbUserType');
-  if(av) av.textContent=(user.name||'?')[0].toUpperCase();
-  if(un) un.textContent=user.name+(user.surname?' '+user.surname:'');
-  if(ut) ut.textContent=user.type==='demo'?'Demo Hesap':'Gerçek Hesap';
-  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
-  try { if(typeof showToast==='function') showToast('Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } catch(e){}
-}
-function _doLogin() {
-  var loginVal = (document.getElementById('inp-email')||{}).value||'';
-  var pass     = (document.getElementById('inp-pass')||{}).value||'';
-  loginVal = loginVal.trim(); pass = pass.trim();
-  if(!loginVal||!pass){ _authErr('err-login','Login no/e-posta ve şifre gerekli!'); return; }
-  _authErr('err-login',''); // hata temizle
-  // Önce Firebase'den yükle, sonra localStorage fallback
-  function tryLogin(accs) {
-    // localStorage ile de merge et
-    var localAccs = [];
-    try { localAccs = JSON.parse(localStorage.getItem('tx_accounts')||'[]'); } catch(e){}
-    // Firebase'den gelenleri localStorage'a ekle
-    if(accs.length) {
-      localStorage.setItem('tx_accounts', JSON.stringify(accs));
-      accounts = accs;
-    } else {
-      accs = localAccs;
-    }
-    var found = null;
-    for(var i=0;i<accs.length;i++){
-      var a = accs[i];
-      var matchLogin = (a.login && String(a.login)===loginVal) || (a.id && String(a.id)===loginVal);
-      var matchEmail = a.email && a.email.toLowerCase()===loginVal.toLowerCase();
-      if((matchLogin||matchEmail) && a.password===pass){ found=a; break; }
-    }
-    if(!found){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
-    _authSuccess(found);
-  }
-  // Firebase'den hesapları çek
-  fbLoadAccounts(function(fbAccs) {
-    tryLogin(fbAccs && fbAccs.length ? fbAccs : []);
-  });
-}
-function _doDemo() {
-  _authSuccess({id:'DEMO-001',name:'Demo',surname:'Kullanıcı',email:'demo@tradex.com',type:'demo',balance:10000,active:true});
-}
-function _doRegister() {
-  var name    = (document.getElementById('inp-name')||{}).value||'';
-  var surname = (document.getElementById('inp-surname')||{}).value||'';
-  var phone   = (document.getElementById('inp-phone')||{}).value||'';
-  var email   = (document.getElementById('inp-remail')||{}).value||'';
-  var pass    = (document.getElementById('inp-rpass')||{}).value||'';
-  var pass2   = (document.getElementById('inp-rpass2')||{}).value||'';
-  name=name.trim();surname=surname.trim();phone=phone.trim();email=email.trim();pass=pass.trim();pass2=pass2.trim();
-  if(!name){_authErr('err-register','Ad gerekli!');return;}
-  if(!surname){_authErr('err-register','Soyad gerekli!');return;}
-  if(!phone){_authErr('err-register','Telefon gerekli!');return;}
-  if(!email){_authErr('err-register','E-posta gerekli!');return;}
-  if(pass.length<6){_authErr('err-register','Şifre en az 6 karakter!');return;}
-  if(pass!==pass2){_authErr('err-register','Şifreler eşleşmiyor!');return;}
-  // Firebase'den güncel hesap listesini çek, sonra kaydet
-  fbLoadAccounts(function(fbAccs) {
-    if(fbAccs && fbAccs.length) { accounts = fbAccs; try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){} }
-    var accs = accounts.length ? accounts : [];
-    try{ if(!accs.length) accs=JSON.parse(localStorage.getItem('tx_accounts')||'[]'); }catch(e){}
-    for(var i=0;i<accs.length;i++){
-      if(accs[i].email && accs[i].email.toLowerCase()===email.toLowerCase()){_authErr('err-register','Bu e-posta zaten kayıtlı!');return;}
-    }
-    // Login numarası 10000'den başlar
-    var _allIds = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
-    var _nextLogin = _allIds.length ? Math.max.apply(null,_allIds)+1 : 10000;
-    if(_nextLogin < 10000) _nextLogin = 10000;
-    var now2 = new Date();
-    var acc = {
-      id: String(_nextLogin), login: String(_nextLogin),
-      name: name, surname: surname, phone: phone, email: email, password: pass,
-      type: _authType, balance: _authType==='demo'?10000:0, equity: _authType==='demo'?10000:0,
-      currency: 'USD', leverage: 100, active: true,
-      created: now2.toISOString(), regDate: now2.toISOString(),
-      spreadGroup: 'standard', bonus: 0, lastSeen: null, online: false
-    };
-    accs.push(acc);
-    // Transaction ile güvenli kaydet
-    fbAddAccount(acc, function(err, savedAcc) {
-      if(err === 'EMAIL_EXISTS') { _authErr('err-register','Bu e-posta zaten kayıtlı!'); return; }
-      if(err) { _authErr('err-register','Kayıt hatası: '+err); return; }
-      var finalAcc = savedAcc || acc;
-      accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
-      if(typeof renderAccCards==='function') renderAccCards();
-      if(typeof renderAccListSmall==='function') renderAccListSmall();
-      var ok=document.getElementById('ok-register');
-      if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
-      setTimeout(function(){_authSuccess(finalAcc);},1200);
-    });
-  });
-}
-function logoutUser() {
-  _cu=null;
-  try{localStorage.removeItem('tx_current_user');}catch(e){}
-  var lb=document.getElementById('tbLoginBtn');
-  var ub=document.getElementById('tbUserBadge');
-  if(lb)lb.style.display='flex';
-  if(ub)ub.style.display='none';
-  _authOpen('login');
-}
-function openAuth(tab){ _authOpen(tab); }
-function closeAuth(){ _authClose(); }
-function demoLogin(){ _doDemo(); }
-function doLogin(){ _doLogin(); }
-function doRegister(){ _doRegister(); }
-function updateUserBadge(){}
-function initAuth(){
-  if(!_cu || !_cu.name) {
-    var el = document.getElementById('authOverlay');
-    if(el) el.style.display = 'flex';
-  }
-  if(_cu && _cu.name) {
-    _authClose();
-    var lb=document.getElementById('tbLoginBtn');
-    var ub=document.getElementById('tbUserBadge');
-    if(lb)lb.style.display='none';
-    if(ub)ub.style.display='flex';
-    var av=document.getElementById('tbUserAvatar');
-    var un=document.getElementById('tbUserName');
-    var ut=document.getElementById('tbUserType');
-    if(av)av.textContent=(_cu.name||'?')[0].toUpperCase();
-    if(un)un.textContent=_cu.name+(_cu.surname?' '+_cu.surname:'');
-    if(ut)ut.textContent=_cu.type==='demo'?'Demo Hesap':'Gerçek Hesap';
-    try{if(_cu.balance&&typeof balance!=='undefined'){balance=parseFloat(_cu.balance);}}catch(e){}
-  }
-}
+// initAuth() kaldırıldı (2026-04-20, 4. pass) — no-op fonksiyon.
+// Admin'de DOM elementleri (authOverlay, tbLoginBtn, tbUserBadge, tbUserAvatar, tbUserName, tbUserType) yok.
+// `_cu` admin'de çoğunlukla null (manager `_mgr` kullanır). Tüm guard'lar false, hiçbir şey yapmıyordu.
+// Çağrı yeri de kaldırıldı (L6479).
 </script>
   
   
@@ -1265,6 +1070,7 @@ function initAuth(){
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
@@ -1274,10 +1080,12 @@ function initAuth(){
       projectId: "tradex-4571e",
       storageBucket: "tradex-4571e.firebasestorage.app",
       messagingSenderId: "66853453105",
-      appId: "1:66853453105:web:df85eda2cad5d4ce204410"
+      appId: "1:66853453105:web:df85eda2cad5d4ce204410",
+      databaseURL: "https://tradex-4571e-default-rtdb.europe-west1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
+    var rtdb = firebase.database();   // Realtime DB — yüksek frekanslı fiyat akışı için
 
     // ── FIREBASE YARDIMCI FONKSİYONLAR ──
     var _fbReady = false;
@@ -1401,43 +1209,47 @@ function startAccCanonListeners() {
 }
 
 // Yeni hesap eklendiğinde de listener bağla
-function attachCanonListener(accId) {
-  if(!accId || !db) return;
-  var key = String(accId);
-  if(_accCanon[key] && _accCanon[key]._unsub) return;
-  _accCanon[key] = _accCanon[key] || {};
-  _accCanon[key]._unsub = db.collection('users').doc(key).onSnapshot(function(doc){
-    if(!doc.exists) return;
-    var d = doc.data() || {};
-    _accCanon[key].balance      = parseFloat(d.balance)||0;
-    _accCanon[key].bonus        = parseFloat(d.bonus)||0;
-    _accCanon[key].positions    = Array.isArray(d.positions) ? d.positions : [];
-    _accCanon[key].tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : [];
-    _accCanon[key].finlog       = Array.isArray(d.finlog) ? d.finlog : [];
-    _accCanon[key].marginLevelPct = parseFloat(d.marginLevelPct)||null;
-    _accCanon[key].lastUpdate   = d.updatedAt || '';
-    _accCanon[key].ready        = true;
-  });
-}
 
 // Canonical read API — tüm render/hesap fonksiyonları buradan okur
 function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
 function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
 function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
-function getAccHist(accId)     { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.tradeHistory))?c.tradeHistory:[]; }
+// Yalnızca GERÇEKTEN AÇIK pozisyon mu? Kapanmış/eski (hayalet) kayıtlar users/{id}.positions
+// dizisinde kalmış olabilir → equity'yi yanlış hareket ettirir. Equity hesaplarında bunları eler.
+function _adIsOpenPos(p){
+  if(!p) return false;
+  var st = (p.status!=null) ? String(p.status).toLowerCase() : '';
+  if(st==='closed' || p.closed===true) return false;
+  if(parseFloat(p.closePrice)>0) return false;
+  if(p.closeTime || p.closedAt) return false;
+  if(!(parseFloat(p.qty)>0)) return false;
+  if(!(parseFloat(p.openPrice)>0)) return false;
+  return true;
+}
 function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
 function getAccEquity(accId)   {
   // equity = balance + bonus + ∑ floating P&L
   var bal = getAccBal(accId) + getAccBonus(accId);
-  var poses = getAccPos(accId);
+  var poses = getAccPos(accId).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları sayma
   var fp = 0;
+  var _missing = 0;
   for(var i=0;i<poses.length;i++){
     var po = poses[i];
     var pr = (typeof adGetPrice==='function') ? adGetPrice(po.sym) : 0;
-    if(!pr) continue;
+    // ⚠️ Fiyat yoksa pozisyonu ATLAMA — openPrice'i kullan (P&L=0 gibi davran).
+    // Eski davranış `continue`'ydu: büyük zarardaki pozisyonlar fiyat feed'i kopunca
+    // equity hesabından düşüyordu → equity yanlış pozitif görünüp stop out tetiklenmiyordu.
+    if(!pr) {
+      pr = po.openPrice;
+      _missing++;
+    }
     var cs = parseFloat(po.contractSize)||1;
     var qt = parseFloat(po.qty)||0;
     fp += (po.side==='buy' ? pr-po.openPrice : po.openPrice-pr) * qt * cs + (parseFloat(po.swapTotal)||0);
+  }
+  if(_missing > 0 && window._equityMissingLog !== accId) {
+    console.warn('[getAccEquity] #'+accId+' için '+_missing+' pozisyonda fiyat yok — openPrice fallback kullanılıyor');
+    window._equityMissingLog = accId; // aynı hesap için tekrar spamlemesin
   }
   return bal + fp;
 }
@@ -1493,75 +1305,34 @@ function fbSaveAccounts() {
     }
 
     // Güvenli hesap ekleme - race condition önler
-    function fbAddAccount(newAcc, callback) {
-      if(!db) { callback && callback(); return; }
-      var ref = db.collection('broker').doc('accounts');
-      db.runTransaction(function(tx) {
-        return tx.get(ref).then(function(doc) {
-          var accs = [];
-          if(doc.exists) {
-            try { accs = JSON.parse(doc.data().data||'[]'); } catch(e){}
-          }
-          // E-posta zaten var mı?
-          for(var i=0;i<accs.length;i++) {
-            if(accs[i].email && accs[i].email.toLowerCase()===newAcc.email.toLowerCase()) {
-              throw new Error('EMAIL_EXISTS');
-            }
-          }
-          // Login numarasını yeniden hesapla (race condition önle)
-          var maxId = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
-          var nextId = maxId.length ? Math.max.apply(null,maxId)+1 : 10000;
-          if(nextId < 10000) nextId = 10000;
-          newAcc.id = String(nextId);
-          newAcc.login = String(nextId);
-          // ⚠️ broker/accounts'a sadece META yaz
-          accs.push(accSanitizeForBroker(newAcc));
-          tx.set(ref, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
-          return newAcc;
-        });
-      }).then(function(acc) {
-        accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
-        accounts.push(acc);
-        localStorage.setItem('tx_accounts', JSON.stringify(accounts));
-        // ⚠️ users/{id}'ye initial balance/bonus/finlog yaz (canonical tek kaynak)
-        var _initBal = parseFloat(acc.balance)||0;
-        db.collection('users').doc(String(acc.id)).set({
-          name: acc.name||'', surname: acc.surname||'', email: acc.email||'',
-          login: acc.login||acc.id, type: acc.type||'live',
-          spreadGroup: acc.spreadGroup||'standard', leverage: acc.leverage||100,
-          active: true, created: acc.created||'', phone: acc.phone||'',
-          password: acc.password||'', currency: acc.currency||'USD',
-          balance: _initBal, bonus: 0, finlog: [],
-          positions: [], tradeHistory: [], pendingOrders: [],
-          _balanceSource: 'system',
-          updatedAt: new Date().toISOString()
-        }).catch(function(e){ console.warn('fbAddAccount users write:', e); });
-        // Canonical listener bağla
-        if(typeof attachCanonListener === 'function') attachCanonListener(acc.id);
-        callback && callback(null, acc);
-      }).catch(function(e) {
-        callback && callback(e.message==='EMAIL_EXISTS' ? 'EMAIL_EXISTS' : e.message);
-      });
-    }
-
+    
     // Hesapları Firebase'den yükle
     function fbLoadAccounts(callback) {
+      // ⚠️ broker/accounts'tan gelen veriden balance/positions/bonus/finlog TEMİZLENİR
+      function _stripCanonFields(accs) {
+        if(!Array.isArray(accs)) return accs;
+        accs.forEach(function(a){
+          delete a.balance; delete a.positions; delete a.bonus;
+          delete a.finlog; delete a.equity; delete a.marginLevelPct;
+        });
+        return accs;
+      }
       // localStorage fallback — Firebase permissions hatası olursa bunu kullan
       function _lsLoad() {
         try {
           var ls = localStorage.getItem('tx_accounts');
           var d = ls ? JSON.parse(ls) : [];
-          if(d && d.length) { console.warn('[fbLoadAccounts] Firebase izin hatası, localStorage kullanılıyor'); callback(d); return true; }
+          if(d && d.length) { console.warn('[fbLoadAccounts] Firebase izin hatası, localStorage kullanılıyor'); callback(_stripCanonFields(d)); return true; }
         } catch(e) {}
         return false;
       }
       if(!db){ _lsLoad() || callback([]); return; }
       db.collection('broker').doc('accounts').get()
         .then(function(doc){
-          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(d);return;}}catch(e){}}
+          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(_stripCanonFields(d));return;}}catch(e){}}
           var hours=[];for(var i=0;i<24;i++){var dt=new Date(Date.now()-i*3600000);hours.push(dt.toISOString().substring(0,13).replace('T','_'));}
           var tryH=function(idx){if(idx>=hours.length){ _lsLoad() || callback([]); return;}
-            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(dd);db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
+            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(_stripCanonFields(dd));db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
           tryH(0);
         }).catch(function(e){
           console.warn('[fbLoadAccounts] Firebase hatası:', e.message||e);
@@ -1653,23 +1424,8 @@ function fbSaveAccounts() {
         .catch(function(e){ console.warn('fbLoadUserData error:', e); callback(null); });
     }
 
-    // Spread gruplarını Firebase'e kaydet
-    function fbSaveSpreadGroups() {
-      try{localStorage.setItem('tx_spreadgroups',JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]));} catch(e){}
-      if(!db) return;
-      try {
-        db.collection('broker').doc('spreadGroups').set({ data: JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]) })
-          .catch(function(e){ console.warn(e); });
-      } catch(e) {}
-    }
-
-    // Spread gruplarını yükle
-    function fbLoadSpreadGroups(callback) {
-      if(!db) { callback(null); return; }
-      db.collection('broker').doc('spreadGroups').get()
-        .then(function(doc){ callback(doc.exists ? JSON.parse(doc.data().data||'null') : null); })
-        .catch(function(){ callback(null); });
-    }
+    // (Spread/trading groups için ayrı Firebase wrapper'ı yok —
+    //  sgSave() ve sgLoadFromFirebase() doğrudan broker/spreadGroups'a yazar/okur.)
 
     
     // ── Standart tarih formatı: DD.MM.YYYY HH:MM ──
@@ -1711,15 +1467,7 @@ function parseFinlogDate(input) {
   return d || new Date(0);
 }
 
-    function fmtDateOnly(d) {
-      if(!d) return '—';
-      var dt=(d instanceof Date)?d:new Date(d);
-      if(isNaN(dt)) return String(d);
-      var p=function(n){return String(n).padStart(2,'0');};
-      return p(dt.getDate())+'.'+p(dt.getMonth()+1)+'.'+dt.getFullYear();
-    }
-    function nowFmt(){ return fmtDate(new Date()); }
-
+        
 
     function fbLoadRequests(callback) {
       if(typeof db==='undefined'||!db){callback&&callback();return;}
@@ -1750,21 +1498,21 @@ function parseFinlogDate(input) {
     function _reqUpdateBalance(accId, delta, finType, note, callback) {
       var acc=accounts.find(function(x){return String(x.id)===String(accId);});
       if(!acc){showAdminToast('Hata','Hesap #'+accId+' bulunamadı','danger');return;}
-      // Balance'ı broker/accounts'tan al (tek resmi kaynak), finlog'u users/{id}'den al
-      var bal = parseFloat(acc.balance)||0;
+      // ⚠️ CANONICAL: balance/finlog users/{id}'den (_accCanon)
+      var bal = getAccBal(accId);
       var newBal = Math.max(0, bal + delta);
-      // finlog'u users/{id}'den çek, sonra güncelle
-      fbLoadUserData(accId, function(data){
-        var fl=(data&&Array.isArray(data.finlog))?data.finlog.slice():(Array.isArray(acc.finlog)?acc.finlog.slice():[]);
-        fl.unshift({type:finType,amount:Math.abs(delta),date:new Date().toISOString(),note:note||''});
-        // users/{id}'ye sadece finlog + balance yaz
-        fbSaveUserData(accId,{balance:newBal,finlog:fl,_balanceSource:'manager'});
-        // broker/accounts güncelle (tek resmi kaynak)
-        acc.balance=newBal; acc.finlog=fl;
-        fbSaveAccounts();
-        try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){}
-        if(callback)callback(newBal);
-      });
+      var fl = getAccFinlog(accId).slice();
+      fl.unshift({type:finType,amount:Math.abs(delta),date:new Date().toISOString(),note:note||''});
+      // Sadece users/{id}'ye yaz — broker/accounts'a DOKUNMA
+      if(typeof db !== 'undefined' && db) {
+        db.collection('users').doc(String(accId)).set({
+          balance: newBal,
+          finlog: fl,
+          _balanceSource: 'manager',
+          updatedAt: new Date().toISOString()
+        }, {merge:true}).catch(function(e){ console.warn('_reqUpdateBalance:', e); });
+      }
+      if(callback)callback(newBal);
     }
 
 console.log('Firebase bağlandı ✓');
@@ -1773,24 +1521,33 @@ console.log('Firebase bağlandı ✓');
     window.startAdminSnapshots = function() {
       if(window._adminSnapshotsStarted || typeof db==='undefined' || !db) return;
       window._adminSnapshotsStarted = true;
+      if(typeof _adLoadSymbolsFromFb==='function') _adLoadSymbolsFromFb();   // Firebase'deki eksik sembolleri admin'e yükle
       db.collection('broker').doc('accounts').onSnapshot(function(doc){
         if(!doc.exists)return;
         try{
           var newAccs=JSON.parse(doc.data().data||'[]');
           if(!newAccs||!newAccs.length){ console.warn('[onSnapshot] Boş accounts geldi, yoksayıldı'); return; }
-          // Cache'leri koru
+          // ⚠️ broker/accounts'tan gelen verideki balance/positions/bonus/finlog'u TEMİZLE
+          // Bu alanlar artık sadece _accCanon (users/{id}) üzerinden okunur
           newAccs.forEach(function(na){
-            var _accs=typeof accounts!=='undefined'?accounts:(window.accounts||[]);
+            delete na.balance;
+            delete na.positions;
+            delete na.bonus;
+            delete na.finlog;
+            delete na.equity;
+            delete na.marginLevelPct;
+            // UI cache'leri koru (eski accounts array'inden)
+            // 2026-04-20: typeof guard kaldırıldı — 'accounts' artık L1059'da declared (top-level var)
+            var _accs = accounts || [];
             var old=_accs.find(function(x){return x.id===na.id;});
             if(old){
-              if(Array.isArray(old.positions)) na.positions=old.positions;
               if(old._liveEquity!==undefined)  na._liveEquity=old._liveEquity;
               if(old._openCount!==undefined)   na._openCount=old._openCount;
               if(old._onlineFromUsers) { na.online=old.online; na.lastSeen=old.lastSeen; }
             }
           });
-          window.accounts=newAccs;
-          if(typeof accounts!=='undefined')accounts=newAccs;
+          // 2026-04-20: iki-slot pattern kaldırıldı — var accounts top-level, window.accounts otomatik aynı slot
+          accounts = newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
           // ⚠️ Canonical listener başlat — accounts yüklendikten sonra
           if(typeof startAccCanonListeners === 'function') startAccCanonListeners();
@@ -1931,6 +1688,12 @@ console.log('Firebase bağlandı ✓');
     <span style="color:#e2e2e2;margin:0 10px;">|</span>
     <span style="font-size:11px;color:#b0b0b0;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
+      <!-- Feed sağlık göstergesi: kripto / forex / firebase -->
+      <div id="feedHealth" title="Fiyat feed durumu" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;padding:3px 10px;background:#111;border:1px solid #222;border-radius:3px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhCrypto" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>BN</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhForex"  style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>FX</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span id="fhFB"     style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>DB</span>
+      </div>
       <span style="color:#a0a0a0;" id="topbar-user">—</span>
       <span style="color:#b0b0b0;" id="topbar-role"></span>
       <button onclick="adminLogout()" class="mgr-btn" style="font-size:10px;padding:3px 10px;">Çıkış</button>
@@ -1940,7 +1703,7 @@ console.log('Firebase bağlandı ✓');
     <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view">👥 Hesaplar</button>
     <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view">📑 Raporlar</button>
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Spread Grupları</button>
+    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Trading Grupları</button>
     <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view">📈 Semboller</button>
     <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="feed.edit">💹 Kotasyon</button>
     <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
@@ -2147,7 +1910,7 @@ console.log('Firebase bağlandı ✓');
       <!-- Genel ayarlar -->
       <div class="ad-sect" style="margin-bottom:14px;padding:14px;">
         <div class="ad-sect-title" style="margin-bottom:10px;">GRUP AYARLARI</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
           <div>
             <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Call (%)</label>
             <input class="mgr-input" id="sg_mc" type="number" step="1" min="0" placeholder="80" style="width:100%;">
@@ -2167,12 +1930,57 @@ console.log('Firebase bağlandı ✓');
             </select>
           </div>
           <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Default Kaldıraç</label>
+            <select class="mgr-input" id="sg_defaultLev" style="width:100%;">
+              <option value="50">1:50</option>
+              <option value="100">1:100</option>
+              <option value="200">1:200</option>
+              <option value="500">1:500</option>
+              <option value="1000">1:1000</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Komisyon (lot/USD)</label>
+            <input class="mgr-input" id="sg_commission" type="number" step="any" min="0" placeholder="0" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Min. Yatırım (USD)</label>
+            <input class="mgr-input" id="sg_minDeposit" type="number" step="any" min="0" placeholder="0" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Modu</label>
+            <select class="mgr-input" id="sg_marginMode" style="width:100%;" title="TradeX tüm hesaplarda hedging modunda çalışır. Netting seçeneği pasifleştirildi.">
+              <option value="hedging">Hedging</option>
+              <option value="netting" disabled>Netting (pasif)</option>
+            </select>
+          </div>
+          <div>
             <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Açıklama</label>
             <input class="mgr-input" id="sg_desc" placeholder="Grup açıklaması..." style="width:100%;">
           </div>
         </div>
         <div style="margin-top:10px;">
           <button class="mgr-btn success" onclick="sgSaveGeneral()" style="padding:6px 18px;">💾 Genel Ayarları Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Sembol İzinleri kartı (whitelist) -->
+      <div class="ad-sect" style="padding:14px;">
+        <div class="ad-sect-title" style="margin-bottom:6px;">SEMBOL İZİNLERİ</div>
+        <p style="font-family:var(--mono);font-size:10px;color:#b0b0b0;margin-bottom:10px;">
+          Hiçbiri işaretli değilse &rarr; <strong>tüm semboller serbest</strong> (varsayılan).
+          En az bir tanesi işaretliyse &rarr; yalnızca işaretliler trade edilebilir.
+        </p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="mgr-btn" onclick="sgWhitelistToggleAll(true)"  style="font-size:10px;padding:4px 10px;">Tümünü Seç</button>
+          <button class="mgr-btn" onclick="sgWhitelistToggleAll(false)" style="font-size:10px;padding:4px 10px;">Temizle</button>
+          <span id="sg_wl_count" style="font-size:10px;color:#a0a0a0;font-family:var(--mono);align-self:center;margin-left:auto;"></span>
+        </div>
+        <div id="sgWhitelistBox" style="max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px;padding:6px;border:1px solid #2a2a2a;border-radius:3px;background:rgba(255,255,255,0.02);">
+          <div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Grup seçin...</div>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="mgr-btn success" onclick="sgSaveWhitelist()" style="padding:6px 18px;">💾 Sembol İzinlerini Kaydet</button>
         </div>
       </div>
 
@@ -2206,8 +2014,35 @@ console.log('Firebase bağlandı ✓');
         <button class="mgr-btn" id="scf-forex"     onclick="filterSymCat('forex')"     style="font-size:10px;padding:4px 12px;">💱 Forex</button>
         <button class="mgr-btn" id="scf-commodity" onclick="filterSymCat('commodity')" style="font-size:10px;padding:4px 12px;">🏅 Emtia</button>
         <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;">📊 Endeks</button>
+        <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;">📈 Hisse</button>
+        <button class="mgr-btn" id="scf-bist"      onclick="filterSymCat('bist')"      style="font-size:10px;padding:4px 12px;">🇹🇷 BİST</button>
         <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="mgr-btn" onclick="txImportMarketGroups()" style="font-size:11px;padding:5px 14px;" title="Trader'da olup admin'de görünmeyen sabit sembolleri (BRENT, NAT GAS, endeksler vb.) symConfig'e ekler">⬇ Eksikleri içe aktar</button>
           <button class="mgr-btn success" onclick="openAddSymModal()" style="font-size:11px;padding:5px 14px;">+ Sembol Ekle</button>
+        </div>
+      </div>
+
+      <!-- TD KÖPRÜ SEMBOLLERİ (canlı forex/emtia/endeks beslemesi) -->
+      <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid #2a2a3a;border-radius:6px;background:#12121a;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;">🌉 TD KÖPRÜ SEMBOLLERİ</span>
+          <span style="font-size:10px;color:#8888ff;font-family:var(--mono);">(<span id="tdBridgeCount">0</span> canlı · köprü ~20sn'de alır)</span>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="txTdResetDefault()">↺ Varsayılana dön</button>
+        </div>
+        <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">
+          Forex/emtia/endeks <b>canlı fiyat</b> beslemesi. Sol kutuya TradeX sembol kodu (örn. <code>EURGBP</code>), sağ kutuya Twelve Data karşılığı (örn. <code>EUR/GBP</code>) yaz. Eklediğin sembolün <b>TD planında açık</b> olması gerekir; değilse köprü "subscribe fail" verir ve fiyat akmaz.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input class="mgr-input" id="tdb_sym" placeholder="EURGBP" style="width:130px;text-transform:uppercase;">
+          <span style="color:#666;">→</span>
+          <input class="mgr-input" id="tdb_td" placeholder="EUR/GBP" style="width:130px;text-transform:uppercase;">
+          <button class="mgr-btn success" style="font-size:11px;padding:5px 14px;" onclick="txTdAddSymbol()">+ Köprüye Ekle</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="mgr-table" style="min-width:360px;width:100%;">
+            <thead><tr><th>TradeX Sembol</th><th>TD Karşılığı</th><th style="text-align:right;">İşlem</th></tr></thead>
+            <tbody id="tdBridgeBody"><tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Yükleniyor...</td></tr></tbody>
+          </table>
         </div>
       </div>
 
@@ -2256,6 +2091,8 @@ console.log('Firebase bağlandı ✓');
                 <option value="forex">Forex</option>
                 <option value="commodity">Emtia</option>
                 <option value="index">Endeks</option>
+                <option value="stock">Hisse</option>
+                <option value="bist">BİST</option>
               </select>
             </div>
             <div>
@@ -2431,7 +2268,7 @@ console.log('Firebase bağlandı ✓');
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--mono);font-size:10px;color:#a0a0a0;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;color:#aaa;">
-              <div>✅ Hesaplar</div><div>✅ Spread Grupları</div>
+              <div>✅ Hesaplar</div><div>✅ Trading Grupları</div>
               <div>✅ Semboller</div><div>✅ Ödeme Yöntemleri</div>
               <div>✅ Yatırım/Çekim</div><div>✅ Personel (staff)</div>
               <div>✅ Kullanıcı pozisyonları</div><div>✅ Ayarlar</div>
@@ -2733,13 +2570,12 @@ var curSym = 'BTCUSDT';
 var curInt = '15m';
 var ordType = 'market';
 var balance = 10000;
-var positions, tradeHistory, portfolio, alarms;
-try { positions = JSON.parse(localStorage.getItem('tx_pos') || '[]'); } catch(e) { positions = []; }
-try { tradeHistory  = JSON.parse(localStorage.getItem('tx_hist') || '[]'); } catch(e) { tradeHistory = []; }
+// 2026-04-20, 5. pass: top-level 'positions', 'tradeHistory' kaldırıldı (trader kopyası state).
+// Admin canonical akışı: _adPositions + _adHistory + users/{id}.
+// 'portfolio' ve 'alarms' manager panel için canlı, tutuluyor.
+var portfolio, alarms;
 try { portfolio= JSON.parse(localStorage.getItem('tx_pf') || '[]'); } catch(e) { portfolio = []; }
 try { alarms   = JSON.parse(localStorage.getItem('tx_al') || '[]'); } catch(e) { alarms = []; }
-if(!Array.isArray(positions)) positions = [];
-if(!Array.isArray(tradeHistory))   tradeHistory = [];
 if(!Array.isArray(portfolio))  portfolio = [];
 if(!Array.isArray(alarms))    alarms = [];
 var triggered = new Set();
@@ -2749,15 +2585,13 @@ var posCounter = Date.now();
 
 var fp = (p, d=2) => p === undefined ? '—' : (p > 10 ? p.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : p.toFixed(p<0.01?5:d));
 var save = () => {
-  localStorage.setItem('tx_pos', JSON.stringify(positions));
-  localStorage.setItem('tx_hist', JSON.stringify(tradeHistory));
+  // 2026-04-20, 5. pass: tx_pos/tx_hist ve positions/tradeHistory Firebase yazımı kaldırıldı (trader kopyası).
+  // Admin canonical akışı adSaveUserTrades() kullanır. save() artık sadece portfolio/alarms için.
   localStorage.setItem('tx_pf', JSON.stringify(portfolio));
   localStorage.setItem('tx_al', JSON.stringify(alarms));
-  // Firebase'e kaydet (giriş yapmışsa) — positions/tradeHistory ARRAY olarak kaydet
+  // Firebase'e kaydet (giriş yapmışsa) — sadece portfolio/alarms
   if(typeof _cu !== 'undefined' && _cu && _cu.id) {
     fbSaveUserData(_cu.id, {
-      positions:    Array.isArray(positions) ? positions : [],
-      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory : [],
       portfolio:    JSON.stringify(portfolio),
       alarms:       JSON.stringify(alarms),
       balance:      typeof balance !== 'undefined' ? balance : 0,
@@ -3034,58 +2868,9 @@ function drawChart() {
     ctx.fillText(label, tx, H-PAD_BOTTOM+11);
   }
 
-  if(typeof positions !== 'undefined' && positions.length > 0) {
-    for(var pi=0; pi<positions.length; pi++) {
-      var pos = positions[pi];
-      if(pos.sym !== _chartSym) continue;
-      var isBuy = pos.side === 'buy';
-      var col = isBuy ? '#26a69a' : '#ef5350';
-
-      var oy = toY(pos.openPrice);
-      if(oy >= PAD_TOP && oy <= PAD_TOP + chartH) {
-        ctx.strokeStyle = col;
-        ctx.setLineDash([6,3]);
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(PAD_LEFT, oy); ctx.lineTo(W-PAD_RIGHT, oy); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = col;
-        ctx.fillRect(W-PAD_RIGHT, oy-9, PAD_RIGHT, 18);
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-        var dec = pos.openPrice > 100 ? 2 : pos.openPrice > 1 ? 4 : 6;
-        ctx.fillText((isBuy ? '▲' : '▼') + pos.openPrice.toFixed(dec), W-PAD_RIGHT+2, oy+4);
-        ctx.fillStyle = col;
-        ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-        ctx.fillText('#'+pos.id+' '+(isBuy?'AL':'SAT'), PAD_LEFT+4, oy-3);
-      }
-
-      if(pos.tp) {
-        var ty = toY(pos.tp);
-        if(ty >= PAD_TOP && ty <= PAD_TOP + chartH) {
-          ctx.strokeStyle = '#26a69a';
-          ctx.setLineDash([3,3]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(PAD_LEFT, ty); ctx.lineTo(W-PAD_RIGHT, ty); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(38,166,154,0.15)';
-          ctx.fillRect(PAD_LEFT, ty, chartW, oy-ty);
-          ctx.fillStyle = '#26a69a'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-          ctx.fillText('TP '+pos.tp.toFixed(pos.tp>100?2:4), PAD_LEFT+4, ty+10);
-        }
-      }
-
-      if(pos.sl) {
-        var sy = toY(pos.sl);
-        if(sy >= PAD_TOP && sy <= PAD_TOP + chartH) {
-          ctx.strokeStyle = '#ef5350';
-          ctx.setLineDash([3,3]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(PAD_LEFT, sy); ctx.lineTo(W-PAD_RIGHT, sy); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#ef5350'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-          ctx.fillText('SL '+pos.sl.toFixed(pos.sl>100?2:4), PAD_LEFT+4, sy-3);
-        }
-      }
-    }
-  }
+  // drawChart pozisyon çizim bloğu kaldırıldı (2026-04-20, 5. pass) — top-level 'positions' array
+  // trader kopyasıydı, admin'de hiç doldurulmuyordu. Admin'in canonical akışı _adPositions kullanıyor
+  // ama chart'ta gösterim yapılmıyor. Gelecekte pozisyon çizgileri istenirse _adPositions'a bağla.
 
   ctx.fillStyle='rgba(255,255,255,0.03)';
   ctx.fillRect(W-PAD_RIGHT, 0, PAD_RIGHT, H);
@@ -3289,13 +3074,6 @@ function switchSym(sym) {
   if (p) updateOrderTicket(p.price);
 }
 
-function setInt(intv, btn) {
-  curInt = intv;
-  document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadKlines(curSym, intv);
-  startCandleWs(curSym, intv);
-}
 
 function updateOrderTicket(price) {
   const sym = SYMS.find(s=>s.sym===curSym);
@@ -3307,253 +3085,14 @@ function updateOrderTicket(price) {
   var _el_otSpread=document.getElementById('otSpread'); if(_el_otSpread) _el_otSpread.textContent = 'Spread: '+spread.toFixed(price>100?2:5);
 }
 
-function setOrdType(type, btn) {
-  ordType = type;
-  document.querySelectorAll('.ot-type-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  var _st_limitPriceRow=document.getElementById('limitPriceRow'); if(_st_limitPriceRow) _st_limitPriceRow.style.display = (type==='limit'||type==='stop') ? 'flex' : 'none';
-}
 
-function placeOrder(side) {
-  var _qtyEl = document.getElementById('ordQty');
-  if(_qtyEl && (!_qtyEl.value || parseFloat(_qtyEl.value)<=0)) _qtyEl.value='0.01';
-  const qty = parseFloat(_qtyEl ? _qtyEl.value : '0.01') || 0.01;
-  const p = prices[curSym];
-  if (!p) { showToast('Hata', 'Fiyat verisi yok!'); return; }
+// placeOrder() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
+// Sadece qtOrder() çağırıyordu; o da ölü kod olarak silindi.
 
-  let execPrice = p.price;
-  if (ordType === 'limit' || ordType === 'stop') {
-    const lp = parseFloat(document.getElementById('limitPrice').value);
-    if (!lp || lp <= 0) { showToast('Hata', 'Limit fiyat girin!'); return; }
-    execPrice = lp;
-  }
-
-  const sl = parseFloat(document.getElementById('ordSL').value) || null;
-  const tp = parseFloat(document.getElementById('ordTP').value) || null;
-  const cost = execPrice * qty;
-
-  // Hedge margin: aynı sembolde karşı pozisyon varsa net teminat hesapla
-  var hedgeQty = 0;
-  for(var _hi=0; _hi<positions.length; _hi++) {
-    var _hp = positions[_hi];
-    if(_hp.sym === curSym && _hp.side !== side) {
-      hedgeQty += _hp.qty;
-    }
-  }
-  var netQty = Math.max(0, qty - hedgeQty); // karşı tarafla netleşince kalan
-  var netCost = execPrice * netQty;          // sadece net kısım için teminat
-
-  if (netCost > balance) { showToast('Yetersiz Bakiye', 'Gerekli: $'+fp(netCost)); return; }
-
-  // İşlem açılınca margin level stop out seviyesinin üzerinde olacak mı kontrol et
-  var _stopOutLvl = 50;
-  try {
-    if(typeof accounts !== 'undefined' && Array.isArray(accounts) && accounts.length &&
-       typeof spreadGroups !== 'undefined' && Array.isArray(spreadGroups) && spreadGroups.length) {
-      var _chkAcc = accounts.find(function(a){ return a.active; });
-      if(_chkAcc) {
-        var _chkSg = spreadGroups.find(function(g){ return g.id===(_chkAcc.spreadGroup||'standard'); });
-        if(_chkSg) _stopOutLvl = _chkSg.stopOut || 50;
-      }
-    }
-  } catch(e) {}
-
-  // Yeni işlemden sonraki durumu simüle et
-  var _newBalance = balance - netCost;
-  var _newMarginUsed = 0;
-  var _symCostsChk = {};
-  for(var _ci=0; _ci<positions.length; _ci++) {
-    var _cp = positions[_ci];
-    if(!_symCostsChk[_cp.sym]) _symCostsChk[_cp.sym] = {buy:0, sell:0};
-    if(_cp.side==='buy') _symCostsChk[_cp.sym].buy  += (_cp.cost||0);
-    else                 _symCostsChk[_cp.sym].sell += (_cp.cost||0);
-  }
-  if(!_symCostsChk[curSym]) _symCostsChk[curSym] = {buy:0, sell:0};
-  if(side==='buy') _symCostsChk[curSym].buy  += netCost;
-  else             _symCostsChk[curSym].sell += netCost;
-  var _chkKeys = Object.keys(_symCostsChk);
-  for(var _cj=0; _cj<_chkKeys.length; _cj++) {
-    var _cs = _symCostsChk[_chkKeys[_cj]];
-    _newMarginUsed += Math.abs(_cs.buy - _cs.sell);
-  }
-  // Açık PL hesapla
-  var _chkPL = 0;
-  for(var _ck=0; _ck<positions.length; _ck++) {
-    var _cpos = positions[_ck];
-    var _cp2 = prices[_cpos.sym];
-    if(_cp2) _chkPL += (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1);
-  }
-  var _newEquity = _newBalance + _chkPL;
-  var _newMarginLvl = _newMarginUsed > 0 ? (_newEquity / _newMarginUsed * 100) : null;
-
-  if(_newMarginLvl !== null && _newMarginLvl <= _stopOutLvl) {
-    showToast('Yetersiz Marj', 'İşlem açılamaz — Marj seviyesi %' + _newMarginLvl.toFixed(0) + ' (Min: %' + _stopOutLvl + ')');
-    return;
-  }
-
-  balance -= netCost;
-
-  const pos = { id:Date.now(), sym:curSym, label:(function(){ var _sf=null; for(var _si=0;_si<SYMS.length;_si++){if(SYMS[_si].sym===curSym){_sf=SYMS[_si];break;}} return _sf?_sf.label:curSym; })(), side, qty, openPrice:execPrice, sl, tp, time:new Date().toISOString(), cost:netCost, hedge:(netQty < qty), device:detectDevice() };
-  positions.push(pos);
-  save();
-  renderPositions();
-  updateAccount();
-
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = '';
-  var _gdad61c=document.getElementById('ordSL'); if(_gdad61c) _gdad61c.value = '';
-  var _g4b1c55=document.getElementById('ordTP'); if(_g4b1c55) _g4b1c55.value = '';
-  if (ordType !== 'market') var _gebac64=document.getElementById('limitPrice'); if(_gebac64) _gebac64.value = '';
-
-  const sideLabel = side === 'buy' ? '▲ ALIM' : '▼ SATIM';
-  showToast(`${sideLabel} Gerçekleşti`, `${qty} ${curSym.replace('USDT','')} @ $${fp(execPrice)}`);
-}
-
-function updatePositions() {
-  if(!Array.isArray(positions)) positions = [];
-  positions.forEach(function(pos) {
-    const p = prices[pos.sym];
-    if (!p) return;
-    const cur = p.price;
-    const pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * pos.qty * (pos.contractSize||1);
-    if (pos.tp && ((pos.side==='buy' && cur>=pos.tp) || (pos.side==='sell' && cur<=pos.tp))) {
-      closePosition(pos.id, 'tp');
-    } else if (pos.sl && ((pos.side==='buy' && cur<=pos.sl) || (pos.side==='sell' && cur>=pos.sl))) {
-      closePosition(pos.id, 'sl');
-    }
-  });
-  renderPositions();
-  updateAccount();
-}
-
-function renderPositions() {
-  const tb = document.getElementById('posBody');
-  if (!tb) return; // Manager kendi sekmesinde değilse çık
-  if (!positions.length) { tb.innerHTML = '<tr><td colspan="10" class="empty-msg">Açık pozisyon yok</td></tr>'; return; }
-  tb.innerHTML = positions.map(pos => {
-    const p = prices[pos.sym];
-    const cur = p ? p.price : pos.openPrice;
-    const pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * pos.qty * (pos.contractSize||1);
-    const pnlPct = (pnl/pos.cost)*100;
-    const cls = pnl>=0?'up':'down';
-    return `<tr>
-      <td style="color:var(--muted)">#${pos.id}</td>
-      <td>${pos.label}</td>
-      <td><span class="${pos.side==='buy'?'badge-buy':'badge-sell'}">${pos.side==='buy'?'AL':'SAT'}</span></td>
-      <td>${pos.qty}</td>
-      <td>$${fp(pos.openPrice)}</td>
-      <td>$${fp(cur)}</td>
-      <td class="${cls}">${pnl>=0?'+':''}$${fp(Math.abs(pnl))}</td>
-      <td class="${cls}">${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%</td>
-      <td style="font-size:10px;color:var(--muted);white-space:nowrap">${deviceIcon(pos.device||'web')}</td>
-      <td><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function closePosition(id, reason='') {
-  if(!reason && typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
-  var _cArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
-  // ID tip güvencesi: number veya string olabilir
-  const idx=_cArr.findIndex(p=>String(p.id)===String(id));
-  if(idx===-1)return;
-  const pos=_cArr[idx];
-
-  // Admin: adGetPrice kullan (bid/ask doğru), trader: prices kullan
-  var closePrice;
-  if(typeof adGetPrice==='function') {
-    closePrice = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
-  } else {
-    var _p = prices&&prices[pos.sym]; closePrice = _p?_p.price:pos.openPrice;
-  }
-
-  const _swapC = parseFloat(pos.swapTotal)||0;
-  const _cs = parseFloat(pos.contractSize)||1;
-  const _qty = parseFloat(pos.qty)||0;
-  const pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qty * _cs + _swapC;
-
-  // Hesabın balance'ını güncelle (admin: _adAcc, trader: global balance)
-  var _adAcc = (_adAccId&&typeof accounts!=='undefined') ? accounts.find(function(a){return String(a.id)===String(_adAccId);}) : null;
-  // Bakiye güncelleme: açılışta cost düşüldü → kapanınca cost+pnl iade et
-  if(_adAcc) {
-    _adAcc.balance = parseFloat(_adAcc.balance||0) + (parseFloat(pos.cost)||0) + pnl;
-    balance = _adAcc.balance; // senkronize et
-  } else {
-    balance += (parseFloat(pos.cost)||0) + pnl;
-  }
-
-  _cArr.splice(idx, 1);
-
-  // _allAccountPositions güncelle - hesaplar listesi doğru görünsün
-  if(_adAccId && typeof _allAccountPositions!=='undefined') {
-    _allAccountPositions[_adAccId] = _cArr.slice();
-  }
-
-  var _closeTime = new Date().toISOString();
-  tradeHistory.unshift(Object.assign({}, pos, {closePrice:closePrice, pnl:pnl, swapTotal:_swapC, closeTime:_closeTime, closeReason:reason||'manuel'}));
-  if(tradeHistory.length > 50) tradeHistory.pop();
-
-  // Admin context'inde accounts dolu olduğunda kaydet; trader context'inde save() kullan
-  if(typeof accounts!=='undefined' && Array.isArray(accounts) && accounts.length > 0) {
-    saveAccounts();
-  } else if(typeof save==='function') {
-    save(); // trader tarafı localStorage kayıt
-  }
-
-  // Firebase users/{id}'ye yaz — trader anında görsün
-  if(typeof db!=='undefined' && db && _adAccId) {
-    var _newBal = _adAcc ? _adAcc.balance : balance;
-    db.collection('users').doc(String(_adAccId)).set({
-      positions: _cArr,
-      tradeHistory: tradeHistory.slice(0,50),
-      balance: _newBal,
-      updatedAt: _closeTime
-    }, { merge: true }).catch(function(e){ console.warn('closePos FB err:', e); });
-  }
-
-  renderPositions();
-  renderHistory();
-  // updateAccount burada çağrılmıyor — çağıran (updatePositions/manuel) zaten çağırır
-  // Aksi halde closePosition → updateAccount → closePosition döngüsü oluşur
-
-  // Audit: manuel kapama (stop_out/sl/tp otomatik, reason varsa sistem)
-  if(!reason || reason === 'manuel') {
-    adAudit('position.close.manual', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, side:pos.side, qty:pos.qty, openPrice:pos.openPrice}, {closePrice:closePrice, pnl:pnl, reason:reason||'manuel'});
-  } else if(reason === 'stop_out') {
-    adAudit('position.close.stopout', 'users/'+(_adAccId||'?'), {posId:pos.id, sym:pos.sym, qty:pos.qty}, {closePrice:closePrice, pnl:pnl});
-  }
-
-  if(reason) {
-    var _tAcc=(_adAccId&&typeof accounts!=='undefined')?accounts.find(function(a){return String(a.id)===String(_adAccId);}):null;
-    var _tName=_tAcc?('#'+(_tAcc.login||_tAcc.id)+' '+(_tAcc.name||'')):'';
-    var _tType=reason==='stop_out'?'danger':pnl>=0?'success':'error';
-    var _tTitle=reason==='stop_out'?'STOP OUT':reason==='tp'?'Take Profit':reason==='sl'?'Stop Loss':'Kapatıldı';
-    showAdminToast(_tTitle,(_tName?_tName+' — ':'')+pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl),_tType);
-  } else {
-    showAdminToast('Kapatıldı', pos.sym+' '+(pnl>=0?'+':'')+adFmtMoney(pnl), pnl>=0?'success':'error');
-  }
-}
-
-function renderHistory() {
-  const tb = document.getElementById('histBody');
-  if (!tb) return;
-  if (!tradeHistory.length) { tb.innerHTML = '<tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr>'; return; }
-  var _reasonMap = {'manuel':'<span style="color:#a0a0a0;font-size:10px">Manuel</span>','stop_out':'<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>','sl':'<span style="color:#ef5350;font-size:10px">Stop Loss</span>','tp':'<span style="color:#26a69a;font-size:10px">Take Profit</span>','margin':'<span style="color:#ff9800;font-size:10px">Margin Call</span>'};
-  tb.innerHTML = tradeHistory.slice(0,30).map(function(h) {
-    var cls = h.pnl>=0?'up':'down';
-    var r = h.closeReason||'manuel';
-    var rl = _reasonMap[r]||('<span style="color:#a0a0a0;font-size:10px">'+r+'</span>');
-    return '<tr>'
-      +'<td style="color:var(--muted);font-size:10px;white-space:nowrap">'+(h.closeTime?fmtDate(h.closeTime):'—')+'</td>'
-      +'<td>'+h.label+'</td>'
-      +'<td><span class="'+(h.side==='buy'?'badge-buy':'badge-sell')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></td>'
-      +'<td>'+h.qty+'</td>'
-      +'<td>$'+fp(h.openPrice)+'</td>'
-      +'<td>$'+fp(h.closePrice)+'</td>'
-      +'<td class="'+cls+'">'+(h.pnl>=0?'+':'')+'$'+fp(h.pnl)+'</td>'
-      +'<td>'+rl+'</td>'
-      +'</tr>';
-  }).join('');
-}
+// updatePositions, renderPositions, closePosition, renderHistory kaldırıldı (2026-04-20, 5. pass).
+// Trader kopyası ölü kod: top-level 'positions' array kullanıyorlardı, admin'de posBody/histBody DOM'u yoktu.
+// Admin'in kendi canonical kapatma akışı: adClosePos + _adPositions + users/{id} — bu DOKUNULMADI.
+// closePosition sadece updatePositions ve renderPositions tarafından çağrılıyordu (SL/TP tetik) — ikisi de silindi.
 
 function renderPortfolio() {
   const tb = document.getElementById('portBody');
@@ -3581,11 +3120,11 @@ function renderPortfolio() {
 function delPort(id) { portfolio = portfolio.filter(p=>p.id!==id); save(); renderPortfolio(); }
 
 function updateAccount() {
-  if(!Array.isArray(positions)) positions = [];
+  // 2026-04-20, 5. pass: top-level 'positions' array'ine fallback kaldırıldı. Admin canonical akışı sadece _adPositions kullanır.
 
   var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return x.id===_adAccId;}):null;
   var _defLev=typeof leverage!=='undefined'?leverage:((typeof settings!=='undefined'&&settings&&settings.leverage)?settings.leverage:100);
-  var _posArr=(_adAccId&&typeof _adPositions!=='undefined'&&_adPositions.length)?_adPositions:positions;
+  var _posArr=(typeof _adPositions!=='undefined'&&Array.isArray(_adPositions))?_adPositions:[];
   var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},_posArr);
   var openPL=_ua.openPnl, marginUsed=_ua.margin, equity=_ua.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
@@ -3614,23 +3153,8 @@ function updateAccount() {
   // updateAccount() burada stop out tetiklememeli — sonsuz döngü oluşur.
 }
 
-function toggleAlarmForm() {
-  const f = document.getElementById('alarmForm');
-  f.style.display = f.style.display==='none' ? 'flex' : 'none';
-}
 
-function addAlarm() {
-  const sym = document.getElementById('alSym').value;
-  const dir = document.getElementById('alDir').value;
-  const t = parseFloat(document.getElementById('alPrice').value);
-  if (!t||t<=0) { showToast('Hata','Hedef fiyat girin!'); return; }
-  alarms.push({ sym, dir, target:t, id:Date.now(), active:true });
-  save(); renderAlarms();
-  var _g49e24e=document.getElementById('alPrice'); if(_g49e24e) _g49e24e.value = '';
-  var _st_alarmForm=document.getElementById('alarmForm'); if(_st_alarmForm) _st_alarmForm.style.display = 'none';
-  showToast('Alarm Kuruldu 🔔', `${sym} $${t} ${dir==='above'?'üzeri':'altı'}`);
-  if (Notification.permission==='default') Notification.requestPermission();
-}
+// addAlarm() kaldırıldı (2026-04-19) — trader kopyası. Admin mgrAddAlarm() kullanıyor.
 
 function delAlarm(id) { alarms=alarms.filter(a=>a.id!==id); triggered.delete(id); save(); renderAlarms(); }
 
@@ -3650,6 +3174,7 @@ function checkAlarms(sym, price) {
 
 function renderAlarms() {
   const el = document.getElementById('alarmItems');
+  if (!el) return; // 2026-04-19: admin'de 'alarmItems' DOM yok, guard eklendi. Admin renderAlarmMgr() kullanıyor.
   if (!alarms.length) { el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Alarm yok</span>'; return; }
   el.innerHTML = alarms.map(a => {
     const up = a.dir==='above';
@@ -3675,14 +3200,7 @@ function buildTicker() {
   if (el) el.innerHTML = items+items;
 }
 
-function bpSwitch(id, btn) {
-  document.querySelectorAll('.bp-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.bp-section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('bp-'+id).classList.add('active');
-  if (id==='hist') renderHistory();
-  if (id==='port') renderPortfolio();
-}
+// bpSwitch() kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
 
 var tTmr;
 var SIM_PRICES = {
@@ -3740,7 +3258,8 @@ function startLiveFeed() {
       if(sym===curSym){updateOrderTicket(np);}
       checkAlarms(sym,np);
     }
-    updatePositions(); buildTicker();
+    // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi, admin'de DOM yoktu.
+    buildTicker();
   }, 800);
 
   setInterval(function() {
@@ -3778,22 +3297,120 @@ function startLiveFeed() {
 // KURAL: Admin yazar, trader sadece okur. Tek doğru kaynak Firebase.
 // ════════════════════════════════════════════════════════════════
 
-var _adTdKey  = '6be463dd71664cc0b5db780dd0a189ab';
+var _adTdKey  = '699ea91fdd9b4ad09e8bb2760b7f3663';
 var _adTdWs   = null, _adBnWs = null;
 var _adTdOk   = false, _adBnOk = false;
 var _adFeedOn = false;
 
-var AD_TD_MAP = {
+// ── TD KÖPRÜ SEMBOLLERİ (admin panelinden yönetilir) ──────────────────
+// AD_TD_BUILTIN: fabrika varsayılanı (RTDB/localStorage boşsa kullanılır).
+// AD_TD_MAP    : CANLI liste — 'tx_tdmap' (localStorage) veya RTDB'den yüklenir.
+// Liste, Semboller bölümündeki "TD KÖPRÜ SEMBOLLERİ" panelinden değişir;
+// değişiklik RTDB '/bridgeConfig/tdMap' yoluna yazılır → köprü ~20sn içinde alır.
+// Sembol ekleme/çıkarma için artık kod düzenlemeye/köprü deploy'una GEREK YOK.
+var AD_TD_BUILTIN = {
   'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'SPX500X':'SPX',     'NAS100X':'NDX',      'DJ30X':'DJI',
-  'FTSE100X':'FTSE',   'DAX40X':'DAX',
-  'USOIL':'WTI/USD',   'BRTUSD':'BRENT/USD'
+  'USOIL':'WTI/USD'
+  // DAX40X TD'den çıkarıldı → köprü artık DAX'ı Yahoo'dan çekiyor.
+  // TD planında KAPALI olanlar (eklersen köprü 'subscribe fail' verir, fiyat akmaz):
+  //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks lisanslı.
+  //   BRTUSD/BRENT → TD spot ile uyuşmadı, USOIL=WTI kullanıldı.
 };
+function _txLoadTdMap(){
+  try {
+    var s = JSON.parse(localStorage.getItem('tx_tdmap') || 'null');
+    if(s && typeof s==='object' && Object.keys(s).length) return s;
+  } catch(e){}
+  return Object.assign({}, AD_TD_BUILTIN);
+}
+var AD_TD_MAP = _txLoadTdMap();
 var AD_TD_REV = {};
-Object.keys(AD_TD_MAP).forEach(function(k){ AD_TD_REV[AD_TD_MAP[k]] = k; });
+function _txRebuildTdRev(){ AD_TD_REV = {}; Object.keys(AD_TD_MAP).forEach(function(k){ AD_TD_REV[AD_TD_MAP[k]] = k; }); }
+_txRebuildTdRev();
+
+// ── TD KÖPRÜ SEMBOL YÖNETİMİ (ekle / çıkar / sıfırla) ─────────────────
+function _txTdToast(t,m,k){
+  if(typeof showAdminToast==='function'){ showAdminToast(t,m,k||'success'); }
+  else if(typeof showToast==='function'){ showToast(t,m); }
+  else { console.log('['+t+'] '+m); }
+}
+function _txSaveTdMap(){
+  localStorage.setItem('tx_tdmap', JSON.stringify(AD_TD_MAP));
+  if(typeof rtdb!=='undefined' && rtdb){
+    try { rtdb.ref('bridgeConfig/tdMap').set(AD_TD_MAP)
+      .catch(function(e){ console.warn('[tdMap RTDB write]', e.message); }); }
+    catch(e){ console.warn('[tdMap RTDB write]', e.message); }
+  }
+}
+function _txApplyTdMap(){
+  _txRebuildTdRev();
+  _txSaveTdMap();
+  if(typeof _adStartTwelveData==='function'){ try { _adStartTwelveData(); } catch(e){} }
+  if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
+}
+function txTdAddSymbol(){
+  var symEl=document.getElementById('tdb_sym'), tdEl=document.getElementById('tdb_td');
+  if(!symEl||!tdEl) return;
+  var sym=(symEl.value||'').toUpperCase().replace(/\s+/g,'').trim();
+  var td =(tdEl.value||'').toUpperCase().replace(/\s+/g,'').trim();
+  if(!sym||!td){ _txTdToast('Hata','Sembol ve TD karşılığı zorunlu','danger'); return; }
+  AD_TD_MAP[sym]=td;
+  symEl.value=''; tdEl.value='';
+  _txApplyTdMap();
+  _txTdToast('Eklendi', sym+' \u2192 '+td+' (köprü ~20sn içinde alır)','success');
+}
+function txTdRemoveSymbol(sym){
+  if(!AD_TD_MAP[sym]) return;
+  if(!confirm(sym+' sembolünü köprü beslemesinden çıkar?\n(Trader sembol listesi / symConfig etkilenmez.)')) return;
+  delete AD_TD_MAP[sym];
+  _txApplyTdMap();
+  _txTdToast('Çıkarıldı', sym+' köprüden çıkarıldı','danger');
+}
+function txTdResetDefault(){
+  if(!confirm('TD köprü listesini fabrika varsayılanına (14 sembol) döndür?')) return;
+  AD_TD_MAP=Object.assign({}, AD_TD_BUILTIN);
+  _txApplyTdMap();
+  _txTdToast('Sıfırlandı','Varsayılan 14 sembol yüklendi','success');
+}
+function renderTdBridgeMgr(){
+  var body=document.getElementById('tdBridgeBody');
+  if(!body) return;
+  var keys=Object.keys(AD_TD_MAP).sort();
+  var cnt=document.getElementById('tdBridgeCount'); if(cnt) cnt.textContent=keys.length;
+  if(!keys.length){ body.innerHTML='<tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Liste boş</td></tr>'; return; }
+  body.innerHTML=keys.map(function(sym){
+    return '<tr>'+
+      '<td style="font-family:var(--mono);font-weight:600;">'+sym+'</td>'+
+      '<td style="font-family:var(--mono);color:#8888ff;">'+AD_TD_MAP[sym]+'</td>'+
+      '<td style="text-align:right;"><button class="mgr-btn danger" style="font-size:10px;padding:3px 10px;" onclick="txTdRemoveSymbol(\''+sym+'\')">\u2715 Çıkar</button></td>'+
+    '</tr>';
+  }).join('');
+}
+// Açılışta RTDB'deki listeyi (varsa) benimse — çoklu cihaz/oturum senkronu.
+function _txSyncTdMapFromRtdb(){
+  if(typeof rtdb==='undefined' || !rtdb) return;
+  try {
+    rtdb.ref('bridgeConfig/tdMap').once('value').then(function(snap){
+      var v=snap.val();
+      if(v && typeof v==='object' && Object.keys(v).length){
+        var m={};
+        Object.keys(v).forEach(function(k){ if(typeof v[k]==='string' && k.charAt(0)!=='_') m[k.toUpperCase()]=v[k]; });
+        var sigOld=Object.keys(AD_TD_MAP).sort().map(function(k){return k+'='+AD_TD_MAP[k];}).join('|');
+        var sigNew=Object.keys(m).sort().map(function(k){return k+'='+m[k];}).join('|');
+        AD_TD_MAP=m;
+        localStorage.setItem('tx_tdmap', JSON.stringify(AD_TD_MAP));
+        _txRebuildTdRev();
+        if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
+        if(sigOld!==sigNew && typeof _adStartTwelveData==='function'){ try{ _adStartTwelveData(); }catch(e){} }
+      } else {
+        _txSaveTdMap();   // RTDB boş → mevcut listeyi oraya yaz (ilk kurulum)
+      }
+    }).catch(function(){});
+  } catch(e){}
+}
 var AD_BN_SYMS = ['btcusdt','ethusdt','solusdt','bnbusdt','xrpusdt','adausdt','dogeusdt','avaxusdt','dotusdt','linkusdt'];
 
 // ── Merkezi fiyat deposu ──────────────────────────────────────
@@ -3825,13 +3442,40 @@ function _adGetSpread(sym) {
 function adGetPrice(sym, side) {
   // side: 'buy'=ask fiyatı, 'sell'=bid fiyatı, undefined=mid
   if(_pcOverrides && _pcOverrides[sym]) return _pcOverrides[sym];
+
+  // 1) _FX.prices — WS feed (öncelikli, bid/ask içerir)
   if(_FX.prices[sym]) {
     if(side==='buy')  return _FX.prices[sym].ask || _FX.prices[sym].mid;
     if(side==='sell') return _FX.prices[sym].bid || _FX.prices[sym].mid;
     return _FX.prices[sym].mid;
   }
+
+  // 2) prices (global) — Firebase / trader ile ortak kaynak. Forex'te feed kopmuşsa burası dolu olur.
+  // ⚠️ KRİTİK: _FX.prices boşken AD_SIM sabitlerine düşmek yanlış P&L'e yol açıyordu.
+  // Önce prices'a bak, orada varsa onu kullan — trader'la tutarlı sonuç.
+  if(typeof prices !== 'undefined' && prices && prices[sym]) {
+    var _p = prices[sym];
+    var _px = (typeof _p === 'object') ? (_p.price || _p.mid) : _p;
+    if(_px && _px > 0) {
+      // Spread'i bid/ask ayrımı için uygula (prices objesi sadece mid tutuyor olabilir)
+      if(side === 'buy' || side === 'sell') {
+        var _sprd = 0;
+        if(typeof _p === 'object' && _p.spread) _sprd = _p.spread;
+        else if(typeof _adGetSpread === 'function') {
+          try { _sprd = _adGetSpread(sym) || 0; } catch(e){}
+        }
+        if(side === 'buy')  return _px + _sprd/2;
+        if(side === 'sell') return _px - _sprd/2;
+      }
+      return _px;
+    }
+  }
+
+  // 3) AD_SIM — simülasyon fallback (SADECE geri uyumluluk için, gerçek feed yoksa)
   if(typeof AD_SIM!=='undefined' && AD_SIM[sym]) return AD_SIM[sym].p;
   if(typeof SIM_PRICES!=='undefined' && SIM_PRICES[sym]) return SIM_PRICES[sym].p;
+
+  // 4) Sentetik sembol → kaynak sembolün fiyatından türet
   if(typeof symConfig!=='undefined' && symConfig) {
     var sc2 = symConfig.find(function(s){ return s.sym===sym; });
     if(sc2 && sc2.priceSource && sc2.priceSource!==sym) return adGetPrice(sc2.priceSource, side);
@@ -3852,11 +3496,18 @@ function adReceiveRawPrice(sym, rawMid) {
     // Sentetik bağlı semboller var — sadece onları güncelle
     _synthOnly.forEach(function(s) {
       if(s.priceSource !== sym || s.sym === sym) return;
-      var _factor = parseFloat(s.priceFactor)||1;
-      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
-                    ? window._synthOffsets[s.sym]
-                    : (parseFloat(s.priceOffset)||0);
-      var _sp = rawMid * _factor + _offset;
+      // 2026-04-27 fix: Override aktifse sentetik fiyatı override değerine sabitle (formül uygulama)
+      var _synthOv = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+      var _sp;
+      if(_synthOv && _synthOv > 0) {
+        _sp = _synthOv;
+      } else {
+        var _factor = parseFloat(s.priceFactor)||1;
+        var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                      ? window._synthOffsets[s.sym]
+                      : (parseFloat(s.priceOffset)||0);
+        _sp = rawMid * _factor + _offset;
+      }
       var _ss = _adGetSpread(s.sym), _sh = _ss/2;
       var _sPrev = (_FX.prices[s.sym] && _FX.prices[s.sym].mid) ? _FX.prices[s.sym].mid : _sp;
       var _sObj = {mid:_sp,price:_sp,bid:_sp-_sh,ask:_sp+_sh,spread:_ss,chg:0,prev:_sPrev,ts:Date.now()};
@@ -3898,7 +3549,7 @@ function adReceiveRawPrice(sym, rawMid) {
   updateMwRow(sym, bid, prev);
   if(sym===curSym) updateOrderTicket(bid);
   if(typeof checkAlarms==='function') checkAlarms(sym, bid);
-  if(typeof updatePositions==='function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   // Hesap detayı açıksa pozisyon tablosu ve badge'leri güncelle
   if(_adAccId && document.getElementById('accDetailOverlay') &&
      document.getElementById('accDetailOverlay').style.display !== 'none') {
@@ -3951,13 +3602,20 @@ function adReceiveRawPrice(sym, rawMid) {
   var _synthCfg2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _synthCfg2.forEach(function(s) {
     if(s.priceSource !== sym || s.sym === sym) return;
-    // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
-    var _factor = parseFloat(s.priceFactor)||1;
-    // _synthOffsets öncelikli, yoksa symConfig.priceOffset
-    var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
-                  ? window._synthOffsets[s.sym]
-                  : (parseFloat(s.priceOffset)||0);
-    var _sp = rawMid * _factor + _offset;
+    // 2026-04-27 fix: Override aktifse sentetik fiyatı override değerine sabitle (formül uygulama)
+    var _synthOverride = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+    var _sp;
+    if(_synthOverride && _synthOverride > 0) {
+      _sp = _synthOverride;
+    } else {
+      // Override varsa o fiyatı kullan, yoksa formül uygula — her iki durumda da güncellemeye devam et
+      var _factor = parseFloat(s.priceFactor)||1;
+      // _synthOffsets öncelikli, yoksa symConfig.priceOffset
+      var _offset = (window._synthOffsets && window._synthOffsets[s.sym] !== undefined)
+                    ? window._synthOffsets[s.sym]
+                    : (parseFloat(s.priceOffset)||0);
+      _sp = rawMid * _factor + _offset;
+    }
     var _ss    = _adGetSpread(s.sym);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
@@ -3993,7 +3651,7 @@ function adApplyOverride(sym, price) {
   if(typeof SIM_PRICES!=='undefined'&&SIM_PRICES[sym]) SIM_PRICES[sym].p=price;
   updateMwRow(sym,price,prev);
   if(sym===curSym) updateOrderTicket(price);
-  if(typeof updatePositions==='function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   // _FX writeBuf'a ekle - throttle ile yazılacak
   if(typeof _FX!=='undefined') {
     _FX.writeBuf[sym] = price;
@@ -4042,29 +3700,39 @@ function adRecalcAllEquities() {
       a._openCount = st.openCount;
     }
   });
-  // Hesaplar sekmesi açıksa yenile
+  // Hesaplar sekmesi açıksa yenile — TÜM varlıklar hesaplandı, doğru sırala ve dondur.
   var secAcc = document.getElementById('sec-accounts');
-  if(secAcc && secAcc.style.display!=='none') renderAccTable();
+  if(secAcc && secAcc.style.display!=='none'){ window._accResortPending = true; renderAccTable(); }
 }
 
-function adApplyPrice(sym, price) { adReceiveRawPrice(sym, price); }
 
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
 function adCalcStats(account, positions) {
   // ⚠️ CANONICAL: balance/bonus users/{id}'den (_accCanon)
+  positions = (positions||[]).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları equity'ye katma
   var bal   = getAccBal(account.id);
   var bonus = getAccBonus(account.id);
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
+  var _missingPrices = 0;
   (positions||[]).forEach(function(pos){
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
-    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || pos.openPrice;
-    if(!closeP) return;
+    var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || adGetPrice(pos.sym);
+    // ⚠️ Fiyat yoksa pozisyonu atlamak yerine openPrice kullan (P&L=0 gibi davran).
+    // Feed koptuğunda büyük zarardaki pozisyonlar equity'den düşmemeli.
+    if(!closeP) {
+      closeP = pos.openPrice;
+      _missingPrices++;
+    }
     var cs=parseFloat(pos.contractSize)||1, qty=parseFloat(pos.qty)||0;
     openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs;
     openPnl += parseFloat(pos.swapTotal)||0;
   });
+  if(_missingPrices > 0 && window._calcStatsMissingLog !== account.id) {
+    console.warn('[adCalcStats] #'+account.id+' '+_missingPrices+' pozisyonda fiyat yok — openPrice fallback');
+    window._calcStatsMissingLog = account.id;
+  }
   var equity=bal+bonus+openPnl;
   var nets={};
   (positions||[]).forEach(function(pos){
@@ -4089,13 +3757,10 @@ function adCalcStats(account, positions) {
 
 // ── Binance WebSocket ─────────────────────────────────────────
 // ── FEED KONFİGÜRASYONU ─────────────────────────────────────
-var _adFfKey    = '81e05712b4-8c68c7d36a-tcvv6a';
-var _adFfForex1 = 'EURUSD,GBPUSD,USDJPY,USDCHF,AUDUSD,USDCAD,NZDUSD,USDTRY,EURTRY,EURCAD';
-var _adFfForex2 = 'EURGBP,EURJPY,GBPJPY,GBPAUD,AUDCAD,USDMXN,USDZAR,USDSGD,USDHKD,USDPLN';
-var _adFfForex3 = 'USDSEK,USDNOK,GBPCHF,AUDNZD,CADCHF';
+// Forex/emtia/endeks → Twelve Data WS (sembol haritası: AD_TD_MAP / AD_TD_REV, ~L3260)
+// Kripto → Binance WS (_adBnSyms)
 var _adBnSyms   = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','CAKEUSDT','CELOUSDT','CHZUSDT','COMPUSDT'];
 
-var _adFfTimer  = null;
 var _adBnTimer  = null;
 var _adBnIdx    = 0;
 
@@ -4109,15 +3774,36 @@ function _adFbWrite(sym, price) {
   window._adWriteBuf[sym] = price;
   if(!window._adWriteTimer) {
     window._adWriteTimer = setTimeout(function() {
-      if(typeof db === 'undefined' || !db) { window._adWriteBuf={}; window._adWriteTimer=null; return; }
       var buf = window._adWriteBuf;
       window._adWriteBuf  = {};
       window._adWriteTimer = null;
       if(!Object.keys(buf).length) return;
-      buf._ts = Date.now();
-      db.collection('broker').doc('prices').set(buf, {merge:true})
-        .catch(function(e){ console.warn('[FB write]', e.message); });
-    }, 200);
+
+      // ── BİRİNCİL: RTDB — her sembol kendi path'ine (prices/{SYM}).
+      // _ts prices içinde (prices/_ts) — RTDB kuralı sadece 'prices'e izin veriyor,
+      // ayrı node (prices_meta) permission_denied verir ve update()'i komple iptal eder.
+      // Trader _ts'i zaten atlıyor (sym.charAt(0)==='_'), child_changed'a zararı yok.
+      if(typeof rtdb !== 'undefined' && rtdb) {
+        var upd = {};
+        Object.keys(buf).forEach(function(s){ upd['prices/'+s] = buf[s]; });
+        upd['prices/_ts'] = firebase.database.ServerValue.TIMESTAMP;
+        rtdb.ref().update(upd)
+          .then(function(){ window._adLastFbWrite = Date.now(); })
+          .catch(function(e){ console.warn('[RTDB write]', e.message); });
+      }
+
+      // ── İKİNCİL: Firestore — geriye dönük uyum (admin panelleri/kill-switch hâlâ okuyabilir) ──
+      // Daha seyrek yaz (her ~2sn), Firestore kotasını yormasın. Sadece snapshot amaçlı.
+      if(typeof db !== 'undefined' && db) {
+        if(!window._adFsLast || (Date.now() - window._adFsLast) > 2000) {
+          window._adFsLast = Date.now();
+          var fsBuf = {}; Object.keys(buf).forEach(function(s){ fsBuf[s]=buf[s]; });
+          fsBuf._ts = Date.now();
+          db.collection('broker').doc('prices').set(fsBuf, {merge:true})
+            .catch(function(e){ /* sessiz — RTDB birincil */ });
+        }
+      }
+    }, 50);   // 200→50ms: trader gecikmesini azalt (RTDB sık yazımı rahat kaldırır)
   }
 }
 
@@ -4179,48 +3865,288 @@ function _adStartBinance() {
   };
 }
 
-// ── FASTFOREX FOREX POLLING (3sn) ───────────────────────────
-function _adStartForex() {
-  if(_adFfTimer) { clearInterval(_adFfTimer); _adFfTimer=null; }
-  function _applyFx(data) {
-    if(!data || !data.quotes) return;
-    Object.keys(data.quotes).forEach(function(sym) {
-      var q = data.quotes[sym]; if(!q) return;
-      var mid = (parseFloat(q.bid) + parseFloat(q.ask)) / 2;
-      if(sym && mid > 0) adReceiveRawPrice(sym, mid);
-    });
+// ── TWELVE DATA FOREX/EMTİA/ENDEKS WS ───────────────────────
+// ── KÖPRÜ İSTEMCİSİ (admin) ─────────────────────────────────────────────
+// Admin de köprüye bağlanır: endeksler (Yahoo) + TD forex tick'leri tek kaynaktan gelir.
+// Böylece admin market watch / equity / margin hesapları gerçek fiyatla çalışır
+// (endeks-hisselerin "1" veya eski seed'de kalması sorununu çözer).
+var AD_BRIDGE_URL = 'wss://tradex-bridge-production.up.railway.app';
+var _adBrWs = null;
+function _adApplyBridge(sym, price, chg){
+  if(!sym || !(price>0)) return;
+  if(!window._adLive) window._adLive = {};
+  window._adLive[sym] = true;
+  adReceiveRawPrice(sym, price);
+  if(chg!==undefined && chg!==null && !isNaN(parseFloat(chg)) && prices[sym]) prices[sym].chg = parseFloat(chg);
+}
+function _adStartBridge(){
+  try{
+    if(_adBrWs){ try{ _adBrWs.onopen=_adBrWs.onmessage=_adBrWs.onclose=_adBrWs.onerror=null; if(_adBrWs.readyState===1) _adBrWs.close(); }catch(e){} }
+    _adBrWs = new WebSocket(AD_BRIDGE_URL);
+    _adBrWs.onmessage = function(e){
+      var msg; try{ msg = JSON.parse(e.data); }catch(ex){ return; }
+      if(msg.type==='snapshot' && msg.prices){
+        Object.keys(msg.prices).forEach(function(s){ _adApplyBridge(s, parseFloat(msg.prices[s]), msg.chgs && msg.chgs[s]); });
+        return;
+      }
+      if(msg.s) _adApplyBridge(msg.s, parseFloat(msg.p), msg.c);
+    };
+    _adBrWs.onerror = function(){};
+    _adBrWs.onclose = function(){ setTimeout(_adStartBridge, 4000); };
+  }catch(e){ setTimeout(_adStartBridge, 8000); }
+}
+setTimeout(_adStartBridge, 1500);
+
+// ── KAPALI PİYASA TOHUMLAMA (admin) ────────────────────────────────────
+// Gerçek tick'i olmayan (hisse vb.) sembollerin son fiyatını TD /quote ile çek.
+function _adFetchLastPrice(sym){
+  var tdSym = AD_TD_MAP[sym];
+  if(!tdSym || typeof _adTdKey==='undefined') return;
+  if(!window._adSeeded) window._adSeeded = {};
+  window._adSeeded[sym] = true;
+  fetch('https://api.twelvedata.com/quote?symbol='+encodeURIComponent(tdSym)+'&apikey='+_adTdKey)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d) return;
+      var p = parseFloat(d.close), pc = parseFloat(d.percent_change);
+      if(window._adLive && window._adLive[sym]) return;
+      if(p>0){ adReceiveRawPrice(sym, p); if(!isNaN(pc) && prices[sym]) prices[sym].chg = pc; }
+    }).catch(function(){ if(window._adSeeded) delete window._adSeeded[sym]; });
+}
+function _adSeedClosedPrices(){
+  if(!window._adSeeded) window._adSeeded = {};
+  var list = Object.keys(AD_TD_MAP||{}), n=0;
+  for(var i=0;i<list.length && n<30;i++){
+    var sym = list[i];
+    if(window._adLive && window._adLive[sym]) continue;
+    if(window._adSeeded[sym]) continue;
+    (function(sm, idx){ setTimeout(function(){ _adFetchLastPrice(sm); }, idx*350); })(sym, n);
+    n++;
   }
-  function _poll() {
-    var open = (typeof _marketHours==='undefined') || _marketHours.forexOpen();
-    if(!open) return;
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex1+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF1]',e.message);});
-    fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex2+'&api_key='+_adFfKey)
-      .then(function(r){return r.json();}).then(_applyFx)
-      .catch(function(e){console.warn('[FF2]',e.message);});
-    if(_adFfForex3) {
-      fetch('https://api.fastforex.io/fx/quote?pairs='+_adFfForex3+'&api_key='+_adFfKey)
-        .then(function(r){return r.json();}).then(_applyFx)
-        .catch(function(e){console.warn('[FF3]',e.message);});
+}
+setTimeout(_adSeedClosedPrices, 5000);
+setTimeout(_adSeedClosedPrices, 25000);
+
+// Endpoint: wss://ws.twelvedata.com/v1/quotes/price?apikey=KEY
+// Subscribe: {"action":"subscribe","params":{"symbols":"EUR/USD,GBP/USD,..."}}
+// Gelen veri: {"event":"price","symbol":"EUR/USD","price":1.17314,"bid":...,"ask":...}
+// Sembol dönüşümü: gelen TD formatı (EUR/USD) → AD_TD_REV → TradeX (EURUSD)
+// SAĞLIK TAKİBİ: window._adTdLastOk = son başarılı tick, _adTdLastErr = son hata mesajı
+function _adStartTwelveData() {
+  if(window._adTdTimerClear) { window._adTdTimerClear(); }
+  window._adTdLastOk  = window._adTdLastOk  || 0;
+  window._adTdLastErr = null;
+
+  // Abone olunacak semboller — TD formatında (AD_TD_MAP değerleri)
+  var _tdSymList = Object.keys(AD_TD_MAP).map(function(k){ return AD_TD_MAP[k]; }).join(',');
+
+  var _ws = null;
+  var _reconnectTimer = null;
+  var _wsBuf = {};
+  var _wsFlushTimer = null;
+
+  function _wsFlush() {
+    var _applied = 0;
+    Object.keys(_wsBuf).forEach(function(sym) {
+      adReceiveRawPrice(sym, _wsBuf[sym]);
+      _applied++;
+    });
+    _wsBuf = {};
+    _wsFlushTimer = null;
+    if(_applied > 0) {
+      window._adTdLastOk  = Date.now();
+      window._adTdLastErr = null;
     }
   }
-  _poll();
-  _adFfTimer = setInterval(_poll, 3000);
+
+  function _connect() {
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _ws = new WebSocket('wss://ws.twelvedata.com/v1/quotes/price?apikey=' + _adTdKey);
+    _adTdWs = _ws;
+
+    _ws.onopen = function() {
+      try {
+        _ws.send(JSON.stringify({ action:'subscribe', params:{ symbols:_tdSymList } }));
+      } catch(e) {
+        window._adTdLastErr = 'subscribe gönderilemedi: ' + e.message;
+        console.warn('[forex feed]', window._adTdLastErr);
+      }
+    };
+
+    _ws.onmessage = function(e) {
+      try {
+        var msg = JSON.parse(e.data);
+        // Abonelik durumu — hangi semboller kabul/red edildi (emtia/endeks adı kontrolü için kritik)
+        if(msg.event === 'subscribe-status') {
+          var fails = msg.fails || (msg.data && msg.data.fails) || [];
+          var succ  = msg.success || (msg.data && msg.data.success) || [];
+          if(fails && fails.length) {
+            console.warn('[forex feed] ⚠ Twelve Data REDDETTİ (' + fails.length + ' sembol):',
+                         fails.map(function(f){ return f.symbol || f; }).join(', '),
+                         '— bu sembol isimleri TD planında geçersiz, AD_TD_MAP düzeltilmeli.');
+          }
+          console.log('[forex feed] Twelve Data abonelik: ' + (succ.length||0) + ' başarılı, ' + (fails.length||0) + ' başarısız');
+          return;
+        }
+        if(msg.event !== 'price') return; // heartbeat vb. atla
+        var tradexSym = AD_TD_REV[msg.symbol];
+        var mid = parseFloat(msg.price);
+        if(!tradexSym || !(mid > 0)) return;
+        _wsBuf[tradexSym] = mid;
+        if(!_wsFlushTimer) {
+          _wsFlushTimer = setTimeout(_wsFlush, 200);
+        }
+      } catch(ex){}
+    };
+
+    _ws.onclose = function() {
+      _reconnectTimer = setTimeout(_connect, 3000);
+    };
+
+    _ws.onerror = function() {
+      window._adTdLastErr = 'WS bağlantı hatası';
+      try{_ws.close();}catch(e){}
+    };
+  }
+
+  _connect();
+
+  window._adTdTimerClear = function() {
+    if(_reconnectTimer) clearTimeout(_reconnectTimer);
+    if(_wsFlushTimer) clearTimeout(_wsFlushTimer);
+    if(_ws) { try{_ws.close();}catch(e){} }
+    _adTdWs = null;
+  };
+
+  // Sağlık kontrolü: 30sn'dir taze forex fiyatı gelmediyse uyar
+  if(window._adTdHealthTimer) clearInterval(window._adTdHealthTimer);
+  window._adTdHealthTimer = setInterval(function(){
+    // Piyasa kapalıysa atla (forex/emtia hafta sonu kapalı, tick gelmez — normal)
+    if(typeof _marketHours !== 'undefined' && !_marketHours.forexOpen()) return;
+    var ageMs = window._adTdLastOk ? (Date.now() - window._adTdLastOk) : Infinity;
+    if(ageMs > 30000) {
+      // Feed ölü — simülasyonu durdur ve konsola sürekli uyar
+      window._adForexFeedDead = true;
+      if(!window._adForexFeedWarned || (Date.now() - window._adForexFeedWarned) > 60000) {
+        console.error('[forex feed] ⚠ Forex fiyat feed\'i ÖLÜ. Son başarılı tick: ' +
+                      (window._adTdLastOk ? new Date(window._adTdLastOk).toISOString() : 'HİÇ') +
+                      '. Son hata: ' + (window._adTdLastErr || 'bilinmiyor') +
+                      '. Simülasyon fiyatları Firebase\'e YAZILMIYOR — Twelve Data keyini/bağlantısını kontrol et!');
+        window._adForexFeedWarned = Date.now();
+        // UI'da görünür uyarı
+        if(typeof showAdminToast === 'function') {
+          showAdminToast('⚠ Forex Feed Yok', 'Twelve Data WS yanıt vermiyor. API key, WS credit limiti veya network problemi olabilir.', 'danger');
+        }
+      }
+    } else {
+      window._adForexFeedDead = false;
+    }
+  }, 10000);
 }
 
 function adStartTwelvedataFeed() {
-  _adStartBinance();
-  _adStartForex();
+  if(typeof _txSyncTdMapFromRtdb==='function') _txSyncTdMapFromRtdb();   // RTDB'deki köprü listesini benimse
+  _adStartBinance();      // Kripto → Binance WS
+  _adStartTwelveData();   // Forex/emtia/endeks → Twelve Data WS
   _adTdOk = true;
   _adBnOk = true;
 }
 
+// ── FEED SAĞLIK GÖSTERGESİ ──
+// Top bar'daki 3 küçük dot'u her 5sn'de bir günceller.
+// Yeşil = taze veri, Sarı = 30sn-2dk arası, Kırmızı = 2dk+ veya hiç
+function _feedHealthTick() {
+  var now = Date.now();
+  function _setDot(id, age, labelColor) {
+    var el = document.getElementById(id);
+    if(!el) return;
+    var color;
+    if(age == null || age === Infinity) color = '#666';
+    else if(age < 30000)   color = '#26a69a'; // yeşil — taze
+    else if(age < 120000)  color = '#f5c518'; // sarı — gecikmeli
+    else                   color = '#ef5350'; // kırmızı — ölü
+    el.style.background = color;
+    el.style.boxShadow = (age != null && age < 30000) ? '0 0 4px '+color : 'none';
+    if(el.parentElement) {
+      el.parentElement.title = (age == null || age === Infinity)
+        ? 'Hiç veri yok'
+        : 'Son güncelleme: ' + Math.floor(age/1000) + 'sn önce';
+    }
+  }
+
+  // Kripto (Binance): en taze kripto fiyatının yaşı
+  var cryptoAge = Infinity;
+  var _cryptoSyms = ['BTCUSDT','ETHUSDT','BNBUSDT'];
+  for(var i=0; i<_cryptoSyms.length; i++) {
+    var p = _FX.prices[_cryptoSyms[i]];
+    if(p && p.ts) cryptoAge = Math.min(cryptoAge, now - p.ts);
+  }
+  _setDot('fhCrypto', cryptoAge);
+
+  // Forex (Twelve Data WS): _adTdLastOk'dan hesapla
+  var forexAge = window._adTdLastOk ? (now - window._adTdLastOk) : Infinity;
+  _setDot('fhForex', forexAge);
+
+  // Firebase (yazım): son başarılı yazım zamanı
+  var fbAge = window._adLastFbWrite ? (now - window._adLastFbWrite) : Infinity;
+  _setDot('fhFB', fbAge);
+}
+
 function adStartRealFeed() {
   _adFeedOn = true;
-  adStartTwelvedataFeed();
-  adListenOverrides();
-  if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  // Feed sağlık göstergesini başlat
+  if(typeof _feedHealthTick === 'function') {
+    _feedHealthTick();
+    setInterval(_feedHealthTick, 5000);
+  }
+  // Önce Firebase'deki son bilinen fiyatları yükle — forex kapalıyken fallback için.
+  // Bu sayede AD_SIM sabit simülasyon değerlerine (EURUSD=1.085 gibi) düşmek yerine
+  // son gerçek cuma kapanış fiyatı kullanılır.
+  adLoadLastKnownPrices(function(){
+    adStartTwelvedataFeed();
+    adListenOverrides();
+    if(typeof startMarketStatusChecker==='function') startMarketStatusChecker();
+  });
+}
+
+// Admin açıldığında broker/prices'tan son fiyatları bir kerelik yükle → _FX.prices doldur.
+// Forex feed kapalıyken adGetPrice() AD_SIM yerine bu değerleri kullanacak.
+function adLoadLastKnownPrices(cb) {
+  if(typeof db==='undefined' || !db) { if(cb) cb(); return; }
+  db.collection('broker').doc('prices').get().then(function(doc){
+    if(!doc.exists) { if(cb) cb(); return; }
+    var data = doc.data() || {};
+    var loaded = 0;
+    Object.keys(data).forEach(function(sym){
+      if(sym.charAt(0) === '_') return; // _ts gibi meta alanlar
+      var val = data[sym];
+      var price = 0;
+      if(typeof val === 'number') price = val;
+      else if(val && typeof val === 'object') price = parseFloat(val.price || val.mid || val.bid || 0);
+      else if(val) price = parseFloat(val);
+      if(price > 0 && !_FX.prices[sym]) {
+        // _FX.prices'a seed olarak yaz — ts eski olduğu için feed açıldığında üzerine yazılır
+        var spread = (typeof _adGetSpread==='function') ? (_adGetSpread(sym)||0) : 0;
+        var half = spread/2;
+        _FX.prices[sym] = {
+          mid: price, price: price,
+          bid: price - half, ask: price + half,
+          spread: spread, chg: 0, prev: price,
+          ts: doc.data()._ts || 0, // eski ts — feed geldiğinde üzerine yazılır
+          _seed: true // Firebase'den seed edildi işareti
+        };
+        // prices global ile senkron tut
+        if(typeof prices !== 'undefined') prices[sym] = _FX.prices[sym];
+        if(typeof _adPrices !== 'undefined') _adPrices[sym] = price;
+        loaded++;
+      }
+    });
+    console.log('[adLoadLastKnownPrices] Firebase broker/prices\'tan '+loaded+' sembol seed edildi');
+    if(cb) cb();
+  }).catch(function(e){
+    console.warn('[adLoadLastKnownPrices]', e.message);
+    if(cb) cb();
+  });
 }
 
 function adListenOverrides() {
@@ -4264,7 +4190,7 @@ function adListenOverrides() {
   });
 }
 
-function adListenFirebasePrices() {} // eski uyumluluk — artık kullanılmıyor
+ // eski uyumluluk — artık kullanılmıyor
 
 var MARKET_GROUPS = [
   {
@@ -4322,21 +4248,50 @@ var MARKET_GROUPS = [
     items:[
       {sym:'XAUUSD',  name:'XAU/USD',   full:'Altın / Dolar',  icon:'🥇', spread:0.30,   decimals:2, mockPrice:2318.50},
       {sym:'XAGUSD',  name:'XAG/USD',   full:'Gümüş / Dolar',  icon:'🥈', spread:0.015,  decimals:3, mockPrice:27.41},
-      {sym:'XPTUSD',  name:'XPT/USD',   full:'Platin / Dolar', icon:'⬡',  spread:0.50,   decimals:2, mockPrice:964.20},
-      {sym:'USOIL',  name:'WTI/USD',   full:'Ham Petrol',      icon:'🛢', spread:0.03,   decimals:2, mockPrice:78.34},
-      {sym:'BRTUSD',  name:'BRENT/USD', full:'Brent Petrol',    icon:'⛽', spread:0.03,   decimals:2, mockPrice:82.61},
-      {sym:'NGAS',   name:'NatGas/USD',full:'Doğal Gaz',       icon:'🔥', spread:0.005,  decimals:3, mockPrice:2.143},
     ]
   },
   {
     id:'indices', label:'ENDEKSLer', open:false,
     items:[
-      {sym:'SPX500X',  name:'S&P 500',   full:'S&P 500 Endeksi',icon:'📈', spread:0.50,   decimals:2, mockPrice:5248.80},
-      {sym:'NAS100X',  name:'NASDAQ',    full:'NASDAQ 100',      icon:'📊', spread:0.80,   decimals:2, mockPrice:18320.40},
-      {sym:'DJ30X',    name:'DOW 30',    full:'Dow Jones 30',    icon:'🏛', spread:1.00,   decimals:2, mockPrice:39127.60},
-      {sym:'FTSE100X', name:'FTSE 100',  full:'FTSE 100 UK',     icon:'🇬🇧',spread:0.50,   decimals:2, mockPrice:8312.40},
-      {sym:'DAX40X',   name:'DAX 40',    full:'DAX Almanya',     icon:'🇩🇪',spread:0.80,   decimals:2, mockPrice:18642.20},
-      {sym:'XU100X',   name:'BIST 100',  full:'Borsa İstanbul',  icon:'🇹🇷',spread:2.00,   decimals:2, mockPrice:10841.60},
+    ]
+  },
+  {
+    id:'stocks', label:'HİSSELER', open:false,
+    items:[]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
+  },
+  {
+    id:'bist', label:'BİST', open:false,
+    items:[
+      {sym:'AEFES', name:'AEFES', full:'Anadolu Efes',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKBNK', name:'AKBNK', full:'Akbank',              icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ASELS', name:'ASELS', full:'Aselsan',             icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BIMAS', name:'BIMAS', full:'BİM Mağazalar',       icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'EKGYO', name:'EKGYO', full:'Emlak Konut GYO',     icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'ENKAI', name:'ENKAI', full:'Enka İnşaat',         icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EREGL', name:'EREGL', full:'Ereğli Demir Çelik',  icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'FROTO', name:'FROTO', full:'Ford Otosan',         icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'GARAN', name:'GARAN', full:'Garanti BBVA',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GUBRF', name:'GUBRF', full:'Gübre Fabrikaları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'ISCTR', name:'ISCTR', full:'Türkiye İş Bankası',  icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'KCHOL', name:'KCHOL', full:'Koç Holding',         icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'KOZAL', name:'KOZAL', full:'Koza Altın',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KRDMD', name:'KRDMD', full:'Kardemir (D)',        icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'MGROS', name:'MGROS', full:'Migros',              icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'PETKM', name:'PETKM', full:'Petkim',              icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SAHOL', name:'SAHOL', full:'Sabancı Holding',     icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SASA',  name:'SASA',  full:'SASA Polyester',      icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SISE',  name:'SISE',  full:'Şişecam',             icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'TAVHL', name:'TAVHL', full:'TAV Havalimanları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TCELL', name:'TCELL', full:'Turkcell',            icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'THYAO', name:'THYAO', full:'Türk Hava Yolları',   icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TOASO', name:'TOASO', full:'Tofaş',               icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TTKOM', name:'TTKOM', full:'Türk Telekom',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TUPRS', name:'TUPRS', full:'Tüpraş',              icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'VAKBN', name:'VAKBN', full:'VakıfBank',           icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'YKBNK', name:'YKBNK', full:'Yapı Kredi',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
     ]
   }
 ];
@@ -4393,9 +4348,10 @@ function saveBrokerInfo() {
 
 function saveSymConfig(){
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+  try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){}
   // Firebase'e yaz
   if(typeof db!=='undefined'&&db){
-    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true})
+    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),deleted:JSON.stringify(_txDeleted),_ts:Date.now()},{merge:true})
       .catch(function(e){console.warn('saveSymConfig FB err:',e);});
   }
 }
@@ -4423,7 +4379,7 @@ function toggleManager() {
     o.classList.add('open');
     renderSymMgr();
     renderAccCards();
-    if(!spreadGroups) loadSpreadGroups();
+    sgLoad();
     renderAccListSmall();
     renderAlarmMgr();
     renderPortMgr();
@@ -4456,10 +4412,116 @@ function mgrTab(id, el) {
   if (id==='pricecontrol') { pcInit(); }
 }
 
+// Admin'de TAMAMEN gizlenen/kaldırılan semboller — sembol tablosu, import ve init
+// filtresi bunları eler (kaynak Firebase olsa bile ekranda görünmezler).
+//   Eski/çift kodlar + talep üzerine kaldırılan emtia/endeksler:
+//   WTI(USOIL), BRENT(BRTUSD), NATGAS(NGAS), SP500(SPX500X), NASDAQ(NAS100X),
+//   DOW30(DJ30X), FTSE100(FTSE100X), DAX40(DAX40X), BIST100(XU100X)
+// Geri getirmek için ilgili kodu bu listeden çıkar.
+var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
+  'USOIL','BRTUSD','NGAS','FTSE100X','XU100X','XPTUSD'];
+
+// Kullanıcının SİLDİĞİ semboller (tombstone). Tohumlama (_defaults) bunları geri
+// EKLEMEZ → silinen sembol bir süre sonra geri gelmez. localStorage + Firebase'de tutulur.
+var _txDeleted = (function(){ try{ return JSON.parse(localStorage.getItem('tx_deleted')||'[]'); }catch(e){ return []; } })();
+function _txMarkDeleted(sym){
+  if(!sym) return;
+  if(_txDeleted.indexOf(sym)===-1) _txDeleted.push(sym);
+  try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){}
+}
+function _txUnmarkDeleted(sym){
+  var i=_txDeleted.indexOf(sym);
+  if(i!==-1){ _txDeleted.splice(i,1); try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){} }
+}
+
+// Firebase'deki (broker/symbols) sembolleri admin'e yükle — başka oturumda/cihazda eklenen
+// ya da trader'da görünüp admin localStorage'ında olmayan sembolleri sembol listesi + market
+// watch'a getirir. (Admin daha önce symConfig'i SADECE localStorage'dan okuyordu.)
+function _adLoadSymbolsFromFb(){
+  if(typeof db==='undefined' || !db) return;
+  db.collection('broker').doc('symbols').get().then(function(doc){
+    if(!doc.exists) return;
+    var d = doc.data()||{};
+    try{ var fbDel = d.deleted ? JSON.parse(d.deleted) : []; if(Array.isArray(fbDel)) fbDel.forEach(function(s){ if(_txDeleted.indexOf(s)===-1) _txDeleted.push(s); }); }catch(e){}
+    var fbSyms; try{ fbSyms = d.data ? JSON.parse(d.data) : []; }catch(e){ return; }
+    if(!Array.isArray(fbSyms) || !fbSyms.length) return;
+    var have={}; symConfig.forEach(function(s){ if(s&&s.sym) have[s.sym]=true; });
+    var added=0;
+    fbSyms.forEach(function(s){
+      if(!s || !s.sym || have[s.sym]) return;
+      if(_txDeleted.indexOf(s.sym)!==-1) return;     // silinmiş (tombstone)
+      if(AD_HIDDEN.indexOf(s.sym)!==-1) return;      // admin'de gizli
+      symConfig.push(s); have[s.sym]=true; added++;
+    });
+    if(!added) return;
+    // symConfig → AD_SIM + MARKET_GROUPS senkronu (yeni eklenenler market watch'ta da görünsün)
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto',stock:'stocks', bist:'bist'};
+    symConfig.forEach(function(s){
+      if(!s||!s.active||!s.sym) return;
+      if(!AD_SIM[s.sym]){ var bp=(s.priceSource&&AD_SIM[s.priceSource])?AD_SIM[s.priceSource].p:1; AD_SIM[s.sym]={p:bp,v:0.002}; _adPrices[s.sym]=bp; mwPrices[s.sym]={price:bp,prev:bp,chg:0}; }
+      var grpId=catMap[s.category]||'crypto';
+      var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
+      if(grp && !grp.items.find(function(it){return it.sym===s.sym;})){
+        var item={sym:s.sym,name:s.sym,full:s.label||s.sym,icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+        grp.items.push(item); MW_MAP[s.sym]=item;
+      }
+    });
+    try{ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }catch(e){}
+    window._symConfig = symConfig;
+    if(typeof renderSymMgr==='function'){ try{ renderSymMgr(window._symFilter||'all'); }catch(e){} }
+    if(typeof renderMarketWatch==='function'){ try{ renderMarketWatch(); }catch(e){} }
+    console.log('[admin] Firebase\'den '+added+' eksik sembol yüklendi');
+  }).catch(function(e){ console.warn('symbols load err', e); });
+}
+
+// Trader'ın MARKET_GROUPS'unda olup symConfig'te olmayan sembolleri içe aktar.
+// (Sistemin sabit listesindeki semboller admin'de görünmüyordu çünkü symConfig'e
+//  hiç girmemişlerdi. Bu, onları symConfig'e ekleyip Firebase'e kaydeder → admin'de
+//  düzenlenebilir/silinebilir olur. AD_HIDDEN'dakiler hariç tutulur.)
+function txImportMarketGroups(){
+  if(typeof MARKET_GROUPS==='undefined' || !Array.isArray(MARKET_GROUPS)){
+    _txTdToast('Hata','MARKET_GROUPS bulunamadı','danger'); return;
+  }
+  var grpCat={crypto:'crypto', forex:'forex', commodity:'commodity', indices:'index', stocks:'stock', bist:'bist'};
+  var have={}; symConfig.forEach(function(s){ have[s.sym]=true; });
+  var added=0, names=[];
+  MARKET_GROUPS.forEach(function(g){
+    var cat=grpCat[g.id]||'crypto';
+    (g.items||[]).forEach(function(it){
+      if(!it || !it.sym || have[it.sym] || AD_HIDDEN.indexOf(it.sym)!==-1) return;
+      if(typeof _txDeleted!=='undefined' && _txDeleted.indexOf(it.sym)!==-1) return;   // kullanıcı silmiş — geri ekleme
+      symConfig.push({
+        sym: it.sym,
+        label: it.full || it.name || it.sym,
+        s: it.name || it.sym,
+        spread: (typeof it.spread==='number') ? it.spread : 0.1,
+        spreadType:'fixed', spreadVariance:20,
+        swapBuy:0, swapSell:0,
+        color: it.color || '#f0b90b',
+        minLot: 0.01,
+        active:true,
+        contractSize: (cat==='forex') ? 100000 : 1,
+        margin: (cat==='forex') ? 2 : 1,
+        decimals: parseInt(it.decimals)||2,
+        category: cat,
+        priceSource:'', priceOffset:0, priceFactor:1
+      });
+      have[it.sym]=true; added++; names.push(it.sym);
+    });
+  });
+  if(!added){ _txTdToast('Bilgi','Eksik sembol yok — hepsi zaten listede','info'); return; }
+  if(typeof saveSymConfig==='function') saveSymConfig();   // localStorage + Firebase (kalıcı)
+  window._symConfig = symConfig;
+  if(typeof applySymConfig==='function'){ try{ applySymConfig(); }catch(e){} }
+  renderSymMgr(window._symFilter||'all');
+  _txTdToast('İçe aktarıldı', added+' sembol eklendi: '+names.join(', '),'success');
+}
+
 function renderSymMgr(filterCat) {
+  if(typeof renderTdBridgeMgr==='function') renderTdBridgeMgr();
   filterCat = filterCat || window._symFilter || 'all';
   window._symFilter = filterCat;
-  ['all','crypto','forex','commodity'].forEach(function(k){
+  ['all','crypto','forex','commodity','index','stock'].forEach(function(k){
     var b = document.getElementById('scf-'+k);
     if(!b) return;
     b.style.borderColor = (k===filterCat) ? 'var(--accent)' : '';
@@ -4468,8 +4530,8 @@ function renderSymMgr(filterCat) {
   var tb = document.getElementById('symMgrBody');
   if(!tb) return;
   var filtered = symConfig.map(function(s,i){ return {s:s,i:i}; })
-    .filter(function(x){ return filterCat==='all' || x.s.category===filterCat; });
-  var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks'};
+    .filter(function(x){ return (filterCat==='all' || x.s.category===filterCat) && AD_HIDDEN.indexOf(x.s.sym)===-1; });
+  var catMap = {crypto:'\u{1FA99} Kripto', forex:'\u{1F4B1} Forex', commodity:'\u{1F3C5} Emtia', index:'\u{1F4C8} Endeks', stock:'\u{1F4C8} Hisse'};
   tb.innerHTML = filtered.map(function(x){
     var s=x.s, i=x.i;
     return '<tr>' +
@@ -4508,7 +4570,9 @@ function updateSym(i, key, val) {
 
 function removeSym(i) {
   if (symConfig.length <= 1) { showToast('Hata','En az 1 sembol olmalı!'); return; }
+  var sym = symConfig[i] ? symConfig[i].sym : '';
   symConfig.splice(i, 1);
+  _txMarkDeleted(sym);
   saveSymConfig();
   renderSymMgr();
   applySymConfig();
@@ -4519,9 +4583,11 @@ function deleteSymMgr(i) {
   if(!confirm('Bu sembolü silmek istediğinizden emin misiniz?')) return;
   var sym = symConfig[i] ? symConfig[i].sym : '';
   symConfig.splice(i, 1);
-  localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+  _txMarkDeleted(sym);               // tohumlama bir daha geri eklemesin
   window._symConfig = symConfig;
+  saveSymConfig();                   // localStorage + Firebase (deleted dahil) → trader'da da kalkar
   renderSymMgr();
+  if(typeof applySymConfig==='function'){ try{ applySymConfig(); }catch(e){} }
   showAdminToast('Silindi', sym + ' sembolü silindi', 'danger');
 }
 function saveSymbolMgr() {
@@ -4561,6 +4627,7 @@ function saveSymbolMgr() {
     symConfig.push(obj);
     showToast('Eklendi', label + ' eklendi');
   }
+  _txUnmarkDeleted(sym);   // tekrar eklenen sembol "silinmiş" sayılmasın
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
   window._symConfig = symConfig;
   // MW_MAP güncelle - yeni/düzenlenen sembol için
@@ -4574,12 +4641,12 @@ function saveSymbolMgr() {
       _adPrices[s.sym]=bp;
       mwPrices[s.sym]={price:bp,prev:bp,chg:0};
     }
-    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto'};
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId=catMap[s.category]||'crypto';
     var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
     if(!grp.items.find(function(it){return it.sym===s.sym;})){
-      var item={sym:s.sym,name:s.label||s.sym,full:s.label||s.sym,
-        icon:s.s||'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+      var item={sym:s.sym,name:s.sym,full:s.label||s.sym,
+        icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
       grp.items.push(item);
       MW_MAP[s.sym]=item;
     }
@@ -4589,6 +4656,7 @@ function saveSymbolMgr() {
     try {
       db.collection('broker').doc('symbols').set({
         data: JSON.stringify(symConfig),
+        deleted: JSON.stringify(_txDeleted),
         updatedAt: new Date().toISOString()
       }).catch(function(e){ console.warn('symbols save:', e); });
     } catch(e){}
@@ -4608,22 +4676,21 @@ function saveSymbolMgr() {
       mwPrices[s.sym] = {price: bp, prev: bp, chg: 0};
     }
     // MARKET_GROUPS'a ekle
-    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto'};
+    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId = catMap[s.category] || 'crypto';
     var grp = MARKET_GROUPS.find(function(g){ return g.id === grpId; }) || MARKET_GROUPS[0];
     if(!grp.items.find(function(it){ return it.sym === s.sym; })) {
       var newItem = {
-        sym: s.sym, name: s.label || s.sym, full: '',
+        sym: s.sym, name: s.sym, full: s.label || s.sym,
         icon: '', spread: s.spread || 0.1, decimals: parseInt(s.decimals) || 2
       };
       grp.items.push(newItem);
       MW_MAP[s.sym] = newItem;
     } else {
-      // Varsa güncelle
+      // Varsa güncelle — KISA AD (name) korunur; uzun ad full'a yazılır
       var existing = grp.items.find(function(it){ return it.sym === s.sym; });
       if(existing) {
-        existing.name = s.label || s.sym;
-        existing.full = s.label || s.sym;
+        existing.full = s.label || existing.full || s.sym;
         existing.spread = s.spread || 0.1;
         existing.decimals = parseInt(s.decimals) || 2;
         MW_MAP[s.sym] = existing;
@@ -4704,16 +4771,6 @@ function editSymForm(i) {
   if(title) title.textContent = 'SEMBOL DÜZENLE: ' + s.sym;
 }
 
-function resetSymForm() {
-  ['ns_editIdx','ns_sym','ns_label','ns_short','ns_spread','ns_contractSize','ns_margin','ns_decimals','ns_minlot'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.value = id==='ns_editIdx' ? -1 : '';
-  });
-  document.getElementById('ns_color').value        = '#f0b90b';
-  document.getElementById('ns_category').value     = 'crypto';
-  document.getElementById('symFormTitle').textContent = 'YENİ SEMBOL EKLE';
-  document.getElementById('symSaveBtn').textContent   = '+ SEMBOL EKLE';
-}
 
 function filterSymCat(cat) { renderSymMgr(cat); }
 function addSymbolMgr() { saveSymbolMgr(); }
@@ -4739,8 +4796,18 @@ function createAccount() {
   var pass    = (document.getElementById('na_pass')||{}).value||'';
   var type    = (document.getElementById('na_type')||{}).value||'real';
   var balance = 0;
-  var lev     = parseInt((document.getElementById('na_lev')||{}).value)||100;
   var sg      = (document.getElementById('na_sg')||{}).value||'standard';
+  // Leverage input varsa parse et, boşsa grubun defaultLeverage'ını kullan
+  var _levRaw = (document.getElementById('na_lev')||{}).value;
+  var lev;
+  if(_levRaw && !isNaN(parseInt(_levRaw))) {
+    lev = parseInt(_levRaw);
+  } else {
+    lev = (typeof getDefaultLeverage === 'function') ? getDefaultLeverage(sg) : 100;
+  }
+  // Grubun maxLeverage'ını aşma — sessizce cap'le
+  var _maxLev = (typeof getMaxLeverage === 'function') ? getMaxLeverage(sg) : 100;
+  if(lev > _maxLev) lev = _maxLev;
   var msgEl   = document.getElementById('na_msg');
   if(!name||!email||!pass){
     if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Ad, e-posta ve sifre zorunlu</span>';
@@ -4802,7 +4869,7 @@ function adRenderTab(tab) {
 
   if(tab === 'info') {
     // spreadGroup'tan marginCall / stopOut al
-    var _infoSg = (typeof spreadGroups!=='undefined'&&spreadGroups) ? spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}) : null;
+    var _infoSg = (typeof tradingGroups!=='undefined'&&tradingGroups) ? tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}) : null;
     var _mcPct = _infoSg ? (_infoSg.marginCall||80) : 80;
     var _soPct = _infoSg ? (_infoSg.stopOut||20) : 20;
     cnt.innerHTML =
@@ -4830,7 +4897,7 @@ function adRenderTab(tab) {
         '<div>' +
           '<div class="ad-section-title">Ticaret Ayarları</div>' +
           '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' +
-            adIR('Spread Grubu', '<span style="color:'+(sgCol[a.spreadGroup||'standard']||'#888')+'">'+(sgMap[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</span>') +
+            adIR('Trading Grubu', '<span style="color:'+(sgCol[a.spreadGroup||'standard']||'#888')+'">'+(sgMap[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</span>') +
             adIR('Kaldıraç', '1:'+(a.leverage||100)) +
             adIR('Marjin Seviyesi', '%'+(a.marginLevelPct||100)) +
             adIR('Para Birimi', a.currency||'USD') +
@@ -5012,7 +5079,7 @@ function adRenderTab(tab) {
         '<div>' +
           '<div class="ad-section-title">Grup & Kaldıraç & Marjin</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Spread Grubu</label>' +
+            '<div><label class="ad-label">Trading Grubu</label>' +
               '<select class="ad-input" id="ad_sg" style="cursor:pointer;">' +
                 '<option value="standard">Standard</option>' +
                 '<option value="ecn">ECN</option>' +
@@ -5079,6 +5146,15 @@ function adDeposit() {
   var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_dep_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
+
+  // minDeposit altında → sadece uyarı (admin override edebilir). Audit log zaten yazılıyor.
+  if(typeof getMinDeposit === 'function') {
+    var _min = getMinDeposit(a.spreadGroup||'standard');
+    if(_min > 0 && amt < _min) {
+      showToast('Uyarı', (a.spreadGroup||'standard')+' grubu min. $'+_min+' — yine de işleniyor');
+    }
+  }
+
   var _mgr = (typeof _currentStaff!=='undefined'&&_currentStaff) ? (_currentStaff.name||_currentStaff.email||'Manager') : 'Manager';
   var note = (document.getElementById('ad_dep_note')||{}).value || '';
   // Canonical okuma — mevcut balance users/{id}'den
@@ -5164,27 +5240,6 @@ function adWithdraw() {
   adRenderTab('finance');
 }
 
-function adBonus(sign) {
-  if(typeof hasPerm==='function'&&!hasPerm('finance.bonus')){showAdminToast('Yetkisiz','Bonus işlemi yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var amt = parseFloat((document.getElementById('ad_bon_amt')||{}).value);
-  if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
-  // Canonical okuma — bonus users/{id}'den
-  var oldBonus = getAccBonus(a.id);
-  var newBonus = Math.max(0, oldBonus + sign * amt);
-  // ⚠️ a.bonus'a dokunmuyoruz — canonical tek kaynak
-  // users/{id}'ye bonus yaz - trader + admin canon listener anlık görür
-  if(typeof db!=='undefined' && db && _adAccId) {
-    db.collection('users').doc(String(_adAccId)).set({
-      bonus: newBonus,
-      updatedAt: new Date().toISOString()
-    }, {merge:true}).catch(function(e){ console.warn('bonus sync err:', e); });
-  }
-  renderAccTable();
-  adAudit(sign>0 ? 'finance.bonus_in' : 'finance.bonus_out', 'users/'+a.id, {bonus: oldBonus}, {bonus: newBonus, amount: amt});
-  showToast('Bonus '+(sign>0?'Eklendi':'Çıkarıldı')+' ✓','$'+amt.toFixed(2)+' → Varlık güncellendi');
-  adRenderTab('finance');
-}
 
 function adRenderFinlog() {
   var a = accounts.find(function(x){ return x.id === _adAccId; });
@@ -5295,32 +5350,6 @@ function adEditFinlog(idx) {
 // ── Finlog tarih parse helper - locale (DD.MM.YYYY) ve ISO her ikisini de destekler ──
 
 // ── users/{id} sync helper ──
-function fbSyncUserFinance(a) {
-  if(!a || !a.id) return;
-  if(typeof db === 'undefined' || !db) return;
-  function _doSync() {
-    db.collection('users').doc(String(a.id)).set({
-      balance:  getAccBal(a.id),
-      bonus:    getAccBonus(a.id),
-      finlog:   getAccFinlog(a.id),
-      updatedAt: new Date().toISOString()
-    }, { merge: true }).catch(function(e){ console.warn('fbSyncUserFinance err:', e); });
-  }
-  // Auth yoksa bekle — permissions hatası önle
-  var _auth = (typeof firebase!=='undefined') ? firebase.auth() : null;
-  if(_auth && !_auth.currentUser) {
-    var _waited = 0;
-    var _wInt = setInterval(function(){
-      _waited += 200;
-      if(_auth.currentUser || _waited >= 3000) {
-        clearInterval(_wInt);
-        _doSync();
-      }
-    }, 200);
-  } else {
-    _doSync();
-  }
-}
 function adSaveFinlog() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return x.id===_adAccId; });
@@ -5437,6 +5466,16 @@ function adSaveSettings() {
   var sg  = (document.getElementById('ad_sg')||{}).value||'standard';
   var lev = parseInt((document.getElementById('ad_lev')||{}).value)||100;
   var ml  = parseFloat((document.getElementById('ad_ml')||{}).value)||100;
+
+  // Trading group'un maxLeverage'ını aşma kontrolü
+  var _maxLev = (typeof getMaxLeverage === 'function') ? getMaxLeverage(sg) : 100;
+  if(lev > _maxLev) {
+    showToast('Uyarı', 'Kaldıraç, '+sg+' grubunun max değerine (1:'+_maxLev+') çekildi');
+    lev = _maxLev;
+    var lvEl = document.getElementById('ad_lev');
+    if(lvEl) lvEl.value = String(lev);
+  }
+
   a.spreadGroup=sg; a.leverage=lev; a.marginLevelPct=ml;
   saveAccounts(); renderAccTable();
   // Firebase'e de yaz
@@ -5485,99 +5524,11 @@ function adDeleteAcc() {
   showToast('Hesap Silindi', 'Hesap kalıcı olarak silindi');
 }
 
-function adManualTrade() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
-  var sym   = (document.getElementById('ad_tsym')||{}).value;
-  var side  = (document.getElementById('ad_tside')||{}).value||'buy';
-  var lot   = parseFloat((document.getElementById('ad_tlot')||{}).value)||0.01;
-  var op    = parseFloat((document.getElementById('ad_tprice')||{}).value)||(prices[sym]?prices[sym].price:0);
-  var sl    = parseFloat((document.getElementById('ad_tsl')||{}).value)||null;
-  var tp    = parseFloat((document.getElementById('ad_ttp')||{}).value)||null;
-  if(!op){ showToast('Hata','Açılış fiyatı girin!'); return; }
-  if(typeof positions==='undefined') window.positions=[];
-  var sc=symConfig.find(function(s){ return s.sym===sym; })||{};
-  positions.push({id:Date.now(),accId:a.id,sym:sym,label:sc.label||sym,side:side,qty:lot,openPrice:op,sl:sl,tp:tp,time:new Date().toISOString(),cost:op*lot,manual:true});
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  showToast('İşlem Açıldı ✓',lot+' lot '+sym);
-  document.getElementById('adMTF').style.display='none';
-  adRenderTrades();
-}
 
-function adRenderTrades() {
-  var tb=document.getElementById('adTradeBody'); if(!tb) return;
-  var a=accounts.find(function(x){ return x.id===_adAccId; });
-  var pos=(typeof positions!=='undefined'?positions:[]).filter(function(p){ return !p.accId||p.accId===(a?a.id:''); });
-  if(!pos.length){ tb.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);">Açık pozisyon yok</td></tr>'; return; }
-  tb.innerHTML=pos.map(function(p){
-    var cp=prices[p.sym]?prices[p.sym].price:p.openPrice;
-    var pnl=(p.side==='buy'?cp-p.openPrice:p.openPrice-cp)*p.qty;
-    var pc=pnl>=0?'#26a69a':'#ef5350';
-    var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-    return '<tr id="posRow-'+p.id+'">'+
-      '<td style="font-family:var(--mono);">#'+p.id+'</td>'+
-      '<td style="font-weight:700;">'+p.sym+'</td>'+
-      '<td style="color:'+(p.side==='buy'?'#26a69a':'#ef5350')+';font-weight:700;">'+(p.side==='buy'?'▲AL':'▼SAT')+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.qty+'</td>'+
-      '<td style="font-family:var(--mono);">'+p.openPrice.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);">'+cp.toFixed(dec)+'</td>'+
-      '<td style="font-family:var(--mono);color:#ef5350;">'+(p.sl||'—')+'</td>'+
-      '<td style="font-family:var(--mono);color:#26a69a;">'+(p.tp||'—')+'</td>'+
-      '<td style="font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'-')+Math.abs(pnl).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
-      '<td style="font-family:var(--mono);font-size:10px;">'+getDeviceIcon(p.device||'Web')+'</td>'+
-      '<td>'
-        +(hasPerm&&hasPerm('trades.close')?'<button class="mgr-btn danger" onclick="adCloseTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Kapat</button> ':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="mgr-btn secondary" onclick="adEditTrade('+p.id+')" style="padding:2px 7px;font-size:10px;">Düzenle</button>':'')
-      +'</td>'+
-    '</tr>';
-  }).join('');
-}
-
-function adCloseTrade(pid) {
-  
-  positions=positions.filter(function(x){ return x.id!==pid; });
-  if(typeof save==='function') save();
-  if(typeof renderPositions==='function') renderPositions();
-  adRenderTrades(); showToast('Kapatıldı','#'+pid);
-}
-
-function adEditTrade(pid) {
-  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','SL/TP düzenleme yetkiniz yok','danger');return;}
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var ex=document.getElementById('editRow-'+pid);
-  if(ex){ex.remove();return;}
-  var pr=document.getElementById('posRow-'+pid);
-  if(!pr){showToast('Hata','Satir bulunamadi');return;}
-  var dec=p.openPrice>100?2:p.openPrice>1?4:6;
-  var tr=document.createElement('tr');
-  tr.id='editRow-'+pid; tr.style.background='#0d1a1a';
-  tr.innerHTML='<td colspan="10" style="padding:12px 16px;"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">'
-    +'<div><div class="ad-label">Yon</div><select id="erside'+pid+'" class="ad-input" style="width:90px;"><option value="buy">AL</option><option value="sell">SAT</option></select></div>'
-    +'<div><div class="ad-label">Lot</div><input id="erl'+pid+'" class="ad-input" type="number" step="0.01" value="'+p.qty+'" style="width:80px;"></div>'
-    +'<div><div class="ad-label">Acilis Fiyati</div><input id="erop'+pid+'" class="ad-input" type="number" step="any" value="'+p.openPrice.toFixed(dec)+'" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Stop Loss</div><input id="ersl'+pid+'" class="ad-input" type="number" step="any" value="'+(p.sl||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<div><div class="ad-label">Take Profit</div><input id="ertp'+pid+'" class="ad-input" type="number" step="any" value="'+(p.tp||'')+'" placeholder="Yok" style="width:110px;"></div>'
-    +'<button class="ad-btn ad-btn-success" onclick="adSvTr('+pid+')" style="padding:7px 14px;">Kaydet</button>'
-    +'<button class="ad-btn ad-btn-secondary" onclick="adClEd('+pid+')" style="padding:7px 10px;">Iptal</button>'
-    +'</div></td>';
-  pr.insertAdjacentElement('afterend',tr);
-  var sEl=document.getElementById('erside'+pid); if(sEl) sEl.value=p.side||'buy';
-}
-function adClEd(pid){var r=document.getElementById('editRow-'+pid);if(r)r.remove();}
-function adSvTr(pid){
-  var p=positions.find(function(x){return x.id===pid;}); if(!p) return;
-  var sd=(document.getElementById('erside'+pid)||{}).value; if(sd) p.side=sd;
-  var lv=parseFloat((document.getElementById('erl'+pid)||{}).value);
-  var ov=parseFloat((document.getElementById('erop'+pid)||{}).value);
-  var sv=(document.getElementById('ersl'+pid)||{}).value;
-  var tv=(document.getElementById('ertp'+pid)||{}).value;
-  if(lv>0) p.qty=lv; if(ov>0) p.openPrice=ov;
-  p.sl=sv?parseFloat(sv):null;
-  p.tp=tv?parseFloat(tv):null;
-  if(typeof save==='function') save();
-  adRenderTrades();
-  showToast('Pozisyon Guncellendi','#'+pid);
-}
+// Eski ad trade cluster kaldırıldı (2026-04-20, 5. pass):
+// adRenderTrades, adCloseTrade, adEditTrade, adClEd, adSvTr — hepsi top-level 'positions' array
+// kullanıyordu (trader kopyası), adTradeBody DOM'u admin'de yoktu, dış çağıran yoktu.
+// Yeni canonical akış: adOpenTrade/adClosePos/adSaveUserTrades — _adPositions + users/{id} kullanır.
 
 document.addEventListener('click', function(e){
   var ov=document.getElementById('accDetailOverlay');
@@ -5613,18 +5564,43 @@ function renderAccTable(){
     return true;
   });
 
+  // Sıralamadan ÖNCE tüm satırların varlığını TAZE hesapla → sıra, hücrede gösterilen
+  // değerle birebir uyuşsun (önbellek gecikmesi kaynaklı tutarsızlık olmasın).
+  rows.forEach(function(a){
+    var _p = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
+      ? _allAccountPositions[a.id] : getAccPos(a.id);
+    var _s = (typeof adCalcStats==='function') ? adCalcStats(a, _p) : null;
+    a._liveEquity = _s ? _s.equity : (getAccBal(a.id)+getAccBonus(a.id));
+  });
+
   var sc=_accSort.col,sd=_accSort.dir;
-  if(sc){rows.sort(function(a,b){
-    var va,vb;
-    if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
-    else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
-    else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
-    else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
-    else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
-    else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
-    else return 0;
-    return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
-  });}
+  // Sıralama kararlılığı: trader'lar dokümanını güncelledikçe (snapshot) tablo sık yeniden
+  // render edilir. Her seferinde canlı equity'ye göre yeniden sıralarsak liste oynar (işlemsiz
+  // hesaplar bile satır atlar). Bu yüzden YENİDEN SIRALAMA yalnızca kullanıcı sütuna tıklayınca
+  // veya bölüm açılınca yapılır (_accResortPending). Otomatik render'larda son sıra KORUNUR.
+  if(sc && (window._accResortPending || !Array.isArray(window._accOrder))){
+    rows.sort(function(a,b){
+      var va,vb;
+      if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
+      else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
+      else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
+      else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
+      else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
+      else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
+      else return 0;
+      return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+    });
+    window._accOrder = rows.map(function(a){ return String(a.id); });   // sırayı sabitle
+    window._accResortPending = false;
+  } else if(Array.isArray(window._accOrder)) {
+    // Otomatik render → son sırayı koru (yeni hesaplar sona)
+    var _ord = window._accOrder;
+    rows.sort(function(a,b){
+      var ia=_ord.indexOf(String(a.id)); if(ia<0) ia=1e9;
+      var ib=_ord.indexOf(String(b.id)); if(ib<0) ib=1e9;
+      return ia-ib;
+    });
+  }
 
   var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
   var cols=_accCols;
@@ -5810,6 +5786,7 @@ var _accCols=['reg','name','email','online','seen','status','type','group','bala
 function _accSortBy(col){
   _accSort.dir=_accSort.col===col?(_accSort.dir==='asc'?'desc':'asc'):'desc';
   _accSort.col=col;
+  window._accResortPending = true;   // kullanıcı sıraladı → yeniden sırala
   renderAccTable();
 }
 function _accToggleCol(id,show){
@@ -5834,17 +5811,6 @@ document.addEventListener('click',function(){
   var p=document.getElementById('accColPicker');
   if(p&&p.style.display==='block')p.style.display='none';
 });
-function _timeAgo(ds){
-  if(!ds)return '—';
-  var d=Date.now()-new Date(ds).getTime();
-  if(isNaN(d)||d<0)return '—';
-  var s=Math.floor(d/1000),mi=Math.floor(s/60),h=Math.floor(mi/60),dy=Math.floor(h/24);
-  if(s<60)return s+'sn';
-  if(mi<60)return mi+'dk';
-  if(h<24)return h+'sa';
-  if(dy<30)return dy+'g';
-  return fmtDateShort(ds);
-}
 
 
 function renderAccListSmall() {
@@ -6002,155 +5968,11 @@ function saveRequests() {
   }
 }
 
-function openWallet() {
-  document.getElementById('walletOverlay').classList.add('open');
-  walletTab('deposit', document.querySelector('.wallet-tab'));
-}
-
-function closeWallet() { document.getElementById('walletOverlay').classList.remove('open'); }
-
-function walletBgClose(e) { if(e.target===document.getElementById('walletOverlay')) closeWallet(); }
-
-function walletTab(tab, el) {
-  document.querySelectorAll('.wallet-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.wallet-section').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('ws-'+tab).classList.add('active');
-  if(tab==='deposit') renderDepositMethods();
-  if(tab==='withdraw') renderWithdrawMethods();
-}
-
-function renderDepositMethods() {
-  const active = payMethods.filter(p=>p.active);
-  const grid = document.getElementById('depositMethodGrid');
-  grid.innerHTML = active.map(m => `
-    <div class="wallet-method" id="dm-${m.id}" onclick="selectDepositMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
-      <div class="wallet-method-name">${m.name}</div>
-      <div class="wallet-method-sub">${m.type==='bank'?m.currency+' · Min '+m.currency+' '+(m.min||0):m.network+' · Min '+m.min+' '+m.currency}</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Ödeme yöntemi tanımlanmamış.<br>Manager > Ödeme Yön. kısmından ekleyin.</div>';
-  var _st_depositDetails=document.getElementById('depositDetails'); if(_st_depositDetails) _st_depositDetails.style.display = 'none';
-  selectedDepositMethod = null;
-}
-
-function selectDepositMethod(id) {
-  document.querySelectorAll('.wallet-method').forEach(m=>m.classList.remove('selected'));
-  const el = document.getElementById('dm-'+id);
-  if(el) el.classList.add('selected');
-  selectedDepositMethod = payMethods.find(p=>p.id===id);
-  if(!selectedDepositMethod) return;
-  const m = selectedDepositMethod;
-  var _st_depositDetails=document.getElementById('depositDetails'); if(_st_depositDetails) _st_depositDetails.style.display = 'block';
-  var _el_depositCurrency=document.getElementById('depositCurrency'); if(_el_depositCurrency) _el_depositCurrency.textContent = m.currency;
-
-  let infoHtml = '';
-  if(m.type==='bank') {
-    infoHtml = `
-      <div class="wallet-info-row"><span class="wallet-info-key">Banka</span><span class="wallet-info-val">${m.bankName}</span></div>
-      <div class="wallet-info-row"><span class="wallet-info-key">Hesap Sahibi</span><span class="wallet-info-val">${m.holder}</span></div>
-      <div class="wallet-info-row">
-        <span class="wallet-info-key">IBAN</span>
-        <span class="wallet-info-val">${m.iban}</span>
-        <button class="wallet-copy-btn" onclick="copyText('${m.iban}')">KOPYALA</button>
-      </div>
-      ${m.ref?`<div class="wallet-info-row"><span class="wallet-info-key">Açıklama</span><span class="wallet-info-val">${m.ref}</span></div>`:''}
-    `;
-  } else {
-    infoHtml = `
-      <div class="wallet-info-row"><span class="wallet-info-key">Ağ</span><span class="wallet-info-val">${m.network}</span></div>
-      <div class="wallet-info-row">
-        <span class="wallet-info-key">Adres</span>
-        <span class="wallet-info-val" style="font-size:10px">${m.wallet}</span>
-        <button class="wallet-copy-btn" onclick="copyText('${m.wallet}')">KOPYALA</button>
-      </div>
-      <div class="wallet-info-row"><span class="wallet-info-key">Min.</span><span class="wallet-info-val">${m.min} ${m.currency}</span></div>
-    `;
-  }
-  var _ih_depositInfoBox=document.getElementById('depositInfoBox'); if(_ih_depositInfoBox) _ih_depositInfoBox.innerHTML = infoHtml;
-  var _el_depositNote=document.getElementById('depositNote'); if(_el_depositNote) _el_depositNote.textContent = '⚠ ' + (m.note || '');
-}
-
-function setDepositAmt(v) { var _g910dbb=document.getElementById('depositAmount'); if(_g910dbb) _g910dbb.value = v; }
-
-function submitDeposit() {
-  if(!selectedDepositMethod) { showToast('Hata','Ödeme yöntemi seçin!'); return; }
-  const amt = parseFloat(document.getElementById('depositAmount').value);
-  if(!amt || amt <= 0) { showToast('Hata','Miktar girin!'); return; }
-  if(amt < (selectedDepositMethod.min||0)) { showToast('Hata',`Min. ${selectedDepositMethod.min} ${selectedDepositMethod.currency}`); return; }
-  const req = {
-    id: genId('DEP'),
-    date: new Date().toISOString(),
-    method: selectedDepositMethod.name,
-    methodType: selectedDepositMethod.type,
-    currency: selectedDepositMethod.currency,
-    amount: amt,
-    note: selectedDepositMethod.type==='bank'?'IBAN: '+selectedDepositMethod.iban:'Adres: '+selectedDepositMethod.wallet,
-    status: 'pending'
-  };
-  depositRequests.unshift(req);
-  saveRequests();
-  closeWallet();
-  showToast('Bildirim Alındı ✓', `${amt} ${selectedDepositMethod.currency} yatırma bildirimi gönderildi`);
-}
-
-function renderWithdrawMethods() {
-  const active = payMethods.filter(p=>p.active);
-  const grid = document.getElementById('withdrawMethodGrid');
-  grid.innerHTML = active.map(m => `
-    <div class="wallet-method" id="wm-${m.id}" onclick="selectWithdrawMethod('${m.id}')">
-      <div class="wallet-method-icon">${m.icon}</div>
-      <div class="wallet-method-name">${m.name}</div>
-      <div class="wallet-method-sub">${m.type==='bank'?m.currency:m.network+' · '+m.currency}</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-family:var(--mono);font-size:11px">Ödeme yöntemi tanımlanmamış.</div>';
-  var _st_withdrawDetails=document.getElementById('withdrawDetails'); if(_st_withdrawDetails) _st_withdrawDetails.style.display = 'none';
-  selectedWithdrawMethod = null;
-}
-
-function selectWithdrawMethod(id) {
-  document.querySelectorAll('#withdrawMethodGrid .wallet-method').forEach(m=>m.classList.remove('selected'));
-  const el = document.getElementById('wm-'+id);
-  if(el) el.classList.add('selected');
-  selectedWithdrawMethod = payMethods.find(p=>p.id===id);
-  if(!selectedWithdrawMethod) return;
-  const m = selectedWithdrawMethod;
-  var _st_withdrawDetails=document.getElementById('withdrawDetails'); if(_st_withdrawDetails) _st_withdrawDetails.style.display = 'block';
-  var _el_withdrawCurrency=document.getElementById('withdrawCurrency'); if(_el_withdrawCurrency) _el_withdrawCurrency.textContent = m.currency;
-  var _gbe2de5=document.getElementById('withdrawAddress'); if(_gbe2de5) _gbe2de5.placeholder = m.type==='bank'?'IBAN numaranızı girin':'Cüzdan adresinizi girin';
-  var _el_withdrawNote=document.getElementById('withdrawNote'); if(_el_withdrawNote) _el_withdrawNote.textContent = m.type==='bank'
-    ? '⚠ Lütfen size ait IBAN numarasını girin. Başkasına ait hesaba işlem yapılmaz.'
-    : '⚠ Lütfen '+m.network+' ağına ait cüzdan adresinizi girin. Hatalı adrese yapılan transferler geri alınamaz.';
-}
-
-function setWithdrawAmt(v) {
-  if(v==='all') var _g0997b4=document.getElementById('withdrawAmount'); if(_g0997b4) _g0997b4.value = balance.toFixed(2);
-  else var _g0997b4=document.getElementById('withdrawAmount'); if(_g0997b4) _g0997b4.value = v;
-}
-
-function submitWithdraw() {
-  if(!selectedWithdrawMethod) { showToast('Hata','Çekim yöntemi seçin!'); return; }
-  const amt = parseFloat(document.getElementById('withdrawAmount').value);
-  const addr = document.getElementById('withdrawAddress').value.trim();
-  if(!amt || amt <= 0) { showToast('Hata','Miktar girin!'); return; }
-  if(!addr) { showToast('Hata',selectedWithdrawMethod.type==='bank'?'IBAN girin!':'Cüzdan adresi girin!'); return; }
-  if(amt > balance) { showToast('Yetersiz Bakiye',`Bakiye: $${fp(balance)}`); return; }
-  const req = {
-    id: genId('WIT'),
-    date: new Date().toISOString(),
-    account: 'Aktif Hesap',
-    method: selectedWithdrawMethod.name,
-    methodType: selectedWithdrawMethod.type,
-    currency: selectedWithdrawMethod.currency,
-    address: addr,
-    amount: amt,
-    status: 'pending'
-  };
-  withdrawRequests.unshift(req);
-  saveRequests();
-  closeWallet();
-  showToast('Talep Alındı ✓', `${amt} ${selectedWithdrawMethod.currency} çekim talebi oluşturuldu`);
-}
+// Wallet cluster (openWallet/closeWallet/walletBgClose/walletTab/
+// renderDepositMethods/selectDepositMethod/setDepositAmt/submitDeposit/
+// renderWithdrawMethods/selectWithdrawMethod/setWithdrawAmt/submitWithdraw)
+// kaldırıldı (2026-04-19) — trader kopyası, admin'de ölü kod.
+// Admin deposit/withdraw için adDeposit()/adWithdraw() ve approveDepReq/approveReq akışını kullanıyor.
 
 function copyText(txt) {
   navigator.clipboard.writeText(txt).then(()=>showToast('Kopyalandı ✓', txt.slice(0,30)+'...')).catch(()=>{
@@ -6582,63 +6404,8 @@ function mwSelect(sym, groupId) {
   if(ctSym2) ctSym2.textContent = sym;
 }
 
-function lpSwitch(tab, el) {
-  var tabs = document.querySelectorAll('.lp-tab');
-  var secs = document.querySelectorAll('.lp-section');
-  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
-  for(var i=0;i<secs.length;i++) { secs[i].classList.remove('active'); secs[i].style.display=''; }
-  if(el) el.classList.add('active');
-  if(tab === 'order') {
-    var o = document.getElementById('lp-order'); if(o) o.classList.add('active');
-  }
-  if(tab === 'market') {
-    var m = document.getElementById('lp-market'); if(m) m.classList.add('active');
-    renderMarketWatch();
-  }
-}
-
-function qtLotSet(val) {
-  if(!val || val <= 0) val = 0.01;
-  val = Math.round(val * 100) / 100; // 2 decimal
-  qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 0;
-  var el = document.getElementById('qtLotVal');
-  if(el) el.value = val.toFixed(2);
-  var _qb = document.querySelectorAll('.qt-preset');
-  for(var _qi=0; _qi<_qb.length; _qi++){
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === val);
-  }
-}
-
-function qtLotStep(dir) {
-  qtLotIdx = Math.max(0, Math.min(QT_LOTS.length - 1, qtLotIdx + dir));
-  qtLot = QT_LOTS[qtLotIdx];
-  var _el_qtLotVal=document.getElementById('qtLotVal'); if(_el_qtLotVal) _el_qtLotVal.value = qtLot.toFixed(2);
-  var _qb = document.querySelectorAll('.qt-preset');
-  for(var _qi=0; _qi<_qb.length; _qi++) {
-    _qb[_qi].classList.toggle('active', parseFloat(_qb[_qi].textContent) === qtLot);
-  }
-}
-
-function qtSetLot(val, btn) {
-  qtLot = val;
-  qtLotIdx = QT_LOTS.indexOf(val);
-  if(qtLotIdx < 0) qtLotIdx = 1;
-  var _el_qtLotVal=document.getElementById('qtLotVal'); if(_el_qtLotVal) _el_qtLotVal.value = val.toFixed(val < 0.1 ? 3 : 2);
-  var _qsb = document.querySelectorAll('.qt-preset');
-  for(var _qsi=0; _qsi<_qsb.length; _qsi++) _qsb[_qsi].classList.remove('active');
-  if(btn) btn.classList.add('active');
-}
-
-function qtOrder(side) {
-  const price = (prices[curSym] ? prices[curSym].price : null);
-  if(!price) { showToast('Fiyat yok', 'Fiyat verisi bekleniyor'); return; }
-  const prevQty = document.getElementById('ordQty').value;
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = qtLot;
-  placeOrder(side);
-  var _g667094=document.getElementById('ordQty'); if(_g667094) _g667094.value = prevQty;
-}
+// lpSwitch, qtLotSet, qtLotStep, qtSetLot, qtOrder kaldırıldı (2026-04-19)
+// — trader kopyası, admin'de ölü kod. qtOrder sadece placeOrder çağırıyordu (o da silindi).
 
 function updateQuickTrade(price, spread) {
   const bid = (price - spread/2).toFixed(price > 100 ? 2 : price > 1 ? 3 : 4);
@@ -6663,9 +6430,7 @@ function openApiKeyModal() {
   showToast('Bilgi', 'Forex verileri otomatik yükleniyor, API key gerekmez.');
 }
 
-function closeApiKeyModal() {}
 
-function saveApiKey() {}
 
 symConfig = null;
 // accounts = []; // KALDIRILDI
@@ -6768,11 +6533,27 @@ if (!symConfig) {
   var _existing = {};
   for(var _i=0; _i<symConfig.length; _i++) _existing[symConfig[_i].sym] = true;
   for(var _j=0; _j<_defaults.length; _j++) {
-    if(!_existing[_defaults[_j].sym]) symConfig.push(_defaults[_j]);
+    if(!_existing[_defaults[_j].sym] && _txDeleted.indexOf(_defaults[_j].sym)===-1) symConfig.push(_defaults[_j]);
   }
-  // Eski/çift sembolleri temizle
-  var _obsolete = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
+  // Eski/çift + kaldırılan sembolleri temizle (AD_HIDDEN)
+  var _obsolete = (typeof AD_HIDDEN!=='undefined') ? AD_HIDDEN : ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD'];
   symConfig = symConfig.filter(function(s){ return _obsolete.indexOf(s.sym) === -1; });
+  // GEÇİŞ: Eski sürümle import edilen BIST hisseleri 'crypto' kategorisiyle kaydedilmişti → 'bist'e çevir.
+  (function(){
+    var _bist = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
+                 'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
+                 'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF'];
+    var _fixed = 0;
+    symConfig.forEach(function(s){
+      if(s && _bist.indexOf(s.sym)!==-1 && s.category!=='bist'){ s.category='bist'; _fixed++; }
+    });
+    if(_fixed){
+      try{ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }catch(e){}
+      // Firebase'e de yansıt (db hazır olduğunda)
+      setTimeout(function(){ try{ if(typeof saveSymConfig==='function') saveSymConfig(); }catch(e){} }, 3000);
+      console.log('[admin] '+_fixed+' BIST sembolünün kategorisi düzeltildi (crypto→bist)');
+    }
+  })();
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
 }
 window._symConfig = symConfig;
@@ -6802,13 +6583,12 @@ for(var _di=0; _di<_dkeys.length; _di++) {
   }
 }
 buildTicker();
-renderPositions();
-renderHistory();
+// renderPositions() / renderHistory() çağrıları kaldırıldı (2026-04-20, 5. pass) — fonksiyonlar silindi, admin'de posBody/histBody DOM'u yoktu.
 renderPortfolio();
 renderAlarms();
 updateAccount();
   window._symConfig = symConfig;
-  loadSpreadGroups();
+  sgLoad();
   window._mainInitDone = true;
 
 accounts = JSON.parse(localStorage.getItem('tx_accounts') || '[]');
@@ -6874,7 +6654,7 @@ var _origTickMock = tickMockPrices;
 applySymConfig();
 initMwPrices();
 startLiveFeed();  // fiyatları başlat ve renderMarketWatch içinde çağrılıyor
-try { initAuth(); } catch(e) { console.error('initAuth:', e); }
+// initAuth() çağrısı kaldırıldı (2026-04-20, 4. pass) — fonksiyon silindi, DOM elementleri admin'de yoktu, no-op.
 
   window._mainInit = _mainInit;
   window.saveSymConfig = saveSymConfig;
@@ -6907,18 +6687,7 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.clearPortfolio = clearPortfolio;
   window.savePayMethods = savePayMethods;
   window.saveRequests = saveRequests;
-  window.openWallet = openWallet;
-  window.closeWallet = closeWallet;
-  window.walletBgClose = walletBgClose;
-  window.walletTab = walletTab;
-  window.renderDepositMethods = renderDepositMethods;
-  window.selectDepositMethod = selectDepositMethod;
-  window.setDepositAmt = setDepositAmt;
-  window.submitDeposit = submitDeposit;
-  window.renderWithdrawMethods = renderWithdrawMethods;
-  window.selectWithdrawMethod = selectWithdrawMethod;
-  window.setWithdrawAmt = setWithdrawAmt;
-  window.submitWithdraw = submitWithdraw;
+  // Wallet cluster export'ları kaldırıldı (2026-04-19) — fonksiyonlar silindi.
   window.copyText = copyText;
   window.pmTypeChange = pmTypeChange;
   window.renderPayMethodList = renderPayMethodList;
@@ -6940,25 +6709,32 @@ try { initAuth(); } catch(e) { console.error('initAuth:', e); }
   window.toggleMwGroup = toggleMwGroup;
   window.mwFilter = mwFilter;
   window.mwSelect = mwSelect;
-  window.lpSwitch = lpSwitch;
-  window.qtLotStep = qtLotStep;
-  window.qtSetLot = qtSetLot;
-  window.qtOrder = qtOrder;
+  // lpSwitch, qtLotStep, qtSetLot, qtOrder export'ları kaldırıldı (2026-04-19) — fonksiyonlar silindi.
   window.updateQuickTrade = updateQuickTrade;
   window.toggleQuickTrade = toggleQuickTrade;
   window.startLiveFeed = startLiveFeed;
   window.openApiKeyModal = openApiKeyModal;
 
-  window.loadSpreadGroups   = loadSpreadGroups;
-  window.saveSpreadGroups   = saveSpreadGroups;
-  window.renderSpreadGroups = renderSpreadGroups;
-  window.selectSgTab        = selectSgTab;
-  window.sgSubTab           = sgSubTab;
-  window.saveSgGeneral      = saveSgGeneral;
-  window.saveSgSpreads      = saveSgSpreads;
-  window.addSpreadGroup     = addSpreadGroup;
-  window.deleteSpreadGroup  = deleteSpreadGroup;
-  window.refreshSgSelects   = refreshSgSelects;
+  // Trading Groups (eski adıyla spreadGroups) — A sistemi
+  window.sgLoad             = sgLoad;
+  window.sgSave             = sgSave;
+  window.sgRender           = sgRender;
+  // 2026-04-23: 5 ölü export silindi — sgSubTab, saveSgGeneral, saveSgSpreads, addSpreadGroup, deleteSpreadGroup (hepsi ölü wrapper/no-op idi, fonksiyonları da silindi)
+  window.sgAddGroup         = sgAddGroup;
+  window.sgDeleteGroup      = sgDeleteGroup;
+  window.sgRefreshSelects   = sgRefreshSelects;
+  window.sgSaveGeneral      = sgSaveGeneral;
+  window.sgSaveSpreads      = sgSaveSpreads;
+  window.sgSaveWhitelist    = sgSaveWhitelist;
+  window.sgWhitelistToggleAll = sgWhitelistToggleAll;
+  // Trading Groups Public API
+  window.getTradingGroup    = getTradingGroup;
+  window.getMaxLeverage     = getMaxLeverage;
+  window.getDefaultLeverage = getDefaultLeverage;
+  window.getCommission      = getCommission;
+  window.getMinDeposit      = getMinDeposit;
+  window.getMarginMode      = getMarginMode;
+  window.canTradeSymbol     = canTradeSymbol;
 
   window.toggleUserDropdown = toggleUserDropdown;
   window.closeUserDropdown = closeUserDropdown;
@@ -7019,70 +6795,16 @@ function calcRSI(data, p) {
   }
   return result;
 }
-function calcMACD(data, fast, slow, sig) {
-  const ef=calcEMA(data,fast), es=calcEMA(data,slow);
-  const sm=new Map(es.map(d=>[d.time,d.value]));
-  const ml=ef.filter(d=>sm.has(d.time)).map(d=>({time:d.time,value:+(d.value-sm.get(d.time)).toFixed(4)}));
-  const k=2/(sig+1); let ema=null;
-  const signal=ml.map((d,i)=>{
-    if(i<sig-1) return null;
-    if(i===sig-1) ema=ml.slice(0,sig).reduce((s,x)=>s+x.value,0)/sig;
-    else ema=d.value*k+ema*(1-k);
-    return {time:d.time,value:+ema.toFixed(4)};
-  }).filter(Boolean);
-  const sigM=new Map(signal.map(d=>[d.time,d.value]));
-  const hist=ml.filter(d=>sigM.has(d.time)).map(d=>({
-    time:d.time, value:+(d.value-sigM.get(d.time)).toFixed(4),
-    color:d.value>=sigM.get(d.time)?'rgba(38,166,154,.7)':'rgba(239,83,80,.7)'
-  }));
-  return {macdLine:ml,signal,hist};
-}
 
 function initSubCharts() {  }
 
-function drawIndicators(data) {
-  if(data && data.length > 1) _chartCandles = data;
-  drawChart(); // canvas chart indikatörleri drawChart içinde çiziyor
-}
 
-function toggleInd(id, btn) {
-  indActive[id]=!indActive[id];
-  btn.classList.toggle('active',indActive[id]);
-  if(id==='vol')  document.getElementById('subVol').classList.toggle('active',indActive.vol);
-  if(id==='macd') document.getElementById('subMacd').classList.toggle('active',indActive.macd);
-  if(id==='rsi')  document.getElementById('subRsi').classList.toggle('active',indActive.rsi);
-  drawIndicators(_chartCandles);
-}
 
-function toggleIndPopup() {
-  var popup = document.getElementById('indPopup');
-  var btn = document.querySelector('.ind-settings-btn');
-  if(popup && btn) {
-    var rect = btn.getBoundingClientRect();
-    popup.style.top = (rect.bottom + 4) + 'px';
-    popup.style.right = (window.innerWidth - rect.right) + 'px';
-  }
-  if(popup) popup.classList.toggle('open');
-}
 document.addEventListener('click', e=>{
   const p=document.getElementById('indPopup');
   if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.ind-settings-btn'))
     p.classList.remove('open');
 });
-function applyIndSettings() {
-  indCfg.ma=+document.getElementById('cfg_ma').value||20;
-  indCfg.ema=+document.getElementById('cfg_ema').value||9;
-  indCfg.bb=+document.getElementById('cfg_bb').value||20;
-  indCfg.bb_std=+document.getElementById('cfg_bb_std').value||2;
-  indCfg.rsi=+document.getElementById('cfg_rsi').value||14;
-  indCfg.macd_fast=+document.getElementById('cfg_macd_fast').value||12;
-  indCfg.macd_slow=+document.getElementById('cfg_macd_slow').value||26;
-  indCfg.macd_sig=+document.getElementById('cfg_macd_sig').value||9;
-  document.querySelector('#subRsi .sub-chart-label').textContent='RSI('+indCfg.rsi+')';
-  drawIndicators(_chartCandles);
-  toggleIndPopup();
-  showToast('İndikatörler Güncellendi ✓','Yeni ayarlar uygulandı');
-}
 
 try { 
   /* admin */ 
@@ -7236,42 +6958,132 @@ function submitPwChange() {
 // ═══════════════════════════════════════
 // SPREAD GRUPLARI
 // ═══════════════════════════════════════
-var spreadGroups = [
-  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:100, desc:'', deletable:false},
-  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:200, desc:'', deletable:false},
-  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLev:500, desc:'', deletable:false},
-  {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false}
+// ═══════════════════════════════════════
+// TRADING GROUPS (eski ad: tradingGroups)
+// Şema (2026-04-18 itibarıyla):
+//   id, name, spreads, swaps,
+//   marginCall, stopOut,
+//   maxLeverage    — kaldıraç tavanı (hesap bu kadarını aşamaz)
+//   defaultLeverage — yeni hesap default kaldıraç
+//   symbolWhitelist — string[]; boş array = tüm semboller serbest
+//   commissionPerLot — lot başına USD (pozisyon açılışında balance'tan kesilir)
+//   minDeposit     — USD; trader deposit request form alt sınırı
+//   marginMode     — 'hedging' | 'netting' (v1'de sadece bilgi amaçlı; enforcement v2)
+//   desc, deletable
+//
+// Firestore dokümanı: broker/tradingGroups (koleksiyon adı DEĞİŞMEDİ — backward-compatible
+// JSON string alanına yeni property'ler eklendi). Eski veriler sgNormalize() ile otomatik upgrade olur.
+// ═══════════════════════════════════════
+var tradingGroups = [
+  {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
+  {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
+  {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:20,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
+  {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
 ];
 var _activeSgId = 'standard';
 
+// Backward-compat alias — eski `spreadGroups` ismi hâlâ çalışsın (console'dan veya eski kod okursa).
+// Bu sadece bir getter/setter; gerçek veri tradingGroups'ta.
+Object.defineProperty(window, 'spreadGroups', {
+  get: function(){ return tradingGroups; },
+  set: function(v){ tradingGroups = v; },
+  configurable: true
+});
+
+// Tek bir grubun eksik alanlarını doldurur — geri uyumluluk katmanı.
+// Eski dokümanlarda maxLev vardı; yeni kodda maxLeverage. Her ikisini de destekle.
+function sgNormalizeGroup(g) {
+  if(!g || typeof g !== 'object') return g;
+  if(!g.spreads) g.spreads = {};
+  if(!g.swaps)   g.swaps   = {};
+  // maxLev → maxLeverage migration (eski alanı koru)
+  if(g.maxLeverage == null) g.maxLeverage = (g.maxLev != null ? g.maxLev : 100);
+  if(g.defaultLeverage == null) g.defaultLeverage = Math.min(100, g.maxLeverage || 100);
+  if(!Array.isArray(g.symbolWhitelist)) g.symbolWhitelist = [];
+  if(g.commissionPerLot == null) g.commissionPerLot = 0;
+  if(g.minDeposit == null) g.minDeposit = 0;
+  if(!g.marginMode) g.marginMode = 'hedging';
+  if(g.desc == null) g.desc = '';
+  // maxLev'i de güncel tut (eski kod hâlâ okuyor olabilir)
+  g.maxLev = g.maxLeverage;
+  return g;
+}
+function sgNormalizeAll(groups) {
+  if(!Array.isArray(groups)) return groups;
+  for(var i=0; i<groups.length; i++) sgNormalizeGroup(groups[i]);
+  return groups;
+}
+
+// ─── Trading Groups Public API ───
+// Tek giriş noktası — tüm sistem bunları kullanmalı.
+// groupId eksik/geçersizse 'standard' fallback'ine düşer. null dönmez, her zaman bir grup döner.
+function getTradingGroup(groupId) {
+  if(!tradingGroups || !tradingGroups.length) sgLoad();
+  var g = tradingGroups.find(function(x){ return x.id === groupId; });
+  if(!g) g = tradingGroups.find(function(x){ return x.id === 'standard'; });
+  if(!g) g = tradingGroups[0];
+  return sgNormalizeGroup(g); // çağrı anında defensive normalize
+}
+function getMaxLeverage(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.maxLeverage || 100) : 100;
+}
+function getDefaultLeverage(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.defaultLeverage || g.maxLeverage || 100) : 100;
+}
+// Lot başına commission × lot miktarı. qty "lot" cinsindense direkt çarpılır.
+// NOT: TradeX'te qty bazen lot, bazen kontrat miktarı olarak kullanılıyor —
+// çağıran taraf lot'a çevirmekten sorumlu.
+function getCommission(groupId, lots) {
+  var g = getTradingGroup(groupId);
+  var per = g ? (g.commissionPerLot || 0) : 0;
+  var q = parseFloat(lots) || 0;
+  return per * q;
+}
+function getMinDeposit(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.minDeposit || 0) : 0;
+}
+function getMarginMode(groupId) {
+  var g = getTradingGroup(groupId);
+  return g ? (g.marginMode || 'hedging') : 'hedging';
+}
+// Boş whitelist = tüm semboller serbest (MT5 pattern'i).
+// Dolu whitelist = SADECE listedeki semboller serbest.
+function canTradeSymbol(groupId, sym) {
+  if(!sym) return false;
+  var g = getTradingGroup(groupId);
+  if(!g) return true; // defensive — grup bulunamazsa engelleme
+  var wl = g.symbolWhitelist;
+  if(!Array.isArray(wl) || wl.length === 0) return true;
+  return wl.indexOf(sym) !== -1;
+}
+
 function sgLoad() {
   var defaults = [
-    {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false},
-    {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:200, desc:'', deletable:false},
-    {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLev:500, desc:'', deletable:false},
-    {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLev:100, desc:'', deletable:false}
+    {id:'standard', name:'Standard',    spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:0, minDeposit:0,    marginMode:'hedging', desc:'', deletable:false},
+    {id:'ecn',      name:'ECN',         spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:200, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:7, minDeposit:500,  marginMode:'hedging', desc:'', deletable:false},
+    {id:'vip',      name:'VIP',         spreads:{}, swaps:{}, marginCall:100, stopOut:75,  maxLeverage:500, defaultLeverage:200, symbolWhitelist:[], commissionPerLot:0, minDeposit:5000, marginMode:'hedging', desc:'', deletable:false},
+    {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:80,  stopOut:50,  maxLeverage:100, defaultLeverage:100, symbolWhitelist:[], commissionPerLot:10,minDeposit:1000, marginMode:'hedging', desc:'', deletable:false}
   ];
   // Her zaman defaults ile başla, sonra localStorage'ı merge et
-  if(!spreadGroups || !Array.isArray(spreadGroups) || !spreadGroups.length) {
-    spreadGroups = defaults;
+  if(!tradingGroups || !Array.isArray(tradingGroups) || !tradingGroups.length) {
+    tradingGroups = defaults;
   }
   try {
     var saved = JSON.parse(localStorage.getItem('tx_sg') || 'null');
     if(saved && Array.isArray(saved) && saved.length && saved[0] && saved[0].id) {
-      spreadGroups = saved;
+      tradingGroups = saved;
     }
   } catch(e) {}
-  // Eksik alanları tamamla
-  for(var i=0; i<spreadGroups.length; i++) {
-    if(!spreadGroups[i].spreads) spreadGroups[i].spreads = {};
-    if(!spreadGroups[i].swaps)   spreadGroups[i].swaps   = {};
-  }
+  sgNormalizeAll(tradingGroups);
   // _activeSgId geçerli mi?
   var found = false;
-  for(var j=0; j<spreadGroups.length; j++) {
-    if(spreadGroups[j].id === _activeSgId) { found = true; break; }
+  for(var j=0; j<tradingGroups.length; j++) {
+    if(tradingGroups[j].id === _activeSgId) { found = true; break; }
   }
-  if(!found) _activeSgId = spreadGroups[0].id;
+  if(!found) _activeSgId = tradingGroups[0].id;
 }
 
 function sgLoadFromFirebase(callback) {
@@ -7285,12 +7097,8 @@ function sgLoadFromFirebase(callback) {
       try {
         var fbSg = JSON.parse(doc.data().data);
         if(fbSg && Array.isArray(fbSg) && fbSg.length) {
-          spreadGroups = fbSg;
-          for(var i=0; i<spreadGroups.length; i++) {
-            if(!spreadGroups[i].spreads) spreadGroups[i].spreads = {};
-            if(!spreadGroups[i].swaps)   spreadGroups[i].swaps   = {};
-          }
-          localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+          tradingGroups = sgNormalizeAll(fbSg);
+          localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
         }
       } catch(e){}
     }
@@ -7299,11 +7107,11 @@ function sgLoadFromFirebase(callback) {
 }
 
 function sgSave() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
   window._sgLastSave = Date.now();
-  try { localStorage.setItem('tx_sg', JSON.stringify(spreadGroups)); } catch(e){}
+  try { localStorage.setItem('tx_sg', JSON.stringify(tradingGroups)); } catch(e){}
   if(typeof db !== 'undefined' && db) {
-    db.collection('broker').doc('spreadGroups').set({data: JSON.stringify(spreadGroups)}, {merge:true})
+    db.collection('broker').doc('spreadGroups').set({data: JSON.stringify(tradingGroups)}, {merge:true})
       .catch(function(e){ console.warn('sgSave FB:', e); });
   }
 }
@@ -7318,7 +7126,7 @@ function sgRenderInner() {
   var bar = document.getElementById('sgTabBar');
   if(bar) {
     bar.innerHTML = '';
-    for(var gi=0; gi<spreadGroups.length; gi++) {
+    for(var gi=0; gi<tradingGroups.length; gi++) {
       (function(g){
         var btn = document.createElement('button');
         btn.textContent = g.name;
@@ -7326,24 +7134,60 @@ function sgRenderInner() {
         btn.style.cssText = 'padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
         btn.onclick = function(){ _activeSgId = g.id; sgRender(); };
         bar.appendChild(btn);
-      })(spreadGroups[gi]);
+      })(tradingGroups[gi]);
     }
   }
 
   var g = null;
-  for(var gi2=0; gi2<spreadGroups.length; gi2++) {
-    if(spreadGroups[gi2].id === _activeSgId) { g = spreadGroups[gi2]; break; }
+  for(var gi2=0; gi2<tradingGroups.length; gi2++) {
+    if(tradingGroups[gi2].id === _activeSgId) { g = tradingGroups[gi2]; break; }
   }
-  if(!g && spreadGroups.length) { g = spreadGroups[0]; _activeSgId = g.id; }
+  if(!g && tradingGroups.length) { g = tradingGroups[0]; _activeSgId = g.id; }
   if(!g) return;
 
   var del = document.getElementById('sgDeleteBtn');
   if(del) del.style.display = g.deletable ? 'inline-block' : 'none';
 
+  // defensive normalize — direkt g'ye yazacağız
+  sgNormalizeGroup(g);
+
   var mc = document.getElementById('sg_mc');    if(mc) mc.value = g.marginCall||100;
   var so = document.getElementById('sg_so');    if(so) so.value = g.stopOut||20;
-  var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLev||100);
+  var ml = document.getElementById('sg_maxlev'); if(ml) ml.value = String(g.maxLeverage||100);
+  var dl = document.getElementById('sg_defaultLev'); if(dl) dl.value = String(g.defaultLeverage || g.maxLeverage || 100);
+  var cm = document.getElementById('sg_commission'); if(cm) cm.value = g.commissionPerLot || 0;
+  var md = document.getElementById('sg_minDeposit'); if(md) md.value = g.minDeposit || 0;
+  var mm = document.getElementById('sg_marginMode'); if(mm) mm.value = g.marginMode || 'hedging';
   var dc = document.getElementById('sg_desc');  if(dc) dc.value = g.desc||'';
+
+  // --- WHITELIST KUTUSU ---
+  var wlBox = document.getElementById('sgWhitelistBox');
+  var wlCnt = document.getElementById('sg_wl_count');
+  if(wlBox) {
+    var _wlSyms = window._symConfig || [];
+    if(!_wlSyms.length) { try { _wlSyms = JSON.parse(localStorage.getItem('tx_syms')||'[]'); } catch(e){ _wlSyms=[]; } }
+    if(!_wlSyms.length && typeof symConfig !== 'undefined' && symConfig) { _wlSyms = symConfig; }
+    var _activeOnly = _wlSyms.filter(function(s){ return s.active; });
+    var _wl = Array.isArray(g.symbolWhitelist) ? g.symbolWhitelist : [];
+    if(!_activeOnly.length) {
+      wlBox.innerHTML = '<div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Aktif sembol yok</div>';
+    } else {
+      var wlHtml = '';
+      for(var wi=0; wi<_activeOnly.length; wi++) {
+        var _ws = _activeOnly[wi];
+        var _chk = _wl.indexOf(_ws.sym) !== -1 ? ' checked' : '';
+        wlHtml += '<label style="display:flex;align-items:center;gap:6px;padding:3px 6px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:2px;" onmouseover="this.style.background=\'rgba(240,185,11,0.08)\'" onmouseout="this.style.background=\'\'">'
+               +   '<input type="checkbox" id="sgwl_'+_ws.sym+'" data-sym="'+_ws.sym+'"'+_chk+' style="cursor:pointer;">'
+               +   '<span>'+_ws.sym+'</span>'
+               + '</label>';
+      }
+      wlBox.innerHTML = wlHtml;
+    }
+    if(wlCnt) {
+      if(_wl.length === 0) wlCnt.textContent = 'Tümü serbest';
+      else wlCnt.textContent = _wl.length + ' / ' + _activeOnly.length + ' izinli';
+    }
+  }
 
   var tb = document.getElementById('sgSymBody');
   if(!tb) return;
@@ -7383,18 +7227,82 @@ function sgRenderInner() {
 
 
 function sgSaveGeneral() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+
+  // Eski hâli audit için kaydet
+  var _before = {
+    marginCall: g.marginCall, stopOut: g.stopOut,
+    maxLeverage: g.maxLeverage, defaultLeverage: g.defaultLeverage,
+    commissionPerLot: g.commissionPerLot, minDeposit: g.minDeposit,
+    marginMode: g.marginMode, desc: g.desc
+  };
+
   var mc = document.getElementById('sg_mc');    if(mc)  g.marginCall = parseFloat(mc.value)||100;
   var so = document.getElementById('sg_so');    if(so)  g.stopOut    = parseFloat(so.value)||20;
-  var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLev     = parseInt(ml.value)||100;
+  var ml = document.getElementById('sg_maxlev');if(ml)  g.maxLeverage = parseInt(ml.value)||100;
+  var dl = document.getElementById('sg_defaultLev'); if(dl) g.defaultLeverage = parseInt(dl.value)||100;
+  var cm = document.getElementById('sg_commission'); if(cm) g.commissionPerLot = Math.max(0, parseFloat(cm.value)||0);
+  var md = document.getElementById('sg_minDeposit'); if(md) g.minDeposit = Math.max(0, parseFloat(md.value)||0);
+  var mm = document.getElementById('sg_marginMode'); if(mm) g.marginMode = (mm.value === 'netting' ? 'netting' : 'hedging');
   var dc = document.getElementById('sg_desc');  if(dc)  g.desc       = dc.value||'';
-  sgSave(); sgRenderInner(); showToast('Kaydedildi ✓', g.name);
+
+  // Validation: defaultLeverage <= maxLeverage
+  if(g.defaultLeverage > g.maxLeverage) {
+    g.defaultLeverage = g.maxLeverage;
+    if(dl) dl.value = String(g.maxLeverage);
+    showToast('Düzeltildi', 'Default kaldıraç Max değerine çekildi');
+  }
+  // maxLev alanını eski kod hâlâ okuyor olabilir — güncel tut
+  g.maxLev = g.maxLeverage;
+
+  sgSave(); sgRenderInner(); sgRefreshSelects();
+  adAudit('tradingGroup.update', 'tradingGroups/'+g.id, _before, {
+    marginCall: g.marginCall, stopOut: g.stopOut,
+    maxLeverage: g.maxLeverage, defaultLeverage: g.defaultLeverage,
+    commissionPerLot: g.commissionPerLot, minDeposit: g.minDeposit,
+    marginMode: g.marginMode, desc: g.desc
+  });
+  showToast('Kaydedildi ✓', g.name);
+}
+
+// Whitelist kutusundaki tüm checkbox'ları işaretle/temizle
+function sgWhitelistToggleAll(checked) {
+  var box = document.getElementById('sgWhitelistBox');
+  if(!box) return;
+  var boxes = box.querySelectorAll('input[type=checkbox][data-sym]');
+  for(var i=0; i<boxes.length; i++) boxes[i].checked = !!checked;
+  var cnt = document.getElementById('sg_wl_count');
+  if(cnt) cnt.textContent = checked ? (boxes.length + ' / ' + boxes.length + ' izinli') : 'Tümü serbest';
+}
+
+function sgSaveWhitelist() {
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  var box = document.getElementById('sgWhitelistBox');
+  if(!box) return;
+  var _before = (g.symbolWhitelist||[]).slice();
+  var selected = [];
+  var boxes = box.querySelectorAll('input[type=checkbox][data-sym]');
+  for(var i=0; i<boxes.length; i++) {
+    if(boxes[i].checked) selected.push(boxes[i].getAttribute('data-sym'));
+  }
+  g.symbolWhitelist = selected;
+  sgSave();
+  adAudit('tradingGroup.whitelist.update', 'tradingGroups/'+g.id,
+    {symbolWhitelist: _before},
+    {symbolWhitelist: selected});
+  var cnt = document.getElementById('sg_wl_count');
+  if(cnt) {
+    if(selected.length === 0) cnt.textContent = 'Tümü serbest';
+    else cnt.textContent = selected.length + ' izinli';
+  }
+  showToast('Kaydedildi ✓', g.name + ' — ' + (selected.length === 0 ? 'Tümü serbest' : selected.length + ' sembol'));
 }
 
 function sgSaveSpreads() {
-  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Spread grubu düzenleme yetkiniz yok','danger');return;}
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
+  if(typeof hasPerm==='function'&&!hasPerm('spreadgroups.edit')){showAdminToast('Yetkisiz','Trading grubu düzenleme yetkiniz yok','danger');return;}
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; }); if(!g) return;
   var n=0;
   symConfig.filter(function(s){ return s.active; }).forEach(function(s){
     var sv = document.getElementById('sgs_'+s.sym); var spVal = sv ? sv.value.trim() : '';
@@ -7410,159 +7318,52 @@ function sgAddGroup() {
   var el = document.getElementById('sg_new_name'); if(!el) return;
   var name = el.value.trim(); if(!name){ showToast('Hata','Grup adı girin!'); return; }
   var id = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if(spreadGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
-  spreadGroups.push({id:id,name:name,spreads:{},swaps:{},marginCall:80,stopOut:50,maxLev:100,desc:'',deletable:true});
+  if(tradingGroups.find(function(g){ return g.id===id; })){ showToast('Hata','Bu isimde grup var!'); return; }
+  var _newGroup = sgNormalizeGroup({
+    id:id, name:name,
+    spreads:{}, swaps:{},
+    marginCall:80, stopOut:50,
+    maxLeverage:100, defaultLeverage:100,
+    symbolWhitelist:[],
+    commissionPerLot:0, minDeposit:0,
+    marginMode:'hedging',
+    desc:'', deletable:true
+  });
+  tradingGroups.push(_newGroup);
   _activeSgId=id; el.value='';
   sgSave(); sgRender(); sgRefreshSelects();
-  adAudit('spreadGroup.add', 'spreadGroups/'+id, null, {id:id, name:name});
+  adAudit('tradingGroup.create', 'tradingGroups/'+id, null, {id:id, name:name});
   showToast('Grup Eklendi ✓',name);
 }
 
 function sgDeleteGroup() {
-  var g = spreadGroups.find(function(x){ return x.id===_activeSgId; });
+  var g = tradingGroups.find(function(x){ return x.id===_activeSgId; });
   if(!g||!g.deletable){ showToast('Hata','Bu grup silinemez!'); return; }
   if(accounts.some(function(a){ return a.spreadGroup===_activeSgId; })){ showToast('Hata','Hesaplarda kullanılıyor!'); return; }
   
-  spreadGroups = spreadGroups.filter(function(x){ return x.id!==_activeSgId; });
-  _activeSgId = spreadGroups[0].id;
+  tradingGroups = tradingGroups.filter(function(x){ return x.id!==_activeSgId; });
+  _activeSgId = tradingGroups[0].id;
   sgSave(); sgRender(); sgRefreshSelects();
-  adAudit('spreadGroup.delete', 'spreadGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
+  adAudit('tradingGroup.delete', 'tradingGroups/'+g.id, {group: {id:g.id, name:g.name}}, null);
   showToast('Silindi',g.name);
 }
 
 function sgRefreshSelects() {
   document.querySelectorAll('#ad_sg,#na_spreadGroup').forEach(function(sel){
     var cur=sel.value;
-    sel.innerHTML=spreadGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
+    sel.innerHTML=tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
     sel.value=cur||'standard';
   });
 }
 
-function getEffectiveSpread(sym,groupId) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
-  if(g&&g.spreads&&g.spreads[sym]!==undefined) return g.spreads[sym];
-  var sc=symConfig.find(function(x){ return x.sym===sym; }); return sc?sc.spread:0;
-}
-function getSwap(sym,groupId,side) {
-  var g=spreadGroups.find(function(x){ return x.id===groupId; });
-  if(!g||!g.swaps||!g.swaps[sym]) return 0;
-  return side==='buy'?(g.swaps[sym].buy||0):(g.swaps[sym].sell||0);
-}
 
-// Eski isimleri yönlendir
-// Eski isimleri yönlendir (yaşayan wrapper'lar — altta gerçek tanım yok)
-function saveSgGeneral() { sgSaveGeneral(); }
-function saveSgSpreads() { sgSaveSpreads(); }
-function addSpreadGroup() { sgAddGroup(); }
-function deleteSpreadGroup() { sgDeleteGroup(); }
-function selectSgTab(id) { _activeSgId=id; sgRender(); }
-function sgSubTab() {}
-
-// ═══════════════════════════════════════
-var spreadGroups = null;
-
-function loadSpreadGroups() {
-  try { spreadGroups = JSON.parse(localStorage.getItem('tx_spread_groups') || 'null'); } catch(e) { spreadGroups = null; }
-  if(!spreadGroups) {
-    // localStorage boş - Firebase'den yükle
-    if(typeof fbLoadSpreadGroups === 'function') {
-      fbLoadSpreadGroups(function(data) {
-        if(data && data.length) {
-          spreadGroups = data;
-          // marginCall/stopOut eksikse varsayılan ekle
-          spreadGroups.forEach(function(g) {
-            if(!g.marginCall) g.marginCall = 100;
-            if(!g.stopOut && g.stopOut !== 0) g.stopOut = 20;
-            if(!g.spreads) g.spreads = {};
-            if(!g.swaps) g.swaps = {};
-          });
-        } else {
-          spreadGroups = [
-            {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-            {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
-            {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
-            {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-          ];
-        }
-        localStorage.setItem('tx_spread_groups', JSON.stringify(spreadGroups));
-        if(typeof sgLoad==='function') sgLoad();
-      });
-      return;
-    }
-    spreadGroups = [
-      {id:'standard', name:'Standard', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-      {id:'ecn',      name:'ECN',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:200, desc:'', deletable:false},
-      {id:'vip',      name:'VIP',      spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:500, desc:'', deletable:false},
-      {id:'zero',     name:'Zero Spread', spreads:{}, swaps:{}, marginCall:100, stopOut:20, maxLev:100, desc:'', deletable:false},
-    ];
-    saveSpreadGroups();
-  } else {
-    // localStorage'dan geldi - marginCall/stopOut eksikse ekle
-    var changed = false;
-    spreadGroups.forEach(function(g) {
-      if(!g.marginCall) { g.marginCall = 100; changed = true; }
-      if(!g.stopOut && g.stopOut !== 0) { g.stopOut = 20; changed = true; }
-      if(!g.spreads) { g.spreads = {}; changed = true; }
-      if(!g.swaps) { g.swaps = {}; changed = true; }
-    });
-    if(changed) saveSpreadGroups();
-  }
-}
-
-function saveSpreadGroups() {
-  localStorage.setItem('tx_spread_groups', JSON.stringify(spreadGroups)); fbSaveSpreadGroups();
-}
-
-function getSpreadGroupById(id) {
-  if(!spreadGroups) loadSpreadGroups();
-  return spreadGroups.find(function(g){ return g.id===id; }) || spreadGroups[0];
-}
-
-function calcEffectiveSpread(baseSpread, groupId) {
-  var g = getSpreadGroupById(groupId);
-  return Math.max(0, baseSpread * g.mult + g.fixed);
-}
-
-function renderSpreadGroups() {
-  if(!spreadGroups) loadSpreadGroups();
-  var tb = document.getElementById('sgTableBody');
-  if(!tb) return;
-  if(!spreadGroups.length) {
-    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px;font-family:var(--mono);">Grup yok</td></tr>';
-    return;
-  }
-  tb.innerHTML = spreadGroups.map(function(g, i) {
-    var isDefault = ['standard','ecn','vip','zero'].includes(g.id);
-    return '<tr>' +
-      '<td style="font-family:var(--mono);font-weight:700;color:var(--accent);">'+g.name+'</td>' +
-      '<td><input class="mgr-input" style="width:80px;padding:3px 6px;" type="number" step="any" value="'+g.mult+'" onchange="updateSG('+i+',\'mult\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:100px;padding:3px 6px;" type="number" step="any" value="'+g.fixed+'" onchange="updateSG('+i+',\'fixed\',parseFloat(this.value))"></td>' +
-      '<td><input class="mgr-input" style="width:180px;padding:3px 6px;" value="'+(g.desc||'')+'" onchange="updateSG('+i+',\'desc\',this.value)"></td>' +
-      '<td>'+(!isDefault ? '<button class="mgr-btn danger" onclick="deleteSpreadGroup(\''+g.id+'\')" style="padding:2px 8px;font-size:10px;">✕</button>' : '<span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Varsayılan</span>')+'</td>' +
-    '</tr>';
-  }).join('');
-
-  // Hesap detay modalındaki tüm spread grubu selectlerini güncelle
-  refreshSgSelects();
-}
-
-function updateSG(i, field, val) {
-  if(!spreadGroups[i]) return;
-  spreadGroups[i][field] = val;
-  saveSpreadGroups();
-  showToast('Güncellendi', spreadGroups[i].name);
-}
-
-function refreshSgSelects() {
-  var selects = document.querySelectorAll('#ad_sg, #na_spreadGroup');
-  selects.forEach(function(sel){
-    var current = sel.value;
-    sel.innerHTML = spreadGroups.map(function(g){
-      return '<option value="'+g.id+'">'+ g.name +'</option>';
-    }).join('');
-    sel.value = current || 'standard';
-  });
-}
+// 2026-04-23 temizliği: 5 ölü wrapper silindi
+// - saveSgGeneral() → HTML direkt sgSaveGeneral() çağırıyor
+// - saveSgSpreads() → HTML direkt sgSaveSpreads() çağırıyor
+// - addSpreadGroup() → HTML direkt sgAddGroup() çağırıyor
+// - deleteSpreadGroup() → HTML direkt sgDeleteGroup() çağırıyor
+// - sgSubTab() → boş gövde, hiçbir yerden çağrılmıyor
+// selectSgTab kaldırıldı (2026-04-19) — çağıran yok, ölü kod.
 
 
 // ═══════════════════════════════════════
@@ -7584,7 +7385,7 @@ function pcPopulateSym() {
     sel.innerHTML = '<option value="">Sembol yok</option>';
     return;
   }
-  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks'};
+  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '';
   // Kategorisiz grup: tüm sembolleri önce kategoriye göre ayır
   var groups = {crypto:[], forex:[], commodity:[], index:[], other:[]};
@@ -7616,7 +7417,7 @@ function pcInit() {
     if(!_s.length && typeof AD_SIM !== 'undefined') {
       _s = Object.keys(AD_SIM).map(function(k){ return {sym:k, label:k, category:'crypto', active:true}; });
     }
-    var catLabels = {crypto:'Kripto',forex:'Forex',commodity:'Emtia',index:'Endeks'};
+    var catLabels = {crypto:'Kripto',forex:'Forex',commodity:'Emtia',index:'Endeks',stock:'Hisse',bist:'BİST'};
     var groups = {};
     _s.forEach(function(s){
       if(s.active===false) return;
@@ -7646,8 +7447,6 @@ function pcInit() {
 }
 
 // ── ADMIN FEED DURUM KONTROLÜ ─────────────────────────────────────────────
-var _adTdWsTest = null, _adBnWsTest = null;
-
 function adFeedSetDot(side, connected, label) {
   var col = connected ? '#26a69a' : '#ef5350';
   if(side === 'td') {
@@ -7664,45 +7463,47 @@ function adFeedSetDot(side, connected, label) {
 }
 
 function adFeedCheckConnections() {
-  // FastForex REST test
-  adFeedSetDot('td', false, 'Bağlanıyor...');
-  fetch('https://api.fastforex.io/fx/quote?pairs=EURUSD&api_key=' + _adFfKey)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.quotes && d.quotes['EURUSD']) {
-        adFeedSetDot('td', true, 'Bağlı ✓');
-        _adTdOk = true;
-      } else {
-        adFeedSetDot('td', false, 'Veri yok');
-      }
-    })
-    .catch(function(){ adFeedSetDot('td', false, 'Bağlantı hatası'); });
+  // Twelve Data WS + Binance WS — REST testi yok, canlı feed tazeliğine bakılır.
+  function _check() {
+    // ── Twelve Data (forex/emtia/endeks) ──
+    var tdWsOpen = !!(_adTdWs && _adTdWs.readyState === 1);
+    var tdAge = window._adTdLastOk ? (Date.now() - window._adTdLastOk) : Infinity;
+    var forexClosed = (typeof _marketHours !== 'undefined' && !_marketHours.forexOpen());
+    if(tdAge < 60000) {
+      adFeedSetDot('td', true, 'Bağlı ✓'); _adTdOk = true;
+    } else if(tdWsOpen && forexClosed) {
+      // WS açık ama piyasa kapalı — tick gelmemesi normal
+      adFeedSetDot('td', true, 'Bağlı (piyasa kapalı)'); _adTdOk = true;
+    } else if(tdWsOpen) {
+      adFeedSetDot('td', false, 'Veri bekleniyor...'); _adTdOk = false;
+    } else {
+      adFeedSetDot('td', false, 'Bağlantı yok'); _adTdOk = false;
+    }
 
-  // FF Kripto test
-  adFeedSetDot('bn', false, 'Bağlanıyor...');
-  fetch('https://api.fastforex.io/crypto/fetch-prices?pairs=BTC%2FUSDT&api_key=' + _adFfKey)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.prices && d.prices['BTC/USDT']) {
-        adFeedSetDot('bn', true, 'Bağlı ✓');
-        _adBnOk = true;
-      } else {
-        adFeedSetDot('bn', false, 'Veri yok');
-      }
-    })
-    .catch(function(){ adFeedSetDot('bn', false, 'Bağlantı hatası'); });
+    // ── Binance (kripto) ──
+    var bnP = _FX.prices['BTCUSDT'];
+    var bnAge = (bnP && bnP.ts) ? (Date.now() - bnP.ts) : Infinity;
+    if(bnAge < 60000) {
+      adFeedSetDot('bn', true, 'Bağlı ✓'); _adBnOk = true;
+    } else {
+      adFeedSetDot('bn', false, 'Veri bekleniyor...'); _adBnOk = false;
+    }
+  }
+  adFeedSetDot('td', false, 'Kontrol ediliyor...');
+  adFeedSetDot('bn', false, 'Kontrol ediliyor...');
+  _check();
+  // WS henüz ısınıyor olabilir — 2.5sn sonra tekrar bak
+  setTimeout(_check, 2500);
 }
 
-var TD_SYM_MAP_AD = {
-  'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
-  'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
-  'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY'
-};
+// NOT: Forex/emtia/endeks kaynak haritası artık tek yerde — AD_TD_MAP (~L3260).
+// adFeedGetSource onu kullanır; bu panele özel ayrı harita tutulmuyor.
 var BN_SYMS_AD = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT'];
 
 function adFeedGetSource(sym) {
-  if(BN_SYMS_AD.indexOf(sym)>=0) return {src:'FF Kripto', col:'#26a69a'};
-  if(TD_SYM_MAP_AD[sym]) return {src:'FastForex', col:'#8888ff'};
+  if((typeof BN_SYMS_AD!=='undefined' && BN_SYMS_AD.indexOf(sym)>=0) || (sym && sym.endsWith && sym.endsWith('USDT')))
+    return {src:'Binance', col:'#26a69a'};
+  if(typeof AD_TD_MAP!=='undefined' && AD_TD_MAP[sym]) return {src:'Twelve Data', col:'#8888ff'};
   return {src:'Simülasyon', col:'#f0b90b'};
 }
 
@@ -7720,7 +7521,7 @@ function adFeedRenderSymTable() {
     return;
   }
 
-  var groups = {'FF Kripto':[], FastForex:[], 'Simülasyon':[]};
+  var groups = {'Binance':[], 'Twelve Data':[], 'Simülasyon':[]};
   allSyms.forEach(function(it){
     var info = adFeedGetSource(it.sym);
     groups[info.src].push({sym:it.sym, name:it.name||it.sym, col:info.col, spread:it.spread||0, decimals:it.decimals||2});
@@ -7732,7 +7533,7 @@ function adFeedRenderSymTable() {
     Object.keys(groups).forEach(function(grpName){
       var items = groups[grpName];
       if(!items.length) return;
-      var col = grpName==='FF Kripto'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
+      var col = grpName==='Binance'?'#26a69a':grpName==='Twelve Data'?'#8888ff':'#f0b90b';
       html += '<div style="grid-column:1/-1;font-family:monospace;font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
               '● '+grpName.toUpperCase()+' ('+items.length+' sembol)</div>';
       items.forEach(function(it){
@@ -7752,12 +7553,12 @@ function adFeedRenderSymTable() {
   if(!el2) return;
   var html2 = '';
   // Önce TD + Binance, sonra Sim
-  ['FF Kripto','FastForex','Simülasyon'].forEach(function(grpName){
+  ['Binance','Twelve Data','Simülasyon'].forEach(function(grpName){
     var items = groups[grpName];
     if(!items.length) return;
-    var col = grpName==='Binance'?'#26a69a':grpName==='FastForex'?'#8888ff':'#f0b90b';
-    var srcLabel = grpName==='FF Kripto'?'FF-K':grpName==='FastForex'?'FF':'SİM';
-    var srcDesc  = grpName==='FF Kripto'?'FastForex Kripto Polling':grpName==='FastForex'?'FastForex REST Polling':'Simülasyon';
+    var col = grpName==='Binance'?'#26a69a':grpName==='Twelve Data'?'#8888ff':'#f0b90b';
+    var srcLabel = grpName==='Binance'?'BN':grpName==='Twelve Data'?'TD':'SİM';
+    var srcDesc  = grpName==='Binance'?'Binance Kripto WS':grpName==='Twelve Data'?'Twelve Data WS':'Simülasyon';
     html2 += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:4px;">'+
              '<span style="font-family:monospace;font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
              '</div>';
@@ -7800,8 +7601,8 @@ function adFeedRenderSymTable() {
 
 // Spread grubundan sembol verisi al (default grup)
 function _getFeedSymSpread(sym) {
-  if(typeof spreadGroups === 'undefined' || !spreadGroups.length) return {spread:0,swapBuy:0,swapSell:0};
-  var dg = spreadGroups.find(function(g){ return g.name==='Standard'||g.name==='Default'||g.default; }) || spreadGroups[0];
+  if(typeof tradingGroups === 'undefined' || !tradingGroups.length) return {spread:0,swapBuy:0,swapSell:0};
+  var dg = tradingGroups.find(function(g){ return g.name==='Standard'||g.name==='Default'||g.default; }) || tradingGroups[0];
   return {
     spread:   (dg.spreads && dg.spreads[sym] !== undefined) ? dg.spreads[sym] : 0,
     swapBuy:  (dg.swaps   && dg.swaps[sym]   !== undefined) ? dg.swaps[sym].buy   : 0,
@@ -7815,21 +7616,21 @@ function adFeedSaveSym(sym) {
   var sb = parseFloat((document.getElementById('fse_sb_'+sym)||{}).value)||0;
   var ss = parseFloat((document.getElementById('fse_ss_'+sym)||{}).value)||0;
   // Tüm spread gruplarında bu sembolü güncelle
-  if(typeof spreadGroups !== 'undefined') {
-    spreadGroups.forEach(function(g){
+  if(typeof tradingGroups !== 'undefined') {
+    tradingGroups.forEach(function(g){
       if(!g.spreads) g.spreads = {};
       if(!g.swaps)   g.swaps   = {};
       g.spreads[sym] = sp;
       g.swaps[sym]   = {buy: sb, sell: ss};
     });
-    // Firebase'e kaydet
-    if(typeof fbSaveSpreadGroups === 'function') fbSaveSpreadGroups();
+    // Firebase'e kaydet (A sisteminin API'si)
+    if(typeof sgSave === 'function') sgSave();
     else if(typeof db !== 'undefined' && db) {
       db.collection('broker').doc('spreadGroups').set(
-        {data: JSON.stringify(spreadGroups)}, {merge:true}
+        {data: JSON.stringify(tradingGroups)}, {merge:true}
       ).catch(function(){});
     }
-    localStorage.setItem('tx_sg', JSON.stringify(spreadGroups));
+    localStorage.setItem('tx_sg', JSON.stringify(tradingGroups));
   }
   showAdminToast('Kaydedildi ✓', sym+' spread/swap güncellendi', 'success');
 }
@@ -7931,7 +7732,7 @@ function pcApplyPrice(sym, price) {
     if(typeof updateTopSym === 'function') updateTopSym(sym, price, chg);
   }
   if(typeof checkAlarms === 'function') checkAlarms(sym, price);
-  if(typeof updatePositions === 'function') updatePositions();
+  // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi.
   if(typeof buildTicker === 'function') buildTicker();
   if(typeof pcRenderOverrides === 'function') pcRenderOverrides();
   if(typeof pcRefresh === 'function') pcRefresh();
@@ -7940,8 +7741,16 @@ function pcApplyPrice(sym, price) {
   var _syms2 = (typeof symConfig !== 'undefined' && symConfig) ? symConfig : [];
   _syms2.forEach(function(s) {
     if(s.priceSource === sym && s.sym !== sym) {
-      // priceFactor varsa uygula
-      var _factor2 = parseFloat(s.priceFactor)||1; var _offset2 = parseFloat(s.priceOffset)||0; var _synthPrice = price * _factor2 + _offset2;
+      // 2026-04-27 fix: Sentetik sembolün kendi override'ı varsa onu kullan, yoksa formül
+      var _synthOv = (window._pcOverrides && window._pcOverrides[s.sym]) ? parseFloat(window._pcOverrides[s.sym]) : null;
+      var _synthPrice;
+      if(_synthOv && _synthOv > 0) {
+        _synthPrice = _synthOv;
+      } else {
+        // priceFactor varsa uygula
+        var _factor2 = parseFloat(s.priceFactor)||1; var _offset2 = parseFloat(s.priceOffset)||0;
+        _synthPrice = price * _factor2 + _offset2;
+      }
       var _synthPrev  = (prices[s.sym] && prices[s.sym].price) ? prices[s.sym].price : _synthPrice;
       var _synthSpread = _adGetSpread(s.sym);
       var _synthChg   = window._adDayOpen && window._adDayOpen[s.sym]
@@ -8063,86 +7872,11 @@ function pcClearOverride(sym) {
 }
 
 
-// Cihaz tespiti
-function deviceIcon(d) {
-  var icons = {
-    'android': '🤖',
-    'ios': '🍎',
-    'web': '🌐',
-    'windows-phone': '📱'
-  };
-  return (icons[d]||'🌐') + ' ' + (d==='android'?'Android':d==='ios'?'iOS':d==='windows-phone'?'Win Phone':'Web');
-}
+// 2026-04-24 temizliği: deviceIcon() ve getDeviceIcon() silindi (ikisi de trader kopyası, admin'de kimse çağırmıyor).
 
-
-// Cihaz tespiti
-function detectDevice() {
-  var ua = navigator.userAgent || '';
-  if(/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
-  if(/Android/i.test(ua)) return 'Android';
-  if(/Windows Phone/i.test(ua)) return 'Windows Phone';
-  if(/Mac/i.test(ua) && navigator.maxTouchPoints > 1) return 'iOS';
-  if(/Windows/i.test(ua)) return 'Windows';
-  if(/Mac/i.test(ua)) return 'macOS';
-  if(/Linux/i.test(ua)) return 'Linux';
-  return 'Web';
-}
-function getDeviceIcon(d) {
-  var icons = {'iOS':'🍎','Android':'🤖','Windows':'🖥','macOS':'🖥','Linux':'🖥','Web':'🌐','Broker':'⚙️'};
-  return (icons[d]||'🌐') + ' ' + d;
-}
-
-function symSearchOpen(){var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');var d=document.getElementById('symDropdown');if(d)d.style.display='block';}
-function symSearchClose(){var d=document.getElementById('symDropdown');if(d)d.style.display='none';}
-function symSearchFilter(q){
-  var dd=document.getElementById('symDropdown');if(!dd)return;
-  var _all=(typeof symConfig!=='undefined'&&Array.isArray(symConfig)&&symConfig.length)?symConfig:SYMS;
-  var _active=_all.filter(function(s){return s.active;});
-  var _pinned=[];try{_pinned=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var q2=(q||'').toLowerCase();
-  var filtered=q2?_active.filter(function(s){return s.sym.toLowerCase().indexOf(q2)>=0||(s.label&&s.label.toLowerCase().indexOf(q2)>=0);}):_active;
-  dd.innerHTML='';
-  if(!filtered.length){
-    var empty=document.createElement('div');
-    empty.style.cssText='padding:16px;text-align:center;color:#b0b0b0;font-family:monospace;font-size:11px;';
-    empty.textContent='Sembol bulunamadi';
-    dd.appendChild(empty);
-    dd.style.display='block'; return;
-  }
-  filtered.forEach(function(s){
-    var isPinned=_pinned.indexOf(s.sym)>=0;
-    var p=prices[s.sym];
-    var dec=p?(p.price>100?2:p.price>1?4:6):2;
-    var priceStr=p?('$'+p.price.toFixed(dec)):'—';
-    var chgStr=p?((p.chg>=0?'+':'')+p.chg.toFixed(2)+'%'):'';
-    var chgCol=p?(p.chg>=0?'#26a69a':'#ef5350'):'#888';
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;border-bottom:1px solid #222;';
-    row.innerHTML='<div><span style="font-weight:700;color:#e2e2e2;font-family:monospace;font-size:11px;">'+s.sym+'</span> <span style="color:#b0b0b0;font-size:10px;font-family:monospace;">'+s.label+'</span></div>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="color:#a0a0a0;font-family:monospace;font-size:10px;">'+priceStr+'</span>'
-      +'<span style="color:'+chgCol+';font-family:monospace;font-size:10px;">'+chgStr+'</span>'
-      +'<span class="sym-pin-star" style="color:'+(isPinned?'#f0b90b':'#444')+';font-size:16px;cursor:pointer;">&#9733;</span>'
-      +'</div>';
-    row.onmouseover=function(){this.style.background='#252525';};
-    row.onmouseout=function(){this.style.background='transparent';};
-    row.onclick=(function(sym){return function(){symSearchSelect(sym);};})(s.sym);
-    var star=row.querySelector('.sym-pin-star');
-    if(star) star.onclick=(function(sym,el){return function(e){e.stopPropagation();symTogglePin(sym);};})(s.sym,star);
-    dd.appendChild(row);
-  });
-  dd.style.display='block';
-}
-function symSearchSelect(sym){switchSym(sym);var s=document.getElementById('symSearch');if(s)s.value='';symSearchClose();}
-function symTogglePin(sym){
-  var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
-  var i=_p.indexOf(sym);
-  if(i>=0){_p.splice(i,1);showToast('Kaldirildi',sym+' ust bardan kaldirildi');}
-  else{_p.push(sym);showToast('Eklendi',sym+' ust bara eklendi');}
-  try{localStorage.setItem('tx_pinned_syms',JSON.stringify(_p));}catch(e){}
-  buildSymTabs();
-  var s=document.getElementById('symSearch');symSearchFilter(s?s.value:'');
-}
+// symSearchOpen/Close/Filter/Select + symTogglePin kaldırıldı (2026-04-19)
+// — trader kopyası. Kendi içinde kapalı ölü zincir, dış çağıranı yok.
+// Admin sembol yönetimi için renderSymMgr/symUnpin akışını kullanıyor.
 function symUnpin(sym){
   var _p=[];try{_p=JSON.parse(localStorage.getItem('tx_pinned_syms')||'[]');}catch(e){}
   _p=_p.filter(function(s){return s!==sym;});
@@ -8216,8 +7950,8 @@ var PERM_DEFS = [
   {group:'Semboller & Spread', perms:[
     {key:'symbols.view',     label:'Sembolleri Görüntüle'},
     {key:'symbols.edit',     label:'Sembol Düzenle'},
-    {key:'spreadgroups.view',label:'Spread Grupları Görüntüle'},
-    {key:'spreadgroups.edit',label:'Spread Grubu Düzenle'},
+    {key:'spreadgroups.view',label:'Trading Grupları Görüntüle'},
+    {key:'spreadgroups.edit',label:'Trading Grubu Düzenle'},
   ]},
   {group:'Sistem', perms:[
     {key:'feed.view',        label:'Feed Görüntüle'},
@@ -8331,7 +8065,7 @@ function _txFullBackup() {
     savedAt:     now.toISOString(),
     version:     4,
     accounts:    JSON.stringify(typeof accounts!=='undefined'?accounts:[]),
-    spreadGroups:JSON.stringify(typeof spreadGroups!=='undefined'?spreadGroups:[]),
+    tradingGroups:JSON.stringify(typeof tradingGroups!=='undefined'?tradingGroups:[]),
     symbols:     JSON.stringify(typeof symConfig!=='undefined'?symConfig:[]),
     payMethods:  JSON.stringify(typeof payMethods!=='undefined'&&payMethods?payMethods:[]),
     settings:    JSON.stringify(typeof settings!=='undefined'?settings:{}),
@@ -8417,8 +8151,10 @@ function restoreFromBackup(dateStr) {
       db.collection('broker').doc('accounts').set({data:d.accounts,updatedAt:new Date().toISOString()})
         .then(function(){ alert('Hesaplar geri yüklendi: ' + accs.length + ' hesap'); location.reload(); });
     }
-    var sgs = JSON.parse(d.spreadGroups||'[]');
-    if(sgs.length) db.collection('broker').doc('spreadGroups').set({data:d.spreadGroups});
+    // Backward-compat: eski backup'larda 'spreadGroups', yenilerinde 'tradingGroups'
+    var _tgRaw = d.tradingGroups || d.spreadGroups || '[]';
+    var sgs = JSON.parse(_tgRaw);
+    if(sgs.length) db.collection('broker').doc('spreadGroups').set({data:_tgRaw});
     var syms = JSON.parse(d.symbols||'[]');
     if(syms.length) db.collection('broker').doc('symbols').set({data:d.symbols});
     var pms = JSON.parse(d.payMethods||'[]');
@@ -8530,6 +8266,7 @@ function adminNav(sec,btn){
   if(el){el.style.display=sec==='accounts'?'flex':'block';}
   if(btn)btn.classList.add('active');
   if(sec==='accounts'){
+    window._accResortPending = true;   // bölüm açılışında bir kez sırala (sonra otomatik render'lar sırayı korur)
     if(typeof accounts==='undefined'||!Array.isArray(accounts)){renderAccTable();return;}
     // Tüm hesapları cache'e yükle
     accounts.filter(function(a){return !a.role||a.role==='customer';}).forEach(function(a){
@@ -8653,7 +8390,12 @@ function alRender() {
     'request.withdraw.approve':'#26a69a','request.withdraw.reject':'#ef5350',
     'position.close.manual':'#2979ff','position.close.stopout':'#ef5350',
     'price.override.set':'#f5c518','price.override.reset':'#888',
-    'spreadGroup.add':'#26a69a','spreadGroup.delete':'#ef5350'
+    // Eski spreadGroup.* action'ları için backward-compat (Cloud Function ve eski audit kayıtları hâlâ bu adlarla yazmış olabilir)
+    'spreadGroup.add':'#26a69a','spreadGroup.delete':'#ef5350',
+    // Trading Groups (yeni action ad setleri)
+    'tradingGroup.create':'#26a69a','tradingGroup.delete':'#ef5350',
+    'tradingGroup.update':'#f5c518','tradingGroup.whitelist.update':'#f5c518',
+    'position.manual_open':'#2979ff'
   };
   body.innerHTML = list.map(function(e){
     var ts = e.ts ? (typeof fmtDate==='function' ? fmtDate(e.ts) : new Date(e.ts).toLocaleString('tr-TR')) : '—';
@@ -8715,8 +8457,8 @@ function updateMarginCallPanel() {
 
     // Hesabın spread grubundan margin call seviyesini al
     var mcLevel = 80; // varsayılan
-    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
-      var sg = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+    if(typeof tradingGroups !== 'undefined' && tradingGroups) {
+      var sg = tradingGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
       if(sg && sg.marginCall) mcLevel = parseFloat(sg.marginCall)||80;
     }
 
@@ -8725,8 +8467,8 @@ function updateMarginCallPanel() {
     // YENİ (2026-04-14): onPriceUpdate + riskEngineBackup Cloud Function'ları yapıyor.
     // Çifte kapatma riski olmasın diye buradaki kapatma kaldırıldı.
     var stopLevel = 20;
-    if(typeof spreadGroups !== 'undefined' && spreadGroups) {
-      var _sg2 = spreadGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
+    if(typeof tradingGroups !== 'undefined' && tradingGroups) {
+      var _sg2 = tradingGroups.find(function(g){ return g.id===(a.spreadGroup||'standard'); });
       if(_sg2 && _sg2.stopOut) stopLevel = parseFloat(_sg2.stopOut)||20;
     }
     var isUnderStopOut = usedMargin > 0 && (equity <= 0 || marginLevel <= stopLevel);
@@ -8820,23 +8562,12 @@ function loadAllPositionsAndUpdate() {
   });
 }
 
-function updateReportsWithPositions(allPositions) {
-  // accounts array'e pozisyonları geçici olarak ekle
-  accounts.forEach(function(a) {
-    if(allPositions[a.id]) {
-      a._repPositions = allPositions[a.id].positions;
-    }
-  });
-  updateReports();
-  // Temizle
-  accounts.forEach(function(a){ delete a._repPositions; });
-}
 function loadInitialData(){
   fbLoadAccounts(function(accs){
     accounts = accs || [];
     try{ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }catch(e){}
-    fbLoadSpreadGroups(function(sgs){
-      spreadGroups = sgs || [];
+    // Trading groups'u A sisteminin API'si ile yükle (defaults + normalize dahil)
+    sgLoadFromFirebase(function(){
       // Tüm hesapların pozisyonlarını yükle, equity'yi hesapla
       _loadAllEquities(function(){
         renderAccTable();
@@ -8907,7 +8638,6 @@ function _loadAllEquities(cb){
     });
   });
 }
-function filterAccTable(){renderAccTable();}
 
 function updateReports(){
   var ptEl = document.getElementById('rep-posTable');
@@ -9212,7 +8942,7 @@ function finWithdraw(){
 
 function exportAccounts(){
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
-  var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Spread Grubu','Kayıt']];
+  var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Trading Grubu','Kayıt']];
   list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),(a.type||'real'),getAccBal(a.id),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join(String.fromCharCode(10));
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
@@ -9221,6 +8951,9 @@ function exportAccounts(){
 
 function renderSgSection(){ sgRender(); }
 function renderSymSection(){
+  // Semboller bölümü: düzenlenebilir tablo (#symMgrBody — düzenle/sil butonlu) +
+  // TD KÖPRÜ paneli (#tdBridgeBody). renderSymMgr ikisini de doldurur.
+  if(typeof renderSymMgr==='function'){ renderSymMgr(window._symFilter||'all'); return; }
   var cnt = document.getElementById('symContent');
   if(!cnt) return;
 
@@ -9231,7 +8964,7 @@ function renderSymSection(){
     return;
   }
 
-  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks'};
+  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '<div class="ad-sect"><div class="ad-sect-title">SEMBOL LİSTESİ ('+allSyms.length+')</div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">'+
     '<thead><tr style="background:#181818;color:#a0a0a0;">'+
@@ -9455,23 +9188,7 @@ function staffAction(btn, action) {
 }
 
 
-function closeAssignModal() {
-  var m = document.getElementById('assignModal');
-  if(m) m.style.display = 'none';
-}
 
-function saveAssign(id) {
-  if(id && id.dataset) id = id.dataset.id;
-  var s = _staffList.find(function(x){ return x.id===id; });
-  if(!s) return;
-  var selected = [];
-  document.querySelectorAll('.assign-cb-'+id+':checked').forEach(function(cb){ selected.push(cb.dataset.acc); });
-  s.assignedAccounts = selected;
-  fbSaveStaff(_staffList);
-  renderStaffTable();
-  document.getElementById('assignModal').style.display = 'none';
-  showAdminToast('Kaydedildi', s.name+' için '+selected.length+' hesap atandı', 'success');
-}
 
 function toggleStaffStatus(id){var s=_staffList.find(function(x){return x.id===id;});if(!s)return;s.active=!s.active;fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Güncellendi',s.name+' '+(s.active?'aktif':'pasif'),'info');}
 
@@ -9575,10 +9292,10 @@ var AD_SIM={
   if(typeof symConfig !== 'undefined' && Array.isArray(symConfig)) {
     symConfig.forEach(function(s) {
       if(!s.active) return;
-      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto'};
+      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
       var grp=MARKET_GROUPS.find(function(g){return g.id===(catMap[s.category]||'crypto');})||MARKET_GROUPS[0];
       if(!grp.items.find(function(it){return it.sym===s.sym;})){
-        var item={sym:s.sym,name:s.label||s.sym,full:'',icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
+        var item={sym:s.sym,name:s.sym,full:s.label||s.sym,icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
         grp.items.push(item); MW_MAP[s.sym]=item;
       }
       if(!AD_SIM[s.sym]){
@@ -9624,8 +9341,27 @@ var AD_SIM={
     var _rfs={};
     if(typeof AD_TD_MAP!=='undefined') Object.keys(AD_TD_MAP).forEach(function(k){_rfs[k]=true;});
     if(typeof AD_BN_SYMS!=='undefined') AD_BN_SYMS.forEach(function(s){_rfs[s.toUpperCase()]=true;});
-    var _has=false;
-    Object.keys(_adPrices).forEach(function(k){if(!_rfs[k]){_pu[k]=_adPrices[k];_has=true;}});
+
+    // ⚠ KILL SWITCH: Forex feed ölüyse forex sembollerini Firebase'e YAZMA.
+    // Aksi halde admin'in sahte/eski simülasyon fiyatları trader'a gidiyor, müşteriler yanlış fiyatla işlem yapıyor.
+    var _forexDead = !!window._adForexFeedDead;
+    var _forexSyms = {};
+    if(_forexDead && typeof symConfig !== 'undefined') {
+      symConfig.forEach(function(s){
+        if(s.category === 'forex') _forexSyms[s.sym] = true;
+      });
+    }
+
+    var _has=false, _skipped=0;
+    Object.keys(_adPrices).forEach(function(k){
+      if(_rfs[k]) return;
+      if(_forexDead && _forexSyms[k]) { _skipped++; return; } // forex feed ölü — atla
+      _pu[k]=_adPrices[k];
+      _has=true;
+    });
+    if(_skipped > 0 && window._simTickCount%150===0) {
+      console.warn('[sim tick] Forex feed ölü; '+_skipped+' forex sembolü Firebase\'e yazılmadı.');
+    }
     if(_has){
       db.collection('broker').doc('prices').set(_pu,{merge:true}).catch(function(e){console.warn('simTick FB:',e);});
       try{localStorage.setItem('tx_prices',JSON.stringify(_pu));}catch(e){}
@@ -9695,10 +9431,7 @@ var AD_SIM={
   },5000);
 })();
 // ── Kotasyon (Fiyat Kontrol) Fonksiyonları ──
-var _pcOverrides = {}; window._pcOverrides = _pcOverrides;
-var _pcGradTimer = null;
-
-// pcInit: removed duplicate
+// (not: _pcOverrides ve _pcGradTimer L7974-7976'da declare edildi — duplicate var kaldırıldı 2026-04-19)
 
 function pcLoadSym() {
   pcRefresh();
@@ -9772,6 +9505,17 @@ var _adOpenSort  = {col:'time', dir:-1};
 var _adHistSort  = {col:'closeTime', dir:-1};
 var _adEditId    = null;
 var _adEditHistIdx = 0;
+
+// İşlem ID'sine göre _adHistory indeksini bul (tablo sıralaması değişse de doğru kaydı hedefler).
+// data-hid yoksa/eşleşmezse eski data-hidx davranışına düşer.
+function _adFindHistIdx(btn){
+  var hid = btn && (btn.dataset.hid || btn.getAttribute('data-hid'));
+  if(hid){
+    var i = _adHistory.findIndex(function(x){ return String(x.id)===String(hid); });
+    if(i>=0) return i;
+  }
+  return parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+}
 
 // Yardımcı: sayı formatla
 function adFpDec(sym) {
@@ -10060,8 +9804,9 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);font-weight:700;color:'+pc+';">'
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
-        +'<button class="ad-btn" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
-        +'<button class="ad-btn ad-btn-danger" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
+        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="font-size:10px;padding:2px 6px;margin-right:2px;">⟳</button>'
+        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
+        +'<button class="ad-btn ad-btn-danger" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
       +'</td>'
     +'</tr>';
   }).join('');
@@ -10232,7 +9977,7 @@ function adOpenTrade(btn){
   var _newBal = _curBal - cost;
   // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
   var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
-  var _swapSg = (typeof spreadGroups!=='undefined'&&spreadGroups)?spreadGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
+  var _swapSg = (typeof tradingGroups!=='undefined'&&tradingGroups)?tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
   var _swBuy  = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].buy  :(_swapSc?(_swapSc.swapBuy||0):0);
   var _swSell = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].sell :(_swapSc?(_swapSc.swapSell||0):0);
   _adPositions.push({
@@ -10277,7 +10022,7 @@ function adSaveUserTrades(){
 
 // ── Geçmiş düzenle ────────────────────────────────────────────
 function adEditHistory(btn){
-  var hidx = parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+  var hidx = _adFindHistIdx(btn);
   var h    = _adHistory[hidx];
   if(!h) return;
   _adEditHistIdx = hidx;
@@ -10306,7 +10051,8 @@ function adEditHistory(btn){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:16px;">'
       +'<button class="ad-btn ad-btn-success" onclick="adSaveHistEdit()" style="flex:1;">Kaydet</button>'
-      +'<button class="ad-btn ad-btn-danger" onclick="adDeleteHistory(this)" data-hidx="'+hidx+'" style="flex:1;">Sil</button>'
+      +'<button class="ad-btn" onclick="adReopenHistory(this)" data-hid="'+h.id+'" title="Pozisyonu yeniden aç" style="flex:1;">⟳ Yeniden Aç</button>'
+      +'<button class="ad-btn ad-btn-danger" onclick="adDeleteHistory(this)" data-hid="'+h.id+'" style="flex:1;">Sil</button>'
       +'<button class="ad-btn" onclick="document.getElementById(\'adHistEditModal\').style.display=\'none\'" style="flex:1;">Kapat</button>'
     +'</div>'
   +'</div>';
@@ -10331,13 +10077,69 @@ function adSaveHistEdit(){
 }
 
 function adDeleteHistory(btn){
-  var hidx = parseInt(btn.dataset.hidx||btn.getAttribute('data-hidx'));
+  var hidx = _adFindHistIdx(btn);
   if(!confirm('Bu geçmiş kaydı silinsin mi?')) return;
+  if(hidx<0 || !_adHistory[hidx]) return;
   _adHistory.splice(hidx, 1);
   adSaveUserTrades();
   adRenderHistoryTable();
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
   showAdminToast('Silindi','Geçmiş kayıt kaldırıldı','info');
+}
+
+// ── Kapalı pozisyonu YENİDEN AÇ (reopen) ──────────────────────
+// Kapalı kaydı açık pozisyonlara geri koyar ve kapanışta bakiyeye eklenen
+// (cost + K/Z) tutarını geri alır → pozisyon hiç kapanmamış gibi aktif olur.
+function adReopenHistory(btn){
+  if(typeof hasPerm==='function' && !hasPerm('trades.edit')){ showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger'); return; }
+  var hidx = _adFindHistIdx(btn);
+  var h = _adHistory[hidx];
+  if(!h) return;
+  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  if(!a) return;
+  if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' pozisyonu YENİDEN AÇILSIN mı?\n\nKapanışta bakiyeye eklenen K/Z geri alınır, pozisyon açık (aktif) duruma döner.')) return;
+
+  var cost = parseFloat(h.cost)||0;
+  var pnl  = parseFloat(h.pnl)||0;
+  // Kapanışta bakiye += cost + pnl yapılmıştı → reopen: bakiye -= cost + pnl
+  var _newBal = getAccBal(a.id) - cost - pnl;
+
+  // Kapalı kaydı açık pozisyona çevir — kapanış alanlarını temizle
+  var pos = Object.assign({}, h);
+  ['closePrice','closeTime','closeDate','closeReason','closeDevice','pnl','status','closed','_accName','_accId'].forEach(function(k){ delete pos[k]; });
+  if(!pos.id) pos.id = Date.now();
+  // Render'ın beklediği alanları garanti et (eski kayıtlarda isimler farklı olabilir)
+  if(!pos.openDate) pos.openDate = pos.time || pos.openTime || new Date().toISOString();
+  if(!pos.qty) pos.qty = parseFloat(h.qty)||parseFloat(h.lot)||0;
+  if(!pos.openPrice) pos.openPrice = parseFloat(h.openPrice)||parseFloat(h.price)||0;
+
+  _adPositions.push(pos);
+  _adHistory.splice(hidx, 1);
+  if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id] = _adPositions;
+  // Canonical balance'ı anında güncelle (UI tutarlı olsun; snapshot da teyit eder)
+  if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
+
+  if(typeof db!=='undefined' && db){
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      positions: _adPositions,
+      tradeHistory: _adHistory.slice(0,100),
+      _balanceSource: 'manager',
+      updatedAt: new Date().toISOString()
+    }, {merge:true}).catch(function(e){ console.warn('adReopenHistory:', e); });
+  }
+
+  var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
+  if(typeof adRenderOpenTable==='function') adRenderOpenTable();
+  adRenderHistoryTable();
+  if(typeof adRefreshBadges==='function') try{ adRefreshBadges(); }catch(e){}
+  // Kullanıcı pozisyonu hemen görsün: AÇIK alt-sekmesine otomatik geç
+  try{ var _ob = document.querySelector('[data-subtab="open"]'); if(_ob && typeof adSubTab==='function') adSubTab(_ob); }catch(e){}
+  // Firebase yazma yankısı (snapshot) sonrası emniyet render'ı
+  setTimeout(function(){
+    try{ if(document.getElementById('adOpenBody')) adRenderOpenTable(); }catch(e){}
+  }, 1200);
+  showAdminToast('Yeniden açıldı','#'+String(h.id).slice(-6)+' '+h.sym+' tekrar aktif', 'success');
 }
 
 // ── MTF fiyat güncelle ────────────────────────────────────────
