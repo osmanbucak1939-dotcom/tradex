@@ -2091,6 +2091,7 @@ console.log('Firebase bağlandı ✓');
                 <option value="commodity">Emtia</option>
                 <option value="index">Endeks</option>
                 <option value="stock">Hisse</option>
+                <option value="bist">BİST</option>
               </select>
             </div>
             <div>
@@ -4256,6 +4257,41 @@ var MARKET_GROUPS = [
   {
     id:'stocks', label:'HİSSELER', open:false,
     items:[]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
+  },
+  {
+    id:'bist', label:'BİST', open:false,
+    items:[
+      {sym:'AEFES', name:'AEFES', full:'Anadolu Efes',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKBNK', name:'AKBNK', full:'Akbank',              icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ASELS', name:'ASELS', full:'Aselsan',             icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BIMAS', name:'BIMAS', full:'BİM Mağazalar',       icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'EKGYO', name:'EKGYO', full:'Emlak Konut GYO',     icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'ENKAI', name:'ENKAI', full:'Enka İnşaat',         icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EREGL', name:'EREGL', full:'Ereğli Demir Çelik',  icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'FROTO', name:'FROTO', full:'Ford Otosan',         icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'GARAN', name:'GARAN', full:'Garanti BBVA',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GUBRF', name:'GUBRF', full:'Gübre Fabrikaları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'ISCTR', name:'ISCTR', full:'Türkiye İş Bankası',  icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'KCHOL', name:'KCHOL', full:'Koç Holding',         icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'KOZAL', name:'KOZAL', full:'Koza Altın',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KRDMD', name:'KRDMD', full:'Kardemir (D)',        icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'MGROS', name:'MGROS', full:'Migros',              icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'PETKM', name:'PETKM', full:'Petkim',              icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SAHOL', name:'SAHOL', full:'Sabancı Holding',     icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SASA',  name:'SASA',  full:'SASA Polyester',      icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SISE',  name:'SISE',  full:'Şişecam',             icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'TAVHL', name:'TAVHL', full:'TAV Havalimanları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TCELL', name:'TCELL', full:'Turkcell',            icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'THYAO', name:'THYAO', full:'Türk Hava Yolları',   icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TOASO', name:'TOASO', full:'Tofaş',               icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TTKOM', name:'TTKOM', full:'Türk Telekom',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TUPRS', name:'TUPRS', full:'Tüpraş',              icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'VAKBN', name:'VAKBN', full:'VakıfBank',           icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'YKBNK', name:'YKBNK', full:'Yapı Kredi',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
+    ]
   }
 ];
 
@@ -4418,7 +4454,7 @@ function _adLoadSymbolsFromFb(){
     });
     if(!added) return;
     // symConfig → AD_SIM + MARKET_GROUPS senkronu (yeni eklenenler market watch'ta da görünsün)
-    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto',stock:'stocks'};
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto',stock:'stocks', bist:'bist'};
     symConfig.forEach(function(s){
       if(!s||!s.active||!s.sym) return;
       if(!AD_SIM[s.sym]){ var bp=(s.priceSource&&AD_SIM[s.priceSource])?AD_SIM[s.priceSource].p:1; AD_SIM[s.sym]={p:bp,v:0.002}; _adPrices[s.sym]=bp; mwPrices[s.sym]={price:bp,prev:bp,chg:0}; }
@@ -4603,7 +4639,7 @@ function saveSymbolMgr() {
       _adPrices[s.sym]=bp;
       mwPrices[s.sym]={price:bp,prev:bp,chg:0};
     }
-    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks'};
+    var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId=catMap[s.category]||'crypto';
     var grp=MARKET_GROUPS.find(function(g){return g.id===grpId;})||MARKET_GROUPS[0];
     if(!grp.items.find(function(it){return it.sym===s.sym;})){
@@ -4638,7 +4674,7 @@ function saveSymbolMgr() {
       mwPrices[s.sym] = {price: bp, prev: bp, chg: 0};
     }
     // MARKET_GROUPS'a ekle
-    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks'};
+    var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks', bist:'bist'};
     var grpId = catMap[s.category] || 'crypto';
     var grp = MARKET_GROUPS.find(function(g){ return g.id === grpId; }) || MARKET_GROUPS[0];
     if(!grp.items.find(function(it){ return it.sym === s.sym; })) {
@@ -9239,7 +9275,7 @@ var AD_SIM={
   if(typeof symConfig !== 'undefined' && Array.isArray(symConfig)) {
     symConfig.forEach(function(s) {
       if(!s.active) return;
-      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks'};
+      var catMap={commodity:'commodity',index:'indices',indices:'indices',forex:'forex',crypto:'crypto', stock:'stocks', bist:'bist'};
       var grp=MARKET_GROUPS.find(function(g){return g.id===(catMap[s.category]||'crypto');})||MARKET_GROUPS[0];
       if(!grp.items.find(function(it){return it.sym===s.sym;})){
         var item={sym:s.sym,name:s.label||s.sym,full:'',icon:'',spread:s.spread||0.1,decimals:parseInt(s.decimals)||2};
