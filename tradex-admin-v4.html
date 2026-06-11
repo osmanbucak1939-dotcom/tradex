@@ -8211,6 +8211,21 @@ function listBackups() {
 function loginSuccess(staff){
   _currentStaff=staff;
   try{localStorage.setItem('tx_admin_user',JSON.stringify(staff));}catch(e){}
+  // Atama/yetki güncel kalsın: Firebase'deki personel kaydını çekip _currentStaff'ı tazele
+  setTimeout(function(){
+    try{
+      fbLoadStaff(function(list){
+        if(!list || !list.length || !_currentStaff) return;
+        var fresh = list.find(function(s){ return s.id===_currentStaff.id || (s.email && s.email===_currentStaff.email); });
+        if(fresh){
+          _currentStaff = fresh;
+          try{ localStorage.setItem('tx_admin_user', JSON.stringify(fresh)); }catch(e){}
+          if(typeof applyRoleUI==='function') try{ applyRoleUI(); }catch(e){}
+          if(typeof renderAccTable==='function') try{ window._accResortPending=true; renderAccTable(); }catch(e){}
+        }
+      });
+    }catch(e){}
+  }, 2500);
   var ov=document.getElementById('adminLoginOverlay');
   var app=document.getElementById('adminApp');
   if(ov)ov.style.display='none';
@@ -9229,6 +9244,24 @@ function saveStaffPass(id) {
 }
 function deleteStaff(id){if(!confirm('Bu personeli silmek istediğinizden emin misiniz?'))return;_staffList=_staffList.filter(function(s){return s.id!==id;});fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Silindi','Personel kaldırıldı','info');}
 function openAssignModal(staffId){_assignStaffId=staffId;var modal=document.getElementById('assignModal');if(modal){modal.style.display='flex';renderAssignList();}}
+// Checkbox değişince hesabı personele ata / atamayı kaldır (EKSİKTİ — atama bu yüzden kaydedilmiyordu)
+function toggleAssign(el){
+  var staff=_staffList.find(function(s){return s.id===_assignStaffId;});
+  if(!staff) return;
+  if(!Array.isArray(staff.assignedAccounts)) staff.assignedAccounts=[];
+  var id=String(el.dataset.id);
+  var ix=staff.assignedAccounts.map(String).indexOf(id);
+  if(el.checked){ if(ix<0) staff.assignedAccounts.push(id); }
+  else { if(ix>=0) staff.assignedAccounts.splice(ix,1); }
+  fbSaveStaff(_staffList);
+  renderStaffTable();   // "Atanan" sayacı güncellensin
+  // Atanan personel şu an giriş yapmışsa kendi görünümü de anında güncellensin
+  if(_currentStaff && _currentStaff.id===staff.id){
+    _currentStaff.assignedAccounts = staff.assignedAccounts.slice();
+    try{ localStorage.setItem('tx_admin_user', JSON.stringify(_currentStaff)); }catch(e){}
+    if(typeof renderAccTable==='function') try{ window._accResortPending=true; renderAccTable(); }catch(e){}
+  }
+}
 function renderAssignList(){
   var body=document.getElementById('assignBody');if(!body)return;
   var staff=_staffList.find(function(s){return s.id===_assignStaffId;});
