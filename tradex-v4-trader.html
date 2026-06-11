@@ -2466,6 +2466,10 @@ function _lwPriceFormat(sym) {
 /* ── Binance REST klines çek ─────────────────────── */
 // Köprüden beslenen endeksler (Yahoo) — grafik geçmişi de köprünün /klines proxy'sinden gelir.
 var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY'];
+// BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
+var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
+  'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
+  'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF'];
 function lwLoadIndexKlines(sym, interval, cb) {
   var base = (typeof TX_BRIDGE_URL!=='undefined' ? TX_BRIDGE_URL : '')
                .replace(/^wss:/i,'https:').replace(/^ws:/i,'http:').replace(/\/+$/,'');
@@ -2512,8 +2516,8 @@ function lwLoadKlines(sym, interval, cb) {
       });
       return;
     }
-    // Endeksler — köprünün /klines (Yahoo) proxy'sinden
-    if(TX_INDEX_SYMS.indexOf(sym) !== -1){ lwLoadIndexKlines(sym, interval, cb); return; }
+    // Endeksler ve BIST — köprünün /klines (Yahoo) proxy'sinden
+    if(TX_INDEX_SYMS.indexOf(sym) !== -1 || TX_BIST_SYMS.indexOf(sym) !== -1){ lwLoadIndexKlines(sym, interval, cb); return; }
     // Forex/emtia/endeks — Twelve Data REST klines
     lwLoadTwelveDataKlines(sym, interval, cb);
     return;
@@ -4546,6 +4550,41 @@ var MARKET_GROUPS = [
   {
     id:'stocks', label:'HİSSELER', open:false,
     items:[]   // Hisseler admin'de category:'stock' ile eklenince symConfig'ten buraya akar
+  },
+  {
+    id:'bist', label:'BİST', open:false,
+    items:[
+      {sym:'AEFES', name:'AEFES', full:'Anadolu Efes',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKBNK', name:'AKBNK', full:'Akbank',              icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ASELS', name:'ASELS', full:'Aselsan',             icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BIMAS', name:'BIMAS', full:'BİM Mağazalar',       icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'EKGYO', name:'EKGYO', full:'Emlak Konut GYO',     icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'ENKAI', name:'ENKAI', full:'Enka İnşaat',         icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EREGL', name:'EREGL', full:'Ereğli Demir Çelik',  icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'FROTO', name:'FROTO', full:'Ford Otosan',         icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'GARAN', name:'GARAN', full:'Garanti BBVA',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GUBRF', name:'GUBRF', full:'Gübre Fabrikaları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'ISCTR', name:'ISCTR', full:'Türkiye İş Bankası',  icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'KCHOL', name:'KCHOL', full:'Koç Holding',         icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'KOZAL', name:'KOZAL', full:'Koza Altın',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KRDMD', name:'KRDMD', full:'Kardemir (D)',        icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'MGROS', name:'MGROS', full:'Migros',              icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'PETKM', name:'PETKM', full:'Petkim',              icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SAHOL', name:'SAHOL', full:'Sabancı Holding',     icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SASA',  name:'SASA',  full:'SASA Polyester',      icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SISE',  name:'SISE',  full:'Şişecam',             icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'TAVHL', name:'TAVHL', full:'TAV Havalimanları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TCELL', name:'TCELL', full:'Turkcell',            icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'THYAO', name:'THYAO', full:'Türk Hava Yolları',   icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TOASO', name:'TOASO', full:'Tofaş',               icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TTKOM', name:'TTKOM', full:'Türk Telekom',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TUPRS', name:'TUPRS', full:'Tüpraş',              icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'VAKBN', name:'VAKBN', full:'VakıfBank',           icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'YKBNK', name:'YKBNK', full:'Yapı Kredi',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
+    ]
   }
 ];
 
@@ -4624,7 +4663,7 @@ function applySymConfig() {
   const active = symConfig.filter(function(s){ return s.active && TX_OBSOLETE.indexOf(s.sym)===-1; });
   var activeSyms = active.map(function(s){ return s.sym; });
 
-  var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks'};
+  var catMap = {commodity:'commodity', index:'indices', indices:'indices', forex:'forex', crypto:'crypto', stock:'stocks', bist:'bist'};
 
   // Sadece spread/label güncelle — MARKET_GROUPS ikonları ve yapısı korunur
   active.forEach(function(s) {
