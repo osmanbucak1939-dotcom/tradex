@@ -2015,6 +2015,7 @@ console.log('Firebase bağlandı ✓');
         <button class="mgr-btn" id="scf-commodity" onclick="filterSymCat('commodity')" style="font-size:10px;padding:4px 12px;">🏅 Emtia</button>
         <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;">📊 Endeks</button>
         <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;">📈 Hisse</button>
+        <button class="mgr-btn" id="scf-bist"      onclick="filterSymCat('bist')"      style="font-size:10px;padding:4px 12px;">🇹🇷 BİST</button>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <button class="mgr-btn" onclick="txImportMarketGroups()" style="font-size:11px;padding:5px 14px;" title="Trader'da olup admin'de görünmeyen sabit sembolleri (BRENT, NAT GAS, endeksler vb.) symConfig'e ekler">⬇ Eksikleri içe aktar</button>
           <button class="mgr-btn success" onclick="openAddSymModal()" style="font-size:11px;padding:5px 14px;">+ Sembol Ekle</button>
@@ -4481,13 +4482,14 @@ function txImportMarketGroups(){
   if(typeof MARKET_GROUPS==='undefined' || !Array.isArray(MARKET_GROUPS)){
     _txTdToast('Hata','MARKET_GROUPS bulunamadı','danger'); return;
   }
-  var grpCat={crypto:'crypto', forex:'forex', commodity:'commodity', indices:'index', stocks:'stock'};
+  var grpCat={crypto:'crypto', forex:'forex', commodity:'commodity', indices:'index', stocks:'stock', bist:'bist'};
   var have={}; symConfig.forEach(function(s){ have[s.sym]=true; });
   var added=0, names=[];
   MARKET_GROUPS.forEach(function(g){
     var cat=grpCat[g.id]||'crypto';
     (g.items||[]).forEach(function(it){
       if(!it || !it.sym || have[it.sym] || AD_HIDDEN.indexOf(it.sym)!==-1) return;
+      if(typeof _txDeleted!=='undefined' && _txDeleted.indexOf(it.sym)!==-1) return;   // kullanıcı silmiş — geri ekleme
       symConfig.push({
         sym: it.sym,
         label: it.full || it.name || it.sym,
@@ -7368,7 +7370,7 @@ function pcPopulateSym() {
     sel.innerHTML = '<option value="">Sembol yok</option>';
     return;
   }
-  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks'};
+  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '';
   // Kategorisiz grup: tüm sembolleri önce kategoriye göre ayır
   var groups = {crypto:[], forex:[], commodity:[], index:[], other:[]};
@@ -7400,7 +7402,7 @@ function pcInit() {
     if(!_s.length && typeof AD_SIM !== 'undefined') {
       _s = Object.keys(AD_SIM).map(function(k){ return {sym:k, label:k, category:'crypto', active:true}; });
     }
-    var catLabels = {crypto:'Kripto',forex:'Forex',commodity:'Emtia',index:'Endeks'};
+    var catLabels = {crypto:'Kripto',forex:'Forex',commodity:'Emtia',index:'Endeks',stock:'Hisse',bist:'BİST'};
     var groups = {};
     _s.forEach(function(s){
       if(s.active===false) return;
@@ -8947,7 +8949,7 @@ function renderSymSection(){
     return;
   }
 
-  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks'};
+  var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '<div class="ad-sect"><div class="ad-sect-title">SEMBOL LİSTESİ ('+allSyms.length+')</div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">'+
     '<thead><tr style="background:#181818;color:#a0a0a0;">'+
