@@ -2993,7 +2993,10 @@ function generateDemoCandles(sym) {
   _chartSym = sym;
   _chartOffset = -8; // sağda boşluk bırak
   drawChart();
-  setInterval(function() {
+  // ⚠️ SIZINTI DÜZELTMESİ (2026-06-12): her sembol değişiminde yeni interval yaratılıyor,
+  // eskisi temizlenmiyordu → onlarca paralel canvas çizimi birikip ekranı yavaşlatıyordu.
+  if(window._adChartSimTimer){ clearInterval(window._adChartSimTimer); window._adChartSimTimer=null; }
+  window._adChartSimTimer = setInterval(function() {
     if(_chartCandles.length === 0) return;
     var last = _chartCandles[_chartCandles.length-1];
     var cur = mwPrices[_chartSym] && mwPrices[_chartSym].price ? mwPrices[_chartSym].price : last.close;
@@ -3017,7 +3020,7 @@ function generateDemoCandles(sym) {
       last.high  = Math.max(last.high, cur);
       last.low   = Math.min(last.low, cur);
     }
-    drawChart();
+    if(!document.hidden) drawChart(); // arka plandayken çizim yapma (veri güncel kalır)
   }, 1000);
 }
 
@@ -3263,13 +3266,15 @@ function startLiveFeed() {
       var prev=cur; var chg=((np-cfg.p)/cfg.p*100);
       mwPrices[sym]={price:np,prev:prev,chg:chg};
       prices[sym]={price:np,chg:chg,bid:np,ask:np*(1+0.0001)};
-      updateMwRow(sym,np,prev);
-      updateTopSym(sym,np,chg);
-      if(sym===curSym){updateOrderTicket(np);}
+      if(!document.hidden){
+        updateMwRow(sym,np,prev);
+        updateTopSym(sym,np,chg);
+        if(sym===curSym){updateOrderTicket(np);}
+      }
       checkAlarms(sym,np);
     }
     // updatePositions() kaldırıldı (2026-04-20, 5. pass) — fonksiyon silindi, admin'de DOM yoktu.
-    buildTicker();
+    if(!document.hidden) buildTicker();
   }, 800);
 
   setInterval(function() {
@@ -5123,7 +5128,8 @@ function adRenderTab(tab) {
     var _secName = _hp('accounts.edit') ?
           '<div class="ad-section-title" style="margin-top:20px;">İsim Güncelle</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div><label class="ad-label">Ad Soyad</label><input class="ad-input" id="ad_nm" value="'+a.name+'"></div>' +
+            '<div><label class="ad-label">Ad</label><input class="ad-input" id="ad_nm" value="'+(a.name||'')+'"></div>' +
+            '<div><label class="ad-label">Soyad</label><input class="ad-input" id="ad_snm" value="'+(a.surname||'')+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adUpdateName()">Güncelle</button>' +
           '</div>' : '';
     var _secPass = _hp('accounts.password') ?
@@ -5542,11 +5548,14 @@ function adSaveSettings() {
 function adUpdateName() {
   if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
-  var n = ((document.getElementById('ad_nm')||{}).value||'').trim();
+  var n  = ((document.getElementById('ad_nm')||{}).value||'').trim();
+  var sn = ((document.getElementById('ad_snm')||{}).value||'').trim();
   if(!n){ showToast('Hata','İsim boş olamaz!'); return; }
-  a.name=n; saveAccounts(); renderAccTable();
-  var el=document.getElementById('adName'); if(el) el.textContent=n;
-  showToast('İsim Güncellendi ✓',n);
+  var _before = {name:a.name, surname:a.surname};
+  a.name=n; a.surname=sn; saveAccounts(); renderAccTable();
+  var el=document.getElementById('adName'); if(el) el.textContent=n+(sn?' '+sn:'');
+  if(typeof adAudit==='function') adAudit('accounts.rename', String(a.id), _before, {name:n, surname:sn});
+  showToast('İsim Güncellendi ✓', n+(sn?' '+sn:''));
 }
 
 function adToggleStatus() {
@@ -8587,8 +8596,8 @@ function updateMarginCallPanel() {
   mcBody.innerHTML = html;
 }
 
-// 1 saniyede bir margin call güncelle
-setInterval(updateMarginCallPanel, 1000);
+// 1 saniyede bir margin call güncelle (arka plandayken atla)
+setInterval(function(){ if(!document.hidden) updateMarginCallPanel(); }, 1000);
 // ─────────────────────────────────────────────────
 
 function loadAllPositionsAndUpdate() {
@@ -9480,6 +9489,7 @@ var AD_SIM={
         // Açık işlem sayısı
       });
     }
+    if(document.hidden) return;
     if(document.getElementById('adBadgeEq')) adRefreshBadges();
     if(document.getElementById('adMTF') && document.getElementById('adMTF').style.display!=='none') adMTFUpdatePrice();
     },1500);})();
@@ -9487,6 +9497,7 @@ var AD_SIM={
 // Hesaplar tablosu - 5 saniyede bir Firebase'den tazele + yeniden render
 (function(){
   setInterval(function(){
+    if(document.hidden) return; // arka plandayken Firebase'i yoklama
     var secAcc=document.getElementById('sec-accounts');
     if(!secAcc||secAcc.style.display==='none') return;
     // Firebase'den güncel account verilerini çek
