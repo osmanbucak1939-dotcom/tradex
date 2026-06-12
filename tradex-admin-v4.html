@@ -3132,7 +3132,7 @@ function delPort(id) { portfolio = portfolio.filter(p=>p.id!==id); save(); rende
 function updateAccount() {
   // 2026-04-20, 5. pass: top-level 'positions' array'ine fallback kaldırıldı. Admin canonical akışı sadece _adPositions kullanır.
 
-  var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return x.id===_adAccId;}):null;
+  var _accObj=(typeof accounts!=='undefined'&&_adAccId)?accounts.find(function(x){return String(x.id)===String(_adAccId);}):null;
   var _defLev=typeof leverage!=='undefined'?leverage:((typeof settings!=='undefined'&&settings&&settings.leverage)?settings.leverage:100);
   var _posArr=(typeof _adPositions!=='undefined'&&Array.isArray(_adPositions))?_adPositions:[];
   var _ua=adCalcStats(_accObj||{balance:balance,bonus:0,leverage:_defLev},_posArr);
@@ -4886,7 +4886,7 @@ function adTab(tab, el) {
 }
 
 function adRenderTab(tab) {
-  var a = accounts.find(function(x){ return x.id === _adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   var cnt = document.getElementById('adContent');
   if(!cnt) return;
@@ -4933,7 +4933,7 @@ function adRenderTab(tab) {
       '</div>';
 
   } else if(tab === 'trades') {
-    var a2 = accounts.find(function(x){ return x.id === _adAccId; }) || {};
+    var a2 = accounts.find(function(x){ return String(x.id)===String(_adAccId); }) || {};
     var syms = Object.keys(typeof AD_SIM !== 'undefined' ? AD_SIM : {});
     if(!syms.length) syms = ['EURUSD','GBPUSD','USDJPY','XAUUSD','BTCUSDT','ETHUSDT','US30','NAS100','GER40'];
     var symopts = syms.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
@@ -5169,7 +5169,7 @@ function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);widt
 
 function adDeposit() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.deposit')){showAdminToast('Yetkisiz','Para yatırma yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_dep_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
 
@@ -5224,7 +5224,7 @@ function adDeposit() {
 
 function adWithdraw() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.withdraw')){showAdminToast('Yetkisiz','Para çekme yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var amt = parseFloat((document.getElementById('ad_wd_amt')||{}).value);
   if(!amt||amt<=0){ showToast('Hata','Geçerli miktar girin!'); return; }
   var _curBal = getAccBal(a.id);
@@ -5268,7 +5268,7 @@ function adWithdraw() {
 
 
 function adRenderFinlog() {
-  var a = accounts.find(function(x){ return x.id === _adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   var panel = document.getElementById('adPanelFinlog');
   if(!panel) return;
@@ -5342,7 +5342,7 @@ function adOpenFinlogForm(type, editIdx) {
   var form = document.getElementById('adFinlogForm');
   if(!form) return;
   var isEdit = editIdx !== undefined && editIdx !== null;
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   var log = (isEdit && a) ? (getAccFinlog(a.id)[editIdx]||null) : null;
   var TYPE_LABELS = {deposit:'Para Yatır', withdraw:'Para Çek', bonus_in:'Bonus Ekle', bonus_out:'Bonus Çıkar'};
   var label = TYPE_LABELS[type] || type;
@@ -5365,7 +5365,7 @@ function adOpenFinlogForm(type, editIdx) {
 }
 
 function adEditFinlog(idx) {
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   var _efl = getAccFinlog(a.id);
   if(!a||!_efl||!_efl[idx]) return;
   adOpenFinlogForm(_efl[idx].type, idx);
@@ -5378,7 +5378,7 @@ function adEditFinlog(idx) {
 // ── users/{id} sync helper ──
 function adSaveFinlog() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   var type    = (document.getElementById('afl_type')||{}).value;
   var amt     = parseFloat((document.getElementById('afl_amt')||{}).value)||0;
@@ -5458,7 +5458,7 @@ function adSaveFinlog() {
 function adDeleteFinlog(idx) {
   if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
   if(!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   // ⚠️ CANONICAL: canon'dan oku
   var fl   = getAccFinlog(a.id).slice();
@@ -5488,7 +5488,7 @@ function adDeleteFinlog(idx) {
 
 function adSaveSettings() {
   if(typeof hasPerm==='function'&&!hasPerm('settings.edit')){showAdminToast('Yetkisiz','Ayar değiştirme yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var sg  = (document.getElementById('ad_sg')||{}).value||'standard';
   var lev = parseInt((document.getElementById('ad_lev')||{}).value)||100;
   var ml  = parseFloat((document.getElementById('ad_ml')||{}).value)||100;
@@ -5513,7 +5513,7 @@ function adSaveSettings() {
 }
 
 function adUpdateName() {
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var n = ((document.getElementById('ad_nm')||{}).value||'').trim();
   if(!n){ showToast('Hata','İsim boş olamaz!'); return; }
   a.name=n; saveAccounts(); renderAccTable();
@@ -5523,7 +5523,7 @@ function adUpdateName() {
 
 function adToggleStatus() {
   if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   a.active=!a.active; saveAccounts(); renderAccTable(); openAccDetail(_adAccId);
 }
 
@@ -7911,7 +7911,7 @@ function symUnpin(sym){
 }
 
 function adSaveViewerPassword(){
-  var a=accounts.find(function(x){return x.id===_adAccId;}); if(!a) return;
+  var a=accounts.find(function(x){return String(x.id)===String(_adAccId);}); if(!a) return;
   var vp=(document.getElementById('ad_vpw')||{}).value||'';
   vp=vp.trim();
   if(vp && vp===a.password){showAdminToast('Hata','İzleyici şifresi ana şifre ile aynı olamaz!','danger');return;}
@@ -7922,7 +7922,7 @@ function adSaveViewerPassword(){
 
 function adChangePassword() {
   if(typeof hasPerm==='function'&&!hasPerm('accounts.password')){showAdminToast('Yetkisiz','Şifre değiştirme yetkiniz yok','danger');return;}
-  var a = accounts.find(function(x){ return x.id===_adAccId; }); if(!a) return;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var pw1 = (document.getElementById('ad_pw1')||{}).value||'';
   var pw2 = (document.getElementById('ad_pw2')||{}).value||'';
   if(!pw1) { showToast('Hata','Yeni şifre boş olamaz!'); return; }
@@ -9120,7 +9120,7 @@ function addStaff(){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:16px;">'
     +'<button class="mgr-btn success" onclick="saveNewStaff()" style="flex:1;">Kaydet</button>'
-    +'<button class="mgr-btn" onclick="document.getElementById("addStaffModal").style.display="none"" style="flex:1;">İptal</button>'
+    +'<button class="mgr-btn" onclick="document.getElementById(\'addStaffModal\').style.display=\'none\'" style="flex:1;">İptal</button>'
     +'</div></div>';
   m.style.display='flex';
 }
@@ -9287,7 +9287,7 @@ function renderAssignList(){
 }
 
 function openAccDetail(id){
-  var a=accounts.find(function(x){return x.id===id||x.id===String(id);});
+  var a=accounts.find(function(x){return String(x.id)===String(id);});
   if(!a)return;
   _adAccId=id;
   var ov=document.getElementById('accDetailOverlay');if(!ov)return;
@@ -9613,7 +9613,7 @@ function adDeviceIcon(d){
 
 // ── Badge güncelle — her zaman güncel fiyatla hesapla ─────────
 function adRefreshBadges(){
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
 
   // adCalcStats her zaman _FX.prices üzerinden hesaplar
@@ -9667,7 +9667,7 @@ function adRefreshBadges(){
 
 // ── Hesap verilerini Firebase'den dinle, render et ────────────
 function adLoadAndRender(){
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
 
   // Eski listener'ı temizle
@@ -9876,7 +9876,7 @@ function adRenderHistoryTable(){
 function adClosePos(btn){
   if(typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
   var id  = parseInt(btn.dataset.id||btn.getAttribute('data-id'));
-  var a   = accounts.find(function(x){ return x.id===_adAccId; });
+  var a   = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   var idx = _adPositions.findIndex(function(p){ return p.id===id; });
   if(idx<0) return;
@@ -9980,7 +9980,7 @@ function adSaveEdit(){
   if(odt && odt.value){ pos.openDate = new Date(odt.value).toISOString(); pos.time = pos.openDate; }
   var dev = (document.getElementById('em_device')||{}).value;
   if(dev) pos.openDevice = dev;
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(a) pos.cost = (pos.openPrice * pos.qty) / parseFloat((a&&a.leverage)||100);
   adSaveUserTrades();
   adRenderOpenTable();
@@ -9995,7 +9995,7 @@ function adDeletePos(){
   if(idx<0) return;
   if(!confirm('Pozisyonu silmek istediğinizden emin misiniz?')) return;
   _adPositions.splice(idx, 1);
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   // ⚠️ a.positions'a DOKUNMA
   if(a && typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
   adSaveUserTrades();
@@ -10009,7 +10009,7 @@ function adDeletePos(){
 function adOpenTrade(btn){
   if(typeof hasPerm==='function'&&!hasPerm('trades.open')){showAdminToast('Yetkisiz','Pozisyon açma yetkiniz yok','danger');return;}
   var side  = btn.dataset.s || btn.getAttribute('data-s');
-  var a     = accounts.find(function(x){ return x.id===_adAccId; });
+  var a     = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   // HTML input ID'leri: ad_tsym, ad_tside, ad_tlot, ad_tprice, ad_tsl, ad_ttp
   var sym   = (document.getElementById('ad_tsym')||document.getElementById('nt_sym')||{}).value || 'BTCUSDT';
@@ -10065,7 +10065,7 @@ function adOpenTrade(btn){
 
 // ── Trades kaydet — SADECE users/{id}, broker/accounts'a DOKUNMAZ ─────
 function adSaveUserTrades(){
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   // ⚠️ balance canonical'dan — a.balance GÜVENİLMEZ
   var payload = {
@@ -10155,7 +10155,7 @@ function adReopenHistory(btn){
   var hidx = _adFindHistIdx(btn);
   var h = _adHistory[hidx];
   if(!h) return;
-  var a = accounts.find(function(x){ return x.id===_adAccId; });
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' pozisyonu YENİDEN AÇILSIN mı?\n\nKapanışta bakiyeye eklenen K/Z geri alınır, pozisyon açık (aktif) duruma döner.')) return;
 
