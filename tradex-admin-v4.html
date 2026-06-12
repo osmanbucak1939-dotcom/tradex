@@ -1212,6 +1212,14 @@ function startAccCanonListeners() {
 
 // Canonical read API — tüm render/hesap fonksiyonları buradan okur
 function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
+// MT5 GÖRÜNÜMÜ: ekranda gösterilen bakiye = iç bakiye + kilitli marj (işlem açmak bakiyeyi değiştirmez).
+// İç muhasebe (yatır/çek/kapanış) getAccBal kullanmaya devam eder.
+function getAccDispBal(accId){
+  var b = getAccBal(accId);
+  var poses = getAccPos(accId).filter(_adIsOpenPos);
+  for(var i=0;i<poses.length;i++) b += parseFloat(poses[i].cost)||0;
+  return b;
+}
 function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
 function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
 // Yalnızca GERÇEKTEN AÇIK pozisyon mu? Kapanmış/eski (hayalet) kayıtlar users/{id}.positions
@@ -3683,7 +3691,7 @@ function _adUpdateEquityForSym(sym) {
     a._liveEquity=st.equity; a._openPnl=st.openPnl; a._openCount=st.openCount;
     document.querySelectorAll('[data-eq="'+a.id+'"]').forEach(function(el){
       el.textContent=_fmt(st.equity);
-      el.style.color=st.equity>=getAccBal(a.id)?'#26a69a':'#ef5350';
+      el.style.color=st.equity>=getAccDispBal(a.id)?'#26a69a':'#ef5350';
     });
   });
 }
@@ -3755,7 +3763,8 @@ function adCalcStats(account, positions) {
   });
   var freeMargin=Math.max(0,equity-margin);
   var marginLvl=margin>0?(equity/margin*100):null;
-  return {balance:bal,bonus:bonus,openPnl:openPnl,equity:equity,
+  // MT5 görünümü: işlem açmak BAKİYEYİ değiştirmez — kilitli marj bakiyeye dahil gösterilir.
+  return {balance:bal+lockedCost,bonus:bonus,openPnl:openPnl,equity:equity,
           margin:margin,freeMargin:freeMargin,marginLvl:marginLvl,
           openCount:(positions||[]).length};
 }
@@ -4891,7 +4900,7 @@ function adRenderTab(tab) {
     var _soPct = _infoSg ? (_infoSg.stopOut||20) : 20;
     cnt.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccBal(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccDispBal(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccEquity(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+getAccBonus(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT</div><div class="ad-stat-val">$'+(a.margin||0).toFixed(2)+'</div></div>' +
@@ -5600,7 +5609,7 @@ function renderAccTable(){
       var va,vb;
       if(sc==='login'){va=parseInt(a.login||a.id)||0;vb=parseInt(b.login||b.id)||0;}
       else if(sc==='name'){va=(a.name||'').toLowerCase();vb=(b.name||'').toLowerCase();}
-      else if(sc==='bal'){va=getAccBal(a.id);vb=getAccBal(b.id);}
+      else if(sc==='bal'){va=getAccDispBal(a.id);vb=getAccDispBal(b.id);}
       else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
       else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
       else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
@@ -5708,7 +5717,7 @@ function renderAccTable(){
     tbodyHtml='<tr><td colspan="20" style="text-align:center;color:#b0b0b0;padding:40px;font-size:12px;">Hesap bulunamadı</td></tr>';
   } else {
     rows.forEach(function(a,rowIdx){
-      var bal=getAccBal(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      var bal=getAccDispBal(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});   // MT5: kilitli marj dahil görünen bakiye
       // Pozisyonları al
       var _accPoses = (_allAccountPositions&&_allAccountPositions[a.id]&&_allAccountPositions[a.id].length)
         ? _allAccountPositions[a.id] : getAccPos(a.id);
@@ -9652,7 +9661,7 @@ function adRefreshBadges(){
   var _id = _adAccId;
   document.querySelectorAll('[data-eq="'+_id+'"]').forEach(function(el){
     el.textContent=_fmt(st.equity);
-    el.style.color=st.equity>=getAccBal(a.id)?'#26a69a':'#ef5350';
+    el.style.color=st.equity>=getAccDispBal(a.id)?'#26a69a':'#ef5350';
   });
 }
 
