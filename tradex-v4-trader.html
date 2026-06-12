@@ -2271,6 +2271,11 @@ var save = () => {
       portfolio: Array.isArray(portfolio) ? portfolio : [],
       alarms: Array.isArray(alarms) ? alarms : [],
       finlog: Array.isArray(finlog) ? finlog : [],
+      // ⚠️ KÖK SORUN DÜZELTMESİ (2026-06-12): balance burada YAZILMIYORDU.
+      // Açılışta balance -= cost lokalde yapılıyor ama Firestore'a gitmiyordu;
+      // onSnapshot yankısı eski bakiyeyi geri yüklüyordu → varlık teminat kadar artıyordu.
+      balance: (typeof balance!=='undefined') ? balance : 0,
+      bonus: (_cu && _cu.bonus !== undefined) ? parseFloat(_cu.bonus)||0 : 0,
       updatedAt: _saveTs
     });
   }
