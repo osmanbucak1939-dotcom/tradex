@@ -4979,10 +4979,10 @@ function adRenderTab(tab) {
       '<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #222;">' +
         '<button data-subtab="open" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--accent);border-bottom:2px solid var(--accent);font-weight:700;font-family:var(--mono);">AÇIK</button>' +
         '<button data-subtab="closed" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#c0c0c0;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">KAPALI</button>' +
-        '<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#c0c0c0;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>' +
+        ((typeof hasPerm!=='function'||hasPerm('finance.view'))?'<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#c0c0c0;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>':'') +
         '<div style="flex:1;"></div>' +
-        '<button id="adBtnNewTrade" class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>' +
-        '<button id="adBtnCloseAll" class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>' +
+        ((typeof hasPerm!=='function'||hasPerm('trades.open'))?'<button id="adBtnNewTrade" class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>':'') +
+        ((typeof hasPerm!=='function'||hasPerm('trades.close'))?'<button id="adBtnCloseAll" class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>':'') +
       '</div>' +
 
       // ── Manuel işlem formu ──
@@ -5100,9 +5100,8 @@ function adRenderTab(tab) {
     }, 50);
     return;
   } else if(tab === 'settings') {
-    cnt.innerHTML =
-      '<div class="ad-grid2" style="gap:20px;">' +
-        '<div>' +
+    var _hp = function(p){ return typeof hasPerm!=='function' || hasPerm(p); };
+    var _secSg = _hp('settings.edit') ?
           '<div class="ad-section-title">Grup & Kaldıraç & Marjin</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Trading Grubu</label>' +
@@ -5120,30 +5119,33 @@ function adRenderTab(tab) {
             '</div>' +
             '<div><label class="ad-label">Marjin Seviyesi (%)</label><input class="ad-input" id="ad_ml" type="number" placeholder="100" min="0" value="'+(a.marginLevelPct||100)+'"></div>' +
             '<button class="ad-btn ad-btn-primary" onclick="adSaveSettings()">Kaydet</button>' +
-          '</div>' +
+          '</div>' : '';
+    var _secName = _hp('accounts.edit') ?
           '<div class="ad-section-title" style="margin-top:20px;">İsim Güncelle</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Ad Soyad</label><input class="ad-input" id="ad_nm" value="'+a.name+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adUpdateName()">Güncelle</button>' +
-          '</div>' +
+          '</div>' : '';
+    var _secPass = _hp('accounts.password') ?
           '<div class="ad-section-title" style="margin-top:20px;">Şifre Değiştir</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Yeni Şifre</label><input class="ad-input" id="ad_pw1" type="password" placeholder="Yeni şifre..."></div>' +
             '<div><label class="ad-label">Şifre Tekrar</label><input class="ad-input" id="ad_pw2" type="password" placeholder="Tekrar girin..."></div>' +
             '<button class="ad-btn ad-btn-primary" onclick="adChangePassword()">🔑 Şifreyi Güncelle</button>' +
-          '</div>' +
+          '</div>' : '';
+    var _secViewer = _hp('accounts.edit') ?
           '<div class="ad-section-title" style="margin-top:20px;">İzleyici Şifresi</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div style="font-family:var(--mono);font-size:10px;color:#c0c0c0;margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
             '<div><label class="ad-label">İzleyici Şifresi</label><input class="ad-input" id="ad_vpw" type="text" placeholder="Örn: izle1234" value="'+(a.viewerPassword||'')+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adSaveViewerPassword()">👁 İzleyici Şifresini Kaydet</button>' +
-          '</div>' +
-        '</div>' +
-        '<div>' +
+          '</div>' : '';
+    var _secStatus = _hp('accounts.edit') ?
           '<div class="ad-section-title">Hesap Durumu</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<button class="ad-btn '+(a.active?'ad-btn-danger':'ad-btn-success')+'" onclick="adToggleStatus()">'+(a.active?'⏸ Hesabı Durdur':'▶ Hesabı Aktif Et')+'</button>' +
-          '</div>' +
+          '</div>' : '';
+    var _secDanger = _hp('accounts.delete') ?
           '<div class="ad-section-title" style="margin-top:20px;color:#ef5350;">Tehlikeli Alan</div>' +
           '<div style="background:rgba(239,83,80,0.05);border:1px solid rgba(239,83,80,0.2);border-radius:6px;padding:14px;">' +
             '<p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;">Bu hesabı silmek geri alınamaz.</p>' +
@@ -5155,8 +5157,17 @@ function adRenderTab(tab) {
             '<button class="ad-btn ad-btn-secondary" onclick="adGenDelCode()">Kod Oluştur</button>' +
             '<button class="ad-btn ad-btn-danger" onclick="adDeleteAcc()">🗑 Hesabı Kalıcı Sil</button>' +
             '</div></div>' +
-          '</div>' +
-        '</div>' +
+          '</div>' : '';
+    var _leftCol = _secSg + _secName + _secPass + _secViewer;
+    var _rightCol = _secStatus + _secDanger;
+    if(!_leftCol && !_rightCol){
+      cnt.innerHTML = '<div style="padding:24px;text-align:center;color:#ef5350;font-family:var(--mono);font-size:12px;">Bu bölümde kullanabileceğiniz bir ayar yetkisi yok</div>';
+      return;
+    }
+    cnt.innerHTML =
+      '<div class="ad-grid2" style="gap:20px;">' +
+        '<div>' + _leftCol + '</div>' +
+        '<div>' + _rightCol + '</div>' +
       '</div>';
     setTimeout(function(){
       var sg=document.getElementById('ad_sg'); if(sg) sg.value=a.spreadGroup||'standard';
@@ -5272,6 +5283,10 @@ function adRenderFinlog() {
   if(!a) return;
   var panel = document.getElementById('adPanelFinlog');
   if(!panel) return;
+  if(typeof hasPerm==='function' && !hasPerm('finance.view')){
+    panel.innerHTML='<div style="padding:24px;text-align:center;color:#ef5350;font-family:var(--mono);font-size:12px;">Finans görüntüleme yetkiniz yok</div>';
+    return;
+  }
 
   function _doRender(logs) {
     var TYPE_LABELS = {deposit:'Para Yatır', withdraw:'Para Çek', bonus_in:'Bonus Ekle', bonus_out:'Bonus Çıkar'};
@@ -5297,20 +5312,23 @@ function adRenderFinlog() {
           + '<td style="padding:7px 8px;font-size:11px;color:#a0a0a0;white-space:nowrap;">'+(log.date?fmtDate(log.date):'—')+'</td>'
           + '<td style="padding:7px 8px;font-size:11px;color:#c0c0c0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
           + '<td style="padding:7px 8px;white-space:nowrap;">'
-            + '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:#1a1a1a;border:1px solid #333;color:#aaa;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;margin-right:4px;">&#9998;</button>'
-            + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid #ef5350;color:#ef5350;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;">&#10005;</button>'
+            + ((typeof hasPerm!=='function'||hasPerm('finance.deposit')||hasPerm('finance.withdraw')||hasPerm('finance.bonus'))
+              ? '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:#1a1a1a;border:1px solid #333;color:#aaa;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;margin-right:4px;">&#9998;</button>'
+                + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid #ef5350;color:#ef5350;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;">&#10005;</button>'
+              : '')
           + '</td>'
           + '</tr>';
       });
     }
 
     var btnStyle = function(bg,bc,col){ return 'background:'+bg+';border:1px solid '+bc+';color:'+col+';padding:5px 14px;border-radius:4px;cursor:pointer;font-size:11px;font-family:var(--mono);'; };
+    var _hp=function(p){return typeof hasPerm!=='function'||hasPerm(p);};
     panel.innerHTML =
       '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">'
-      + '<button data-ftype="deposit"   onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#0d2e2b','#26a69a','#26a69a')+'">+ Para Yatır</button>'
-      + '<button data-ftype="withdraw"  onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e0d0d','#ef5350','#ef5350')+'">- Para Çek</button>'
-      + '<button data-ftype="bonus_in"  onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e2800','#f5c518','#f5c518')+'">+ Bonus Ekle</button>'
-      + '<button data-ftype="bonus_out" onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e1d00','#f5a623','#f5a623')+'">- Bonus Çıkar</button>'
+      + (_hp('finance.deposit') ? '<button data-ftype="deposit"   onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#0d2e2b','#26a69a','#26a69a')+'">+ Para Yatır</button>' : '')
+      + (_hp('finance.withdraw')? '<button data-ftype="withdraw"  onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e0d0d','#ef5350','#ef5350')+'">- Para Çek</button>' : '')
+      + (_hp('finance.bonus')   ? '<button data-ftype="bonus_in"  onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e2800','#f5c518','#f5c518')+'">+ Bonus Ekle</button>' : '')
+      + (_hp('finance.bonus')   ? '<button data-ftype="bonus_out" onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e1d00','#f5a623','#f5a623')+'">- Bonus Çıkar</button>' : '')
       + '</div>'
       + '<div id="adFinlogForm" style="display:none;background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:14px;margin-bottom:14px;"></div>'
       + '<div style="overflow-x:auto;">'
@@ -5339,6 +5357,12 @@ function adRenderFinlog() {
 }
 
 function adOpenFinlogForm(type, editIdx) {
+  if(typeof hasPerm==='function'){
+    var _need = (type==='deposit') ? 'finance.deposit'
+              : (type==='withdraw') ? 'finance.withdraw'
+              : 'finance.bonus';
+    if(!hasPerm(_need)){ showAdminToast('Yetkisiz','Bu finans işlemi için yetkiniz yok','danger'); return; }
+  }
   var form = document.getElementById('adFinlogForm');
   if(!form) return;
   var isEdit = editIdx !== undefined && editIdx !== null;
@@ -5365,6 +5389,9 @@ function adOpenFinlogForm(type, editIdx) {
 }
 
 function adEditFinlog(idx) {
+  if(typeof hasPerm==='function' && !(hasPerm('finance.deposit')||hasPerm('finance.withdraw')||hasPerm('finance.bonus'))){
+    showAdminToast('Yetkisiz','Finans kaydı düzenleme yetkiniz yok','danger'); return;
+  }
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   var _efl = getAccFinlog(a.id);
   if(!a||!_efl||!_efl[idx]) return;
@@ -5456,7 +5483,7 @@ function adSaveFinlog() {
 }
 
 function adDeleteFinlog(idx) {
-  if(typeof hasPerm==='function'&&!hasPerm('finance.view')){showAdminToast('Yetkisiz','Finans işlemi yetkiniz yok','danger');return;}
+  if(typeof hasPerm==='function' && !(hasPerm('finance.deposit')||hasPerm('finance.withdraw')||hasPerm('finance.bonus'))){showAdminToast('Yetkisiz','Finans kaydı silme yetkiniz yok','danger');return;}
   if(!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
@@ -5513,6 +5540,7 @@ function adSaveSettings() {
 }
 
 function adUpdateName() {
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var n = ((document.getElementById('ad_nm')||{}).value||'').trim();
   if(!n){ showToast('Hata','İsim boş olamaz!'); return; }
@@ -7911,6 +7939,7 @@ function symUnpin(sym){
 }
 
 function adSaveViewerPassword(){
+  if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a=accounts.find(function(x){return String(x.id)===String(_adAccId);}); if(!a) return;
   var vp=(document.getElementById('ad_vpw')||{}).value||'';
   vp=vp.trim();
@@ -9864,9 +9893,9 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);font-weight:700;color:'+pc+';">'
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
-        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="font-size:10px;padding:2px 6px;margin-right:2px;">⟳</button>'
-        +'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>'
-        +'<button class="ad-btn ad-btn-danger" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>'
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="font-size:10px;padding:2px 6px;margin-right:2px;">⟳</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-btn-danger" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>':'')
       +'</td>'
     +'</tr>';
   }).join('');
@@ -9911,6 +9940,49 @@ function adClosePos(btn){
   adRenderHistoryTable();
   adRefreshBadges();
   showAdminToast('Kapatıldı','#'+String(id).slice(-6)+' '+(pnl>=0?'+':'')+adFp(pnl), pnl>=0?'success':'error');
+}
+
+// ── Tüm pozisyonları kapat ────────────────────────────────────
+// (2026-06-12: buton çağırıyordu ama fonksiyon temizlik geçişinde silinmişti — geri eklendi)
+function adCloseAllPositions(){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
+  if(!a) return;
+  if(!_adPositions.length){ showAdminToast('Bilgi','Açık pozisyon yok','info'); return; }
+  if(!confirm(_adPositions.length+' açık pozisyonun TÜMÜ kapatılsın mı?')) return;
+  var nowIso = new Date().toISOString();
+  var totalPnl = 0, totalCost = 0;
+  _adPositions.forEach(function(pos){
+    var cur = adGetPrice(pos.sym);
+    var cs  = parseFloat(pos.contractSize)||1;
+    var qty = parseFloat(pos.qty)||0;
+    var pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs
+              + (parseFloat(pos.swapTotal)||0);
+    totalPnl  += pnl;
+    totalCost += (pos.cost||0);
+    _adHistory.unshift(Object.assign({}, pos, {
+      closePrice: cur, pnl: pnl,
+      closeTime: nowIso, closeReason:'admin-tumunu-kapat'
+    }));
+  });
+  // Açılışta cost düşüldü → kapanınca cost+pnl iade — canonical balance üzerinden
+  var _newBal = getAccBal(a.id) + totalCost + totalPnl;
+  _adPositions = [];
+  if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(a.id)).set({
+      balance: _newBal,
+      positions: _adPositions,
+      tradeHistory: _adHistory.slice(0, 100),
+      _balanceSource: 'manager',
+      updatedAt: nowIso
+    }, {merge:true}).catch(function(e){ console.warn('adCloseAllPositions:', e); });
+  }
+  if(typeof adAudit==='function') adAudit('trades.closeAll', String(a.id), null, {count:_adHistory.length, totalPnl:totalPnl});
+  adRenderOpenTable();
+  adRenderHistoryTable();
+  adRefreshBadges();
+  showAdminToast('Tümü Kapatıldı', (totalPnl>=0?'+':'')+adFp(totalPnl)+' toplam K/Z', totalPnl>=0?'success':'error');
 }
 
 // ── Pozisyon düzenle ──────────────────────────────────────────
@@ -10082,6 +10154,7 @@ function adSaveUserTrades(){
 
 // ── Geçmiş düzenle ────────────────────────────────────────────
 function adEditHistory(btn){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Geçmiş düzenleme yetkiniz yok','danger');return;}
   var hidx = _adFindHistIdx(btn);
   var h    = _adHistory[hidx];
   if(!h) return;
@@ -10137,6 +10210,7 @@ function adSaveHistEdit(){
 }
 
 function adDeleteHistory(btn){
+  if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Geçmiş silme yetkiniz yok','danger');return;}
   var hidx = _adFindHistIdx(btn);
   if(!confirm('Bu geçmiş kaydı silinsin mi?')) return;
   if(hidx<0 || !_adHistory[hidx]) return;
@@ -10236,6 +10310,9 @@ function adSubmitManualTrade(btn){ adOpenTrade(btn); }
 // adSubTab — sekme değiştir (işlemler/kapanmış/finans)
 function adSubTab(btn){
   var tab = btn.getAttribute('data-subtab');
+  if(tab==='finlog' && typeof hasPerm==='function' && !hasPerm('finance.view')){
+    showAdminToast('Yetkisiz','Finans görüntüleme yetkiniz yok','danger'); return;
+  }
   document.querySelectorAll('[data-subtab]').forEach(function(b){
     var active = b.getAttribute('data-subtab')===tab;
     b.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
