@@ -4000,7 +4000,7 @@ function updateAccount() {
   var _bonus = _st.bonus, equity = _st.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
   const cls = openPL >= 0 ? 'up' : 'down';
-  var _el_accBalance=document.getElementById('accBalance'); if(_el_accBalance) _el_accBalance.textContent = '$'+fp(balance);
+  var _el_accBalance=document.getElementById('accBalance'); if(_el_accBalance) _el_accBalance.textContent = '$'+fp(_st.balance);   // MT5: kilitli marj dahil görünen bakiye
   var _el_accEquity=document.getElementById('accEquity'); if(_el_accEquity) _el_accEquity.textContent = '$'+fp(equity);
   var _el_accPL=document.getElementById('accPL'); if(_el_accPL) _el_accPL.textContent = (openPL>=0?'+':'')+'$'+fp(openPL);
   var _cn_accPL=document.getElementById('accPL'); if(_cn_accPL) _cn_accPL.className = 'acc-val '+cls;
@@ -4012,7 +4012,7 @@ function updateAccount() {
   const sb = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
   const sbc = (id, col) => { const el=document.getElementById(id); if(el) el.style.color=col; };
   var f2 = function(v){ return (v>=0?'':'-')+'$'+(Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')); };
-  sb('sbBalance',   f2(balance));
+  sb('sbBalance',   f2(_st.balance));   // MT5: görünen bakiye = iç bakiye + kilitli marj
   sb('sbEquity',    f2(equity));
   sb('sbBonus',     f2(_bonus));
   sb('sbPL',        (openPL>=0?'+':'')+f2(openPL));
@@ -6699,7 +6699,9 @@ function txCalcStats(account, posArr) {
     margin+=(nq*n.price*cs)/lv;
   });
   return {
-    balance:bal, bonus:bonus, openPnl:openPnl, equity:equity,
+    // MT5 görünümü: işlem açmak BAKİYEYİ değiştirmez — kilitli marj bakiyeye dahil gösterilir.
+    // (İç muhasebede balance marj kadar düşüktür; bu sadece gösterim değeridir.)
+    balance:bal+lockedCost, bonus:bonus, openPnl:openPnl, equity:equity,
     margin:margin, freeMargin:Math.max(0,equity-margin),
     marginLvl:margin>0?(equity/margin*100):null,
     openCount:(posArr||[]).length
