@@ -6662,7 +6662,20 @@ var _pcRefTimer   = null;
 function pcApplyPrice(sym, price) { txApplyPrice(sym, price); }
 
 // ── Trader hesap motoru — tek kaynak ─────────────────────────
+// Yalnızca GERÇEKTEN AÇIK pozisyon mu? (admin _adIsOpenPos eşleniği)
+// Kapanmış/hayalet kayıtlar positions dizisinde kalırsa cost'ları varlığı ŞİŞİRİR.
+function _txIsOpenPos(p){
+  if(!p) return false;
+  var st = (p.status!=null) ? String(p.status).toLowerCase() : '';
+  if(st==='closed' || p.closed===true) return false;
+  if(parseFloat(p.closePrice)>0) return false;
+  if(p.closeTime || p.closedAt) return false;
+  if(!(parseFloat(p.qty)>0)) return false;
+  if(!(parseFloat(p.openPrice)>0)) return false;
+  return true;
+}
 function txCalcStats(account, posArr) {
+  posArr = (posArr||[]).filter(_txIsOpenPos);   // hayalet/kapalı kayıtları sayma
   var bal   = parseFloat(account.balance)||0;
   var bonus = parseFloat(account.bonus)||0;
   var lev   = parseFloat(account.leverage||100);
