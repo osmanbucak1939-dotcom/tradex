@@ -1046,7 +1046,7 @@ function _authSuccess(user) {
         try { if(d.alarms !== undefined) alarms = Array.isArray(d.alarms)?d.alarms:JSON.parse(d.alarms||'[]'); } catch(e){}
         if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
         // ⚠️ balance: users/{id}'den direkt oku — broker/accounts'a BAKMA
-        if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
+        if(d.balance !== undefined){ balance = parseFloat(d.balance)||0; window._txBalLoaded=true; }
         if(d.bonus !== undefined) _cu.bonus = parseFloat(d.bonus)||0;
         window._lastSyncAt = '';
         if(typeof renderPositions==='function') renderPositions();
@@ -1091,7 +1091,7 @@ function _authSuccess(user) {
             try { if(d.positions !== undefined) positions = Array.isArray(d.positions)?d.positions:JSON.parse(d.positions||'[]'); } catch(e){}
             try { if(d.tradeHistory !== undefined) tradeHistory = Array.isArray(d.tradeHistory)?d.tradeHistory:JSON.parse(d.tradeHistory||'[]'); } catch(e){}
             // ⚠️ users/{id} TEK KAYNAK
-            if(d.balance !== undefined) balance = parseFloat(d.balance)||0;
+            if(d.balance !== undefined){ balance = parseFloat(d.balance)||0; window._txBalLoaded=true; }
             if(d.bonus !== undefined) _cu.bonus = parseFloat(d.bonus)||0;
             if(Array.isArray(d.finlog) && d.finlog.length > 0) finlog = d.finlog;
             renderPositions(); renderHistory(); updateAccount();
@@ -1133,7 +1133,7 @@ function _authSuccess(user) {
   // İşlem panelini blokla
   window._readOnly = !!user._readOnly;
   _applyReadOnlyUI(window._readOnly);
-  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
+  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); window._txBalLoaded=true; if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
   try { if(typeof showToast==='function') showToast('Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } catch(e){}
   // Gece yarısı swap zamanla
   scheduleSwap();
@@ -1532,6 +1532,7 @@ function initAuth(){
         // Balance — koşulsuz güncelle
         if(d.balance !== undefined) {
           balance = parseFloat(d.balance)||0;
+          window._txBalLoaded = true;
         }
         // Bonus
         if(d.bonus !== undefined && typeof _cu !== 'undefined' && _cu) {
@@ -2265,19 +2266,21 @@ var save = () => {
   if(typeof _cu !== 'undefined' && _cu && _cu.id) {
     var _saveTs = new Date().toISOString();
     window._lastSyncAt = _saveTs; // kendi yazdığımızı tekrar okuyup ezmeyelim
-    fbSaveUserData(_cu.id, {
+    var _saveData = {
       positions: Array.isArray(positions) ? positions : [],
       tradeHistory: Array.isArray(tradeHistory) ? tradeHistory.slice(0,100) : [],
       portfolio: Array.isArray(portfolio) ? portfolio : [],
       alarms: Array.isArray(alarms) ? alarms : [],
-      finlog: Array.isArray(finlog) ? finlog : [],
       // ⚠️ KÖK SORUN DÜZELTMESİ (2026-06-12): balance burada YAZILMIYORDU.
       // Açılışta balance -= cost lokalde yapılıyor ama Firestore'a gitmiyordu;
       // onSnapshot yankısı eski bakiyeyi geri yüklüyordu → varlık teminat kadar artıyordu.
-      balance: (typeof balance!=='undefined') ? balance : 0,
-      bonus: (_cu && _cu.bonus !== undefined) ? parseFloat(_cu.bonus)||0 : 0,
       updatedAt: _saveTs
-    });
+    };
+    // balance/bonus yalnızca sunucudan en az bir kez yüklendiyse yazılır —
+    // erken save() çağrısının gerçek bakiyeyi 0 ile ezmesini önler.
+    if(window._txBalLoaded && typeof balance!=='undefined') _saveData.balance = balance;
+    if(_cu && _cu.bonus !== undefined) _saveData.bonus = parseFloat(_cu.bonus)||0;
+    fbSaveUserData(_cu.id, _saveData);
   }
 };
 
@@ -2740,7 +2743,7 @@ function startCandleWs(sym, interval) {
     lwRenderCandles(candles, sym);
     if(lbl) lbl.textContent = sym;
     if(window._lwLiveTimer) { clearInterval(window._lwLiveTimer); window._lwLiveTimer=null; }
-    window._lwLiveTimer = setInterval(function(){ lwTickUpdate(); }, 1000);
+    window._lwLiveTimer = setInterval(function(){ if(!document.hidden) lwTickUpdate(); }, 1000);
   });
 }
 
@@ -4850,7 +4853,7 @@ function openWallet(tab) {
   if(_cu && _cu.id && typeof db !== 'undefined' && db) {
     fbLoadUserData(_cu.id, function(data) {
       if(data) {
-        if(data.balance !== undefined) { balance = parseFloat(data.balance)||0; updateAccount(); }
+        if(data.balance !== undefined) { balance = parseFloat(data.balance)||0; window._txBalLoaded=true; updateAccount(); }
         if(Array.isArray(data.finlog)) finlog = data.finlog;
         if(Array.isArray(data.pendingOrders)) { pendingOrders = data.pendingOrders; localStorage.setItem('tx_pending', JSON.stringify(pendingOrders)); renderPendingOrders(); }
       }
@@ -5214,7 +5217,7 @@ function updateMwRow(sym, price, prev) {
     row.querySelector('.mw-bid').textContent = bidFmt;
     row.querySelector('.mw-ask').textContent = askFmt;
     row.classList.remove('mw-flash-g','mw-flash-r');
-    void row.offsetWidth;  // reflow — flash animasyonunu HER tick'te yeniden tetikle (admin'de var, trader'da eksikti)
+    if(!document.hidden) void row.offsetWidth;  // reflow — flash animasyonu (arka plandayken layout maliyetine girme)
     row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
     row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
     _mwApplyDirColor(row, up, neutral);
