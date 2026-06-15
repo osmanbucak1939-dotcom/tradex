@@ -914,6 +914,34 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 
 
+
+/* ── Tema modalı (native prompt yerine) ───────────────── */
+#txModalOv{position:fixed;inset:0;z-index:30000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.62);backdrop-filter:blur(2px);animation:txModalFade .14s ease;}
+#txModalOv.open{display:flex;}
+@keyframes txModalFade{from{opacity:0}to{opacity:1}}
+@keyframes txModalPop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.tx-modal{width:330px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--border2);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.55);animation:txModalPop .16s cubic-bezier(.2,.8,.3,1);overflow:hidden;}
+.tx-modal-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.tx-modal-head .tx-modal-icon{font-size:15px;}
+.tx-modal-head h4{margin:0;font-size:13px;font-weight:700;color:var(--text);flex:1;}
+.tx-modal-head .tx-modal-x{cursor:pointer;color:var(--muted);font-size:16px;line-height:1;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .12s,color .12s;}
+.tx-modal-head .tx-modal-x:hover{background:var(--panel2);color:var(--text);}
+.tx-modal-body{padding:16px;}
+.tx-modal-sub{font-size:11px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+.tx-modal-sub b{color:var(--text);font-family:var(--mono);}
+.tx-modal-label{display:block;font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.tx-modal-input{width:100%;box-sizing:border-box;padding:10px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:border-color .12s;}
+.tx-modal-input:focus{border-color:var(--accent);}
+.tx-modal-input.err{border-color:var(--sell);}
+.tx-modal-hint{font-size:10px;color:var(--muted);margin-top:6px;min-height:13px;}
+.tx-modal-hint.err{color:var(--sell);}
+.tx-modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.tx-modal-btn{flex:1;padding:9px 0;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;transition:filter .12s,opacity .12s;}
+.tx-modal-btn:hover{filter:brightness(1.12);}
+.tx-modal-btn.ghost{background:var(--panel2);color:var(--muted);border:1px solid var(--border2);}
+.tx-modal-btn.primary{background:var(--accent);color:#1a1a1a;}
+.tx-modal-btn.danger{background:var(--sell);color:#fff;}
+
 </style>
 <script>
 var _cu = null;
@@ -3905,12 +3933,25 @@ function txPartialClose(id){
   var pos = positions.find(function(p){ return String(p.id)===String(id); });
   if(!pos) return;
   var maxQ = parseFloat(pos.qty)||0;
-  var v = prompt('Kapatılacak lot miktarı (maks. '+maxQ+'):', '');
-  if(v===null) return;
-  v = parseFloat(String(v).replace(',','.'));
-  if(!(v>0)){ showToast('Hata','Geçerli bir lot girin'); return; }
-  if(v >= maxQ - 1e-9){ closePosition(id); return; }   // tamamı → normal kapatma
-  closePosition(id, '', v);
+  txPrompt({
+    title:'Parçalı Kapat',
+    icon:'◐',
+    sub:'Pozisyon <b>#'+id+'</b> — '+(pos.label||pos.sym)+'<br>Toplam <b>'+maxQ+'</b> lot açık',
+    label:'Kapatılacak lot',
+    placeholder:'Maks. '+maxQ,
+    okText:'Kapat', okClass:'danger',
+    validate:function(raw){
+      var v=parseFloat(String(raw).replace(',','.'));
+      if(!(v>0)) return 'Geçerli bir lot miktarı girin';
+      if(v>maxQ+1e-9) return 'En fazla '+maxQ+' lot kapatabilirsin';
+      return null;
+    }
+  }).then(function(raw){
+    if(raw===null) return; // iptal
+    var v=parseFloat(String(raw).replace(',','.'));
+    if(v >= maxQ - 1e-9){ closePosition(id); return; }   // tamamı → normal kapatma
+    closePosition(id, '', v);
+  });
 }
 
 // Masaüstü: SL veya TP hücresine tıklayınca o alanı düzenle (mobil mPosUpdate eşleniği)
@@ -3921,32 +3962,43 @@ function txEditField(id, field){
   var _cur = '';
   try { var pr=prices[pos.sym]; if(pr) _cur=(pos.side==='buy'?(pr.bid||pr.price):(pr.ask||pr.price)); } catch(e){}
   var isSL = (field==='sl');
-  var lbl  = isSL ? 'Stop Loss (zarar durdur)' : 'Take Profit (kâr al)';
-  var hint = (_cur?'Güncel fiyat: '+fp(_cur,dec)+'\n':'') + 'Boş bırak = seviyeyi kaldır';
-
   var cur = isSL ? pos.sl : pos.tp;
-  var str = prompt(lbl+' fiyatı:\n'+hint, cur ? fp(cur,dec) : '');
-  if(str===null) return; // iptal
 
-  var val = parseFloat(String(str).replace(',','.'));
-  val = (str.trim()!=='' && val>0) ? val : null;
-
-  // Yön mantığı kontrolü
-  if(_cur && val!==null){
-    if(isSL){
-      if(pos.side==='buy' && val>=_cur){ showToast('Hata','AL pozisyonunda SL güncel fiyatın altında olmalı'); return; }
-      if(pos.side==='sell'&& val<=_cur){ showToast('Hata','SAT pozisyonunda SL güncel fiyatın üstünde olmalı'); return; }
-    } else {
-      if(pos.side==='buy' && val<=_cur){ showToast('Hata','AL pozisyonunda TP güncel fiyatın üstünde olmalı'); return; }
-      if(pos.side==='sell'&& val>=_cur){ showToast('Hata','SAT pozisyonunda TP güncel fiyatın altında olmalı'); return; }
+  txPrompt({
+    title:(isSL?'Stop Loss':'Take Profit')+' — #'+id,
+    icon:isSL?'🛑':'🎯',
+    okClass:isSL?'danger':'primary',
+    sub:(pos.label||pos.sym)+' · '+(pos.side==='buy'?'AL':'SAT')+
+        (_cur?'<br>Güncel fiyat: <b>'+fp(_cur,dec)+'</b>':''),
+    label:(isSL?'Zarar durdur (SL) fiyatı':'Kâr al (TP) fiyatı'),
+    value:cur?fp(cur,dec):'',
+    placeholder:'Boş = seviyeyi kaldır',
+    hint:'Boş bırakıp kaydedersen bu seviye kaldırılır',
+    validate:function(raw){
+      if(String(raw).trim()==='') return null; // boş = kaldır, geçerli
+      var v=parseFloat(String(raw).replace(',','.'));
+      if(!(v>0)) return 'Geçerli bir fiyat girin';
+      if(_cur){
+        if(isSL){
+          if(pos.side==='buy' && v>=_cur) return 'AL pozisyonunda SL güncel fiyatın altında olmalı';
+          if(pos.side==='sell'&& v<=_cur) return 'SAT pozisyonunda SL güncel fiyatın üstünde olmalı';
+        } else {
+          if(pos.side==='buy' && v<=_cur) return 'AL pozisyonunda TP güncel fiyatın üstünde olmalı';
+          if(pos.side==='sell'&& v>=_cur) return 'SAT pozisyonunda TP güncel fiyatın altında olmalı';
+        }
+      }
+      return null;
     }
-  }
-
-  if(isSL) pos.sl = val; else pos.tp = val;
-  if(typeof save==='function') save();
-  if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {positions:positions});
-  if(typeof renderPositions==='function') renderPositions();
-  showToast('Güncellendi ✓', (isSL?'SL':'TP')+': '+(val?fp(val,dec):'kaldırıldı'));
+  }).then(function(raw){
+    if(raw===null) return; // iptal
+    var v=parseFloat(String(raw).replace(',','.'));
+    v=(String(raw).trim()!=='' && v>0) ? v : null;
+    if(isSL) pos.sl = v; else pos.tp = v;
+    if(typeof save==='function') save();
+    if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {positions:positions});
+    if(typeof renderPositions==='function') renderPositions();
+    showToast('Güncellendi ✓', (isSL?'SL':'TP')+': '+(v?fp(v,dec):'kaldırıldı'));
+  });
 }
 
 function sortHist(col) {
@@ -8708,5 +8760,81 @@ function _checkMarketStatus() {
 
 </script>
 
+<div id="txModalOv" onclick="if(event.target===this)txPromptCancel()">
+  <div class="tx-modal" role="dialog" aria-modal="true">
+    <div class="tx-modal-head">
+      <span class="tx-modal-icon" id="txModalIcon">✎</span>
+      <h4 id="txModalTitle">Düzenle</h4>
+      <span class="tx-modal-x" onclick="txPromptCancel()">✕</span>
+    </div>
+    <div class="tx-modal-body">
+      <p class="tx-modal-sub" id="txModalSub" style="display:none"></p>
+      <label class="tx-modal-label" id="txModalLabel">Değer</label>
+      <input class="tx-modal-input" id="txModalInput" type="text" inputmode="decimal" autocomplete="off">
+      <div class="tx-modal-hint" id="txModalHint"></div>
+    </div>
+    <div class="tx-modal-foot">
+      <button class="tx-modal-btn ghost" onclick="txPromptCancel()" id="txModalCancel">İptal</button>
+      <button class="tx-modal-btn primary" onclick="txPromptOk()" id="txModalOk">Kaydet</button>
+    </div>
+  </div>
+</div>
+<script>
+/* Tema modalı — native prompt yerine söz-tabanlı (Promise) kullanım.
+   txPrompt({title, sub, label, value, placeholder, okText, okClass, icon, validate})
+   → çözülür: girilen string (boş olabilir) | reddedilmez, iptalde null döner. */
+var _txPromptResolver = null;
+function txPromptCancel(){ _txCloseModal(null); }
+function _txCloseModal(val){
+  var ov=document.getElementById('txModalOv'); if(ov) ov.classList.remove('open');
+  document.removeEventListener('keydown', _txModalKey);
+  var r=_txPromptResolver; _txPromptResolver=null;
+  if(r) r(val);
+}
+function _txModalKey(e){
+  if(e.key==='Escape'){ e.preventDefault(); txPromptCancel(); }
+  else if(e.key==='Enter'){ e.preventDefault(); txPromptOk(); }
+}
+var _txPromptValidate=null;
+function txPromptOk(){
+  var inp=document.getElementById('txModalInput');
+  var hint=document.getElementById('txModalHint');
+  var raw=inp?inp.value:'';
+  if(_txPromptValidate){
+    var err=_txPromptValidate(raw);
+    if(err){
+      if(hint){ hint.textContent=err; hint.classList.add('err'); }
+      if(inp){ inp.classList.add('err'); inp.focus(); }
+      return;
+    }
+  }
+  _txCloseModal(raw);
+}
+function txPrompt(opts){
+  opts=opts||{};
+  return new Promise(function(resolve){
+    _txPromptResolver=resolve;
+    _txPromptValidate=opts.validate||null;
+    var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+    set('txModalTitle', opts.title||'Düzenle');
+    set('txModalLabel', opts.label||'Değer');
+    document.getElementById('txModalIcon').textContent = opts.icon||'✎';
+    var sub=document.getElementById('txModalSub');
+    if(opts.sub){ sub.innerHTML=opts.sub; sub.style.display=''; } else { sub.style.display='none'; }
+    var hint=document.getElementById('txModalHint');
+    hint.textContent=opts.hint||''; hint.classList.remove('err');
+    var ok=document.getElementById('txModalOk');
+    ok.textContent=opts.okText||'Kaydet';
+    ok.className='tx-modal-btn '+(opts.okClass||'primary');
+    var inp=document.getElementById('txModalInput');
+    inp.classList.remove('err');
+    inp.value=(opts.value!=null?opts.value:'');
+    inp.placeholder=opts.placeholder||'';
+    var ov=document.getElementById('txModalOv'); ov.classList.add('open');
+    document.addEventListener('keydown', _txModalKey);
+    setTimeout(function(){ inp.focus(); inp.select(); }, 30);
+  });
+}
+</script>
 </body>
 </html>
