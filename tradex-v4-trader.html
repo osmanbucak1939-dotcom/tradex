@@ -3825,8 +3825,8 @@ function renderPositions() {
       <td style="font-size:10px;color:${_posSortCol==='time'?'#aaa':'var(--muted)'};white-space:nowrap">${pos.time ? fmtDate(pos.time) : '—'}</td>
       <td>$${fp(pos.openPrice, pos.decimals||2)}</td>
       <td data-cur="${pos.id}">$${fp(cur, pos.decimals||2)}</td>
-      <td style="font-size:10px;color:#ef5350">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '—'}</td>
-      <td style="font-size:10px;color:#2979ff">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '—'}</td>
+      <td onclick="txEditField(${pos.id},'sl')" title="Düzenlemek için tıkla" style="font-size:10px;color:#ef5350;cursor:pointer">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style="color:#555;border-bottom:1px dashed #555">—</span>'}</td>
+      <td onclick="txEditField(${pos.id},'tp')" title="Düzenlemek için tıkla" style="font-size:10px;color:#2979ff;cursor:pointer">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style="color:#555;border-bottom:1px dashed #555">—</span>'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#2979ff':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor};text-align:right">${pnlSign}$${fp(Math.abs(pnl))}</td>
       <td><button class="close-ord" onclick="txPartialClose(${pos.id})" title="Parçalı kapat" style="margin-right:4px">◐</button><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
@@ -3911,6 +3911,42 @@ function txPartialClose(id){
   if(!(v>0)){ showToast('Hata','Geçerli bir lot girin'); return; }
   if(v >= maxQ - 1e-9){ closePosition(id); return; }   // tamamı → normal kapatma
   closePosition(id, '', v);
+}
+
+// Masaüstü: SL veya TP hücresine tıklayınca o alanı düzenle (mobil mPosUpdate eşleniği)
+function txEditField(id, field){
+  var pos = positions.find(function(p){ return String(p.id)===String(id); });
+  if(!pos) return;
+  var dec = pos.decimals||2;
+  var _cur = '';
+  try { var pr=prices[pos.sym]; if(pr) _cur=(pos.side==='buy'?(pr.bid||pr.price):(pr.ask||pr.price)); } catch(e){}
+  var isSL = (field==='sl');
+  var lbl  = isSL ? 'Stop Loss (zarar durdur)' : 'Take Profit (kâr al)';
+  var hint = (_cur?'Güncel fiyat: '+fp(_cur,dec)+'\n':'') + 'Boş bırak = seviyeyi kaldır';
+
+  var cur = isSL ? pos.sl : pos.tp;
+  var str = prompt(lbl+' fiyatı:\n'+hint, cur ? fp(cur,dec) : '');
+  if(str===null) return; // iptal
+
+  var val = parseFloat(String(str).replace(',','.'));
+  val = (str.trim()!=='' && val>0) ? val : null;
+
+  // Yön mantığı kontrolü
+  if(_cur && val!==null){
+    if(isSL){
+      if(pos.side==='buy' && val>=_cur){ showToast('Hata','AL pozisyonunda SL güncel fiyatın altında olmalı'); return; }
+      if(pos.side==='sell'&& val<=_cur){ showToast('Hata','SAT pozisyonunda SL güncel fiyatın üstünde olmalı'); return; }
+    } else {
+      if(pos.side==='buy' && val<=_cur){ showToast('Hata','AL pozisyonunda TP güncel fiyatın üstünde olmalı'); return; }
+      if(pos.side==='sell'&& val>=_cur){ showToast('Hata','SAT pozisyonunda TP güncel fiyatın altında olmalı'); return; }
+    }
+  }
+
+  if(isSL) pos.sl = val; else pos.tp = val;
+  if(typeof save==='function') save();
+  if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {positions:positions});
+  if(typeof renderPositions==='function') renderPositions();
+  showToast('Güncellendi ✓', (isSL?'SL':'TP')+': '+(val?fp(val,dec):'kaldırıldı'));
 }
 
 function sortHist(col) {
