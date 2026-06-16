@@ -3754,7 +3754,7 @@ function adCalcStats(account, positions) {
       _missingPrices++;
     }
     var cs=parseFloat(pos.contractSize)||1, qty=parseFloat(pos.qty)||0;
-    openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs;
+    openPnl += _adQuoteToUsd(pos.sym, (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP)*qty*cs);
     openPnl += parseFloat(pos.swapTotal)||0;
   });
   if(_missingPrices > 0 && window._calcStatsMissingLog !== account.id) {
@@ -9972,6 +9972,47 @@ function adRenderHistoryTable(){
 }
 
 // ── Pozisyon kapat ────────────────────────────────────────────
+
+// ── QUOTE → USD DÖNÜŞÜMÜ (admin) ────────────────────────────────────────────
+function _adQuoteToUsd(sym, amount) {
+  if(!sym || !amount) return amount || 0;
+  sym = sym.toUpperCase();
+  if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
+  var _USD_C = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
+    'XAUUSD','XAGUSD','XPTUSD','NGAS','DXY','FTSE100X','DAX40X'];
+  if(_USD_C.indexOf(sym) >= 0) return amount;
+  var quoteCur = '';
+  if(sym === 'XU100X') quoteCur = 'TRY';
+  if(!quoteCur && typeof symConfig !== 'undefined' && symConfig) {
+    for(var _qi=0; _qi<symConfig.length; _qi++) {
+      if(symConfig[_qi].sym === sym) {
+        var _cat = symConfig[_qi].category;
+        if(_cat === 'bist' || _cat === 'stock') { quoteCur = 'TRY'; break; }
+      }
+    }
+  }
+  if(!quoteCur) quoteCur = (sym.length === 6) ? sym.slice(3) : 'USD';
+  if(quoteCur === 'USD') return amount;
+  var _g = function(s) { return adGetPrice(s) || 0; };
+  var conv;
+  if(quoteCur==='JPY') conv = _g('USDJPY') > 0 ? 1/_g('USDJPY') : 1/160;
+  else if(quoteCur==='CAD') conv = _g('USDCAD') > 0 ? 1/_g('USDCAD') : 1/1.40;
+  else if(quoteCur==='CHF') conv = _g('USDCHF') > 0 ? 1/_g('USDCHF') : 1/0.89;
+  else if(quoteCur==='TRY') conv = _g('USDTRY') > 0 ? 1/_g('USDTRY') : 1/38.5;
+  else if(quoteCur==='MXN') conv = _g('USDMXN') > 0 ? 1/_g('USDMXN') : 1/17.2;
+  else if(quoteCur==='ZAR') conv = _g('USDZAR') > 0 ? 1/_g('USDZAR') : 1/18.5;
+  else if(quoteCur==='SGD') conv = _g('USDSGD') > 0 ? 1/_g('USDSGD') : 1/1.33;
+  else if(quoteCur==='HKD') conv = _g('USDHKD') > 0 ? 1/_g('USDHKD') : 1/7.79;
+  else if(quoteCur==='PLN') conv = _g('USDPLN') > 0 ? 1/_g('USDPLN') : 1/3.83;
+  else if(quoteCur==='SEK') conv = _g('USDSEK') > 0 ? 1/_g('USDSEK') : 1/9.85;
+  else if(quoteCur==='NOK') conv = _g('USDNOK') > 0 ? 1/_g('USDNOK') : 1/10.48;
+  else if(quoteCur==='GBP') conv = _g('GBPUSD') > 0 ? _g('GBPUSD') : 1.34;
+  else if(quoteCur==='EUR') conv = _g('EURUSD') > 0 ? _g('EURUSD') : 1.16;
+  else if(quoteCur==='AUD') conv = _g('AUDUSD') > 0 ? _g('AUDUSD') : 0.71;
+  else if(quoteCur==='NZD') conv = _g('NZDUSD') > 0 ? _g('NZDUSD') : 0.58;
+  else conv = 1;
+  return amount * conv;
+}
 function adClosePos(btn){
   if(typeof hasPerm==='function'&&!hasPerm('trades.close')){showAdminToast('Yetkisiz','Pozisyon kapatma yetkiniz yok','danger');return;}
   var id  = parseInt(btn.dataset.id||btn.getAttribute('data-id'));
@@ -9983,7 +10024,7 @@ function adClosePos(btn){
   var cur = adGetPrice(pos.sym);
   var cs  = parseFloat(pos.contractSize)||1;
   var qty = parseFloat(pos.qty)||0;
-  var pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs
+  var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
             + (parseFloat(pos.swapTotal)||0);
   // Bakiyeye geri ekle: açılışta cost düşüldü → kapanınca cost+pnl iade et
   // ⚠️ Canonical balance'ı kullan
@@ -10026,7 +10067,7 @@ function adCloseAllPositions(){
     var cur = adGetPrice(pos.sym);
     var cs  = parseFloat(pos.contractSize)||1;
     var qty = parseFloat(pos.qty)||0;
-    var pnl = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs
+    var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
               + (parseFloat(pos.swapTotal)||0);
     totalPnl  += pnl;
     totalCost += (pos.cost||0);
