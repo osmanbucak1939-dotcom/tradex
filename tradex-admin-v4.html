@@ -2221,14 +2221,14 @@ console.log('Firebase bağlandı ✓');
           <div id="adFeedDotTD" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
-              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">FASTFOREX</div>
+              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">KÖPRÜ (Bridge)</div>
               <span id="adFeedLblTD" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
           <div id="adFeedDotBN" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
-              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">FF KRİPTO</div>
+              <div style="color:#aaa;font-size:10px;margin-bottom:2px;">BİNANCE (Kripto)</div>
               <span id="adFeedLblBN" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
@@ -3312,7 +3312,10 @@ function startLiveFeed() {
 // KURAL: Admin yazar, trader sadece okur. Tek doğru kaynak Firebase.
 // ════════════════════════════════════════════════════════════════
 
-var _adTdKey  = '699ea91fdd9b4ad09e8bb2760b7f3663';
+// _adTdKey: artık hardcoded değil — localStorage'dan okunur.
+// Bir kez ayarlamak için console'a: localStorage.setItem('tx_td_key', 'YOUR_KEY')
+// Bridge aktifken bu key yalnızca kapalı piyasa REST seeding için kullanılır (opsiyonel).
+var _adTdKey = (function(){ try{ return localStorage.getItem('tx_td_key')||''; }catch(e){ return ''; } })();
 var _adTdWs   = null, _adBnWs = null;
 var _adTdOk   = false, _adBnOk = false;
 var _adFeedOn = false;
@@ -3896,6 +3899,7 @@ function _adApplyBridge(sym, price, chg){
   if(!window._adLive) window._adLive = {};
   window._adLive[sym] = true;
   adReceiveRawPrice(sym, price);
+  window._adTdLastOk = Date.now(); // Bridge tick → sağlık dot'unu güncelle
   if(chg!==undefined && chg!==null && !isNaN(parseFloat(chg)) && prices[sym]) prices[sym].chg = parseFloat(chg);
 }
 function _adStartBridge(){
@@ -3920,7 +3924,7 @@ setTimeout(_adStartBridge, 1500);
 // Gerçek tick'i olmayan (hisse vb.) sembollerin son fiyatını TD /quote ile çek.
 function _adFetchLastPrice(sym){
   var tdSym = AD_TD_MAP[sym];
-  if(!tdSym || typeof _adTdKey==='undefined') return;
+  if(!tdSym || !_adTdKey) return; // key yoksa REST seeding atlanır (bridge snapshot yeterli)
   if(!window._adSeeded) window._adSeeded = {};
   window._adSeeded[sym] = true;
   fetch('https://api.twelvedata.com/quote?symbol='+encodeURIComponent(tdSym)+'&apikey='+_adTdKey)
@@ -4066,7 +4070,8 @@ function _adStartTwelveData() {
 function adStartTwelvedataFeed() {
   if(typeof _txSyncTdMapFromRtdb==='function') _txSyncTdMapFromRtdb();   // RTDB'deki köprü listesini benimse
   _adStartBinance();      // Kripto → Binance WS
-  _adStartTwelveData();   // Forex/emtia/endeks → Twelve Data WS
+  // Forex/emtia/endeks → köprü üzerinden geliyor (_adStartBridge zaten çalışıyor)
+  // _adStartTwelveData() kaldırıldı — köprü tüm TD sembollerini kapsamaktadır.
   _adTdOk = true;
   _adBnOk = true;
 }
@@ -7528,19 +7533,19 @@ function adFeedSetDot(side, connected, label) {
 function adFeedCheckConnections() {
   // Twelve Data WS + Binance WS — REST testi yok, canlı feed tazeliğine bakılır.
   function _check() {
-    // ── Twelve Data (forex/emtia/endeks) ──
-    var tdWsOpen = !!(_adTdWs && _adTdWs.readyState === 1);
+    // ── Köprü (Bridge) — forex/emtia/endeks/hisse ──
+    var tdWsOpen = !!(_adBrWs && _adBrWs.readyState === 1);
     var tdAge = window._adTdLastOk ? (Date.now() - window._adTdLastOk) : Infinity;
     var forexClosed = (typeof _marketHours !== 'undefined' && !_marketHours.forexOpen());
     if(tdAge < 60000) {
       adFeedSetDot('td', true, 'Bağlı ✓'); _adTdOk = true;
     } else if(tdWsOpen && forexClosed) {
-      // WS açık ama piyasa kapalı — tick gelmemesi normal
+      // Köprü açık ama piyasa kapalı — tick gelmemesi normal
       adFeedSetDot('td', true, 'Bağlı (piyasa kapalı)'); _adTdOk = true;
     } else if(tdWsOpen) {
       adFeedSetDot('td', false, 'Veri bekleniyor...'); _adTdOk = false;
     } else {
-      adFeedSetDot('td', false, 'Bağlantı yok'); _adTdOk = false;
+      adFeedSetDot('td', false, 'Köprü bağlantı yok'); _adTdOk = false;
     }
 
     // ── Binance (kripto) ──
@@ -9388,6 +9393,26 @@ var AD_SIM={
   'SPX500X':{p:5800,v:0.0003},'NAS100X':{p:20500,v:0.0003},'DJ30X':{p:42000,v:0.0003},
   'FTSE100X':{p:8200,v:0.0003},'DAX40X':{p:19500,v:0.0003},'XU100X':{p:9800,v:0.0003}
 };
+// ── AD_SIM cache: önceki oturumdan gerçek fiyatları yükle ──────────────────
+(function(){
+  try {
+    var _sc = JSON.parse(localStorage.getItem('tx_ad_sim_cache') || 'null');
+    // 7 günden eski cache'i yoksay
+    if(_sc && _sc._ts && (Date.now() - _sc._ts) < 7*24*3600*1000) {
+      var _n = 0;
+      Object.keys(_sc).forEach(function(k){
+        if(k === '_ts') return;
+        var p = parseFloat(_sc[k]);
+        if(p > 0) {
+          if(AD_SIM[k]) AD_SIM[k].p = p;
+          else AD_SIM[k] = {p:p, v:0.002};
+          _n++;
+        }
+      });
+      if(_n > 0) console.log('[AD_SIM] ' + _n + ' sembol cache\'ten yüklendi (' + new Date(_sc._ts).toLocaleString() + ')');
+    }
+  } catch(e) { console.warn('[AD_SIM cache load]', e); }
+})();
 (function(){
   // _adPrices ve mwPrices'ı AD_SIM'den doldur
   Object.keys(AD_SIM).forEach(function(k){
@@ -9475,6 +9500,14 @@ var AD_SIM={
       db.collection('broker').doc('prices').set(_pu,{merge:true}).catch(function(e){console.warn('simTick FB:',e);});
       try{localStorage.setItem('tx_prices',JSON.stringify(_pu));}catch(e){}
     }
+  }
+  // Her 60 saniyede bir _adPrices'ı AD_SIM cache'e yaz (fallback kalitesi için)
+  if(window._simTickCount % 60 === 0) {
+    try {
+      var _cache = {_ts: Date.now()};
+      Object.keys(_adPrices).forEach(function(k){ if(_adPrices[k]>0) _cache[k]=_adPrices[k]; });
+      localStorage.setItem('tx_ad_sim_cache', JSON.stringify(_cache));
+    } catch(e) {}
   }
   if(document.getElementById('adOpenBody'))adRenderOpenTable();
     // Hesaplar listesindeki equity hücrelerini güncelle
