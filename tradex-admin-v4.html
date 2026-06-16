@@ -3327,15 +3327,23 @@ var _adFeedOn = false;
 // değişiklik RTDB '/bridgeConfig/tdMap' yoluna yazılır → köprü ~20sn içinde alır.
 // Sembol ekleme/çıkarma için artık kod düzenlemeye/köprü deploy'una GEREK YOK.
 var AD_TD_BUILTIN = {
+  // Major forex
   'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
+  // Emtia
   'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'USOIL':'WTI/USD'
+  'USOIL':'WTI/USD',
+  // Cross pair'ler (minor forex) — köprü TD WS'e abone olur
+  'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
+  'EURAUD':'EUR/AUD',  'EURCHF':'EUR/CHF',
+  'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'GBPCHF':'GBP/CHF',
+  'AUDCAD':'AUD/CAD',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
+  'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
+  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK', 'USDNOK':'USD/NOK'
   // DAX40X TD'den çıkarıldı → köprü artık DAX'ı Yahoo'dan çekiyor.
   // TD planında KAPALI olanlar (eklersen köprü 'subscribe fail' verir, fiyat akmaz):
   //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks lisanslı.
-  //   BRTUSD/BRENT → TD spot ile uyuşmadı, USOIL=WTI kullanıldı.
 };
 function _txLoadTdMap(){
   try {
@@ -9383,9 +9391,16 @@ var AD_SIM={
   'DOGEUSDT':{p:0.168,v:0.005},'AVAXUSDT':{p:38,v:0.004},'DOTUSDT':{p:7.2,v:0.004},
   'LINKUSDT':{p:18.5,v:0.003},
   // Forex
-  'EURUSD':{p:1.085,v:0.0002},'GBPUSD':{p:1.264,v:0.0002},'USDJPY':{p:152,v:0.0002},
-  'USDCHF':{p:0.895,v:0.0002},'AUDUSD':{p:0.645,v:0.0002},'USDCAD':{p:1.36,v:0.0002},
-  'NZDUSD':{p:0.605,v:0.0002},'USDTRY':{p:38.5,v:0.001},'EURTRY':{p:35.8,v:0.001},
+  'EURUSD':{p:1.161,v:0.0002},'GBPUSD':{p:1.343,v:0.0002},'USDJPY':{p:160.4,v:0.0002},
+  'USDCHF':{p:0.793,v:0.0002},'AUDUSD':{p:0.707,v:0.0002},'USDCAD':{p:1.399,v:0.0002},
+  'NZDUSD':{p:0.584,v:0.0002},'USDTRY':{p:38.5,v:0.001},'EURTRY':{p:53.7,v:0.001},
+  // Cross pair'ler
+  'EURCAD':{p:1.624,v:0.0002},'EURGBP':{p:0.864,v:0.0002},'EURJPY':{p:186.2,v:0.0002},
+  'EURAUD':{p:1.642,v:0.0002},'EURCHF':{p:0.921,v:0.0002},
+  'GBPJPY':{p:215.4,v:0.0002},'GBPAUD':{p:1.899,v:0.0002},'GBPCHF':{p:1.065,v:0.0002},
+  'AUDCAD':{p:0.989,v:0.0002},'AUDNZD':{p:1.211,v:0.0002},'CADCHF':{p:0.567,v:0.0002},
+  'USDMXN':{p:17.20,v:0.0003},'USDZAR':{p:18.50,v:0.0004},'USDSGD':{p:1.326,v:0.0002},
+  'USDHKD':{p:7.789,v:0.0002},'USDPLN':{p:3.830,v:0.0003},'USDSEK':{p:9.850,v:0.0003},'USDNOK':{p:10.48,v:0.0003},
   // Emtia
   'XAUUSD':{p:2650,v:0.001},'XAGUSD':{p:30.5,v:0.002},'XPTUSD':{p:980,v:0.002},
   'USOIL':{p:78.5,v:0.003},'BRTUSD':{p:82,v:0.003},'NGAS':{p:2.8,v:0.005},
