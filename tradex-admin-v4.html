@@ -9130,14 +9130,19 @@ function renderStaffTable(){
     var cnt=(s.assignedAccounts||[]).length;
     var customCnt = (s.customPerms||[]).length;
     var permBadge = customCnt ? '<span style="font-size:9px;color:#f0b90b;margin-left:4px;">⚙ Özel ('+customCnt+')</span>' : '';
+    var isAdminRole = (s.role === 'admin' || s.role === 'superadmin');
+    var assignedCell = isAdminRole
+      ? '<span style="color:#26a69a;font-size:10px;font-weight:600;">🌐 Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
+      : cnt;
+    var ataLabel = isAdminRole ? 'Ata <span style="color:#555;font-size:9px;">(opsiyonel)</span>' : 'Ata';
     html+='<tr style="border-bottom:1px solid #1a1a1a;">'
       +'<td style="padding:7px 10px;font-weight:600;">'+s.name+'</td>'
       +'<td style="padding:7px 10px;color:#a0a0a0;font-size:11px;">'+s.email+'</td>'
       +'<td style="padding:7px 10px;font-size:11px;color:var(--accent);">'+(rl[s.role]||s.role)+permBadge+'</td>'
       +'<td style="padding:7px 10px;">'+(s.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>'
-      +'<td style="padding:7px 10px;font-size:11px;">'+cnt+'</td>'
+      +'<td style="padding:7px 10px;font-size:11px;">'+assignedCell+'</td>'
       +'<td style="padding:7px 10px;white-space:nowrap;">'
-        +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">Ata</button> '
+        +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">'+ataLabel+'</button> '
         +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openPermModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">⚙ Yetki</button> '
         +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
         +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">🔑 Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
@@ -9320,7 +9325,13 @@ function renderAssignList(){
   if(!staff){body.innerHTML='Personel bulunamadı';return;}
   var assigned=staff.assignedAccounts||[];
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
-  body.innerHTML='<div style="font-size:11px;color:#a0a0a0;margin-bottom:10px;"><strong>'+staff.name+'</strong> için hesap atama:</div>'
+  var adminBanner = (staff.role==='admin'||staff.role==='superadmin')
+    ? '<div style="background:#0d2b1a;border:1px solid #26a69a44;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">'
+      +'<span style="font-size:16px;line-height:1;">🌐</span>'
+      +'<div><div style="font-size:11px;color:#26a69a;font-weight:600;margin-bottom:2px;">Admin rolü — tüm hesaplara otomatik erişim</div>'
+      +'<div style="font-size:11px;color:#a0a0a0;">Bu personel <strong style="color:#e0e0e0;">Admin</strong> rolünde olduğu için atama yapmadan tüm hesapları görebilir ve yönetebilir. Aşağıdan ek özel atama yapabilirsiniz (isteğe bağlı).</div></div></div>'
+    : '';
+  body.innerHTML=adminBanner+'<div style="font-size:11px;color:#a0a0a0;margin-bottom:10px;"><strong>'+staff.name+'</strong> için hesap atama:</div>'
     +list.map(function(a){var checked=assigned.indexOf(a.id)>=0;return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;"><input type="checkbox" '+(checked?'checked':'')+' data-id="'+a.id+'" onchange="toggleAssign(this)"><span style="color:var(--accent);font-family:var(--mono);">#'+(a.login||a.id)+'</span> — '+a.name+(a.surname?' '+a.surname:'')+'</label>';}).join('');
 }
 
