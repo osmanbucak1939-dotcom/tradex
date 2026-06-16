@@ -3754,7 +3754,7 @@ function txTickPositions() {
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
     var cur = pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price);
     var cs  = parseFloat(pos.contractSize)||1;
-    var raw = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * (parseFloat(pos.qty)||0) * cs;
+    var raw = _quoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * (parseFloat(pos.qty)||0) * cs);
     var pnl = raw + (parseFloat(pos.swapTotal)||0);
     // SL/TP kontrol
     if(pos.tp && ((pos.side==='buy'&&cur>=pos.tp)||(pos.side==='sell'&&cur<=pos.tp))){ closePosition(pos.id,'tp'); needFullRender=true; return; }
@@ -3796,12 +3796,67 @@ function sortPos(col) {
   renderPositions();
 }
 
+
+// ── QUOTE → USD DÖNÜŞÜMÜ ────────────────────────────────────────────────────
+// P&L her zaman quote currency cinsinden hesaplanır (EUR/JPY → JPY, USD/CAD → CAD, vs).
+// Bu fonksiyon ham P&L'i USD'ye çevirir.
+// Forex: quote = sembolün son 3 karakteri (EURJPY→JPY, USDCAD→CAD).
+// BIST/TRY hisseler + XU100X → TRY.
+// USD-sözleşmeli endeks/emtia (XAUUSD, SPX500X vb.) → dönüşüm yok.
+function _quoteToUsd(sym, amount) {
+  if(!sym || !amount) return amount || 0;
+  sym = sym.toUpperCase();
+  // Kripto (USDT bazlı) → direkt USD
+  if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
+  // USD-sözleşmeli kontratlar — dönüşüm gerekmez
+  var _USD_CONTRACTS = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
+    'XAUUSD','XAGUSD','XPTUSD','NGAS','DXY','FTSE100X','DAX40X'];
+  if(_USD_CONTRACTS.indexOf(sym) >= 0) return amount;
+  // Quote currency belirle
+  var quoteCur = '';
+  if(sym === 'XU100X') quoteCur = 'TRY';
+  if(!quoteCur && typeof symConfig !== 'undefined' && symConfig) {
+    for(var _qi=0; _qi<symConfig.length; _qi++) {
+      if(symConfig[_qi].sym === sym) {
+        var _cat = symConfig[_qi].category;
+        if(_cat === 'bist' || _cat === 'stock') { quoteCur = 'TRY'; break; }
+      }
+    }
+  }
+  if(!quoteCur) quoteCur = (sym.length === 6) ? sym.slice(3) : 'USD';
+  if(quoteCur === 'USD') return amount;
+  // Fiyat sorgulayıcı
+  var _px = function(s) {
+    var _p = prices[s];
+    return _p ? (parseFloat(_p.price || _p.bid || _p.mid) || 0) : 0;
+  };
+  var conv;
+  // USD/XXX çiftleri → 1/rate
+  if(quoteCur==='JPY') conv = _px('USDJPY') > 0 ? 1/_px('USDJPY') : 1/160;
+  else if(quoteCur==='CAD') conv = _px('USDCAD') > 0 ? 1/_px('USDCAD') : 1/1.40;
+  else if(quoteCur==='CHF') conv = _px('USDCHF') > 0 ? 1/_px('USDCHF') : 1/0.89;
+  else if(quoteCur==='TRY') conv = _px('USDTRY') > 0 ? 1/_px('USDTRY') : 1/38.5;
+  else if(quoteCur==='MXN') conv = _px('USDMXN') > 0 ? 1/_px('USDMXN') : 1/17.2;
+  else if(quoteCur==='ZAR') conv = _px('USDZAR') > 0 ? 1/_px('USDZAR') : 1/18.5;
+  else if(quoteCur==='SGD') conv = _px('USDSGD') > 0 ? 1/_px('USDSGD') : 1/1.33;
+  else if(quoteCur==='HKD') conv = _px('USDHKD') > 0 ? 1/_px('USDHKD') : 1/7.79;
+  else if(quoteCur==='PLN') conv = _px('USDPLN') > 0 ? 1/_px('USDPLN') : 1/3.83;
+  else if(quoteCur==='SEK') conv = _px('USDSEK') > 0 ? 1/_px('USDSEK') : 1/9.85;
+  else if(quoteCur==='NOK') conv = _px('USDNOK') > 0 ? 1/_px('USDNOK') : 1/10.48;
+  // XXX/USD çiftleri → direkt rate
+  else if(quoteCur==='GBP') conv = _px('GBPUSD') > 0 ? _px('GBPUSD') : 1.34;
+  else if(quoteCur==='EUR') conv = _px('EURUSD') > 0 ? _px('EURUSD') : 1.16;
+  else if(quoteCur==='AUD') conv = _px('AUDUSD') > 0 ? _px('AUDUSD') : 0.71;
+  else if(quoteCur==='NZD') conv = _px('NZDUSD') > 0 ? _px('NZDUSD') : 0.58;
+  else conv = 1;
+  return amount * conv;
+}
 function _calcPnl(pos) {
   const p = prices[pos.sym];
   // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
   const cur = p ? (pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price)) : pos.openPrice;
   const _cs = pos.contractSize || 1;
-  const rawPnl = (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs;
+  const rawPnl = _quoteToUsd(pos.sym, (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs);
   return rawPnl + (pos.swapTotal || 0);
 }
 
@@ -3835,7 +3890,7 @@ function renderPositions() {
     const p = prices[pos.sym];
     const cur = p ? (pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price)) : pos.openPrice;
     const _cs = pos.contractSize || 1;
-    const rawPnl = (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs;
+    const rawPnl = _quoteToUsd(pos.sym, (pos.side === 'buy' ? cur - pos.openPrice : pos.openPrice - cur) * pos.qty * _cs);
     const swapAcc = pos.swapTotal || 0;
     const pnl = rawPnl + swapAcc;
     const costBase = (pos.cost && pos.cost > 0) ? pos.cost : (pos.openPrice * pos.qty);
@@ -3883,7 +3938,7 @@ function closePosition(id, reason='', closeQty) {
     const _r = _pq/_qtyC;
     const _costPart = Math.round(_costC*_r*100)/100;
     const _swapPart = Math.round(_swapC*_r*100)/100;
-    let pnlPart = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _pq * _csC;
+    let pnlPart = _quoteToUsd(pos.sym, (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _pq * _csC);
     if(isNaN(pnlPart)) pnlPart = 0;
     pnlPart += _swapPart;
     balance += _costPart + pnlPart;
@@ -3907,7 +3962,7 @@ function closePosition(id, reason='', closeQty) {
     return;
   }
 
-  let pnl = (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qtyC * _csC;
+  let pnl = _quoteToUsd(pos.sym, (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qtyC * _csC);
   if(isNaN(pnl)) pnl = 0;
   pnl += _swapC; // birikmiş swap balance'a dahil
   balance += _costC + pnl;
@@ -6797,7 +6852,7 @@ function txCalcStats(account, posArr) {
     var cs = parseFloat(pos.contractSize)||1;
     // MT4 mantığı: buy→bid, sell→ask ile kapatma fiyatı hesapla
     var closeP = pos.side==='buy' ? (p.bid||p.price) : (p.ask||p.price);
-    openPnl += (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP) * (parseFloat(pos.qty)||0) * cs;
+    openPnl += _quoteToUsd(pos.sym, (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP) * (parseFloat(pos.qty)||0) * cs);
     openPnl += parseFloat(pos.swapTotal)||0;
   });
   // Varlık = bakiye + bonus + kilitli marj + açık K/Z.
