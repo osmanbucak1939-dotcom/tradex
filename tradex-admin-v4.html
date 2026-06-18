@@ -5955,7 +5955,7 @@ function _txFilterDeletedAccs(arr) {
       var before = accounts.length;
       accounts = _txFilterDeletedAccs(accounts);
       if(accounts.length < before) {
-        console.log('[tombstone] '+  (before-accounts.length)+' silinmiş hesap accounts'tan temizlendi');
+        console.log('[tombstone] '+ (before-accounts.length)+' silinmiş hesap accounts listesinden temizlendi.');
         try{ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }catch(e){}
         if(typeof fbSaveAccounts === 'function') fbSaveAccounts();
         if(typeof renderAccCards === 'function') renderAccCards();
