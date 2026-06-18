@@ -1339,10 +1339,15 @@ function fbSaveAccounts() {
       if(!db){ _lsLoad() || callback([]); return; }
       db.collection('broker').doc('accounts').get()
         .then(function(doc){
-          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){callback(_stripCanonFields(d));return;}}catch(e){}}
+          if(doc.exists){try{var d=JSON.parse(doc.data().data||'[]');if(d.length){if(typeof _txFilterDeletedAccs==='function') d=_txFilterDeletedAccs(d);callback(_stripCanonFields(d));return;}}catch(e){}}
           var hours=[];for(var i=0;i<24;i++){var dt=new Date(Date.now()-i*3600000);hours.push(dt.toISOString().substring(0,13).replace('T','_'));}
           var tryH=function(idx){if(idx>=hours.length){ _lsLoad() || callback([]); return;}
-            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){callback(_stripCanonFields(dd));db.collection('broker').doc('accounts').set({data:JSON.stringify(dd),updatedAt:new Date().toISOString()}).catch(function(){});return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
+            db.collection('broker').doc('accounts_backup_'+hours[idx]).get().then(function(d2){if(d2.exists){try{var dd=JSON.parse(d2.data().data||'[]');if(dd.length){// Tombstone: silinmiş hesapları backup'tan da temizle
+            if(typeof _txFilterDeletedAccs==='function') dd=_txFilterDeletedAccs(dd);
+            if(!dd.length){tryH(idx+1);return;} // hepsi silinmiş hesapsa bu backup'ı atla
+            callback(_stripCanonFields(dd));// ⚠️ broker/accounts'ı backup'la EZME — bu silinen hesapları geri getirebilir
+            // Sadece başlangıç yüklemesi için kullan, kalıcı yazma yapma
+return;}}catch(e){}}tryH(idx+1);}).catch(function(){tryH(idx+1);});};
           tryH(0);
         }).catch(function(e){
           console.warn('[fbLoadAccounts] Firebase hatası:', e.message||e);
@@ -1557,6 +1562,8 @@ console.log('Firebase bağlandı ✓');
             }
           });
           // 2026-04-20: iki-slot pattern kaldırıldı — var accounts top-level, window.accounts otomatik aynı slot
+          // Tombstone: silinmiş hesapları yeniden yükleme
+          if(typeof _txFilterDeletedAccs === 'function') newAccs = _txFilterDeletedAccs(newAccs);
           accounts = newAccs;
           try{localStorage.setItem('tx_accounts',JSON.stringify(newAccs));}catch(e){}
           // ⚠️ Canonical listener başlat — accounts yüklendikten sonra
@@ -5912,10 +5919,68 @@ function toggleAccount(id) {
   if (a) { a.active = !a.active; saveAccounts(); renderAccCards(); }
 }
 
+
+// ── SİLİNEN HESAP TOMBSTONE ─────────────────────────────────────────────────
+// Semboller için _txDeleted nasıl çalışıyorsa hesaplar için aynı pattern.
+// broker/config {deletedAccIds:[...]} + localStorage 'tx_deleted_accs'
+var _txDeletedAccs = (function(){
+  try{ return JSON.parse(localStorage.getItem('tx_deleted_accs')||'[]'); }catch(e){ return []; }
+})();
+function _txMarkAccDeleted(id) {
+  id = String(id);
+  if(_txDeletedAccs.indexOf(id) === -1) _txDeletedAccs.push(id);
+  try{ localStorage.setItem('tx_deleted_accs', JSON.stringify(_txDeletedAccs)); }catch(e){}
+  // Firestore'a da yaz — diğer tarayıcılar/sekmeler okusun
+  if(typeof db !== 'undefined' && db) {
+    db.collection('broker').doc('config').set(
+      { deletedAccIds: _txDeletedAccs, _ts: Date.now() }, {merge:true}
+    ).catch(function(e){ console.warn('[tombstone] broker/config yazılamadı', e); });
+  }
+}
+function _txFilterDeletedAccs(arr) {
+  if(!arr || !_txDeletedAccs.length) return arr;
+  return arr.filter(function(a){ return _txDeletedAccs.indexOf(String(a.id)) === -1; });
+}
+// Startup: broker/config'den silinmiş hesap listesini yükle
+(function _txLoadDeletedAccs(){
+  if(typeof db === 'undefined' || !db) return;
+  db.collection('broker').doc('config').get().then(function(doc){
+    if(!doc.exists) return;
+    var ids = doc.data().deletedAccIds;
+    if(!Array.isArray(ids)) return;
+    ids.forEach(function(id){ if(_txDeletedAccs.indexOf(String(id))===-1) _txDeletedAccs.push(String(id)); });
+    try{ localStorage.setItem('tx_deleted_accs', JSON.stringify(_txDeletedAccs)); }catch(e){}
+    // Eğer accounts zaten yüklenmiş ve içinde silinmiş hesap varsa temizle
+    if(typeof accounts !== 'undefined' && accounts && accounts.length) {
+      var before = accounts.length;
+      accounts = _txFilterDeletedAccs(accounts);
+      if(accounts.length < before) {
+        console.log('[tombstone] '+  (before-accounts.length)+' silinmiş hesap accounts'tan temizlendi');
+        try{ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }catch(e){}
+        if(typeof fbSaveAccounts === 'function') fbSaveAccounts();
+        if(typeof renderAccCards === 'function') renderAccCards();
+      }
+    }
+  }).catch(function(e){ console.warn('[tombstone load]', e); });
+})();
 function deleteAccount(id) {
+  // 1) Tombstone kaydet — diğer sekmeler/tarayıcılar diriltemesin
+  _txMarkAccDeleted(id);
+  // 2) Bellekten çıkar
   accounts = accounts.filter(function(a){ return a.id!==id; });
   localStorage.setItem('tx_accounts', JSON.stringify(accounts));
-  fbSaveAccounts(); // Firebase'e kaydet
+  // 3) broker/accounts güncelle
+  fbSaveAccounts();
+  // 4) users/{id} belgesini sil — kalırsa canonical listener diriltebilir
+  if(typeof db !== 'undefined' && db) {
+    db.collection('users').doc(String(id)).delete()
+      .catch(function(e){ console.warn('[deleteAccount] users/'+id+' silinemedi:', e); });
+  }
+  // 5) Canon listener'ı kapat
+  if(typeof _accCanon !== 'undefined' && _accCanon[String(id)] && _accCanon[String(id)]._unsub) {
+    try{ _accCanon[String(id)]._unsub(); }catch(e){}
+    delete _accCanon[String(id)];
+  }
   renderAccCards(); renderAccListSmall();
 }
 
@@ -8315,6 +8380,33 @@ function loginSuccess(staff){
     setTimeout(function(){
       if(typeof _startUsersSnap === 'function') _startUsersSnap();
     }, 2000);
+    // ── Sekme görünürlük değişimi — siyah ekran koruması ────────────────
+    // Tab arka plana gidince render durur (document.hidden guard'ları).
+    // Geri gelince canvas boyutu sıfırlanmış olabilir → yeniden ölç + çiz.
+    document.removeEventListener('visibilitychange', window._adVisibilityHandler||function(){});
+    window._adVisibilityHandler = function() {
+      if(document.hidden) return;
+      // DOM layout'un yerleşmesi için 1 frame bekle
+      setTimeout(function() {
+        // 1. Canvas yeniden boyutlandır + grafiği çiz
+        if(typeof resizeCanvas === 'function') { try { resizeCanvas(); } catch(e) {} }
+        // 2. Ticker şeridini yenile
+        if(typeof buildTicker === 'function') { try { buildTicker(); } catch(e) {} }
+        // 3. Feed sağlık göstergesi
+        if(typeof _feedHealthTick === 'function') { try { _feedHealthTick(); } catch(e) {} }
+        if(typeof adFeedCheckConnections === 'function') { try { adFeedCheckConnections(); } catch(e) {} }
+        // 4. Aktif paneli yenile (hesaplar, pozisyonlar, vb.)
+        if(typeof renderAccTable === 'function' && document.getElementById('accTblBody')) {
+          try { renderAccTable(); } catch(e) {}
+        }
+        if(typeof updateMarginCallPanel === 'function') { try { updateMarginCallPanel(); } catch(e) {} }
+        // 5. Grafik 100ms sonra bir kez daha — bazı tarayıcılarda layout geç yerleşir
+        setTimeout(function() {
+          if(typeof resizeCanvas === 'function') { try { resizeCanvas(); } catch(e) {} }
+        }, 200);
+      }, 50);
+    };
+    document.addEventListener('visibilitychange', window._adVisibilityHandler);
   }
   try {
     var _auth = firebase.auth();
