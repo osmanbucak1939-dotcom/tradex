@@ -10378,11 +10378,11 @@ function adEditHistory(btn){
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
     +'<div><label class="ad-label">SEMBOL</label><input class="ad-input" value="'+h.sym+'" disabled></div>'
     +'<div><label class="ad-label">YÖN</label><input class="ad-input" value="'+(h.side==='buy'?'AL':'SAT')+'" disabled></div>'
-    +'<div><label class="ad-label">LOT</label><input class="ad-input" id="he_qty" type="number" value="'+h.qty+'"></div>'
-    +'<div><label class="ad-label">AÇILIŞ FİYATI</label><input class="ad-input" id="he_open" type="number" step="any" value="'+h.openPrice+'"></div>'
-    +'<div><label class="ad-label">KAPANIS FİYATI</label><input class="ad-input" id="he_close" type="number" step="any" value="'+h.closePrice+'"></div>'
-    +'<div><label class="ad-label">K/Z</label><input class="ad-input" id="he_pnl" type="number" step="any" value="'+adFp(h.pnl||0)+'"></div>'
-    +'<div><label class="ad-label">SWAP</label><input class="ad-input" id="he_swap" type="number" step="any" value="'+(h.swapTotal||0)+'"></div>'
+    +'<div><label class="ad-label">LOT</label><input class="ad-input" id="he_qty" type="number" value="'+h.qty+'" oninput="_adHistRecalcPnl()"></div>'
+    +'<div><label class="ad-label">AÇILIŞ FİYATI</label><input class="ad-input" id="he_open" type="number" step="any" value="'+h.openPrice+'" oninput="_adHistRecalcPnl()"></div>'
+    +'<div><label class="ad-label">KAPANIS FİYATI</label><input class="ad-input" id="he_close" type="number" step="any" value="'+h.closePrice+'" oninput="_adHistRecalcPnl()"></div>'
+    +'<div><label class="ad-label">K/Z <span style="color:#666;font-weight:400;">(otomatik, gerekirse düzelt)</span></label><input class="ad-input" id="he_pnl" type="number" step="any" value="'+adFp(h.pnl||0)+'"></div>'
+    +'<div><label class="ad-label">SWAP</label><input class="ad-input" id="he_swap" type="number" step="any" value="'+(h.swapTotal||0)+'" oninput="_adHistRecalcPnl()"></div>'
     +'<div><label class="ad-label">KOMİSYON</label><input class="ad-input" id="he_com" type="number" step="any" value="'+(h.commission||0)+'"></div>'
     +'<div style="grid-column:1/-1"><label class="ad-label">AÇILIŞ</label><input class="ad-input" id="he_otime" type="datetime-local" value="'+openVal+'"></div>'
     +'<div style="grid-column:1/-1"><label class="ad-label">KAPANIS</label><input class="ad-input" id="he_ctime" type="datetime-local" value="'+closeVal+'"></div>'
@@ -10397,33 +10397,83 @@ function adEditHistory(btn){
   modal.style.display = 'flex';
 }
 
+// ── Açılış/Kapanış/Lot/Swap değişince K/Z alanını canlı yeniden hesapla ──────
+function _adHistRecalcPnl(){
+  var h = _adHistory[_adEditHistIdx];
+  if(!h) return;
+  var op   = parseFloat((document.getElementById('he_open') ||{}).value);
+  var cp   = parseFloat((document.getElementById('he_close')||{}).value);
+  var qty  = parseFloat((document.getElementById('he_qty')  ||{}).value);
+  var swap = parseFloat((document.getElementById('he_swap') ||{}).value);
+  if(isNaN(op))   op   = parseFloat(h.openPrice)||0;
+  if(isNaN(cp))   cp   = parseFloat(h.closePrice)||0;
+  if(isNaN(qty))  qty  = parseFloat(h.qty)||0;
+  if(isNaN(swap)) swap = 0;
+  var cs  = parseFloat(h.contractSize)||1;
+  var raw = (typeof _adQuoteToUsd==='function')
+    ? _adQuoteToUsd(h.sym, (h.side==='buy' ? cp-op : op-cp) * qty * cs)
+    : (h.side==='buy' ? cp-op : op-cp) * qty * cs;
+  var newPnl = raw + swap;
+  var pnlEl = document.getElementById('he_pnl');
+  if(pnlEl) pnlEl.value = newPnl.toFixed(2);
+}
+
 function adSaveHistEdit(){
   var h = _adHistory[_adEditHistIdx];
   if(!h) return;
+  var oldPnl = parseFloat(h.pnl)||0;
   h.qty        = parseFloat((document.getElementById('he_qty')||{}).value)   || h.qty;
   h.openPrice  = parseFloat((document.getElementById('he_open')||{}).value)  || h.openPrice;
   h.closePrice = parseFloat((document.getElementById('he_close')||{}).value) || h.closePrice;
-  h.pnl        = parseFloat((document.getElementById('he_pnl')||{}).value);
   h.swapTotal  = parseFloat((document.getElementById('he_swap')||{}).value)  || 0;
   h.commission = parseFloat((document.getElementById('he_com')||{}).value)   || 0;
+  var newPnl = parseFloat((document.getElementById('he_pnl')||{}).value);
+  if(isNaN(newPnl)) newPnl = oldPnl;
+  h.pnl = newPnl;
   var ot = document.getElementById('he_otime'); if(ot&&ot.value){ h.openDate=new Date(ot.value).toISOString(); h.time=h.openDate; }
   var ct = document.getElementById('he_ctime'); if(ct&&ct.value){ h.closeDate=new Date(ct.value).toISOString(); h.closeTime=h.closeDate; }
+
+  // ⚠️ KRİTİK: K/Z değişince bakiyeyi FARKLA güncelle — eski pnl kapanışta
+  // zaten bakiyeye eklenmişti, şimdi sadece (yeni-eski) farkını uygula.
+  var delta = newPnl - oldPnl;
+  if(delta !== 0){
+    var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
+    if(a){
+      var _newBal = getAccBal(a.id) + delta;
+      if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
+    }
+  }
+
   adSaveUserTrades();
   adRenderHistoryTable();
+  if(typeof adRefreshBadges==='function') try{ adRefreshBadges(); }catch(e){}
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
-  showAdminToast('Kaydedildi','Geçmiş pozisyon güncellendi','success');
+  showAdminToast('Kaydedildi', delta!==0 ? 'Pozisyon güncellendi, bakiye farkı ('+(delta>=0?'+':'')+adFp(delta)+') uygulandı' : 'Geçmiş pozisyon güncellendi', 'success');
 }
 
 function adDeleteHistory(btn){
   if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Geçmiş silme yetkiniz yok','danger');return;}
   var hidx = _adFindHistIdx(btn);
-  if(!confirm('Bu geçmiş kaydı silinsin mi?')) return;
   if(hidx<0 || !_adHistory[hidx]) return;
+  var h = _adHistory[hidx];
+  if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' geçmiş kaydı silinsin mi?\n\nKapanışta bakiyeye eklenen tutar (margin iadesi + K/Z) geri alınacak.')) return;
+
+  // ⚠️ KRİTİK: Kapanışta bakiye += cost + pnl yapılmıştı → silme: bakiye -= cost + pnl
+  // (adReopenHistory ile aynı mantık, ama pozisyon tekrar açılmıyor, tamamen siliniyor)
+  var cost = parseFloat(h.cost)||0;
+  var pnl  = parseFloat(h.pnl)||0;
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
+  if(a){
+    var _newBal = getAccBal(a.id) - cost - pnl;
+    if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
+  }
+
   _adHistory.splice(hidx, 1);
   adSaveUserTrades();
   adRenderHistoryTable();
+  if(typeof adRefreshBadges==='function') try{ adRefreshBadges(); }catch(e){}
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
-  showAdminToast('Silindi','Geçmiş kayıt kaldırıldı','info');
+  showAdminToast('Silindi','Geçmiş kayıt kaldırıldı, bakiye güncellendi','info');
 }
 
 // ── Kapalı pozisyonu YENİDEN AÇ (reopen) ──────────────────────
