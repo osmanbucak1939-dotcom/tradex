@@ -3609,7 +3609,7 @@ function placeOrder(side) {
   var netQty = Math.max(0, Math.round((_newNetQty - _oldNetQty) * 1e8) / 1e8);
   var netCost = (execPrice * netQty * _contractSizeCost) / _leverage;
 
-  // hedgeQty: iade hesabı için hâlâ gerekli
+  // hedgeQty: artık balance işlemi için kullanılmıyor (MT4/5 model), 'hedge' flag'i için referans
   var hedgeQty = 0;
   for(var _hi2=0; _hi2<positions.length; _hi2++) {
     var _hp2 = positions[_hi2];
@@ -3661,8 +3661,7 @@ function placeOrder(side) {
     if(_mySg && _mySg.stopOut) _stopOutLvl = parseFloat(_mySg.stopOut);
   } catch(e) {}
 
-  // Yeni işlemden sonraki durumu simüle et
-  var _newBalance = balance - netCost;
+  // Yeni işlemden sonraki durumu simüle et (MT4/5 model: margin bakiyeyi etkilemez)
   var _newMarginUsed = 0;
   var _symQtysChk = {};
   for(var _ci=0; _ci<positions.length; _ci++) {
@@ -3687,17 +3686,16 @@ function placeOrder(side) {
     if(_symCfg3 && _symCfg3.margin && _symCfg3.margin > 0) _lev3 = 100 / _symCfg3.margin;
     _newMarginUsed += (_nq * _sq2.price * _cs3) / _lev3;
   }
-  // Açık PL hesapla
+  // Açık PL hesapla (mevcut pozisyonlar — yeni işlemin kendi anlık spread maliyeti
+  // bu ön-kontrolde yaklaşıksal olarak ihmal edilir, önceki davranışla aynı seviyede)
   var _chkPL = 0;
-  var _chkCost = 0;   // mevcut pozisyonların kilitli marjı (varlığa dahil)
   for(var _ck=0; _ck<positions.length; _ck++) {
     var _cpos = positions[_ck];
-    _chkCost += parseFloat(_cpos.cost)||0;
     var _cp2 = prices[_cpos.sym];
     if(_cp2) _chkPL += (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1);
   }
-  // Varlık = (işlem sonrası bakiye) + kilitli marjlar (mevcut + yeni) + açık K/Z
-  var _newEquity = _newBalance + _chkCost + netCost + _chkPL;
+  // Varlık = bakiye (margin'den etkilenmez) + açık K/Z
+  var _newEquity = balance + _chkPL;
   var _newMarginLvl = _newMarginUsed > 0 ? (_newEquity / _newMarginUsed * 100) : null;
 
   if(_newMarginLvl !== null && _newMarginLvl <= _stopOutLvl) {
@@ -3705,24 +3703,11 @@ function placeOrder(side) {
     return;
   }
 
-  // Hedge teminat iadesi: karşı pozisyonlardan netleşen miktar kadar teminatı geri ver
-  var _hedgeRefund = 0;
-  var _remainHedge = hedgeQty; // netleşecek toplam karşı qty
-  for(var _hri=0; _hri<positions.length && _remainHedge>0; _hri++) {
-    var _hrp = positions[_hri];
-    if(_hrp.sym === curSym && _hrp.side !== side) {
-      var _hrQty = parseFloat(_hrp.qty)||0;
-      var _hrUsed = Math.min(_hrQty, _remainHedge);
-      // Bu pozisyonun orantılı teminatını iade et
-      var _hrRefund = (_hrp.cost||0) * (_hrUsed / _hrQty);
-      _hedgeRefund += _hrRefund;
-      // Pozisyonun kalan cost'unu güncelle
-      _hrp.cost = (_hrp.cost||0) - _hrRefund;
-      _remainHedge -= _hrUsed;
-    }
-  }
-  balance += _hedgeRefund; // iade edilen teminat balance'a geri döner
-  balance -= netCost;      // yeni pozisyonun net teminatı kesilir (hedge'se 0)
+  // ⚠️ MT4/5 STANDART MODEL: Pozisyon açılışı BAKİYEYİ değiştirmez.
+  // Teminat (margin) balance'tan kesilmez — txCalcStats() canlı pozisyonlardan ayrıca
+  // hesaplar (qty/fiyat/contractSize/kaldıraçtan, pos.cost'tan değil). Hedge netleşmesi
+  // de otomatik olarak bu canlı margin hesabına yansır, balance'a dokunmaya gerek yok.
+  // 'cost' alanı yalnızca kayıt/referans için saklanır.
 
   // Trading group commission — açılışta balance'tan kesilir (MT5 pattern'i)
   var _commission = 0;
@@ -3950,7 +3935,7 @@ function closePosition(id, reason='', closeQty) {
     let pnlPart = _quoteToUsd(pos.sym, (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _pq * _csC);
     if(isNaN(pnlPart)) pnlPart = 0;
     pnlPart += _swapPart;
-    balance += _costPart + pnlPart;
+    balance += pnlPart; // MT4/5 model: margin balance'a dahil değildi, sadece K/Z eklenir
     // Kalan pozisyon: lot/cost/swap azalt (açılış fiyatı ve TP/SL aynen kalır)
     pos.qty = Math.round((_qtyC - _pq)*1e6)/1e6;
     pos.cost = Math.round((_costC - _costPart)*100)/100;
@@ -3974,7 +3959,7 @@ function closePosition(id, reason='', closeQty) {
   let pnl = _quoteToUsd(pos.sym, (pos.side==='buy' ? closePrice-pos.openPrice : pos.openPrice-closePrice) * _qtyC * _csC);
   if(isNaN(pnl)) pnl = 0;
   pnl += _swapC; // birikmiş swap balance'a dahil
-  balance += _costC + pnl;
+  balance += pnl; // MT4/5 model: margin balance'a dahil değildi, sadece K/Z eklenir
   positions.splice(idx, 1);
   tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
   if (tradeHistory.length > 50) tradeHistory.pop();
@@ -4160,7 +4145,7 @@ function updateAccount() {
   var _bonus = _st.bonus, equity = _st.equity;
   const marginPct = equity > 0 ? (marginUsed/equity*100) : 0;
   const cls = openPL >= 0 ? 'up' : 'down';
-  var _el_accBalance=document.getElementById('accBalance'); if(_el_accBalance) _el_accBalance.textContent = '$'+fp(_st.balance);   // MT5: kilitli marj dahil görünen bakiye
+  var _el_accBalance=document.getElementById('accBalance'); if(_el_accBalance) _el_accBalance.textContent = '$'+fp(_st.balance);   // MT4/5 standart: margin'den etkilenmeyen bakiye
   var _el_accEquity=document.getElementById('accEquity'); if(_el_accEquity) _el_accEquity.textContent = '$'+fp(equity);
   var _el_accPL=document.getElementById('accPL'); if(_el_accPL) _el_accPL.textContent = (openPL>=0?'+':'')+'$'+fp(openPL);
   var _cn_accPL=document.getElementById('accPL'); if(_cn_accPL) _cn_accPL.className = 'acc-val '+cls;
@@ -4172,7 +4157,7 @@ function updateAccount() {
   const sb = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
   const sbc = (id, col) => { const el=document.getElementById(id); if(el) el.style.color=col; };
   var f2 = function(v){ return (v>=0?'':'-')+'$'+(Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')); };
-  sb('sbBalance',   f2(_st.balance));   // MT5: görünen bakiye = iç bakiye + kilitli marj
+  sb('sbBalance',   f2(_st.balance));   // MT4/5 standart: margin'den etkilenmeyen bakiye
   sb('sbEquity',    f2(equity));
   sb('sbBonus',     f2(_bonus));
   sb('sbPL',        (openPL>=0?'+':'')+f2(openPL));
@@ -6927,9 +6912,7 @@ function txCalcStats(account, posArr) {
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl = 0;
-  var lockedCost = 0;   // açılışta bakiyeden düşülen kilitli marj — varlığa GERİ sayılmalı (MT mantığı)
   (posArr||[]).forEach(function(pos){
-    lockedCost += parseFloat(pos.cost)||0;
     var p = prices[pos.sym];
     if(!p) return;
     var cs = parseFloat(pos.contractSize)||1;
@@ -6938,10 +6921,10 @@ function txCalcStats(account, posArr) {
     openPnl += _quoteToUsd(pos.sym, (pos.side==='buy' ? closeP-pos.openPrice : pos.openPrice-closeP) * (parseFloat(pos.qty)||0) * cs);
     openPnl += parseFloat(pos.swapTotal)||0;
   });
-  // Varlık = bakiye + bonus + kilitli marj + açık K/Z.
-  // (Açılışta balance -= cost yapıldığı için cost geri sayılmazsa pozisyon açıkken varlık
-  //  marj kadar EKSİK görünür ve kapanışta aniden zıplar — düzeltildi.)
-  var equity = bal + bonus + lockedCost + openPnl;
+  // ⚠️ MT4/5 STANDART MODEL: Pozisyon açmak bakiyeyi değiştirmez.
+  // Varlık = bakiye + bonus + açık K/Z. Açılış spread maliyeti openPnl'e otomatik yansır
+  // (openPrice ask/bid, mevcut fiyatla farkı negatif başlar).
+  var equity = bal + bonus + openPnl;
   var nets = {};
   (posArr||[]).forEach(function(pos){
     if(!nets[pos.sym]) nets[pos.sym]={buy:0,sell:0,price:0};
@@ -6958,9 +6941,7 @@ function txCalcStats(account, posArr) {
     margin+=(nq*n.price*cs)/lv;
   });
   return {
-    // MT5 görünümü: işlem açmak BAKİYEYİ değiştirmez — kilitli marj bakiyeye dahil gösterilir.
-    // (İç muhasebede balance marj kadar düşüktür; bu sadece gösterim değeridir.)
-    balance:bal+lockedCost, bonus:bonus, openPnl:openPnl, equity:equity,
+    balance:bal, bonus:bonus, openPnl:openPnl, equity:equity,
     margin:margin, freeMargin:Math.max(0,equity-margin),
     marginLvl:margin>0?(equity/margin*100):null,
     openCount:(posArr||[]).length
