@@ -8876,7 +8876,8 @@ function updateReports(){
       _pos.forEach(function(p){
         var cur=adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
         if(cur){
-          var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0);
+          var _cs8879 = parseFloat(p.contractSize)||1;
+          var pnl=_adQuoteToUsd(p.sym, (p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*_cs8879);
           netPnl+=pnl;
         }
       });
@@ -9049,7 +9050,8 @@ function updateReports(){
       });
       allPos.forEach(function(p,idx){
         var cur=adGetPrice(p.sym, p.side==='buy'?'sell':'buy')||0;
-        var pnl=cur?((p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)):0;
+        var _cs9052 = parseFloat(p.contractSize)||1;
+        var pnl=cur?_adQuoteToUsd(p.sym, (p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*_cs9052):0;
         var pc=pnl>=0?'#26a69a':'#ef5350';
         var bg=idx%2===0?'':'background:#0d0d0d;';
         ptHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
@@ -9936,7 +9938,7 @@ function adTickOpenTable(){
     if(!cur) return;
     var cs  = parseFloat(pos.contractSize)||1;
     var qty = parseFloat(pos.qty)||0;
-    var raw = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * qty * cs;
+    var raw = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * qty * cs);
     var pnl = raw + (parseFloat(pos.swapTotal)||0);
     var pc  = pnl>=0 ? '#26a69a' : '#ef5350';
     // Güncel fiyat hücresi
@@ -9966,8 +9968,8 @@ function adRenderOpenTable(){
   var sorted = _adPositions.slice().sort(function(a,b){
     var col=_adOpenSort.col, d=_adOpenSort.dir, va, vb;
     if(col==='pnl'){
-      va = (a.side==='buy'?adGetPrice(a.sym)-a.openPrice:a.openPrice-adGetPrice(a.sym))*(parseFloat(a.qty)||0)*(parseFloat(a.contractSize)||1);
-      vb = (b.side==='buy'?adGetPrice(b.sym)-b.openPrice:b.openPrice-adGetPrice(b.sym))*(parseFloat(b.qty)||0)*(parseFloat(b.contractSize)||1);
+      va = _adQuoteToUsd(a.sym, (a.side==='buy'?adGetPrice(a.sym)-a.openPrice:a.openPrice-adGetPrice(a.sym))*(parseFloat(a.qty)||0)*(parseFloat(a.contractSize)||1));
+      vb = _adQuoteToUsd(b.sym, (b.side==='buy'?adGetPrice(b.sym)-b.openPrice:b.openPrice-adGetPrice(b.sym))*(parseFloat(b.qty)||0)*(parseFloat(b.contractSize)||1));
     } else if(col==='time'){ va=new Date(a.openDate||a.time||0).getTime(); vb=new Date(b.openDate||b.time||0).getTime(); }
     else { va=a[col]||''; vb=b[col]||''; }
     return (va<vb?-1:va>vb?1:0)*d;
@@ -9979,7 +9981,7 @@ function adRenderOpenTable(){
     var cur = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy');
     var cs  = parseFloat(pos.contractSize)||1;
     var qty = parseFloat(pos.qty)||0;
-    var raw = (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * qty * cs;
+    var raw = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur) * qty * cs);
     var pnl = raw + (parseFloat(pos.swapTotal)||0);
     totalPnl += pnl;
     var pc   = pnl>=0 ? '#26a69a' : '#ef5350';
@@ -10204,7 +10206,7 @@ function adEditPos(btn){
   }
   var cur = adGetPrice(pos.sym);
   var cs  = parseFloat(pos.contractSize)||1;
-  var pnl = (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs;
+  var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs);
   var pc  = pnl>=0?'#26a69a':'#ef5350';
   var openVal = (pos.openDate||pos.time) ? new Date(pos.openDate||pos.time).toISOString().slice(0,16) : '';
   modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
