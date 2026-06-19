@@ -4805,6 +4805,8 @@ function txToggleFavorite(sym) {
   if(typeof renderMarketWatch === 'function') {
     renderMarketWatch(document.getElementById('mwSearch') ? document.getElementById('mwSearch').value : '');
   }
+  // Mobil piyasalar panelini de güncelle (ayrı render fonksiyonu kullanıyor)
+  if(typeof window.mFM === 'function') { try { window.mFM(); } catch(e) {} }
 }
 
 var MW_MAP = {};
@@ -8023,6 +8025,33 @@ function symUnpin(sym){
   };
 
   // Piyasalar
+  function _mFMBuildRowHtml(it2, gid) {
+    var _p2=(typeof prices!=='undefined'&&prices[it2.sym])?prices[it2.sym]:null;
+    var bid=_p2?_p2.bid.toFixed(it2.decimals):'—';
+    var ask=_p2?_p2.ask.toFixed(it2.decimals):'—';
+    var pipSize=Math.pow(10,-(it2.decimals-1));
+    var spd=(it2.spread/pipSize).toFixed(1);
+    if(spd.endsWith('.0')) spd=spd.slice(0,-2);
+    var chgVal=_p2&&_p2.chg!==undefined?_p2.chg:0;
+    var chgAbs=Math.abs(chgVal).toFixed(2);
+    var chgUp=chgVal>=0;
+    var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
+    var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
+    var ico=(it2.icon&&it2.icon.trim()&&it2.icon.trim().length<=2)?it2.icon.trim():'';
+    var dotColor=it2.color||'#f0b90b';
+    var _favOnclick="event.stopPropagation(); txToggleFavorite('"+it2.sym+"')";
+    var icoHtml=ico?'<div class="mw-icon" onclick="'+_favOnclick+'">'+ico+'</div>'
+      :'<div class="mw-icon" onclick="'+_favOnclick+'" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span></div>';
+    return '<div id="mmwr-'+it2.sym+'" class="'+rowCls+'" data-sym="'+it2.sym+'" data-gid="'+gid+'">'
+      +icoHtml
+      +'<div class="mw-sym-block"><div class="mw-sym-name">'+it2.name+' '+chgHtml+'</div><div class="mw-sym-full">'+it2.full+'</div></div>'
+      +'<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
+        +'<div class="mw-bid" id="mmwb-'+it2.sym+'">'+bid+'</div>'
+        +'<div class="mw-spd-badge">'+spd+'</div>'
+        +'<div class="mw-ask" id="mmwa-'+it2.sym+'">'+ask+'</div>'
+      +'</div>'
+    +'</div>';
+  }
   function mFM(){
     var dst=document.getElementById('mMwBody');
     if(!dst) return;
@@ -8031,49 +8060,56 @@ function symUnpin(sym){
     filter=filter.toLowerCase();
     var scrollTop=dst.scrollTop;
     var html='';
+
+    if(typeof mwGroupState['favorites']==='undefined') mwGroupState['favorites']=true;
+
+    var favItems=[]; // {it, gid}
+    var groupItemsMap={};
     for(var gi=0;gi<MARKET_GROUPS.length;gi++){
       var g=MARKET_GROUPS[gi];
       var items=[];
       for(var ii=0;ii<g.items.length;ii++){
         var it=g.items[ii];
         var match=!filter||it.name.toLowerCase().indexOf(filter)>=0||it.full.toLowerCase().indexOf(filter)>=0;
-        if(match) items.push(it);
+        if(!match) continue;
+        if(typeof _txFavorites!=='undefined' && _txFavorites[it.sym]){
+          favItems.push({it:it, gid:g.id});
+          continue; // favori — kendi grubunda değil, FAVORİLER'de gösterilecek
+        }
+        items.push(it);
       }
-      if(!items.length) continue;
+      groupItemsMap[g.id]=items;
+    }
+
+    // ── FAVORİLER grubu — en üstte ──────────────────────────────────────────
+    if(favItems.length){
+      var favOpen=mwGroupState['favorites']!==false;
+      html+='<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">'
+        +'<span class="mw-group-title">⭐ FAVORİLER <span style="opacity:.5">('+favItems.length+')</span></span>'
+        +'<span class="mw-group-arrow'+(favOpen?' open':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg></span></div>';
+      if(favOpen){
+        for(var fi=0;fi<favItems.length;fi++){
+          html+=_mFMBuildRowHtml(favItems[fi].it, favItems[fi].gid);
+        }
+      }
+    }
+
+    // ── Diğer gruplar — MARKET_GROUPS sırasıyla ─────────────────────────────
+    for(var gi=0;gi<MARKET_GROUPS.length;gi++){
+      var g=MARKET_GROUPS[gi];
+      var items=groupItemsMap[g.id];
+      if(!items||!items.length) continue;
       var isOpen=(typeof mwGroupState!=='undefined'&&mwGroupState[g.id]!==false);
       html+='<div class="mw-group-header" data-gid="'+g.id+'" onclick="toggleMwGroup(this.dataset.gid)">'
         +'<span class="mw-group-title">'+g.label+' <span style="opacity:.5">('+items.length+')</span></span>'
         +'<span class="mw-group-arrow'+(isOpen?' open':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg></span></div>';
       if(isOpen){
         for(var ri=0;ri<items.length;ri++){
-          var it2=items[ri];
-          var _p2=(typeof prices!=='undefined'&&prices[it2.sym])?prices[it2.sym]:null;
-          var bid=_p2?_p2.bid.toFixed(it2.decimals):'—';
-          var ask=_p2?_p2.ask.toFixed(it2.decimals):'—';
-          var pipSize=Math.pow(10,-(it2.decimals-1));
-          var spd=(it2.spread/pipSize).toFixed(1);
-          if(spd.endsWith('.0')) spd=spd.slice(0,-2);
-          var chgVal=_p2&&_p2.chg!==undefined?_p2.chg:0;
-          var chgAbs=Math.abs(chgVal).toFixed(2);
-          var chgUp=chgVal>=0;
-          var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
-          var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
-          var ico=(it2.icon&&it2.icon.trim()&&it2.icon.trim().length<=2)?it2.icon.trim():'';
-          var dotColor=it2.color||'#f0b90b';
-          var icoHtml=ico?'<div class="mw-icon">'+ico+'</div>'
-            :'<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span></div>';
-          html+='<div id="mmwr-'+it2.sym+'" class="'+rowCls+'" data-sym="'+it2.sym+'" data-gid="'+g.id+'">'
-            +icoHtml
-            +'<div class="mw-sym-block"><div class="mw-sym-name">'+it2.name+' '+chgHtml+'</div><div class="mw-sym-full">'+it2.full+'</div></div>'
-            +'<div class="mw-price-group" style="position:relative;margin-bottom:6px">'
-              +'<div class="mw-bid" id="mmwb-'+it2.sym+'">'+bid+'</div>'
-              +'<div class="mw-spd-badge">'+spd+'</div>'
-              +'<div class="mw-ask" id="mmwa-'+it2.sym+'">'+ask+'</div>'
-            +'</div>'
-          +'</div>';
+          html+=_mFMBuildRowHtml(items[ri], g.id);
         }
       }
     }
+
     dst.innerHTML=html;
     dst.scrollTop=scrollTop;
     // Render sonrası chg badge'leri güncelle
@@ -8084,6 +8120,7 @@ function symUnpin(sym){
       });
     }
   }
+  window.mFM = mFM; // Dış kapsamdan (örn. txToggleFavorite) çağrılabilsin
   window.mMwPick=function(sym,gid){
     if(typeof switchSym==='function') switchSym(sym);
     else if(typeof mwSelect==='function') mwSelect(sym,gid);
