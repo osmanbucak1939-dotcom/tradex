@@ -569,7 +569,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-row:hover { background:var(--panel2); }
 .mw-row.active-sym { background:rgba(240,185,11,.07); border-left:2px solid var(--accent); }
 
-.mw-icon { font-size:14px; text-align:center; }
+.mw-icon { font-size:14px; text-align:center; cursor:pointer; transition:transform .12s; }
+.mw-icon:hover { transform:scale(1.15); }
+.mw-group-fav { background:rgba(240,185,11,.08) !important; }
+.mw-group-fav .mw-group-title { color:var(--accent); opacity:1; }
 .mw-sym-block { min-width:0; }
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Desktop'ta chg badge gizle */
@@ -1253,6 +1256,12 @@ function _authSuccess(user) {
         var d = doc.data();
         if(d.spreadGroup) _cu.spreadGroup = d.spreadGroup;
         if(d.leverage)    _cu.leverage    = d.leverage;
+        // Favori semboller — cihazlar arası senkron (Firestore tek doğru kaynak)
+        if(Array.isArray(d.favorites)) {
+          _txFavorites = {};
+          d.favorites.forEach(function(s){ if(s) _txFavorites[s]=true; });
+          try{ localStorage.setItem('tx_favorites', JSON.stringify(Object.keys(_txFavorites))); }catch(e){}
+        }
       }
       if(typeof applyGroupSpreads === 'function') applyGroupSpreads();
       if(document.getElementById('mwBody') && typeof renderMarketWatch === 'function') renderMarketWatch();
@@ -4641,23 +4650,38 @@ function _loadFirebaseData() {
 
 var MARKET_GROUPS = [
   {
-    id:'crypto', label:'KRİPTO', open:true,
+    id:'bist', label:'BİST', open:false,
     items:[
-      {sym:'BTCUSDT',  name:'BTC/USDT',  full:'Bitcoin',        icon:'₿',  spread:0.10,   decimals:2},
-      {sym:'ETHUSDT',  name:'ETH/USDT',  full:'Ethereum',       icon:'Ξ',  spread:0.05,   decimals:2},
-      {sym:'SOLUSDT',  name:'SOL/USDT',  full:'Solana',         icon:'◎',  spread:0.01,   decimals:2},
-      {sym:'BNBUSDT',  name:'BNB/USDT',  full:'BNB Chain',      icon:'◈',  spread:0.02,   decimals:2},
-      {sym:'XRPUSDT',  name:'XRP/USDT',  full:'Ripple',         icon:'✕',  spread:0.0001, decimals:4},
-      {sym:'ADAUSDT',  name:'ADA/USDT',  full:'Cardano',        icon:'♠',  spread:0.0001, decimals:4},
-      {sym:'DOGEUSDT', name:'DOGE/USDT', full:'Dogecoin',       icon:'Ð',  spread:0.0001, decimals:4},
-      {sym:'AVAXUSDT', name:'AVAX/USDT', full:'Avalanche',      icon:'△',  spread:0.005,  decimals:3},
-      {sym:'DOTUSDT',  name:'DOT/USDT',  full:'Polkadot',       icon:'●',  spread:0.003,  decimals:3},
-      {sym:'LINKUSDT', name:'LINK/USDT', full:'Chainlink',      icon:'⬡',  spread:0.005,  decimals:3},
-      {sym:'CAKEUSDT', name:'CAKE/USDT', full:'PancakeSwap',    icon:'🥞', spread:0.001,  decimals:4},
-      {sym:'CELOUSDT', name:'CELO/USDT', full:'Celo',           icon:'🌱', spread:0.0005, decimals:4},
-      {sym:'CHZUSDT',  name:'CHZ/USDT',  full:'Chiliz',         icon:'⚽', spread:0.0001, decimals:5},
-      {sym:'COMPUSDT', name:'COMP/USDT', full:'Compound',       icon:'🏦', spread:0.01,   decimals:3},
-      {sym:'CROUSDT',  name:'CRO/USDT',  full:'Cronos',         icon:'🔷', spread:0.0001, decimals:5},
+      {sym:'AEFES', name:'AEFES', full:'Anadolu Efes',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKBNK', name:'AKBNK', full:'Akbank',              icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ASELS', name:'ASELS', full:'Aselsan',             icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BIMAS', name:'BIMAS', full:'BİM Mağazalar',       icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'EKGYO', name:'EKGYO', full:'Emlak Konut GYO',     icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'ENKAI', name:'ENKAI', full:'Enka İnşaat',         icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EREGL', name:'EREGL', full:'Ereğli Demir Çelik',  icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'FROTO', name:'FROTO', full:'Ford Otosan',         icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'GARAN', name:'GARAN', full:'Garanti BBVA',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GUBRF', name:'GUBRF', full:'Gübre Fabrikaları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'ISCTR', name:'ISCTR', full:'Türkiye İş Bankası',  icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'KCHOL', name:'KCHOL', full:'Koç Holding',         icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'KOZAL', name:'KOZAL', full:'Koza Altın',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KRDMD', name:'KRDMD', full:'Kardemir (D)',        icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'MGROS', name:'MGROS', full:'Migros',              icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'PETKM', name:'PETKM', full:'Petkim',              icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SAHOL', name:'SAHOL', full:'Sabancı Holding',     icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SASA',  name:'SASA',  full:'SASA Polyester',      icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'SISE',  name:'SISE',  full:'Şişecam',             icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'TAVHL', name:'TAVHL', full:'TAV Havalimanları',   icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TCELL', name:'TCELL', full:'Turkcell',            icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'THYAO', name:'THYAO', full:'Türk Hava Yolları',   icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TOASO', name:'TOASO', full:'Tofaş',               icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'TTKOM', name:'TTKOM', full:'Türk Telekom',        icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TUPRS', name:'TUPRS', full:'Tüpraş',              icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'VAKBN', name:'VAKBN', full:'VakıfBank',           icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'YKBNK', name:'YKBNK', full:'Yapı Kredi',          icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
+      {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
+      {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
     ]
   },
   {
@@ -4702,7 +4726,7 @@ var MARKET_GROUPS = [
     ]
   },
   {
-    id:'indices', label:'ENDEKSLEr', open:true,
+    id:'indices', label:'ENDEKSLER', open:true,
     items:[
       {sym:'SPX500X',  name:'S&P 500',  full:'S&P 500 Endeksi',       icon:'📈', spread:0.50,   decimals:2},
       {sym:'NAS100X',  name:'NASDAQ',   full:'NASDAQ 100',             icon:'📊', spread:0.80,   decimals:2},
@@ -4714,43 +4738,28 @@ var MARKET_GROUPS = [
     ]
   },
   {
-    id:'stocks', label:'HİSSELER', open:false,
-    items:[]   // Hisseler admin'de category:'stock' ile eklenince symConfig'ten buraya akar
+    id:'crypto', label:'KRİPTO', open:true,
+    items:[
+      {sym:'BTCUSDT',  name:'BTC/USDT',  full:'Bitcoin',        icon:'₿',  spread:0.10,   decimals:2},
+      {sym:'ETHUSDT',  name:'ETH/USDT',  full:'Ethereum',       icon:'Ξ',  spread:0.05,   decimals:2},
+      {sym:'SOLUSDT',  name:'SOL/USDT',  full:'Solana',         icon:'◎',  spread:0.01,   decimals:2},
+      {sym:'BNBUSDT',  name:'BNB/USDT',  full:'BNB Chain',      icon:'◈',  spread:0.02,   decimals:2},
+      {sym:'XRPUSDT',  name:'XRP/USDT',  full:'Ripple',         icon:'✕',  spread:0.0001, decimals:4},
+      {sym:'ADAUSDT',  name:'ADA/USDT',  full:'Cardano',        icon:'♠',  spread:0.0001, decimals:4},
+      {sym:'DOGEUSDT', name:'DOGE/USDT', full:'Dogecoin',       icon:'Ð',  spread:0.0001, decimals:4},
+      {sym:'AVAXUSDT', name:'AVAX/USDT', full:'Avalanche',      icon:'△',  spread:0.005,  decimals:3},
+      {sym:'DOTUSDT',  name:'DOT/USDT',  full:'Polkadot',       icon:'●',  spread:0.003,  decimals:3},
+      {sym:'LINKUSDT', name:'LINK/USDT', full:'Chainlink',      icon:'⬡',  spread:0.005,  decimals:3},
+      {sym:'CAKEUSDT', name:'CAKE/USDT', full:'PancakeSwap',    icon:'🥞', spread:0.001,  decimals:4},
+      {sym:'CELOUSDT', name:'CELO/USDT', full:'Celo',           icon:'🌱', spread:0.0005, decimals:4},
+      {sym:'CHZUSDT',  name:'CHZ/USDT',  full:'Chiliz',         icon:'⚽', spread:0.0001, decimals:5},
+      {sym:'COMPUSDT', name:'COMP/USDT', full:'Compound',       icon:'🏦', spread:0.01,   decimals:3},
+      {sym:'CROUSDT',  name:'CRO/USDT',  full:'Cronos',         icon:'🔷', spread:0.0001, decimals:5},
+    ]
   },
   {
-    id:'bist', label:'BİST', open:false,
-    items:[
-      {sym:'AEFES', name:'AEFES', full:'Anadolu Efes',        icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'AKBNK', name:'AKBNK', full:'Akbank',              icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'ASELS', name:'ASELS', full:'Aselsan',             icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'BIMAS', name:'BIMAS', full:'BİM Mağazalar',       icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'EKGYO', name:'EKGYO', full:'Emlak Konut GYO',     icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'ENKAI', name:'ENKAI', full:'Enka İnşaat',         icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'EREGL', name:'EREGL', full:'Ereğli Demir Çelik',  icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'FROTO', name:'FROTO', full:'Ford Otosan',         icon:'🇹🇷', spread:0.20, decimals:2},
-      {sym:'GARAN', name:'GARAN', full:'Garanti BBVA',        icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'GUBRF', name:'GUBRF', full:'Gübre Fabrikaları',   icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'ISCTR', name:'ISCTR', full:'Türkiye İş Bankası',  icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'KCHOL', name:'KCHOL', full:'Koç Holding',         icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'KOZAL', name:'KOZAL', full:'Koza Altın',          icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'KRDMD', name:'KRDMD', full:'Kardemir (D)',        icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'MGROS', name:'MGROS', full:'Migros',              icon:'🇹🇷', spread:0.20, decimals:2},
-      {sym:'PETKM', name:'PETKM', full:'Petkim',              icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'SAHOL', name:'SAHOL', full:'Sabancı Holding',     icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'SASA',  name:'SASA',  full:'SASA Polyester',      icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'SISE',  name:'SISE',  full:'Şişecam',             icon:'🇹🇷', spread:0.02, decimals:2},
-      {sym:'TAVHL', name:'TAVHL', full:'TAV Havalimanları',   icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'TCELL', name:'TCELL', full:'Turkcell',            icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'THYAO', name:'THYAO', full:'Türk Hava Yolları',   icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'TOASO', name:'TOASO', full:'Tofaş',               icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'TTKOM', name:'TTKOM', full:'Türk Telekom',        icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'TUPRS', name:'TUPRS', full:'Tüpraş',              icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'VAKBN', name:'VAKBN', full:'VakıfBank',           icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'YKBNK', name:'YKBNK', full:'Yapı Kredi',          icon:'🇹🇷', spread:0.05, decimals:2},
-      {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
-      {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
-      {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
-    ]
+    id:'stocks', label:'HİSSELER', open:false,
+    items:[]   // Hisseler admin'de category:'stock' ile eklenince symConfig'ten buraya akar
   }
 ];
 
@@ -4766,6 +4775,37 @@ var TX_HIDDEN = [
 MARKET_GROUPS.forEach(function(g){
   if(g && g.items) g.items = g.items.filter(function(it){ return TX_HIDDEN.indexOf(it.sym)===-1; });
 });
+
+
+// ── FAVORİ SEMBOLLER ─────────────────────────────────────────────────────────
+// Market Watch'ta sembol logosuna tıklanınca favorilere eklenir/çıkarılır.
+// Favori semboller kendi grubundan çıkıp en üstteki "FAVORİLER" grubuna taşınır.
+// Kalıcılık: localStorage 'tx_favorites' (hızlı) + Firestore users/{id}.favorites (cihazlar arası senkron).
+var _txFavorites = (function(){
+  try {
+    var arr = JSON.parse(localStorage.getItem('tx_favorites')||'[]');
+    var o = {};
+    if(Array.isArray(arr)) arr.forEach(function(s){ if(s) o[s]=true; });
+    return o;
+  } catch(e) { return {}; }
+})();
+function _txSaveFavorites() {
+  try { localStorage.setItem('tx_favorites', JSON.stringify(Object.keys(_txFavorites))); } catch(e){}
+  if(typeof db !== 'undefined' && db && typeof _cu !== 'undefined' && _cu && _cu.id) {
+    db.collection('users').doc(String(_cu.id)).set(
+      { favorites: Object.keys(_txFavorites) }, {merge:true}
+    ).catch(function(e){ console.warn('[favorites] Firestore kaydı başarısız', e); });
+  }
+}
+function txToggleFavorite(sym) {
+  if(!sym) return;
+  if(_txFavorites[sym]) delete _txFavorites[sym];
+  else _txFavorites[sym] = true;
+  _txSaveFavorites();
+  if(typeof renderMarketWatch === 'function') {
+    renderMarketWatch(document.getElementById('mwSearch') ? document.getElementById('mwSearch').value : '');
+  }
+}
 
 var MW_MAP = {};
 var mwPrices = {};
@@ -5478,12 +5518,42 @@ function _mwApplyDirColor(row, up, neutral) {
   }
 }
 
+function _mwBuildRowHtml(it2, gid) {
+  var pr = (mwPrices[it2.sym] && mwPrices[it2.sym].price) ? mwPrices[it2.sym].price : (it2.mockPrice||0);
+  var bid = pr ? (pr - it2.spread/2).toFixed(it2.decimals) : '—';
+  var ask = pr ? (pr + it2.spread/2).toFixed(it2.decimals) : '—';
+  var pipSize = Math.pow(10, -(it2.decimals - 1));
+  var spd = (it2.spread / pipSize).toFixed(1);
+  if(spd.endsWith('.0')) spd = spd.slice(0,-2);
+  var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
+  var html = '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + gid + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
+  var _ico = (it2.icon && it2.icon.trim() && it2.icon.trim().length <= 2) ? it2.icon.trim() : '';
+  var _dot_color = it2.color || '#f0b90b';
+  var _isFav = !!_txFavorites[it2.sym];
+  var _favTitle = _isFav ? 'Favorilerden çıkar' : 'Favorilere ekle';
+  var _favOnclick = "event.stopPropagation(); txToggleFavorite('" + it2.sym + "')";
+  html += _ico
+    ? '<div class="mw-icon" onclick="' + _favOnclick + '" title="' + _favTitle + '">' + _ico + '</div>'
+    : '<div class="mw-icon" onclick="' + _favOnclick + '" style="display:flex;align-items:center;justify-content:center;" title="' + _favTitle + '"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
+  var chgVal = (mwPrices[it2.sym] && mwPrices[it2.sym].chg !== undefined) ? mwPrices[it2.sym].chg : 0;
+  var chgAbs = Math.abs(chgVal).toFixed(2);
+  var chgUp = chgVal >= 0;
+  var chgHtml = '<span class="mw-chg ' + (chgUp?'mw-chg-u':'mw-chg-d') + '" id="mwc-' + it2.sym + '">'
+    + (chgUp ? '▲' : '▼') + ' ' + chgAbs + '%</span>';
+  html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + ' ' + chgHtml + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
+  html += '<div class="mw-bid">' + bid + '</div>';
+  html += '<div class="mw-ask">' + ask + '</div>';
+  html += '<div class="mw-spread-col">' + spd + '</div></div>';
+  return html;
+}
+
 function renderMarketWatch(filter) {
   if(typeof MARKET_GROUPS === 'undefined' || !MARKET_GROUPS) return;
   var body = document.getElementById('mwBody');
   if(!body) return;
   filter = filter ? filter.toLowerCase() : '';
 
+  if(typeof mwGroupState['favorites'] === 'undefined') mwGroupState['favorites'] = true;
   for(var gi=0; gi<MARKET_GROUPS.length; gi++) {
     var _g = MARKET_GROUPS[gi];
     if(typeof mwGroupState[_g.id] === 'undefined') {
@@ -5492,6 +5562,9 @@ function renderMarketWatch(filter) {
   }
 
   var html = '';
+  var favItems = []; // {it, gid} — tüm gruplardan toplanan favori semboller
+  var groupItemsMap = {}; // gid -> filtrelenmiş, favori-olmayan items
+
   for(var gi=0; gi<MARKET_GROUPS.length; gi++) {
     var g = MARKET_GROUPS[gi];
     var items = [];
@@ -5503,9 +5576,33 @@ function renderMarketWatch(filter) {
       if(typeof canTradeSymbol === 'function' && _cu) {
         if(!canTradeSymbol(_cu.spreadGroup || 'standard', it.sym)) continue;
       }
+      if(_txFavorites[it.sym]) {
+        favItems.push({it:it, gid:g.id});
+        continue; // favori — kendi grubunda değil, FAVORİLER grubunda gösterilecek
+      }
       items.push(it);
     }
-    if(!items.length) continue;
+    groupItemsMap[g.id] = items;
+  }
+
+  // ── FAVORİLER grubu — her zaman en üstte ──────────────────────────────────
+  if(favItems.length) {
+    var favOpen = mwGroupState['favorites'] !== false;
+    html += '<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">';
+    html += '<span class="mw-group-title">⭐ FAVORİLER <span style="opacity:.5">(' + favItems.length + ')</span></span>';
+    html += '<span class="mw-group-arrow" style="display:flex;align-items:center">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;transition:transform .2s;transform:' + (favOpen ? 'rotate(90deg)' : 'rotate(0deg)') + '"><path d=\"M9 18l6-6-6-6\"/></svg></span></div>';
+    if(favOpen) {
+      for(var fi=0; fi<favItems.length; fi++) {
+        html += _mwBuildRowHtml(favItems[fi].it, favItems[fi].gid);
+      }
+    }
+  }
+
+  // ── Diğer gruplar — sıra: MARKET_GROUPS dizisindeki sıra ──────────────────
+  for(var gi=0; gi<MARKET_GROUPS.length; gi++) {
+    var g = MARKET_GROUPS[gi];
+    var items = groupItemsMap[g.id];
+    if(!items || !items.length) continue;
 
     var isOpen = mwGroupState[g.id] !== false;
     html += '<div class="mw-group-header" data-gid="' + g.id + '" onclick="toggleMwGroup(this.dataset.gid)">';
@@ -5514,29 +5611,7 @@ function renderMarketWatch(filter) {
 
     if(isOpen) {
       for(var ri=0; ri<items.length; ri++) {
-        var it2 = items[ri];
-        var pr = (mwPrices[it2.sym] && mwPrices[it2.sym].price) ? mwPrices[it2.sym].price : (it2.mockPrice||0);
-        var bid = pr ? (pr - it2.spread/2).toFixed(it2.decimals) : '—';
-        var ask = pr ? (pr + it2.spread/2).toFixed(it2.decimals) : '—';
-        var pipSize = Math.pow(10, -(it2.decimals - 1));
-        var spd = (it2.spread / pipSize).toFixed(1);
-        if(spd.endsWith('.0')) spd = spd.slice(0,-2);
-        var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
-        html += '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + g.id + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
-        var _ico = (it2.icon && it2.icon.trim() && it2.icon.trim().length <= 2) ? it2.icon.trim() : '';
-        var _dot_color = it2.color || '#f0b90b';
-        html += _ico
-          ? '<div class="mw-icon">' + _ico + '</div>'
-          : '<div class="mw-icon" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
-        var chgVal = (mwPrices[it2.sym] && mwPrices[it2.sym].chg !== undefined) ? mwPrices[it2.sym].chg : 0;
-        var chgAbs = Math.abs(chgVal).toFixed(2);
-        var chgUp = chgVal >= 0;
-        var chgHtml = '<span class="mw-chg ' + (chgUp?'mw-chg-u':'mw-chg-d') + '" id="mwc-' + it2.sym + '">'
-          + (chgUp ? '▲' : '▼') + ' ' + chgAbs + '%</span>';
-        html += '<div class="mw-sym-block"><div class="mw-sym-name">' + it2.name + ' ' + chgHtml + '</div><div class="mw-sym-full">' + it2.full + '</div></div>';
-        html += '<div class="mw-bid">' + bid + '</div>';
-        html += '<div class="mw-ask">' + ask + '</div>';
-        html += '<div class="mw-spread-col">' + spd + '</div></div>';
+        html += _mwBuildRowHtml(items[ri], g.id);
       }
     }
   }
@@ -7281,6 +7356,7 @@ function symUnpin(sym){
     display: flex; align-items: center; justify-content: center;
     background: #141414; border-radius: 50%;
   }
+  #mPanMarket .mw-icon:active { transform: scale(0.88); background: #1e1e1e; }
 
   /* Sembol blok */
   #mPanMarket .mw-sym-block { flex: 1; min-width: 0; }
