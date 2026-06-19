@@ -3769,9 +3769,9 @@ function adDebugAccountBalance(){
     var lev = (a.leverage)||100;
     lockedCost += c;
     lines.push('  • '+p.sym+' '+p.side+' '+p.qty+' lot @ '+p.openPrice
-      +'  →  cost(kayıtlı):$'+c.toFixed(4)
-      +'  cs:'+cs+'  kaldıraç:'+lev
-      +'  (beklenen cost ≈ $'+((p.openPrice*p.qty*cs)/lev).toFixed(4)+')');
+      +'  →  cost(kilitli):$'+c.toFixed(4)
+      +'  cs(şu an kayıtlı):'+cs
+      +'  [not: cost açılış anındaki ayarlarla kilitlenir, sonradan symConfig değişse bile bu pozisyon için değişmez — bu normaldir]');
   });
 
   var st = (typeof adCalcStats==='function') ? adCalcStats(a, poses) : null;
