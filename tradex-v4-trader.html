@@ -4498,6 +4498,12 @@ function startFirebaseSnapshots() {
         fbSyms = fbSyms.filter(function(s){ return _del.indexOf(s.sym)===-1; });   // silinenleri at
         localStorage.setItem('tx_syms', JSON.stringify(fbSyms));
         symConfig = fbSyms; window._symConfig = fbSyms;
+        // ⚠️ KRİTİK: _txGetSymConf() sonuçları _txSymIdx'te cache'lenir (performans için).
+        // symConfig YENİDEN ATANINCA (yeni admin verisi) eski cache hâlâ ESKİ obje
+        // referanslarını tutar → txApplyPrice() spread'i symConfig'den okurken
+        // sayfa yenilenene kadar ESKİ spread'i kullanmaya devam eder.
+        // Cache'i temizleyince bir sonraki tick doğru spread'i okur.
+        if(typeof window._txClearSymIdx === 'function') window._txClearSymIdx();
         applySymConfig(); renderMarketWatch();
         var _curSC = symConfig.find(function(s){return s.sym===curSym;});
         if(_curSC) {
