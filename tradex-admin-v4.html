@@ -3739,6 +3739,81 @@ function adRecalcAllEquities() {
 }
 
 
+// ── HESAP TEŞHİSİ — bakiye/teminat uyuşmazlığını bulmak için ham veri dökümü ──
+function adDebugAccountBalance(){
+  var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
+  if(!a){ alert('Hesap bulunamadı'); return; }
+
+  var rawBal   = getAccBal(a.id);
+  var rawBonus = getAccBonus(a.id);
+
+  // adCalcStats'ın AYNI mantığıyla pozisyon kaynağını belirle (badge'in kullandığı yol)
+  var srcLabel;
+  var poses;
+  if(Array.isArray(a.positions)) {
+    poses = a.positions; srcLabel = 'a.positions (canonical users/{id} listener)';
+  } else if(typeof _allAccountPositions!=='undefined' && _allAccountPositions[a.id]) {
+    poses = _allAccountPositions[a.id]; srcLabel = '_allAccountPositions['+a.id+'] (fallback)';
+  } else {
+    poses = []; srcLabel = 'HİÇBİRİ BULUNAMADI — boş dizi kullanıldı';
+  }
+
+  // Gerçekte canlı pozisyon listesi neyse onunla da kıyasla (admin o an bu hesabı görüntülüyorsa _adPositions)
+  var liveCount = (String(_adAccId)===String(a.id) && Array.isArray(_adPositions)) ? _adPositions.length : null;
+
+  var lockedCost = 0;
+  var lines = [];
+  (poses||[]).forEach(function(p){
+    var c  = parseFloat(p.cost)||0;
+    var cs = parseFloat(p.contractSize)||1;
+    var lev = (a.leverage)||100;
+    lockedCost += c;
+    lines.push('  • '+p.sym+' '+p.side+' '+p.qty+' lot @ '+p.openPrice
+      +'  →  cost(kayıtlı):$'+c.toFixed(4)
+      +'  cs:'+cs+'  kaldıraç:'+lev
+      +'  (beklenen cost ≈ $'+((p.openPrice*p.qty*cs)/lev).toFixed(4)+')');
+  });
+
+  var st = (typeof adCalcStats==='function') ? adCalcStats(a, poses) : null;
+
+  var msg = '════ HESAP TEŞHİSİ  #'+a.id+'  ('+(a.name||'')+') ════\n\n'
+    + '【 HAM FIRESTORE DEĞERLERİ 】\n'
+    + 'Ham Bakiye (users/{id}.balance): $'+rawBal.toFixed(4)+'\n'
+    + 'Bonus: $'+rawBonus.toFixed(4)+'\n'
+    + 'Kaldıraç (a.leverage): '+(a.leverage||'tanımsız (100 varsayılan)')+'\n\n'
+    + '【 POZİSYON KAYNAĞI 】\n'
+    + 'Badge\'in kullandığı kaynak: '+srcLabel+'\n'
+    + 'Bu kaynaktaki pozisyon sayısı: '+(poses||[]).length+'\n'
+    + (liveCount!==null ? 'Canlı _adPositions sayısı (bu an görüntülenen): '+liveCount+(liveCount!==(poses||[]).length?'  ⚠️ FARKLI! senkron sorunu var':'  ✓ eşleşiyor')+'\n' : '')
+    + '\n【 AÇIK POZİSYONLAR — kilitli teminat (cost) 】\n'
+    + (lines.length ? lines.join('\n') : '  (açık pozisyon yok)')
+    + '\n\nToplam kilitli teminat (Σcost): $'+lockedCost.toFixed(4)+'\n\n'
+    + '【 adCalcStats() SONUCU (badge\'lerde gösterilen) 】\n'
+    + (st ? (
+        'Gösterilen Bakiye (ham+kilitliTeminat): $'+st.balance.toFixed(4)+'\n'
+      + '  = '+rawBal.toFixed(4)+' (ham) + '+lockedCost.toFixed(4)+' (kilitli) = '+(rawBal+lockedCost).toFixed(4)+'\n'
+      + (Math.abs(st.balance-(rawBal+lockedCost))>0.01 ? '  ⚠️ FORMÜL UYUŞMUYOR — kod farklı bir şey döndürüyor!\n' : '  ✓ formül tutarlı\n')
+      + 'Varlık (equity): $'+st.equity.toFixed(4)+'\n'
+      + 'Açık K/Z (openPnl): $'+st.openPnl.toFixed(4)+'\n'
+      + 'Margin: $'+st.margin.toFixed(4)+'\n'
+      ) : '  adCalcStats çalıştırılamadı')
+    + '\n【 BEKLENEN (10.000 başlangıç varsayımıyla) 】\n'
+    + 'Eğer hesap $10.000 ile başladıysa ve SADECE yukarıdaki açık pozisyonların\n'
+    + 'teminatı kilitliyse, gösterilen Bakiye şuna yakın olmalı:\n'
+    + '  10000 - (kapanan işlemlerin net K/Z\'si) ≈ kontrol için KAPALI sekmesindeki\n'
+    + '  toplam K/Z\'yi manuel topla ve buradaki "Gösterilen Bakiye" ile kıyasla.';
+
+  console.log(msg);
+  // Uzun metin için modal/alert yerine yeni pencere-stili kutu
+  var w = window.open('', '_blank', 'width=700,height=800');
+  if(w) {
+    w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;padding:16px;background:#0a0a0a;color:#e0e0e0;">'+msg.replace(/</g,'&lt;')+'</pre>');
+  } else {
+    alert(msg);
+  }
+}
+
+
 // ── Equity/Margin Hesap Motoru — TEK KAYNAK ──────────────────
 function adCalcStats(account, positions) {
   // ⚠️ CANONICAL: balance/bonus users/{id}'den (_accCanon)
@@ -4998,6 +5073,7 @@ function adRenderTab(tab) {
           '<span style="color:#c0c0c0;">T.Seviyesi: </span><span id="adBadgeMarLv" style="font-family:var(--mono);color:#f5c518;font-weight:700;">'+marLv+'</span></div>' +
         '<div style="background:#181818;border:1px solid '+((_opnl>0)?'#26a69a44':(_opnl<0)?'#ef535044':'#222')+';border-radius:4px;padding:6px 12px;font-size:11px;">' +
           '<span style="color:#c0c0c0;">Açık K/Z: </span><span id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;">'+_opnlTxt+'</span></div>' +
+        '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" style="background:#181818;border:1px solid #444;border-radius:4px;padding:6px 12px;font-size:11px;color:#888;cursor:pointer;font-family:var(--mono);">🔍 Teşhis</button>' +
       '</div>' +
 
       // ── Sekme butonları ──
