@@ -1212,13 +1212,10 @@ function startAccCanonListeners() {
 
 // Canonical read API — tüm render/hesap fonksiyonları buradan okur
 function getAccBal(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.balance||0):0; }
-// MT5 GÖRÜNÜMÜ: ekranda gösterilen bakiye = iç bakiye + kilitli marj (işlem açmak bakiyeyi değiştirmez).
-// İç muhasebe (yatır/çek/kapanış) getAccBal kullanmaya devam eder.
+// ⚠️ MT4/5 STANDART MODEL: Pozisyon açmak bakiyeyi değiştirmez — margin ayrıca hesaplanır.
+// Bu fonksiyon artık sadece geriye dönük uyumluluk için var, ham bakiyeyi döndürür.
 function getAccDispBal(accId){
-  var b = getAccBal(accId);
-  var poses = getAccPos(accId).filter(_adIsOpenPos);
-  for(var i=0;i<poses.length;i++) b += parseFloat(poses[i].cost)||0;
-  return b;
+  return getAccBal(accId);
 }
 function getAccBonus(accId)    { var c=_accCanon[String(accId)]; return (c&&c.ready)?(c.bonus||0):0; }
 function getAccPos(accId)      { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.positions))?c.positions:[]; }
@@ -1236,15 +1233,13 @@ function _adIsOpenPos(p){
 }
 function getAccFinlog(accId)   { var c=_accCanon[String(accId)]; return (c&&c.ready&&Array.isArray(c.finlog))?c.finlog:[]; }
 function getAccEquity(accId)   {
-  // equity = balance + bonus + ∑ kilitli marj (cost) + ∑ floating P&L
-  // (Açılışta balance -= cost yapılır; cost geri sayılmazsa varlık marj kadar eksik görünür.)
+  // ⚠️ MT4/5 STANDART MODEL: equity = bakiye + bonus + açık K/Z (margin dahil değil).
   var bal = getAccBal(accId) + getAccBonus(accId);
   var poses = getAccPos(accId).filter(_adIsOpenPos);   // hayalet/kapalı kayıtları sayma
   var fp = 0;
   var _missing = 0;
   for(var i=0;i<poses.length;i++){
     var po = poses[i];
-    fp += parseFloat(po.cost)||0;   // kilitli marj varlığa geri sayılır
     var pr = (typeof adGetPrice==='function') ? adGetPrice(po.sym) : 0;
     // ⚠️ Fiyat yoksa pozisyonu ATLAMA — openPrice'i kullan (P&L=0 gibi davran).
     // Eski davranış `continue`'ydu: büyük zarardaki pozisyonlar fiyat feed'i kopunca
@@ -1255,7 +1250,10 @@ function getAccEquity(accId)   {
     }
     var cs = parseFloat(po.contractSize)||1;
     var qt = parseFloat(po.qty)||0;
-    fp += (po.side==='buy' ? pr-po.openPrice : po.openPrice-pr) * qt * cs + (parseFloat(po.swapTotal)||0);
+    // ⚠️ KRİTİK: quote currency → USD dönüşümü (BIST/TRY ve cross pair'ler için gerekli,
+    // bu fonksiyon daha önce bu dönüşümü hiç yapmıyordu — TRY tutarı USD gibi sayılıyordu).
+    var _rawPl = (po.side==='buy' ? pr-po.openPrice : po.openPrice-pr) * qt * cs;
+    fp += (typeof _adQuoteToUsd==='function' ? _adQuoteToUsd(po.sym, _rawPl) : _rawPl) + (parseFloat(po.swapTotal)||0);
   }
   if(_missing > 0 && window._equityMissingLog !== accId) {
     console.warn('[getAccEquity] #'+accId+' için '+_missing+' pozisyonda fiyat yok — openPrice fallback kullanılıyor');
@@ -3766,42 +3764,41 @@ function adDebugAccountBalance(){
   (poses||[]).forEach(function(p){
     var c  = parseFloat(p.cost)||0;
     var cs = parseFloat(p.contractSize)||1;
-    var lev = (a.leverage)||100;
     lockedCost += c;
     lines.push('  • '+p.sym+' '+p.side+' '+p.qty+' lot @ '+p.openPrice
-      +'  →  cost(kilitli):$'+c.toFixed(4)
-      +'  cs(şu an kayıtlı):'+cs
-      +'  [not: cost açılış anındaki ayarlarla kilitlenir, sonradan symConfig değişse bile bu pozisyon için değişmez — bu normaldir]');
+      +'  →  margin(referans):$'+c.toFixed(4)
+      +'  cs:'+cs
+      +'  [not: MT4/5 modelde bu tutar bakiyeden KESİLMEZ, sadece Teminat göstergesi için bilgi amaçlı]');
   });
 
   var st = (typeof adCalcStats==='function') ? adCalcStats(a, poses) : null;
 
   var msg = '════ HESAP TEŞHİSİ  #'+a.id+'  ('+(a.name||'')+') ════\n\n'
     + '【 HAM FIRESTORE DEĞERLERİ 】\n'
-    + 'Ham Bakiye (users/{id}.balance): $'+rawBal.toFixed(4)+'\n'
+    + 'Bakiye (users/{id}.balance): $'+rawBal.toFixed(4)+'\n'
     + 'Bonus: $'+rawBonus.toFixed(4)+'\n'
     + 'Kaldıraç (a.leverage): '+(a.leverage||'tanımsız (100 varsayılan)')+'\n\n'
     + '【 POZİSYON KAYNAĞI 】\n'
     + 'Badge\'in kullandığı kaynak: '+srcLabel+'\n'
     + 'Bu kaynaktaki pozisyon sayısı: '+(poses||[]).length+'\n'
     + (liveCount!==null ? 'Canlı _adPositions sayısı (bu an görüntülenen): '+liveCount+(liveCount!==(poses||[]).length?'  ⚠️ FARKLI! senkron sorunu var':'  ✓ eşleşiyor')+'\n' : '')
-    + '\n【 AÇIK POZİSYONLAR — kilitli teminat (cost) 】\n'
+    + '\n【 AÇIK POZİSYONLAR — referans margin (bilgi amaçlı, bakiyeyi etkilemez) 】\n'
     + (lines.length ? lines.join('\n') : '  (açık pozisyon yok)')
-    + '\n\nToplam kilitli teminat (Σcost): $'+lockedCost.toFixed(4)+'\n\n'
-    + '【 adCalcStats() SONUCU (badge\'lerde gösterilen) 】\n'
+    + '\n\nToplam referans margin: $'+lockedCost.toFixed(4)+' (Teminat alanında ayrıca, CANLI fiyatla yeniden hesaplanır)\n\n'
+    + '【 adCalcStats() SONUCU (badge\'lerde gösterilen — MT4/5 STANDART MODEL) 】\n'
     + (st ? (
-        'Gösterilen Bakiye (ham+kilitliTeminat): $'+st.balance.toFixed(4)+'\n'
-      + '  = '+rawBal.toFixed(4)+' (ham) + '+lockedCost.toFixed(4)+' (kilitli) = '+(rawBal+lockedCost).toFixed(4)+'\n'
-      + (Math.abs(st.balance-(rawBal+lockedCost))>0.01 ? '  ⚠️ FORMÜL UYUŞMUYOR — kod farklı bir şey döndürüyor!\n' : '  ✓ formül tutarlı\n')
-      + 'Varlık (equity): $'+st.equity.toFixed(4)+'\n'
-      + 'Açık K/Z (openPnl): $'+st.openPnl.toFixed(4)+'\n'
-      + 'Margin: $'+st.margin.toFixed(4)+'\n'
+        'Bakiye (DEĞİŞMEZ, açılış/kapanıştan sadece K/Z ile değişir): $'+st.balance.toFixed(4)+'\n'
+      + (Math.abs(st.balance-rawBal)>0.01 ? '  ⚠️ Bakiye ham değerden farklı — kontrol et!\n' : '  ✓ Bakiye = ham değer (margin karışmıyor)\n')
+      + 'Varlık (equity = bakiye + bonus + açık K/Z): $'+st.equity.toFixed(4)+'\n'
+      + 'Açık K/Z (openPnl, spread maliyeti dahil): $'+st.openPnl.toFixed(4)+'\n'
+      + 'Teminat (margin, CANLI hesaplanır — pos.cost kullanılmaz): $'+st.margin.toFixed(4)+'\n'
+      + 'Serbest Teminat: $'+st.freeMargin.toFixed(4)+'\n'
       ) : '  adCalcStats çalıştırılamadı')
-    + '\n【 BEKLENEN (10.000 başlangıç varsayımıyla) 】\n'
-    + 'Eğer hesap $10.000 ile başladıysa ve SADECE yukarıdaki açık pozisyonların\n'
-    + 'teminatı kilitliyse, gösterilen Bakiye şuna yakın olmalı:\n'
-    + '  10000 - (kapanan işlemlerin net K/Z\'si) ≈ kontrol için KAPALI sekmesindeki\n'
-    + '  toplam K/Z\'yi manuel topla ve buradaki "Gösterilen Bakiye" ile kıyasla.';
+    + '\n【 KONTROL 】\n'
+    + 'MT4/5 modelde Bakiye SADECE şunlarla değişir: kapanan işlem K/Z\'si,\n'
+    + 'swap, komisyon, deposit/withdraw/bonus. Pozisyon AÇMAK bakiyeyi DEĞİŞTİRMEZ.\n'
+    + 'KAPALI sekmesindeki toplam K/Z\'yi manuel topla ve başlangıç bakiyesiyle\n'
+    + 'kıyasla — fark varsa FİNANS sekmesindeki deposit/withdraw kayıtlarına bak.';
 
   console.log(msg);
   // Uzun metin için modal/alert yerine yeni pencere-stili kutu
@@ -3823,10 +3820,8 @@ function adCalcStats(account, positions) {
   var lev   = parseFloat(account.leverage||100);
   var cfg   = (typeof symConfig!=='undefined'&&symConfig) ? symConfig : [];
   var openPnl=0;
-  var lockedCost=0;   // açılışta bakiyeden düşülen kilitli marj — varlığa GERİ sayılmalı (MT mantığı)
   var _missingPrices = 0;
   (positions||[]).forEach(function(pos){
-    lockedCost += parseFloat(pos.cost)||0;
     // MT4 mantığı: buy kapatma→bid, sell kapatma→ask
     var closeP = adGetPrice(pos.sym, pos.side==='buy'?'sell':'buy') || adGetPrice(pos.sym);
     // ⚠️ Fiyat yoksa pozisyonu atlamak yerine openPrice kullan (P&L=0 gibi davran).
@@ -3843,8 +3838,9 @@ function adCalcStats(account, positions) {
     console.warn('[adCalcStats] #'+account.id+' '+_missingPrices+' pozisyonda fiyat yok — openPrice fallback');
     window._calcStatsMissingLog = account.id;
   }
-  // Varlık = bakiye + bonus + kilitli marj + açık K/Z (kapanışta zıplama olmasın — trader ile aynı formül)
-  var equity=bal+bonus+lockedCost+openPnl;
+  // ⚠️ MT4/5 STANDART MODEL: Pozisyon açmak bakiyeyi değiştirmez.
+  // Varlık = bakiye + bonus + açık K/Z. Açılış spread maliyeti openPnl'e otomatik yansır.
+  var equity=bal+bonus+openPnl;
   var nets={};
   (positions||[]).forEach(function(pos){
     if(!nets[pos.sym]) nets[pos.sym]={buy:0,sell:0,price:0};
@@ -3861,8 +3857,7 @@ function adCalcStats(account, positions) {
   });
   var freeMargin=Math.max(0,equity-margin);
   var marginLvl=margin>0?(equity/margin*100):null;
-  // MT5 görünümü: işlem açmak BAKİYEYİ değiştirmez — kilitli marj bakiyeye dahil gösterilir.
-  return {balance:bal+lockedCost,bonus:bonus,openPnl:openPnl,equity:equity,
+  return {balance:bal,bonus:bonus,openPnl:openPnl,equity:equity,
           margin:margin,freeMargin:freeMargin,marginLvl:marginLvl,
           openCount:(positions||[]).length};
 }
@@ -10196,9 +10191,10 @@ function adClosePos(btn){
   var qty = parseFloat(pos.qty)||0;
   var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
             + (parseFloat(pos.swapTotal)||0);
-  // Bakiyeye geri ekle: açılışta cost düşüldü → kapanınca cost+pnl iade et
+  // ⚠️ MT4/5 STANDART MODEL: açılışta margin bakiyeden kesilmedi → kapanışta
+  // sadece gerçekleşen K/Z eklenir, cost/margin iadesi yok.
   // ⚠️ Canonical balance'ı kullan
-  var _newBal = getAccBal(a.id) + (pos.cost||0) + pnl;
+  var _newBal = getAccBal(a.id) + pnl;
   // Geçmişe ekle
   _adHistory.unshift(Object.assign({}, pos, {
     closePrice: cur, pnl: pnl,
@@ -10232,7 +10228,7 @@ function adCloseAllPositions(){
   if(!_adPositions.length){ showAdminToast('Bilgi','Açık pozisyon yok','info'); return; }
   if(!confirm(_adPositions.length+' açık pozisyonun TÜMÜ kapatılsın mı?')) return;
   var nowIso = new Date().toISOString();
-  var totalPnl = 0, totalCost = 0;
+  var totalPnl = 0;
   _adPositions.forEach(function(pos){
     var cur = adGetPrice(pos.sym);
     var cs  = parseFloat(pos.contractSize)||1;
@@ -10240,14 +10236,14 @@ function adCloseAllPositions(){
     var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
               + (parseFloat(pos.swapTotal)||0);
     totalPnl  += pnl;
-    totalCost += (pos.cost||0);
     _adHistory.unshift(Object.assign({}, pos, {
       closePrice: cur, pnl: pnl,
       closeTime: nowIso, closeReason:'admin-tumunu-kapat'
     }));
   });
-  // Açılışta cost düşüldü → kapanınca cost+pnl iade — canonical balance üzerinden
-  var _newBal = getAccBal(a.id) + totalCost + totalPnl;
+  // ⚠️ MT4/5 STANDART MODEL: açılışta margin bakiyeden kesilmedi → sadece toplam
+  // gerçekleşen K/Z eklenir, cost/margin iadesi yok — canonical balance üzerinden.
+  var _newBal = getAccBal(a.id) + totalPnl;
   _adPositions = [];
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
   if(typeof db !== 'undefined' && db) {
@@ -10384,10 +10380,13 @@ function adOpenTrade(btn){
   // ⚠️ CANONICAL: balance/bonus users/{id}'den
   var _curBal = getAccBal(a.id);
   var _curBon = getAccBonus(a.id);
-  if(cost > (_curBal + _curBon)){
-    showAdminToast('Yetersiz Teminat','$'+adFp(cost)+' teminat gerekli','error'); return;
+  // ⚠️ MT4/5 STANDART MODEL: Yeterlilik kontrolü SERBEST TEMİNATA göre yapılır
+  // (bakiyeye göre değil) — margin açılışta bakiyeden kesilmiyor artık.
+  var _stBefore = (typeof adCalcStats==='function') ? adCalcStats(a, _adPositions) : null;
+  var _freeMarginNow = _stBefore ? _stBefore.freeMargin : (_curBal + _curBon);
+  if(cost > _freeMarginNow){
+    showAdminToast('Yetersiz Serbest Teminat','$'+adFp(cost)+' teminat gerekli — Serbest: $'+adFp(_freeMarginNow),'error'); return;
   }
-  var _newBal = _curBal - cost;
   // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
   var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
   var _swapSg = (typeof tradingGroups!=='undefined'&&tradingGroups)?tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
@@ -10401,10 +10400,9 @@ function adOpenTrade(btn){
   });
   // ⚠️ a.positions'a DOKUNMA — users/{id} canonical
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  // Sadece users/{id}'ye yaz
+  // Sadece users/{id}'ye yaz — MT4/5 model: balance açılışta DEĞİŞMEZ, yazılmıyor.
   if(typeof db !== 'undefined' && db) {
     db.collection('users').doc(String(a.id)).set({
-      balance: _newBal,
       positions: _adPositions,
       _balanceSource: 'manager',
       updatedAt: new Date().toISOString()
@@ -10532,15 +10530,14 @@ function adDeleteHistory(btn){
   var hidx = _adFindHistIdx(btn);
   if(hidx<0 || !_adHistory[hidx]) return;
   var h = _adHistory[hidx];
-  if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' geçmiş kaydı silinsin mi?\n\nKapanışta bakiyeye eklenen tutar (margin iadesi + K/Z) geri alınacak.')) return;
+  if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' geçmiş kaydı silinsin mi?\n\nKapanışta bakiyeye eklenen K/Z geri alınacak.')) return;
 
-  // ⚠️ KRİTİK: Kapanışta bakiye += cost + pnl yapılmıştı → silme: bakiye -= cost + pnl
-  // (adReopenHistory ile aynı mantık, ama pozisyon tekrar açılmıyor, tamamen siliniyor)
-  var cost = parseFloat(h.cost)||0;
+  // ⚠️ MT4/5 STANDART MODEL: Kapanışta bakiye += pnl yapılmıştı (margin hiç kesilmemişti)
+  // → silme: bakiye -= pnl. cost'a dokunulmaz.
   var pnl  = parseFloat(h.pnl)||0;
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(a){
-    var _newBal = getAccBal(a.id) - cost - pnl;
+    var _newBal = getAccBal(a.id) - pnl;
     if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
   }
 
@@ -10554,7 +10551,7 @@ function adDeleteHistory(btn){
 
 // ── Kapalı pozisyonu YENİDEN AÇ (reopen) ──────────────────────
 // Kapalı kaydı açık pozisyonlara geri koyar ve kapanışta bakiyeye eklenen
-// (cost + K/Z) tutarını geri alır → pozisyon hiç kapanmamış gibi aktif olur.
+// K/Z'yi geri alır → pozisyon hiç kapanmamış gibi aktif olur.
 function adReopenHistory(btn){
   if(typeof hasPerm==='function' && !hasPerm('trades.edit')){ showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger'); return; }
   var hidx = _adFindHistIdx(btn);
@@ -10564,10 +10561,10 @@ function adReopenHistory(btn){
   if(!a) return;
   if(!confirm('#'+String(h.id).slice(-6)+' '+h.sym+' pozisyonu YENİDEN AÇILSIN mı?\n\nKapanışta bakiyeye eklenen K/Z geri alınır, pozisyon açık (aktif) duruma döner.')) return;
 
-  var cost = parseFloat(h.cost)||0;
+  // ⚠️ MT4/5 STANDART MODEL: Kapanışta bakiye += pnl yapılmıştı (margin hiç kesilmemişti)
+  // → reopen: bakiye -= pnl. cost'a dokunulmaz.
   var pnl  = parseFloat(h.pnl)||0;
-  // Kapanışta bakiye += cost + pnl yapılmıştı → reopen: bakiye -= cost + pnl
-  var _newBal = getAccBal(a.id) - cost - pnl;
+  var _newBal = getAccBal(a.id) - pnl;
 
   // Kapalı kaydı açık pozisyona çevir — kapanış alanlarını temizle
   var pos = Object.assign({}, h);
