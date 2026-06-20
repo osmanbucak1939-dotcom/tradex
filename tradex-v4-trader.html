@@ -1322,6 +1322,11 @@ function _doRegister() {
   if(!email){_authErr('err-register','E-posta gerekli!');return;}
   if(pass.length<6){_authErr('err-register','Şifre en az 6 karakter!');return;}
   if(pass!==pass2){_authErr('err-register','Şifreler eşleşmiyor!');return;}
+
+  // ⚠️ KRİTİK: Sayfa yeni açıldıysa anonim Firebase Auth henüz tamamlanmamış
+  // olabilir — bu durumda Firestore yazma "Missing or insufficient permissions"
+  // hatası verir (request.auth henüz null). Kayda geçmeden auth'u garanti et.
+  function _proceedRegister() {
   // Firebase'den güncel hesap listesini çek, sonra kaydet
   fbLoadAccounts(function(fbAccs) {
     if(fbAccs && fbAccs.length) { accounts = fbAccs; try{localStorage.setItem('tx_accounts',JSON.stringify(accounts));}catch(e){} }
@@ -1356,6 +1361,19 @@ function _doRegister() {
       setTimeout(function(){_authSuccess(finalAcc);},1200);
     });
   });
+  } // _proceedRegister sonu
+
+  if(typeof firebase !== 'undefined' && firebase.auth) {
+    if(firebase.auth().currentUser) {
+      _proceedRegister();
+    } else {
+      firebase.auth().signInAnonymously()
+        .then(function(){ _proceedRegister(); })
+        .catch(function(){ _proceedRegister(); }); // başarısız olsa da dene, en azından hata mesajı görünsün
+    }
+  } else {
+    _proceedRegister();
+  }
 }
 function logoutUser() {
   if(typeof window._txSetOffline === 'function') window._txSetOffline();
