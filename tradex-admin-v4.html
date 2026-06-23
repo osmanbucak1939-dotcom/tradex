@@ -7895,6 +7895,16 @@ function pcSetPrice() {
         Object.assign({_ts:Date.now()}, window._synthOffsets), {merge:false}
       ).catch(function(){});
     }
+    // ⚠️ KRİTİK: pcRenderOverrides() listesi window._synthOffsets'e DEĞİL, symConfig'teki
+    // priceOffset alanına bakıyor (offKeys filtresi: s.priceOffset!==0). Bu satır
+    // eksikti — offset doğru uygulanıyordu ama liste hep "yok" görünüyordu.
+    if(_scIdx>=0){
+      symConfig[_scIdx].priceOffset = _newOffset;
+      try{ localStorage.setItem('tx_syms', JSON.stringify(symConfig)); }catch(e){}
+      if(typeof db!=='undefined'&&db){
+        db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),_ts:Date.now()},{merge:true}).catch(function(){});
+      }
+    }
     // Hemen uygula
     var _sp = _srcPrice * _factor + _newOffset;
     var _ss = _adGetSpread(sym), _sh=_ss/2;
