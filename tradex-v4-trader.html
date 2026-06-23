@@ -3640,7 +3640,7 @@ function placeOrder(side) {
   for(var _fpi=0; _fpi<positions.length; _fpi++) {
     var _fp2 = positions[_fpi];
     var _fpp = prices[_fp2.sym];
-    if(_fpp) _curOpenPL += (_fp2.side==='buy' ? _fpp.price-_fp2.openPrice : _fp2.openPrice-_fpp.price) * _fp2.qty * (_fp2.contractSize||1);
+    if(_fpp) _curOpenPL += _quoteToUsd(_fp2.sym, (_fp2.side==='buy' ? _fpp.price-_fp2.openPrice : _fp2.openPrice-_fpp.price) * _fp2.qty * (_fp2.contractSize||1));
     _curOpenPL += (_fp2.swapTotal||0);
   }
   var _curAcc = _cu || {balance:balance, bonus:0, leverage:100};
@@ -3710,7 +3710,7 @@ function placeOrder(side) {
   for(var _ck=0; _ck<positions.length; _ck++) {
     var _cpos = positions[_ck];
     var _cp2 = prices[_cpos.sym];
-    if(_cp2) _chkPL += (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1);
+    if(_cp2) _chkPL += _quoteToUsd(_cpos.sym, (_cpos.side==='buy' ? _cp2.price-_cpos.openPrice : _cpos.openPrice-_cp2.price) * _cpos.qty * (_cpos.contractSize||1));
   }
   // Varlık = bakiye (margin'den etkilenmez) + açık K/Z
   var _newEquity = balance + _chkPL;
@@ -4235,8 +4235,8 @@ function _checkStopOut(equity, marginUsed, marginLvl) {
   var sortedPos = positions.slice().sort(function(a, b) {
     var pa = prices[a.sym] ? prices[a.sym].price : a.openPrice;
     var pb = prices[b.sym] ? prices[b.sym].price : b.openPrice;
-    var plA = (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty * (a.contractSize||1);
-    var plB = (b.side==='buy' ? pb-b.openPrice : b.openPrice-pb) * b.qty * (b.contractSize||1);
+    var plA = _quoteToUsd(a.sym, (a.side==='buy' ? pa-a.openPrice : a.openPrice-pa) * a.qty * (a.contractSize||1));
+    var plB = _quoteToUsd(b.sym, (b.side==='buy' ? pb-b.openPrice : b.openPrice-pb) * b.qty * (b.contractSize||1));
     return plA - plB;
   });
   var toClose = sortedPos[0];
@@ -8205,7 +8205,7 @@ function symUnpin(sym){
         var _pr=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym]:null;
         var cur=_pr?(p.side==='buy'?(_pr.bid||_pr.price):(_pr.ask||_pr.price)):p.openPrice;
         var cs=parseFloat(p.contractSize)||1;
-        var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
+        var pnl=_quoteToUsd(p.sym, (p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs)+(parseFloat(p.swapTotal)||0);
         var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
         return '<div class="m-card" onclick="mPosDetail('+p.id+')" style="cursor:pointer">'
           +'<div class="m-cl">'
@@ -8372,7 +8372,7 @@ function symUnpin(sym){
     var dec = sc?parseInt(sc.decimals)||2:2;
     var cur = (typeof prices!=='undefined'&&prices[pos.sym])?prices[pos.sym].price:pos.openPrice;
     var cs = parseFloat(pos.contractSize)||1;
-    var pnl = (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs+(parseFloat(pos.swapTotal)||0);
+    var pnl = _quoteToUsd(pos.sym, (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs)+(parseFloat(pos.swapTotal)||0);
     var fp2 = function(n,d){return parseFloat(n||0).toFixed(d||2);};
     var set = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
     var setc = function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
@@ -8591,7 +8591,7 @@ function symUnpin(sym){
       var pr=(typeof prices!=='undefined'&&prices[p.sym])?prices[p.sym]:null;
       var cur=pr?(p.side==='buy'?(pr.bid||pr.price):(pr.ask||pr.price)):p.openPrice;
       var cs=parseFloat(p.contractSize)||1;
-      var pnl=(p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs+(parseFloat(p.swapTotal)||0);
+      var pnl=_quoteToUsd(p.sym, (p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*cs)+(parseFloat(p.swapTotal)||0);
       var pe=document.querySelector('[data-mp="'+p.id+'"]');
       var ce=document.querySelector('[data-mc="'+p.id+'"]');
       if(pe){pe.textContent=(pnl>=0?'+':'-')+'$'+fp(Math.abs(pnl));pe.className='m-cpnl '+(pnl>=0?'u':'d');}
@@ -8637,7 +8637,7 @@ function symUnpin(sym){
         var _mpr=(typeof prices!=='undefined'&&prices[_mp.sym])?prices[_mp.sym]:null;
         var _mcur=_mpr?(_mp.side==='buy'?(_mpr.bid||_mpr.price):(_mpr.ask||_mpr.price)):_mp.openPrice;
         var _mcs=parseFloat(_mp.contractSize)||1;
-        var _mpnl=(_mp.side==='buy'?_mcur-_mp.openPrice:_mp.openPrice-_mcur)*(parseFloat(_mp.qty)||0)*_mcs+(parseFloat(_mp.swapTotal)||0);
+        var _mpnl=_quoteToUsd(_mp.sym, (_mp.side==='buy'?_mcur-_mp.openPrice:_mp.openPrice-_mcur)*(parseFloat(_mp.qty)||0)*_mcs)+(parseFloat(_mp.swapTotal)||0);
         var _fp2=function(n,d){return parseFloat(n||0).toFixed(d||2);};
         var _se=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
         var _sc2=function(id,c){var e=document.getElementById(id);if(e)e.style.color=c;};
