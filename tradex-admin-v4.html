@@ -10393,12 +10393,22 @@ function adOpenTrade(btn){
   // ⚠️ CANONICAL: balance/bonus users/{id}'den
   var _curBal = getAccBal(a.id);
   var _curBon = getAccBonus(a.id);
-  // ⚠️ MT4/5 STANDART MODEL: Yeterlilik kontrolü SERBEST TEMİNATA göre yapılır
-  // (bakiyeye göre değil) — margin açılışta bakiyeden kesilmiyor artık.
+  // ⚠️ MT4/5 STANDART MODEL + HEDGE NETLEŞMESİ: Yeterlilik kontrolü, bu işlemin
+  // toplam margin'i NE KADAR ARTTIRACAĞINA göre yapılmalı — izole maliyetine göre değil.
+  // Aksi halde mevcut pozisyonu hedge eden (ters yönde) bir işlem, margin'i gerçekte
+  // DÜŞÜRSE bile, sanki sıfırdan açılan bağımsız bir pozisyonmuş gibi tam teminat
+  // isteyip serbest teminat yetersizse reddediliyordu — forex mantığına aykırıydı.
   var _stBefore = (typeof adCalcStats==='function') ? adCalcStats(a, _adPositions) : null;
   var _freeMarginNow = _stBefore ? _stBefore.freeMargin : (_curBal + _curBon);
-  if(cost > _freeMarginNow){
-    showAdminToast('Yetersiz Serbest Teminat','$'+adFp(cost)+' teminat gerekli — Serbest: $'+adFp(_freeMarginNow),'error'); return;
+  var _existNet = {buy:0, sell:0};
+  _adPositions.forEach(function(p){ if(p.sym===sym){ _existNet[p.side] += parseFloat(p.qty)||0; } });
+  var _oldNetQty = Math.abs(_existNet.buy - _existNet.sell);
+  var _newBuy  = _existNet.buy  + (side==='buy'  ? qty : 0);
+  var _newSell = _existNet.sell + (side==='sell' ? qty : 0);
+  var _newNetQty = Math.abs(_newBuy - _newSell);
+  var _marginDelta = ((_newNetQty - _oldNetQty) * price * cs) / lev;
+  if(_marginDelta > 0 && _marginDelta > _freeMarginNow){
+    showAdminToast('Yetersiz Serbest Teminat','$'+adFp(_marginDelta)+' ek teminat gerekli — Serbest: $'+adFp(_freeMarginNow),'error'); return;
   }
   // swapBuy/swapSell — spread grubundan al (trader applyDailySwap için gerekli)
   var _swapSc = (typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
