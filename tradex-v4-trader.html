@@ -8155,6 +8155,10 @@ function symUnpin(sym){
         var it=g.items[ii];
         var match=!filter||it.name.toLowerCase().indexOf(filter)>=0||it.full.toLowerCase().indexOf(filter)>=0;
         if(!match) continue;
+        // ⚠️ Masaüstüyle TUTARLILIK: Trading group sembol whitelist'i mobilde de uygulanmalı.
+        if(typeof canTradeSymbol === 'function' && _cu) {
+          if(!canTradeSymbol(_cu.spreadGroup || 'standard', it.sym)) continue;
+        }
         if(typeof _txFavorites!=='undefined' && _txFavorites[it.sym]){
           favItems.push({it:it, gid:g.id});
           continue; // favori — kendi grubunda değil, FAVORİLER'de gösterilecek
