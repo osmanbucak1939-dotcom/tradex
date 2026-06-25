@@ -3692,7 +3692,9 @@ function placeOrder(side) {
     var _fsc = symConfig ? symConfig.find(function(s){return s.sym===_fs;}) : null;
     var _fcs = _fsc ? (parseFloat(_fsc.contractSize)||1) : 1;
     var _flv = (_cu && _cu.leverage) ? parseFloat(_cu.leverage) : 100;
-    if(_fsc && _fsc.margin && _fsc.margin>0) _flv = 100/_fsc.margin;
+    // ⚠️ KALDIRILDI: sembolün 'margin' alanı artık hesap kaldıracını geçersiz kılmıyor —
+    // çoğu sembolde margin:1 varsayılan olduğu için hesap kaldıracı hiçbir zaman etkili
+    // olmuyordu (her zaman sabit 1:100'e kilitleniyordu).
     _curMarginUsed += (Math.abs(_fsd.buyQty-_fsd.sellQty) * _fsd.price * _fcs) / _flv;
   });
   var _freeMarginNow = _curEquity - _curMarginUsed;
@@ -7063,7 +7065,9 @@ function txCalcStats(account, posArr) {
     var n=nets[sym], nq=Math.abs(n.buy-n.sell);
     var sc=cfg.find(function(s){return s.sym===sym;});
     var cs=sc?(parseFloat(sc.contractSize)||1):1;
-    var lv=(sc&&sc.margin&&sc.margin>0)?(100/parseFloat(sc.margin)):lev;
+    // ⚠️ KALDIRILDI: sembolün 'margin' alanı artık hesap kaldıracını geçersiz kılmıyor
+    // (bkz. admin'deki adCalcStats'taki aynı düzeltme — sebebi orada açıklandı).
+    var lv=lev;
     margin+=(nq*n.price*cs)/lv;
   });
   return {
