@@ -4015,11 +4015,31 @@ function closePosition(id, reason='', closeQty) {
   pnl += _swapC; // birikmiş swap balance'a dahil
   balance += pnl; // MT4/5 model: margin balance'a dahil değildi, sadece K/Z eklenir
   positions.splice(idx, 1);
-  tradeHistory.unshift({ ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' });
+  const _histEntry = { ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' };
+  tradeHistory.unshift(_histEntry);
   if (tradeHistory.length > 50) tradeHistory.pop();
   save();
-  if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
-    // finlog YAZILMIYOR — sadece admin yazar (kök sorun: trader'ın boş finlog yazması veri kaybına yol açıyordu)
+  // ⚠️ KRİTİK: Bayat bir oturumun (örn. admin aynı hesabı izlerken, ya da aynı hesap
+  // başka bir cihazda açıkken) eski pozisyon listesini geri yazıp bu kapatmayı
+  // "diriltmesini" önlemek için, transaction ile SUNUCUDAKİ EN GÜNCEL listeden
+  // SADECE bu pozisyonu cerrahi olarak çıkarıyoruz — yerel diziyi olduğu gibi yazmıyoruz.
+  if(typeof db !== 'undefined' && db && typeof _cu !== 'undefined' && _cu) {
+    var _refCP = db.collection('users').doc(String(_cu.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refCP).then(function(doc){
+        if(!doc.exists) return;
+        var d = doc.data();
+        var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+        var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
+        var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+        if(sIdx >= 0) serverPos.splice(sIdx, 1);
+        serverHist.unshift(_histEntry);
+        if(serverHist.length > 50) serverHist.pop();
+        var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : balance;
+        tx.set(_refCP, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
+      });
+    }).catch(function(e){ console.warn('[closePosition] transaction:', e.message); });
+  } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
     fbSaveUserData(_cu.id, {balance:balance, positions:positions});
   }
   renderPositions();
