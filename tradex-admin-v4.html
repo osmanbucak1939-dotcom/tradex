@@ -3884,7 +3884,11 @@ function adCalcStats(account, positions) {
     var n=nets[sym], nq=Math.abs(n.buy-n.sell);
     var sc=cfg.find(function(s){return s.sym===sym;});
     var cs=sc?(parseFloat(sc.contractSize)||1):1;
-    var lv=(sc&&sc.margin&&sc.margin>0)?(100/parseFloat(sc.margin)):lev;
+    // ⚠️ KALDIRILDI: sembolün kendi 'margin' alanı artık hesabın kaldıracını geçersiz
+    // kılmıyor. Çoğu sembolde varsayılan margin:1 olduğu için, eskiden TÜM hesaplar
+    // sembol bazında sabit 1:100'e kilitleniyordu — hesap kaldıracı (1:1000 gibi) hiç
+    // etkisi olmuyordu. Artık her zaman hesabın CANLI kaldıracı kullanılır.
+    var lv=lev;
     margin+=(nq*n.price*cs)/lv;
   });
   var freeMargin=Math.max(0,equity-margin);
@@ -10582,10 +10586,8 @@ function adOpenTrade(btn){
   var sc    = (typeof symConfig!=='undefined'&&symConfig) ? symConfig.find(function(s){ return s.sym===sym; }) : null;
   var cs    = sc ? (parseFloat(sc.contractSize)||1) : 1;
   var lev   = parseFloat((a&&a.leverage)||100);
-  // Sembol margin oranı varsa onu kullan (trader'la aynı mantık) — yoksa hesabın leverage'ı
-  if(sc && sc.margin && parseFloat(sc.margin) > 0) {
-    lev = 100 / parseFloat(sc.margin);
-  }
+  // ⚠️ KALDIRILDI: sembolün 'margin' alanı artık hesap kaldıracını geçersiz kılmıyor
+  // (bkz. adCalcStats'taki aynı düzeltme — sebebi orada açıklandı).
   var cost  = (price * qty * cs) / lev;
   var label = sc ? (sc.label||sym) : sym;
   // ⚠️ CANONICAL: balance/bonus users/{id}'den
