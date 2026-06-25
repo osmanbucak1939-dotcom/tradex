@@ -3775,7 +3775,27 @@ function placeOrder(side) {
   var _decPos = _symCfgSw ? (_symCfgSw.decimals||2) : 2;
   pos = { id:Date.now(), sym:curSym, contractSize:_contractSizeCost, decimals:_decPos, label:(function(){ var _sf=null; for(var _si=0;_si<SYMS.length;_si++){if(SYMS[_si].sym===curSym){_sf=SYMS[_si];break;}} return _sf?_sf.label:curSym; })(), side, qty, openPrice:execPrice, sl, tp, time:new Date().toISOString(), cost:netCost, commission:_commission, hedge:(netQty < qty), device:detectDevice(), swapBuy:_swBuy, swapSell:_swSell, swapTotal:0 };
   positions.push(pos);
-  save();
+  // ⚠️ KRİTİK: Genel save() yerine, SADECE bu yeni pozisyonu sunucudaki en güncel
+  // listeye ekleyen bir transaction kullanıyoruz. Sebep: Cloud Function risk motoru
+  // (onPriceUpdate/riskEngineBackup) bir pozisyonu SUNUCU tarafında stop-out ile
+  // kapatabilir; eğer trader bunu henüz bilmeden (gerçek zamanlı dinleyici henüz
+  // yetişmeden) yeni bir işlem açıp genel save()'i çağırırsa, yerel (bayat) pozisyon
+  // dizisi sunucuya geri yazılır ve Cloud Function'ın AZ ÖNCE kapattığı pozisyon
+  // dirilir. Bu transaction, sadece "yeni pozisyon ekle" işlemini atomik yapar,
+  // sunucunun kapatma kararlarını ezmez.
+  if(typeof db !== 'undefined' && db && typeof _cu !== 'undefined' && _cu) {
+    var _refPO = db.collection('users').doc(String(_cu.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refPO).then(function(doc){
+        var serverPos = (doc.exists && Array.isArray(doc.data().positions)) ? doc.data().positions.slice() : [];
+        serverPos.push(pos);
+        tx.set(_refPO, { positions: serverPos, balance: balance, updatedAt: new Date().toISOString() }, { merge: true });
+      });
+    }).catch(function(e){ console.warn('[placeOrder] transaction:', e.message); });
+    try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+  } else {
+    save();
+  }
   renderPositions();
   updateAccount();
 
