@@ -1288,6 +1288,34 @@ function fbSaveAccounts() {
       window._fbSaveTimer = setTimeout(function() {
         window._fbSaveTimer = null;
         if(!accounts||accounts.length<1) return;
+        // ⚠️ KRİTİK — VERİ KAYBI KORUMASI:
+        // Bu fonksiyon eskiden yerel 'accounts' dizisini KÖR şekilde (.set, transaction
+        // değil) sunucuya yazıyordu. Eğer yerel kopya bayatsa (örn. trader'dan az önce
+        // self-registration ile eklenen bir hesabı admin'in oturumu henüz görmediyse),
+        // bu yazma sunucudaki YENİ hesabı TAMAMEN SİLERDİ — gerçekten yaşanan bug bu oldu.
+        // Çözüm: yazmadan önce sunucudaki GÜNCEL listeyi çek, yerelde OLMAYAN hesapları
+        // (id bazında) geri ekle, sonra yaz. Yerel listedeki hesaplar (admin'in az önce
+        // düzenlediği/oluşturduğu) öncelikli kalır — onlar için yereldeki versiyon yazılır.
+        var ref = db.collection('broker').doc('accounts');
+        ref.get().then(function(doc){
+          var serverAccs = [];
+          if(doc.exists) { try { serverAccs = JSON.parse(doc.data().data||'[]'); } catch(e){} }
+          var localIds = {};
+          accounts.forEach(function(a){ if(a.id) localIds[String(a.id)] = true; });
+          var missing = serverAccs.filter(function(sa){ return sa.id && !localIds[String(sa.id)]; });
+          if(missing.length) {
+            console.warn('[fbSaveAccounts] Yerel listede olmayan '+missing.length+' hesap sunucuda bulundu, geri ekleniyor:',
+              missing.map(function(a){ return a.login||a.id; }).join(', '));
+            accounts = accounts.concat(missing);
+          }
+          _fbSaveAccountsCommit();
+        }).catch(function(e){
+          console.warn('[fbSaveAccounts] sunucu kontrolü başarısız, yine de yazılıyor:', e.message);
+          _fbSaveAccountsCommit();
+        });
+      }, 2000); // 2sn debounce — stop out 1sn interval'daki flood'u önler
+}
+function _fbSaveAccountsCommit() {
         // ⚠️ broker/accounts sadece META: balance/positions/bonus/finlog buradan çıkarılır
         var _clean = accounts.map(accSanitizeForBroker);
         var _ts=new Date().toISOString(),_data=JSON.stringify(_clean);
@@ -1310,8 +1338,7 @@ function fbSaveAccounts() {
             db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
           });
         }catch(e){console.warn(e);}
-      }, 2000); // 2sn debounce — stop out 1sn interval'daki flood'u önler
-    }
+}
 
     // Güvenli hesap ekleme - race condition önler
     
