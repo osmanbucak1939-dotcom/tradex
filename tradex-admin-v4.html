@@ -10487,15 +10487,30 @@ function adClosePos(btn){
   _adPositions.splice(idx, 1);
   // ⚠️ a.positions'a DOKUNMA — canonical users/{id}'ye yazılıyor
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  // Sadece users/{id}'ye yaz — broker/accounts'a DOKUNMA
+  // ⚠️ KRİTİK: Bayat bir oturumun (trader aynı hesabı açıkken, ya da admin'in kendi
+  // bayat _adPositions kopyası) bu kapatmayı "diriltmesini" önlemek için, transaction
+  // ile SUNUCUDAKİ EN GÜNCEL listeden SADECE bu pozisyonu cerrahi olarak çıkarıyoruz.
+  var _histEntryAd = Object.assign({}, pos, {
+    closePrice: cur, pnl: pnl,
+    closeTime: new Date().toISOString(), closeReason:'admin-kapat'
+  });
   if(typeof db !== 'undefined' && db) {
-    db.collection('users').doc(String(a.id)).set({
-      balance: _newBal,
-      positions: _adPositions,
-      tradeHistory: _adHistory.slice(0, 100),
-      _balanceSource: 'manager',
-      updatedAt: new Date().toISOString()
-    }, {merge:true}).catch(function(e){ console.warn('adClosePos:', e); });
+    var _refACP = db.collection('users').doc(String(a.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refACP).then(function(doc){
+        if(!doc.exists) return;
+        var d = doc.data();
+        var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+        var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
+        var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+        if(sIdx >= 0) serverPos.splice(sIdx, 1);
+        serverHist.unshift(_histEntryAd);
+        if(serverHist.length > 100) serverHist = serverHist.slice(0,100);
+        var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : _newBal;
+        tx.set(_refACP, { balance: serverBal, positions: serverPos, tradeHistory: serverHist,
+          _balanceSource: 'manager', updatedAt: new Date().toISOString() }, { merge: true });
+      });
+    }).catch(function(e){ console.warn('adClosePos transaction:', e.message); });
   }
   adRenderOpenTable();
   adRenderHistoryTable();
