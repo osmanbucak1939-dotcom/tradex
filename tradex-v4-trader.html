@@ -1183,6 +1183,11 @@ function _authSuccess(user) {
   }
 
   // ── HEARTBEAT — her 30 sn'de Firebase'e lastSeen yaz ──────
+  // ⚠️ KRİTİK: Eskiden get() + set() ayrı ayrıydı (atomik değildi). Bu ikisi
+  // arasındaki kısa pencerede BAŞKA bir yazma (örn. yeni hesap eklenmesi) olursa,
+  // heartbeat o yazmayı SİLEREK üzerine yazıyordu. Çok sayıda aktif trader varken
+  // (her biri 30sn'de bir bu yarışı tekrarlıyor) bu, gerçek veri kaybına yol açtı.
+  // Çözüm: transaction içinde oku+yaz — Firestore çakışma olursa otomatik tekrar dener.
 
   window._txSetOffline = function _txSetOffline() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
@@ -1190,34 +1195,36 @@ function _authSuccess(user) {
     // users koleksiyonu
     db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_now},{merge:true}).catch(function(){});
     // broker/accounts koleksiyonu - admin tablosu buradan okuyor
-    db.collection('broker').doc('accounts').get().then(function(doc){
-      if(!doc.exists) return;
-      try {
+    var ref = db.collection('broker').doc('accounts');
+    db.runTransaction(function(tx){
+      return tx.get(ref).then(function(doc){
+        if(!doc.exists) return;
         var accs = JSON.parse(doc.data().data||'[]');
         var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
         if(idx >= 0) {
           accs[idx].online = false;
           accs[idx].lastSeen = _now;
-          db.collection('broker').doc('accounts').set({data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
+          tx.set(ref, {data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
         }
-      } catch(e){}
+      });
     }).catch(function(){});
   }
   function _txSendHeartbeat() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     var now = new Date().toISOString();
-    // broker/accounts içindeki hesabı güncelle
-    db.collection('broker').doc('accounts').get().then(function(doc) {
-      if(!doc.exists) return;
-      try {
+    // broker/accounts içindeki hesabı güncelle (transaction — atomik oku+yaz)
+    var ref = db.collection('broker').doc('accounts');
+    db.runTransaction(function(tx){
+      return tx.get(ref).then(function(doc) {
+        if(!doc.exists) return;
         var accs = JSON.parse(doc.data().data||'[]');
         var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
         if(idx >= 0) {
           accs[idx].lastSeen = now;
           accs[idx].online = true;
-          db.collection('broker').doc('accounts').set({data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
+          tx.set(ref, {data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
         }
-      } catch(e){}
+      });
     }).catch(function(){});
     // users koleksiyonuna yaz - 30sn'de bir
     db.collection('users').doc(String(_cu.id)).set({lastSeen:now, online:true},{merge:true}).catch(function(){});
@@ -1439,10 +1446,22 @@ function initAuth(){
     // Hesapları Firebase'e kaydet
     function fbSaveAccounts() {
       if(!db) return;
-      try {
+      // ⚠️ Aynı veri-kaybı riski: yazmadan önce sunucudaki güncel listeyi kontrol et,
+      // yerelde olmayan (başka oturumlarca eklenmiş) hesapları geri ekle.
+      var ref = db.collection('broker').doc('accounts');
+      ref.get().then(function(doc){
+        var serverAccs = [];
+        if(doc.exists) { try { serverAccs = JSON.parse(doc.data().data||'[]'); } catch(e){} }
+        var localIds = {};
+        accounts.forEach(function(a){ if(a.id) localIds[String(a.id)] = true; });
+        var missing = serverAccs.filter(function(sa){ return sa.id && !localIds[String(sa.id)]; });
+        if(missing.length) accounts = accounts.concat(missing);
         db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
           .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
-      } catch(e) { console.warn(e); }
+      }).catch(function(){
+        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
+          .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
+      });
     }
 
     // Güvenli hesap ekleme - race condition önler
