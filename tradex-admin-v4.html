@@ -5924,6 +5924,17 @@ function renderAccTable(){
   if(!container)return;
   if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
 
+  // ⚠️ ODAK KORUMA: Bu fonksiyon arama/filtre kutularını da innerHTML ile yeniden
+  // oluşturuyor — bu, her tuş vuruşunda eski input'u yok edip yenisini yaratıyor,
+  // bu da fokusu (ve imleç konumunu) kaybettiriyor. Yeniden çizmeden ÖNCE hangi
+  // elementin odakta olduğunu ve imleç konumunu yakalıyoruz, çizimden SONRA geri yüklüyoruz.
+  var _focusId = (document.activeElement && document.activeElement.id) || null;
+  var _focusSelStart = null, _focusSelEnd = null;
+  if(_focusId && document.activeElement && typeof document.activeElement.selectionStart === 'number') {
+    _focusSelStart = document.activeElement.selectionStart;
+    _focusSelEnd = document.activeElement.selectionEnd;
+  }
+
   var all=accounts.filter(function(a){
     if(a.role && a.role!=='customer') return false;
     // Superadmin/admin tüm hesapları görür
@@ -6134,6 +6145,20 @@ function renderAccTable(){
 
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
   container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar+headerDiv+bodyDiv+'</div>';
+
+  // Odağı (ve mümkünse imleç konumunu) geri yükle — yeniden çizimden hemen sonra,
+  // aynı id'li yeni element üzerinde. requestAnimationFrame, DOM'un yerleşmesini garanti eder.
+  if(_focusId) {
+    requestAnimationFrame(function(){
+      var _el = document.getElementById(_focusId);
+      if(_el && typeof _el.focus === 'function') {
+        _el.focus();
+        if(_focusSelStart !== null && typeof _el.setSelectionRange === 'function') {
+          try { _el.setSelectionRange(_focusSelStart, _focusSelEnd); } catch(e){}
+        }
+      }
+    });
+  }
 
   // Yatay scroll senkronizasyonu + kolon genişliği eşitleme
   setTimeout(function(){
@@ -9049,7 +9074,16 @@ function updateMarginCallPanel() {
 }
 
 // 1 saniyede bir margin call güncelle (arka plandayken atla)
-setInterval(function(){ if(!document.hidden) updateMarginCallPanel(); }, 1000);
+setInterval(function(){
+  if(document.hidden) return;
+  // ⚠️ Yönetim paneli (mgrOverlay — Trading Groups, Hesap ayarları vb.) açıkken bu
+  // ağır, tüm-hesapları-tarayan hesaplamayı atla. Aksi halde her saniye ana iş
+  // parçacığını kısa süreli kilitleyip, o panellerdeki dropdown/tıklama gibi
+  // etkileşimlerde aralıklı/öngörülemez gecikmelere yol açıyordu.
+  var _mgr = document.getElementById('mgrOverlay');
+  if(_mgr && _mgr.classList.contains('open')) return;
+  updateMarginCallPanel();
+}, 1000);
 // ─────────────────────────────────────────────────
 
 function loadAllPositionsAndUpdate() {
@@ -10699,21 +10733,27 @@ function adOpenTrade(btn){
   var _swapSg = (typeof tradingGroups!=='undefined'&&tradingGroups)?tradingGroups.find(function(g){return g.id===(a.spreadGroup||'standard');}):null;
   var _swBuy  = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].buy  :(_swapSc?(_swapSc.swapBuy||0):0);
   var _swSell = (_swapSg&&_swapSg.swaps&&_swapSg.swaps[sym]!==undefined)?_swapSg.swaps[sym].sell :(_swapSc?(_swapSc.swapSell||0):0);
-  _adPositions.push({
+  var _newPos = {
     id:Date.now(), sym:sym, label:label, side:side, qty:qty,
     contractSize:cs, openPrice:price, sl:sl, tp:tp,
     time:new Date().toISOString(), openDate:new Date().toISOString(),
     cost:cost, swapTotal:0, swapBuy:_swBuy, swapSell:_swSell
-  });
+  };
+  _adPositions.push(_newPos);
   // ⚠️ a.positions'a DOKUNMA — users/{id} canonical
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  // Sadece users/{id}'ye yaz — MT4/5 model: balance açılışta DEĞİŞMEZ, yazılmıyor.
+  // ⚠️ KRİTİK: Genel blind write yerine, SADECE bu yeni pozisyonu sunucudaki en
+  // güncel listeye ekleyen transaction — Cloud Function risk motorunun (varsa)
+  // az önce kapattığı bir pozisyonu dirilltmesin (bkz. trader placeOrder'daki aynı düzeltme).
   if(typeof db !== 'undefined' && db) {
-    db.collection('users').doc(String(a.id)).set({
-      positions: _adPositions,
-      _balanceSource: 'manager',
-      updatedAt: new Date().toISOString()
-    }, {merge:true}).catch(function(e){ console.warn('adOpenTrade:', e); });
+    var _refAOT = db.collection('users').doc(String(a.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refAOT).then(function(doc){
+        var serverPos = (doc.exists && Array.isArray(doc.data().positions)) ? doc.data().positions.slice() : [];
+        serverPos.push(_newPos);
+        tx.set(_refAOT, { positions: serverPos, _balanceSource: 'manager', updatedAt: new Date().toISOString() }, { merge: true });
+      });
+    }).catch(function(e){ console.warn('adOpenTrade transaction:', e.message); });
   }
   adRenderOpenTable();
   adRefreshBadges();
