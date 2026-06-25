@@ -1449,11 +1449,18 @@ function initAuth(){
     function fbAddAccount(newAcc, callback) {
       if(!db) { callback && callback(); return; }
       var ref = db.collection('broker').doc('accounts');
+      var cfgRef = db.collection('broker').doc('config');
       db.runTransaction(function(tx) {
-        return tx.get(ref).then(function(doc) {
+        // ⚠️ Firestore transaction kuralı: TÜM okumalar yazmalardan ÖNCE yapılmalı.
+        return Promise.all([tx.get(ref), tx.get(cfgRef)]).then(function(results) {
+          var doc = results[0], cfgDoc = results[1];
           var accs = [];
           if(doc.exists) {
             try { accs = JSON.parse(doc.data().data||'[]'); } catch(e){}
+          }
+          var _delIds = [];
+          if(cfgDoc.exists && Array.isArray(cfgDoc.data().deletedAccIds)) {
+            _delIds = cfgDoc.data().deletedAccIds.map(String);
           }
           // E-posta zaten var mı?
           for(var i=0;i<accs.length;i++) {
@@ -1465,6 +1472,10 @@ function initAuth(){
           var maxId = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
           var nextId = maxId.length ? Math.max.apply(null,maxId)+1 : 10000;
           if(nextId < 10000) nextId = 10000;
+          // ⚠️ KRİTİK: Tombstone'lanmış (önceden silinmiş) bir numara asla yeniden
+          // verilmemeli — aksi halde yeni hesap, eski silinmiş hesabın tombstone
+          // filtresine çarpıp listede hiç görünmez hale gelir (gerçek ama görünmez hesap).
+          while(_delIds.indexOf(String(nextId)) !== -1) { nextId++; }
           newAcc.id = String(nextId);
           newAcc.login = String(nextId);
           accs.push(newAcc);
