@@ -1328,12 +1328,16 @@ function _fbSaveAccountsCommit() {
             var _ud = {
               name:a.name||'', surname:a.surname||'', email:a.email||'',
               login:a.login||a.id, type:a.type||'live',
-              spreadGroup:a.spreadGroup||'standard', leverage:a.leverage||100,
               active:a.active!==false, created:a.created||'', regDate:a.regDate||'',
               phone:a.phone||'', password:a.password||'',
               currency:a.currency||'USD'
               // ⚠️ bonus ARTIK BURADAN YAZILMAZ — canonical (users/{id}) tek kaynak
               // finlog BURADAN YAZILMAZ — sadece merkezi finlog fonksiyonu yazar (veri kaybını önle)
+              // ⚠️ leverage/spreadGroup/marginLevelPct ARTIK BURADAN YAZILMAZ — bunlar
+              // adSaveSettings() → fbSaveUserData() ile CERRAHİ olarak yazılıyor. Burada
+              // toplu yazılırsa, bayat bir oturumun yerel kopyası (örn. leverage hiç
+              // değiştirilmemiş, varsayılan 100), BAŞKA bir oturumun az önce yaptığı
+              // doğru değişikliği (örn. 1:1000) eziyordu — gerçekte yaşanan bug bu oldu.
             };
             db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
           });
@@ -5797,6 +5801,27 @@ function adSaveSettings() {
   // Firebase'e de yaz
   if(typeof fbSaveUserData === 'function') {
     fbSaveUserData(a.id, {spreadGroup: sg, leverage: lev, marginLevelPct: ml});
+  }
+  // ⚠️ KRİTİK: broker/accounts BLOB'unu da CERRAHİ bir transaction ile güncelle.
+  // saveAccounts() (genel, debounce'lu, tüm diziyi yazan yol) başka bir oturumun
+  // bayat kopyasıyla yarışabilir — bu transaction, SADECE bu hesabın leverage/
+  // spreadGroup/marginLevelPct alanlarını, en güncel sunucu verisinin üzerine
+  // atomik olarak yazar; başka hesaplara dokunmaz, yarış riski taşımaz.
+  if(typeof db !== 'undefined' && db) {
+    var _ref = db.collection('broker').doc('accounts');
+    db.runTransaction(function(tx){
+      return tx.get(_ref).then(function(doc){
+        if(!doc.exists) return;
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
+        if(idx >= 0) {
+          accs[idx].spreadGroup = sg;
+          accs[idx].leverage = lev;
+          accs[idx].marginLevelPct = ml;
+          tx.set(_ref, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+        }
+      });
+    }).catch(function(e){ console.warn('[adSaveSettings] blob transaction:', e.message); });
   }
   showToast('Kaydedildi ✓', a.name);
   openAccDetail(_adAccId);
