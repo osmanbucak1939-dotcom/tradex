@@ -1326,18 +1326,17 @@ function _fbSaveAccountsCommit() {
           accounts.forEach(function(a){
             if(!a.id)return;
             var _ud = {
-              name:a.name||'', surname:a.surname||'', email:a.email||'',
               login:a.login||a.id, type:a.type||'live',
-              active:a.active!==false, created:a.created||'', regDate:a.regDate||'',
-              phone:a.phone||'', password:a.password||'',
+              created:a.created||'', regDate:a.regDate||'',
+              phone:a.phone||'', email:a.email||'',
               currency:a.currency||'USD'
               // ⚠️ bonus ARTIK BURADAN YAZILMAZ — canonical (users/{id}) tek kaynak
               // finlog BURADAN YAZILMAZ — sadece merkezi finlog fonksiyonu yazar (veri kaybını önle)
-              // ⚠️ leverage/spreadGroup/marginLevelPct ARTIK BURADAN YAZILMAZ — bunlar
-              // adSaveSettings() → fbSaveUserData() ile CERRAHİ olarak yazılıyor. Burada
-              // toplu yazılırsa, bayat bir oturumun yerel kopyası (örn. leverage hiç
-              // değiştirilmemiş, varsayılan 100), BAŞKA bir oturumun az önce yaptığı
-              // doğru değişikliği (örn. 1:1000) eziyordu — gerçekte yaşanan bug bu oldu.
+              // ⚠️ leverage/spreadGroup/marginLevelPct/name/surname/active/password ARTIK
+              // BURADAN YAZILMAZ — her birinin kendi cerrahi transaction'ı var (adSaveSettings,
+              // adUpdateName, adToggleStatus, toggleAccount, adChangePassword). Burada toplu
+              // yazılırsa, bayat bir oturumun yerel kopyası az önce yapılan bir değişikliği
+              // (kaldıraç, isim, durum, şifre) ezebiliyordu — gerçekte yaşanan bug bu oldu.
             };
             db.collection('users').doc(String(a.id)).set(_ud,{merge:true}).catch(function(){});
           });
@@ -5841,6 +5840,24 @@ function adUpdateName() {
   a.name=n; a.surname=sn; saveAccounts(); renderAccTable();
   var el=document.getElementById('adName'); if(el) el.textContent=n+(sn?' '+sn:'');
   if(typeof adAudit==='function') adAudit('accounts.rename', String(a.id), _before, {name:n, surname:sn});
+  // ⚠️ Cerrahi transaction — bayat bir oturumun toplu yazmasıyla yarışmasın (kaldıraçta
+  // bulduğumuz aynı sınıf bug; aynı korumayı isim değişikliğine de uyguluyoruz).
+  if(typeof db !== 'undefined' && db) {
+    var _refN = db.collection('broker').doc('accounts');
+    db.runTransaction(function(tx){
+      return tx.get(_refN).then(function(doc){
+        if(!doc.exists) return;
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
+        if(idx >= 0) {
+          accs[idx].name = n;
+          accs[idx].surname = sn;
+          tx.set(_refN, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+        }
+      });
+    }).catch(function(e){ console.warn('[adUpdateName] blob transaction:', e.message); });
+    db.collection('users').doc(String(a.id)).set({name:n, surname:sn}, {merge:true}).catch(function(){});
+  }
   showToast('İsim Güncellendi ✓', n+(sn?' '+sn:''));
 }
 
@@ -5848,6 +5865,23 @@ function adToggleStatus() {
   if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   a.active=!a.active; saveAccounts(); renderAccTable(); openAccDetail(_adAccId);
+  // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
+  if(typeof db !== 'undefined' && db) {
+    var _refS = db.collection('broker').doc('accounts');
+    var _newActive = a.active;
+    db.runTransaction(function(tx){
+      return tx.get(_refS).then(function(doc){
+        if(!doc.exists) return;
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
+        if(idx >= 0) {
+          accs[idx].active = _newActive;
+          tx.set(_refS, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+        }
+      });
+    }).catch(function(e){ console.warn('[adToggleStatus] blob transaction:', e.message); });
+    db.collection('users').doc(String(a.id)).set({active:_newActive}, {merge:true}).catch(function(){});
+  }
 }
 
 var _adDelCode = '';
@@ -6182,7 +6216,26 @@ function renderAccListSmall() {
 
 function toggleAccount(id) {
   const a = accounts.find(x=>x.id===id);
-  if (a) { a.active = !a.active; saveAccounts(); renderAccCards(); }
+  if (a) {
+    a.active = !a.active; saveAccounts(); renderAccCards();
+    // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
+    if(typeof db !== 'undefined' && db) {
+      var _refT = db.collection('broker').doc('accounts');
+      var _newActiveT = a.active;
+      db.runTransaction(function(tx){
+        return tx.get(_refT).then(function(doc){
+          if(!doc.exists) return;
+          var accs = JSON.parse(doc.data().data||'[]');
+          var idx = accs.findIndex(function(x){ return String(x.id)===String(id); });
+          if(idx >= 0) {
+            accs[idx].active = _newActiveT;
+            tx.set(_refT, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+          }
+        });
+      }).catch(function(e){ console.warn('[toggleAccount] blob transaction:', e.message); });
+      db.collection('users').doc(String(id)).set({active:_newActiveT}, {merge:true}).catch(function(){});
+    }
+  }
 }
 
 
@@ -8324,6 +8377,22 @@ function adChangePassword() {
   if(pw1.length < 4) { showToast('Hata','Şifre en az 4 karakter olmalı!'); return; }
   a.password = pw1;
   saveAccounts();
+  // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
+  if(typeof db !== 'undefined' && db) {
+    var _refP = db.collection('broker').doc('accounts');
+    db.runTransaction(function(tx){
+      return tx.get(_refP).then(function(doc){
+        if(!doc.exists) return;
+        var accs = JSON.parse(doc.data().data||'[]');
+        var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
+        if(idx >= 0) {
+          accs[idx].password = pw1;
+          tx.set(_refP, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+        }
+      });
+    }).catch(function(e){ console.warn('[adChangePassword] blob transaction:', e.message); });
+    db.collection('users').doc(String(a.id)).set({password:pw1}, {merge:true}).catch(function(){});
+  }
   showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi');
   var p1=document.getElementById('ad_pw1'); if(p1) p1.value='';
   var p2=document.getElementById('ad_pw2'); if(p2) p2.value='';
