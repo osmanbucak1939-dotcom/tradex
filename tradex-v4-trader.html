@@ -2532,7 +2532,8 @@ var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY'];
 // BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
 var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
   'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
-  'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF'];
+  'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF',
+  'AGHOL','AGROT','AHGAZ','AKCNS','AKSA','AKSEN','ALARK','ALFAS','ALTNY','ANSGR','ARCLK','ARDYZ','AYDEM','BERA','BRSAN','BRYAT','BSOKE','BTCIM','CANTE','CCOLA','CIMSA','CVKMD','CWENE','DOAS','DOHOL','ECILC','EFOR','ENERY','ENJSA','EUPWR','FENER','GENIL','GESAN','HALKB','HEKTS','HROZM','ISGYO','ISMEN','KAYSE','KCAER','KLYN','KOND','KONTR','KOZAA','LMKDC','MAVI','MIATK','MOGAN','OBAMS','ODAS','OTKAR','OYAKC','PEKGY','QUAGR','RALYH','REEDR','SAYAS','SDTTR','SKBNK','SOKM','TABGD','TARKM','TEKFA','TKFEN','TMSN','TRENJ','TSKB','TUKAS','TURSG','ULKER','VESBE','VESTL','YEOTK','ZOREN'];
 function lwLoadIndexKlines(sym, interval, cb) {
   var base = (typeof TX_BRIDGE_URL!=='undefined' ? TX_BRIDGE_URL : '')
                .replace(/^wss:/i,'https:').replace(/^ws:/i,'http:').replace(/\/+$/,'');
@@ -3827,6 +3828,9 @@ function _quoteToUsd(sym, amount) {
   // Quote currency belirle
   var quoteCur = '';
   if(sym === 'XU100X') quoteCur = 'TRY';
+  // ⚠️ KRİTİK: symConfig kaydına bağımlı kalmadan BIST sembollerini DOĞRUDAN
+  // listeden tanı — sembol symConfig'e hiç eklenmemiş olsa bile TRY dönüşümü garantilenir.
+  if(!quoteCur && typeof TX_BIST_SYMS !== 'undefined' && TX_BIST_SYMS.indexOf(sym) >= 0) quoteCur = 'TRY';
   if(!quoteCur && typeof symConfig !== 'undefined' && symConfig) {
     for(var _qi=0; _qi<symConfig.length; _qi++) {
       if(symConfig[_qi].sym === sym) {
@@ -4691,6 +4695,80 @@ var MARKET_GROUPS = [
       {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
       {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
       {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'AGHOL', name:'AGHOL', full:'Anadolu Grubu Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AGROT', name:'AGROT', full:'Agrotech Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AHGAZ', name:'AHGAZ', full:'Ahlatcı Doğalgaz', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKCNS', name:'AKCNS', full:'Akçansa Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKSA', name:'AKSA', full:'Aksa Akrilik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKSEN', name:'AKSEN', full:'Aksa Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ALARK', name:'ALARK', full:'Alarko Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ALFAS', name:'ALFAS', full:'Alfa Solar Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ALTNY', name:'ALTNY', full:'Altınay Savunma', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ANSGR', name:'ANSGR', full:'Anadolu Sigorta', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ARCLK', name:'ARCLK', full:'Arçelik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ARDYZ', name:'ARDYZ', full:'ARD Bilişim Teknolojileri', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AYDEM', name:'AYDEM', full:'Aydem Yenilenebilir Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BERA', name:'BERA', full:'Bera Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BRSAN', name:'BRSAN', full:'Borusan Boru', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BRYAT', name:'BRYAT', full:'Borusan Yatırım Pazarlama', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BSOKE', name:'BSOKE', full:'Batısöke Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'BTCIM', name:'BTCIM', full:'Batıçim Batı Anadolu Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'CANTE', name:'CANTE', full:'Çan2 Termik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'CCOLA', name:'CCOLA', full:'Coca-Cola İçecek', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'CIMSA', name:'CIMSA', full:'Çimsa Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'CVKMD', name:'CVKMD', full:'CVK Maden İşletmeleri', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'CWENE', name:'CWENE', full:'CW Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'DOAS', name:'DOAS', full:'Doğuş Otomotiv', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'DOHOL', name:'DOHOL', full:'Doğan Şirketler Grubu', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ECILC', name:'ECILC', full:'Eczacıbaşı İlaç', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EFOR', name:'EFOR', full:'Efor Çay Sanayi', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ENERY', name:'ENERY', full:'Enerya Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ENJSA', name:'ENJSA', full:'Enerjisa Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'EUPWR', name:'EUPWR', full:'Europower Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'FENER', name:'FENER', full:'Fenerbahçe Futbol', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GENIL', name:'GENIL', full:'Gen İlaç ve Sağlık', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GESAN', name:'GESAN', full:'Girişim Elektrik Taahhüt', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'HALKB', name:'HALKB', full:'Türkiye Halk Bankası', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'HEKTS', name:'HEKTS', full:'Hektaş Ticaret', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'HROZM', name:'HROZM', full:'Horoz Lojistik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ISGYO', name:'ISGYO', full:'İş GYO', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ISMEN', name:'ISMEN', full:'İş Yatırım Menkul Değerler', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KAYSE', name:'KAYSE', full:'Kayseri Şeker Fabrikası', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KCAER', name:'KCAER', full:'Kocaer Çelik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KLYN', name:'KLYN', full:'Kalyon Yatırım', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KOND', name:'KOND', full:'Konda', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KONTR', name:'KONTR', full:'Kontrolmatik Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KOZAA', name:'KOZAA', full:'Koza Anadolu Metal', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'LMKDC', name:'LMKDC', full:'Limak Doğu Anadolu Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'MAVI', name:'MAVI', full:'Mavi Giyim', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'MIATK', name:'MIATK', full:'Mia Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'MOGAN', name:'MOGAN', full:'Mogan Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'OBAMS', name:'OBAMS', full:'Oba Makarnacılık', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ODAS', name:'ODAS', full:'Odaş Elektrik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'OTKAR', name:'OTKAR', full:'Otokar Otomotiv', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'OYAKC', name:'OYAKC', full:'Oyak Çimento', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PEKGY', name:'PEKGY', full:'Peker GYO', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'QUAGR', name:'QUAGR', full:'Qua Granite Hayal Yapı', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'RALYH', name:'RALYH', full:'Ral Yatırım Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'REEDR', name:'REEDR', full:'Reeder Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SAYAS', name:'SAYAS', full:'Say Reklamcılık', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SDTTR', name:'SDTTR', full:'SDT Uzay ve Savunma', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SKBNK', name:'SKBNK', full:'Şekerbank', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SOKM', name:'SOKM', full:'Şok Marketler Ticaret', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TABGD', name:'TABGD', full:'TAB Gıda Sanayi', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TARKM', name:'TARKM', full:'Tarkim Bitki Koruma', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TEKFA', name:'TEKFA', full:'Tekfen Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TKFEN', name:'TKFEN', full:'Tekfen Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TMSN', name:'TMSN', full:'Tümosan Motor', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TRENJ', name:'TRENJ', full:'Doğal Enerji / Trend GYO', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TSKB', name:'TSKB', full:'Türkiye Sınai Kalkınma Bankası', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TUKAS', name:'TUKAS', full:'Tukaş Gıda Sanayi', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TURSG', name:'TURSG', full:'Türkiye Sigorta', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ULKER', name:'ULKER', full:'Ülker Bisküvi', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'VESBE', name:'VESBE', full:'Vestel Beyaz Eşya', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'VESTL', name:'VESTL', full:'Vestel Elektronik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'YEOTK', name:'YEOTK', full:'Yeo Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'ZOREN', name:'ZOREN', full:'Zorlu Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
     ]
   },
   {
