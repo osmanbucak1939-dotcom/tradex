@@ -5009,7 +5009,6 @@ function createAccount() {
   var type    = (document.getElementById('na_type')||{}).value||'real';
   var balance = 0;
   var sg      = (document.getElementById('na_sg')||{}).value||'standard';
-  // Leverage input varsa parse et, boşsa grubun defaultLeverage'ını kullan
   var _levRaw = (document.getElementById('na_lev')||{}).value;
   var lev;
   if(_levRaw && !isNaN(parseInt(_levRaw))) {
@@ -5017,7 +5016,6 @@ function createAccount() {
   } else {
     lev = (typeof getDefaultLeverage === 'function') ? getDefaultLeverage(sg) : 100;
   }
-  // Grubun maxLeverage'ını aşma — sessizce cap'le
   var _maxLev = (typeof getMaxLeverage === 'function') ? getMaxLeverage(sg) : 100;
   if(lev > _maxLev) lev = _maxLev;
   var msgEl   = document.getElementById('na_msg');
@@ -5025,24 +5023,74 @@ function createAccount() {
     if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Ad, e-posta ve sifre zorunlu</span>';
     return;
   }
-  if(accounts.find(function(a){return a.email===email;})){
-    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Bu e-posta zaten kayitli</span>';
+
+  // ⚠️ KRİTİK DÜZELTME: Eski kod loginNo = 10000 + accounts.length (SAYIM) kullanıyordu.
+  // Bu, herhangi bir hesap silindiğinde sayım düşer ve YENİ hesap VAR OLAN bir login
+  // numarasını TEKRAR kullanır — garanti çakışma (bug, sadece race condition değil).
+  // Çözüm: trader'daki fbAddAccount() ile AYNI desen — Firestore transaction içinde
+  // MAX(mevcut login/id)+1 hesapla, e-posta tekilliğini de aynı transaction'da kontrol et.
+  if(typeof db === 'undefined' || !db) {
+    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Veritabanı bağlantısı yok</span>';
     return;
   }
-  var loginNo = 10000 + accounts.filter(function(a){return !a.role||a.role==='customer';}).length;
-  var newAcc = {
-    id: 'acc_'+Date.now(), login: String(loginNo),
-    name: name, surname: surname, email: email, password: pass,
-    type: type, balance: balance, bonus: 0, leverage: lev,
-    spreadGroup: sg, active: true, role: 'customer',
-    created: new Date().toISOString(), regDate: new Date().toISOString()
-  };
-  accounts.push(newAcc);
-  saveAccounts();
-  if(msgEl) msgEl.innerHTML='<span style="color:#26a69a;">Hesap olusturuldu: #'+loginNo+'</span>';
-  showAdminToast('Olusturuldu','Hesap #'+loginNo+' hazir','success');
-  ['na_name','na_surname','na_email','na_pass','na_balance'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value='';
+  var ref = db.collection('broker').doc('accounts');
+  var cfgRef = db.collection('broker').doc('config');
+  db.runTransaction(function(tx){
+    // ⚠️ Firestore transaction kuralı: TÜM okumalar yazmalardan ÖNCE yapılmalı.
+    return Promise.all([tx.get(ref), tx.get(cfgRef)]).then(function(results){
+      var doc = results[0], cfgDoc = results[1];
+      var accs = [];
+      if(doc.exists) { try { accs = JSON.parse(doc.data().data||'[]'); } catch(e){} }
+      var _delIds = [];
+      if(cfgDoc.exists && Array.isArray(cfgDoc.data().deletedAccIds)) {
+        _delIds = cfgDoc.data().deletedAccIds.map(String);
+      }
+      for(var i=0;i<accs.length;i++){
+        if(accs[i].email && accs[i].email.toLowerCase()===email.toLowerCase()) {
+          throw new Error('EMAIL_EXISTS');
+        }
+      }
+      var allIds = accs.map(function(a){ return parseInt(a.login||a.id)||0; });
+      var loginNo = allIds.length ? Math.max.apply(null, allIds)+1 : 10000;
+      if(loginNo < 10000) loginNo = 10000;
+      // ⚠️ KRİTİK: Tombstone'lanmış (önceden silinmiş) bir numara asla yeniden
+      // verilmemeli — aksi halde yeni hesap, eski silinmiş hesabın tombstone
+      // filtresine çarpıp listede hiç görünmez hale gelir (gerçek ama görünmez hesap).
+      while(_delIds.indexOf(String(loginNo)) !== -1) { loginNo++; }
+      var newAcc = {
+        id: String(loginNo), login: String(loginNo),
+        name: name, surname: surname, email: email, password: pass,
+        type: type, balance: balance, bonus: 0, leverage: lev,
+        spreadGroup: sg, active: true, role: 'customer',
+        created: new Date().toISOString(), regDate: new Date().toISOString()
+      };
+      accs.push(newAcc);
+      tx.set(ref, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+      return newAcc;
+    });
+  }).then(function(newAcc){
+    accounts.push(newAcc);
+    try{ localStorage.setItem('tx_accounts', JSON.stringify(accounts)); }catch(e){}
+    db.collection('users').doc(String(newAcc.id)).set({
+      name: newAcc.name||'', surname: newAcc.surname||'', email: newAcc.email||'',
+      login: newAcc.login, type: newAcc.type||'real',
+      spreadGroup: newAcc.spreadGroup||'standard', leverage: newAcc.leverage||100,
+      active: true, created: newAcc.created||'', phone: '',
+      password: newAcc.password||'', currency: 'USD',
+      balance: 0, bonus: 0, finlog: [],
+      positions: [], tradeHistory: [], pendingOrders: [],
+      _balanceSource: 'system', updatedAt: new Date().toISOString()
+    }).catch(function(e){ console.warn('createAccount users write:', e); });
+
+    if(msgEl) msgEl.innerHTML='<span style="color:#26a69a;">Hesap olusturuldu: #'+newAcc.login+'</span>';
+    showAdminToast('Olusturuldu','Hesap #'+newAcc.login+' hazir','success');
+    ['na_name','na_surname','na_email','na_pass','na_balance'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+  }).catch(function(e){
+    var msg = (e.message==='EMAIL_EXISTS') ? 'Bu e-posta zaten kayitli' : ('Hata: '+e.message);
+    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">'+msg+'</span>';
+    showAdminToast('Hata', msg, 'danger');
   });
 }
 
