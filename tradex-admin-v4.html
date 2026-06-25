@@ -4820,6 +4820,22 @@ function saveSymbolMgr() {
     if(exists) { showToast('Hata', 'Bu sembol zaten var!'); return; }
     symConfig.push(obj);
     showToast('Eklendi', label + ' eklendi');
+    // ⚠️ KALICI ÇÖZÜM: Yeni eklenen sembol, whitelist'i BOŞ OLMAYAN (yani kısıtlı)
+    // trading group'lara OTOMATİK eklenir. Aksi halde whitelist'li gruplardaki
+    // trader'lar bu sembolü hiç göremez — manuel hatırlamaya gerek kalmaz.
+    if(typeof tradingGroups !== 'undefined' && Array.isArray(tradingGroups)) {
+      var _wlTouched = [];
+      tradingGroups.forEach(function(g){
+        if(Array.isArray(g.symbolWhitelist) && g.symbolWhitelist.length > 0 && g.symbolWhitelist.indexOf(sym) === -1) {
+          g.symbolWhitelist.push(sym);
+          _wlTouched.push(g.name);
+        }
+      });
+      if(_wlTouched.length && typeof sgSave === 'function') {
+        sgSave();
+        console.log('[saveSymbolMgr] '+sym+' whitelist\'e eklendi: '+_wlTouched.join(', '));
+      }
+    }
   }
   _txUnmarkDeleted(sym);   // tekrar eklenen sembol "silinmiş" sayılmasın
   localStorage.setItem('tx_syms', JSON.stringify(symConfig));
