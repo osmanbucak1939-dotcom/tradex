@@ -4699,6 +4699,12 @@ function _loadFirebaseData() {
     }
     applyGroupSpreads();
     if(document.getElementById('mwBody')) renderMarketWatch();
+    // ⚠️ Bugünkü mobil whitelist düzeltmesinin eksik kalan parçası: tradingGroups
+    // yüklenmeden önce mFM() zaten çalışmış olabilir (ilk fiyat tick'inde tetiklenir,
+    // bu yüklemeden önce de olabilir) — o zaman canTradeSymbol() grubu bulamayıp
+    // "izin ver" dönmüştü, gizlenmesi gereken semboller görünmüştü. Veri gelince
+    // mobili de yeniden çizip doğru filtreyi uygulat.
+    if(typeof window.mFM === 'function') { try { window.mFM(); } catch(e){} }
   }).catch(function(){});
 
   // payMethods
