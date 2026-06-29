@@ -5375,10 +5375,9 @@ function adRenderTab(tab) {
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Trading Grubu</label>' +
               '<select class="ad-input" id="ad_sg" style="cursor:pointer;">' +
-                '<option value="standard">Standard</option>' +
-                '<option value="ecn">ECN</option>' +
-                '<option value="vip">VIP</option>' +
-                '<option value="zero">Zero Spread</option>' +
+                (typeof tradingGroups!=='undefined' && Array.isArray(tradingGroups) && tradingGroups.length
+                  ? tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('')
+                  : '<option value="standard">Standard</option>') +
               '</select>' +
             '</div>' +
             '<div><label class="ad-label">Kaldıraç</label>' +
@@ -7834,7 +7833,7 @@ function sgDeleteGroup() {
 }
 
 function sgRefreshSelects() {
-  document.querySelectorAll('#ad_sg,#na_spreadGroup').forEach(function(sel){
+  document.querySelectorAll('#ad_sg,#na_sg').forEach(function(sel){
     var cur=sel.value;
     sel.innerHTML=tradingGroups.map(function(g){ return '<option value="'+g.id+'">'+g.name+'</option>'; }).join('');
     sel.value=cur||'standard';
