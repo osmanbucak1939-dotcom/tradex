@@ -2563,7 +2563,7 @@ var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY'];
 var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
   'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
   'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF',
-  'AGHOL','AGROT','AHGAZ','AKCNS','AKSA','AKSEN','ALARK','ALFAS','ALTNY','ANSGR','ARCLK','ARDYZ','AYDEM','BERA','BRSAN','BRYAT','BSOKE','BTCIM','CANTE','CCOLA','CIMSA','CVKMD','CWENE','DOAS','DOHOL','ECILC','EFOR','ENERY','ENJSA','EUPWR','FENER','GENIL','GESAN','HALKB','HEKTS','HROZM','ISGYO','ISMEN','KAYSE','KCAER','KLYN','KOND','KONTR','KOZAA','LMKDC','MAVI','MIATK','MOGAN','OBAMS','ODAS','OTKAR','OYAKC','PEKGY','QUAGR','RALYH','REEDR','SAYAS','SDTTR','SKBNK','SOKM','TABGD','TARKM','TEKFA','TKFEN','TMSN','TRENJ','TSKB','TUKAS','TURSG','ULKER','VESBE','VESTL','YEOTK','ZOREN'];
+  'AGHOL','AGROT','AHGAZ','AKCNS','AKSA','AKSEN','ALARK','ALFAS','ALTNY','ANSGR','ARCLK','ARDYZ','AYDEM','BERA','BRSAN','BRYAT','BSOKE','BTCIM','CANTE','CCOLA','CIMSA','CVKMD','CWENE','DOAS','DOHOL','ECILC','EFOR','ENERY','ENJSA','EUPWR','FENER','GENIL','GESAN','HALKB','HEKTS','HROZM','ISGYO','ISMEN','KAYSE','KCAER','KLYN','KOND','KONTR','KOZAA','LMKDC','MAVI','MIATK','MOGAN','OBAMS','ODAS','OTKAR','OYAKC','PEKGY','QUAGR','RALYH','REEDR','SAYAS','SDTTR','SKBNK','SOKM','TABGD','TARKM','TEKFA','TKFEN','TMSN','TRENJ','TSKB','TUKAS','TURSG','ULKER','VESBE','VESTL','YEOTK','ZOREN','MPARK','GWIND','HTTBT','LOGO','PASEU','MAGEN','KUYAS','AKFYE','MIAKT','SARKY'];
 function lwLoadIndexKlines(sym, interval, cb) {
   var base = (typeof TX_BRIDGE_URL!=='undefined' ? TX_BRIDGE_URL : '')
                .replace(/^wss:/i,'https:').replace(/^ws:/i,'http:').replace(/\/+$/,'');
@@ -4773,6 +4773,16 @@ var MARKET_GROUPS = [
       {sym:'PGSUS', name:'PGSUS', full:'Pegasus',             icon:'🇹🇷', spread:0.20, decimals:2},
       {sym:'ASTOR', name:'ASTOR', full:'Astor Enerji',        icon:'🇹🇷', spread:0.10, decimals:2},
       {sym:'DSTKF', name:'DSTKF', full:'Destek Faktoring',    icon:'🇹🇷', spread:0.02, decimals:2},
+      {sym:'MPARK', name:'MPARK', full:'Marka Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'GWIND', name:'GWIND', full:'Galata Wind', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'HTTBT', name:'HTTBT', full:'Hat Holding', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'LOGO', name:'LOGO', full:'Logo Yazılım', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'PASEU', name:'PASEU', full:'Pasifik Eurasia Lojistik', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'MAGEN', name:'MAGEN', full:'Margün Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'KUYAS', name:'KUYAS', full:'Kuyas Yatırım', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'AKFYE', name:'AKFYE', full:'Akfen Yenilenebilir Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'MIAKT', name:'MIAKT', full:'Mia Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'SARKY', name:'SARKY', full:'Sarkuysan', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AGHOL', name:'AGHOL', full:'Anadolu Grubu Holding', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AGROT', name:'AGROT', full:'Agrotech Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AHGAZ', name:'AHGAZ', full:'Ahlatcı Doğalgaz', icon:'🇹🇷', spread:0.05, decimals:2},
