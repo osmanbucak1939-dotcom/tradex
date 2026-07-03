@@ -5836,7 +5836,10 @@ function adSaveSettings() {
     }).catch(function(e){ console.warn('[adSaveSettings] blob transaction:', e.message); });
   }
   showToast('Kaydedildi ✓', a.name);
-  openAccDetail(_adAccId);
+  // ⚠️ openAccDetail(_adAccId) KALDIRILDI — tüm paneli sıfırdan açıp kullanıcıyı
+  // bulunduğu sekmeden/scroll'dan fırlatıyordu. Ayarlar zaten yerel değişkende ve
+  // Firestore'da güncel; sadece üst rozetleri tazelemek yeterli.
+  if(typeof adRefreshBadges === 'function') { try { adRefreshBadges(); } catch(e){} }
 }
 
 function adUpdateName() {
@@ -5873,7 +5876,9 @@ function adUpdateName() {
 function adToggleStatus() {
   if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
-  a.active=!a.active; saveAccounts(); renderAccTable(); openAccDetail(_adAccId);
+  a.active=!a.active; saveAccounts(); renderAccTable();
+  // ⚠️ openAccDetail KALDIRILDI (bkz. adSaveSettings'teki not) — durum rozetini tazele
+  if(typeof adRefreshBadges === 'function') { try { adRefreshBadges(); } catch(e){} }
   // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
   if(typeof db !== 'undefined' && db) {
     var _refS = db.collection('broker').doc('accounts');
@@ -5943,6 +5948,11 @@ function renderAccTable(){
     _focusSelStart = document.activeElement.selectionStart;
     _focusSelEnd = document.activeElement.selectionEnd;
   }
+  // ⚠️ SCROLL KORUMA: Kanonik dinleyici (users/{id} her değişince, örn. bakiye tick'i)
+  // bu tabloyu ~300ms throttle ile sürekli yeniden çiziyor — scroll pozisyonu her
+  // seferinde kayboluyordu, kullanıcı aşağı kaydırdıkça yukarı fırlıyordu.
+  var _scrollEl = document.getElementById('accBodyScroll');
+  var _scrollTop = _scrollEl ? _scrollEl.scrollTop : 0;
 
   var all=accounts.filter(function(a){
     if(a.role && a.role!=='customer') return false;
@@ -6166,6 +6176,13 @@ function renderAccTable(){
           try { _el.setSelectionRange(_focusSelStart, _focusSelEnd); } catch(e){}
         }
       }
+    });
+  }
+  // Scroll pozisyonunu geri yükle
+  if(_scrollTop > 0) {
+    requestAnimationFrame(function(){
+      var _newScrollEl = document.getElementById('accBodyScroll');
+      if(_newScrollEl) _newScrollEl.scrollTop = _scrollTop;
     });
   }
 
