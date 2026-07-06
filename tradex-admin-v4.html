@@ -10564,7 +10564,11 @@ function adClosePos(btn){
         var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
         var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
         if(sIdx >= 0) serverPos.splice(sIdx, 1);
-        serverHist.unshift(_histEntryAd);
+        // ⚠️ Çift kayıt koruması (bkz. trader closePosition'daki aynı düzeltme)
+        var _alreadyClosedAd = serverHist.some(function(h){
+          return String(h.id)===String(_histEntryAd.id) && h.closeTime===_histEntryAd.closeTime;
+        });
+        if(!_alreadyClosedAd) serverHist.unshift(_histEntryAd);
         if(serverHist.length > 100) serverHist = serverHist.slice(0,100);
         var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : _newBal;
         tx.set(_refACP, { balance: serverBal, positions: serverPos, tradeHistory: serverHist,
