@@ -5399,10 +5399,11 @@ function adRenderTab(tab) {
             '<button class="ad-btn ad-btn-primary" onclick="adSaveSettings()">Kaydet</button>' +
           '</div>' : '';
     var _secName = _hp('accounts.edit') ?
-          '<div class="ad-section-title" style="margin-top:20px;">İsim Güncelle</div>' +
+          '<div class="ad-section-title" style="margin-top:20px;">Bilgi Güncelle</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Ad</label><input class="ad-input" id="ad_nm" value="'+(a.name||'')+'"></div>' +
             '<div><label class="ad-label">Soyad</label><input class="ad-input" id="ad_snm" value="'+(a.surname||'')+'"></div>' +
+            '<div><label class="ad-label">E-posta</label><input class="ad-input" type="email" id="ad_eml" value="'+(a.email||'')+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adUpdateName()">Güncelle</button>' +
           '</div>' : '';
     var _secPass = _hp('accounts.password') ?
@@ -5847,13 +5848,26 @@ function adUpdateName() {
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); }); if(!a) return;
   var n  = ((document.getElementById('ad_nm')||{}).value||'').trim();
   var sn = ((document.getElementById('ad_snm')||{}).value||'').trim();
+  var em = ((document.getElementById('ad_eml')||{}).value||'').trim();
   if(!n){ showToast('Hata','İsim boş olamaz!'); return; }
-  var _before = {name:a.name, surname:a.surname};
-  a.name=n; a.surname=sn; saveAccounts(); renderAccTable();
+  var _emailChanged = em && em.toLowerCase() !== String(a.email||'').toLowerCase();
+  if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+    showToast('Hata','Geçersiz e-posta formatı!'); return;
+  }
+  if(_emailChanged) {
+    var _dupe = accounts.find(function(x){
+      return String(x.id)!==String(a.id) && String(x.email||'').toLowerCase()===em.toLowerCase();
+    });
+    if(_dupe) { showToast('Hata','Bu e-posta başka bir hesapta kayıtlı (#'+(_dupe.login||_dupe.id)+')'); return; }
+  }
+  var _before = {name:a.name, surname:a.surname, email:a.email};
+  a.name=n; a.surname=sn;
+  if(em) a.email=em;
+  saveAccounts(); renderAccTable();
   var el=document.getElementById('adName'); if(el) el.textContent=n+(sn?' '+sn:'');
-  if(typeof adAudit==='function') adAudit('accounts.rename', String(a.id), _before, {name:n, surname:sn});
+  if(typeof adAudit==='function') adAudit('accounts.rename', String(a.id), _before, {name:n, surname:sn, email:em});
   // ⚠️ Cerrahi transaction — bayat bir oturumun toplu yazmasıyla yarışmasın (kaldıraçta
-  // bulduğumuz aynı sınıf bug; aynı korumayı isim değişikliğine de uyguluyoruz).
+  // bulduğumuz aynı sınıf bug; aynı korumayı isim/e-posta değişikliğine de uyguluyoruz).
   if(typeof db !== 'undefined' && db) {
     var _refN = db.collection('broker').doc('accounts');
     db.runTransaction(function(tx){
@@ -5864,13 +5878,18 @@ function adUpdateName() {
         if(idx >= 0) {
           accs[idx].name = n;
           accs[idx].surname = sn;
+          if(em) accs[idx].email = em;
           tx.set(_refN, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
         }
       });
     }).catch(function(e){ console.warn('[adUpdateName] blob transaction:', e.message); });
-    db.collection('users').doc(String(a.id)).set({name:n, surname:sn}, {merge:true}).catch(function(){});
+    // ⚠️ Canonical users/{id}'ye de yaz — trader login e-postayı buradan doğrular,
+    // güncellenmiş e-postayla giriş sorunsuz olsun.
+    var _uUpdate = {name:n, surname:sn};
+    if(em) _uUpdate.email = em;
+    db.collection('users').doc(String(a.id)).set(_uUpdate, {merge:true}).catch(function(){});
   }
-  showToast('İsim Güncellendi ✓', n+(sn?' '+sn:''));
+  showToast('Güncellendi ✓', n+(sn?' '+sn:'')+(em?' • '+em:''));
 }
 
 function adToggleStatus() {
