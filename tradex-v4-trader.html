@@ -4038,7 +4038,12 @@ function closePosition(id, reason='', closeQty) {
   const _histEntry = { ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' };
   tradeHistory.unshift(_histEntry);
   if (tradeHistory.length > 50) tradeHistory.pop();
-  save();
+  // ⚠️ localStorage'ı güncelle ama save()'İ ÇAĞIRMA — save() tüm tradeHistory'yi
+  // Firestore'a yazıyor, ardından aşağıdaki transaction sunucudan taze listeyi çekip
+  // AYNI kapanışı BİR KEZ DAHA ekliyordu → kapalı listesinde ÇİFT KAYIT (aynı id).
+  // Transaction zaten positions + tradeHistory + balance'ın üçünü de doğru yazıyor.
+  try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+  try { localStorage.setItem('tx_hist', JSON.stringify(tradeHistory)); } catch(e){}
   // ⚠️ KRİTİK: Bayat bir oturumun (örn. admin aynı hesabı izlerken, ya da aynı hesap
   // başka bir cihazda açıkken) eski pozisyon listesini geri yazıp bu kapatmayı
   // "diriltmesini" önlemek için, transaction ile SUNUCUDAKİ EN GÜNCEL listeden
@@ -4053,14 +4058,18 @@ function closePosition(id, reason='', closeQty) {
         var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
         var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
         if(sIdx >= 0) serverPos.splice(sIdx, 1);
-        serverHist.unshift(_histEntry);
+        // ⚠️ Çift kayıt koruması: bu kapanış zaten sunucu listesinde varsa tekrar ekleme
+        var _alreadyClosed = serverHist.some(function(h){
+          return String(h.id)===String(_histEntry.id) && h.closeTime===_histEntry.closeTime;
+        });
+        if(!_alreadyClosed) serverHist.unshift(_histEntry);
         if(serverHist.length > 50) serverHist.pop();
         var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : balance;
         tx.set(_refCP, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
       });
     }).catch(function(e){ console.warn('[closePosition] transaction:', e.message); });
   } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
-    fbSaveUserData(_cu.id, {balance:balance, positions:positions});
+    fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,50)});
   }
   renderPositions();
   renderHistory();
