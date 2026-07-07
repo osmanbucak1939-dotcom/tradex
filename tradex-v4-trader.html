@@ -5597,9 +5597,7 @@ function updateMwRow(sym, price, prev) {
   if(row) {
     row.querySelector('.mw-bid').textContent = bidFmt;
     row.querySelector('.mw-ask').textContent = askFmt;
-    row.classList.remove('mw-flash-g','mw-flash-r');
-    if(!document.hidden) void row.offsetWidth;  // reflow — flash animasyonu (arka plandayken layout maliyetine girme)
-    row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
+    // ⚠️ PERFORMANS: Flash animasyonu + zorla reflow KALDIRILDI (bkz. admin'deki not).
     row.dataset.dir = neutral ? 'n' : (up ? 'u' : 'd');
     _mwApplyDirColor(row, up, neutral);
   }
