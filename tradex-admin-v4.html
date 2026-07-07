@@ -363,6 +363,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mgr-input { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:5px 8px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; transition:border-color .15s; width:100%; }
 .mgr-input:focus { border-color:var(--accent); }
 .mgr-select { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:5px 8px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; width:100%; cursor:pointer; }
+/* ⚠️ Dropdown açılır listesi (option'lar) — arka plan verilmezse bazı tarayıcılarda
+   saydam/boş görünüyordu (arkadaki alanlar görünüyordu). Açıkça koyu arka plan ver. */
+.mgr-input option, .mgr-select option, select.mgr-input option, select option {
+  background:#1a1a1a; color:#e0e0e0;
+}
 
 .mgr-row { display:grid; gap:12px; margin-bottom:14px; }
 .mgr-row.cols2 { grid-template-columns:1fr 1fr; }
