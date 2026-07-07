@@ -6844,9 +6844,11 @@ function updateMwRow(sym, price, prev) {
   const up = price >= prev;
   row.querySelector('.mw-bid').textContent = bid.toFixed(it.decimals);
   row.querySelector('.mw-ask').textContent = ask.toFixed(it.decimals);
-  row.classList.remove('mw-flash-g','mw-flash-r');
-  void row.offsetWidth; // reflow
-  row.classList.add(up ? 'mw-flash-g' : 'mw-flash-r');
+  // ⚠️ PERFORMANS: Flash animasyonu + `void row.offsetWidth` (zorla senkron reflow)
+  // KALDIRILDI. 179 sembol × saniyede ~24 tick × her birinde zorla reflow = tarayıcı
+  // sürekli tüm sayfa düzenini yeniden hesaplıyordu (profilde 4.5sn "Oluşturma").
+  var _bidCell = row.querySelector('.mw-bid');
+  if(_bidCell) _bidCell.style.color = up ? 'var(--buy)' : 'var(--sell)';
 }
 
 function renderMarketWatch(filter) {
