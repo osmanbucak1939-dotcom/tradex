@@ -1978,6 +1978,8 @@ console.log('Firebase bağlandı ✓');
               <option value="200">1:200</option>
               <option value="500">1:500</option>
               <option value="1000">1:1000</option>
+              <option value="2000">1:2000</option>
+              <option value="5000">1:5000</option>
             </select>
           </div>
           <div>
@@ -1988,6 +1990,8 @@ console.log('Firebase bağlandı ✓');
               <option value="200">1:200</option>
               <option value="500">1:500</option>
               <option value="1000">1:1000</option>
+              <option value="2000">1:2000</option>
+              <option value="5000">1:5000</option>
             </select>
           </div>
           <div>
@@ -4451,6 +4455,8 @@ var MARKET_GROUPS = [
       {sym:'AKFYE', name:'AKFYE', full:'Akfen Yenilenebilir Enerji', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'MIAKT', name:'MIAKT', full:'Mia Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'SARKY', name:'SARKY', full:'Sarkuysan', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TDGYO', name:'TDGYO', full:'Trend GYO', icon:'🇹🇷', spread:0.05, decimals:2},
+      {sym:'TTRAK', name:'TTRAK', full:'Türk Traktör', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AGHOL', name:'AGHOL', full:'Anadolu Grubu Holding', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AGROT', name:'AGROT', full:'Agrotech Teknoloji', icon:'🇹🇷', spread:0.05, decimals:2},
       {sym:'AHGAZ', name:'AHGAZ', full:'Ahlatcı Doğalgaz', icon:'🇹🇷', spread:0.05, decimals:2},
@@ -5397,7 +5403,7 @@ function adRenderTab(tab) {
             '</div>' +
             '<div><label class="ad-label">Kaldıraç</label>' +
               '<select class="ad-input" id="ad_lev" style="cursor:pointer;">' +
-                '<option value="50">1:50</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1000</option>' +
+                '<option value="50">1:50</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1000</option><option value="2000">1:2000</option><option value="5000">1:5000</option>' +
               '</select>' +
             '</div>' +
             '<div><label class="ad-label">Marjin Seviyesi (%)</label><input class="ad-input" id="ad_ml" type="number" placeholder="100" min="0" value="'+(a.marginLevelPct||100)+'"></div>' +
@@ -7079,7 +7085,7 @@ if (!symConfig) {
   (function(){
     var _bist = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
                  'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
-                 'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF','MPARK','GWIND','HTTBT','LOGO','PASEU','MAGEN','KUYAS','AKFYE','MIAKT','SARKY'];
+                 'TCELL','THYAO','TOASO','TTKOM','TUPRS','VAKBN','YKBNK','PGSUS','ASTOR','DSTKF','MPARK','GWIND','HTTBT','LOGO','PASEU','MAGEN','KUYAS','AKFYE','MIAKT','SARKY','TDGYO','TTRAK'];
     var _fixed = 0;
     symConfig.forEach(function(s){
       if(s && _bist.indexOf(s.sym)!==-1 && s.category!=='bist'){ s.category='bist'; _fixed++; }
