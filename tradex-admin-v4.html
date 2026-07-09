@@ -10595,8 +10595,12 @@ function adClosePos(btn){
         var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
         var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
         var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
-        if(sIdx >= 0) serverPos.splice(sIdx, 1);
-        // ⚠️ Çift kayıt koruması (bkz. trader closePosition'daki aynı düzeltme)
+        // ⚠️ KESİN ÇİFT-KAPATMA KORUMASI (bkz. trader closePosition)
+        if(sIdx < 0) {
+          console.warn('[adClosePos] #'+id+' sunucuda zaten kapatılmış, tekrar yazılmadı');
+          return;
+        }
+        serverPos.splice(sIdx, 1);
         var _alreadyClosedAd = serverHist.some(function(h){
           return String(h.id)===String(_histEntryAd.id) && h.closeTime===_histEntryAd.closeTime;
         });
