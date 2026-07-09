@@ -3990,6 +3990,18 @@ function closePosition(id, reason='', closeQty) {
   // ID tip güvencesi: number veya string olabilir (Date.now() veya Firebase'den string gelebilir)
   const idx = positions.findIndex(p=>String(p.id)===String(id));
   if (idx === -1) return;
+  // ⚠️ ÇİFT KAPATMA KİLİDİ: Hızlı çift tıklama aynı pozisyonu 2-3 kez kapatıp geçmişe
+  // 2-3 kez kâr yazıyordu. Kapatma başlayınca kilitle; ikinci çağrı reddedilsin.
+  window._closingPositions = window._closingPositions || {};
+  var _isPartial = (parseFloat(closeQty)||0) > 0 && (parseFloat(closeQty)||0) < (parseFloat(positions[idx].qty)||0) - 1e-9;
+  if(!_isPartial) {
+    if(window._closingPositions[String(id)]) {
+      console.warn('[closePosition] #'+id+' zaten kapatılıyor, tekrar çağrı yoksayıldı');
+      return;
+    }
+    window._closingPositions[String(id)] = true;
+    setTimeout(function(){ if(window._closingPositions) delete window._closingPositions[String(id)]; }, 8000);
+  }
   const pos = positions[idx];
   const p = prices[pos.sym];
   const closePrice = p ? p.price : pos.openPrice;
@@ -4057,8 +4069,13 @@ function closePosition(id, reason='', closeQty) {
         var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
         var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
         var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
-        if(sIdx >= 0) serverPos.splice(sIdx, 1);
-        // ⚠️ Çift kayıt koruması: bu kapanış zaten sunucu listesinde varsa tekrar ekleme
+        // ⚠️ KESİN ÇİFT-KAPATMA KORUMASI: Pozisyon sunucuda YOKSA başka çağrı zaten
+        // kapatmış — tarihe/bakiyeye tekrar yazma.
+        if(sIdx < 0) {
+          console.warn('[closePosition] #'+id+' sunucuda zaten kapatılmış, tekrar yazılmadı');
+          return;
+        }
+        serverPos.splice(sIdx, 1);
         var _alreadyClosed = serverHist.some(function(h){
           return String(h.id)===String(_histEntry.id) && h.closeTime===_histEntry.closeTime;
         });
@@ -4067,9 +4084,15 @@ function closePosition(id, reason='', closeQty) {
         var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : balance;
         tx.set(_refCP, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
       });
-    }).catch(function(e){ console.warn('[closePosition] transaction:', e.message); });
+    }).then(function(){
+      if(window._closingPositions) delete window._closingPositions[String(id)];
+    }).catch(function(e){
+      if(window._closingPositions) delete window._closingPositions[String(id)];
+      console.warn('[closePosition] transaction:', e.message);
+    });
   } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
     fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,50)});
+    if(window._closingPositions) delete window._closingPositions[String(id)];
   }
   renderPositions();
   renderHistory();
