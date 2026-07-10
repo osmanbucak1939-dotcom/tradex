@@ -5795,7 +5795,7 @@ function _mwBuildRowHtml(it2, gid) {
   if(spd.endsWith('.0')) spd = spd.slice(0,-2);
   var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
   var html = '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + gid + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
-  var _ico = (it2.icon && it2.icon.trim() && it2.icon.trim().length <= 2) ? it2.icon.trim() : '';
+  var _ico = (it2.icon && it2.icon.trim() && Array.from(it2.icon.trim()).length <= 2) ? it2.icon.trim() : '';
   var _dot_color = it2.color || '#f0b90b';
   var _isFav = !!_txFavorites[it2.sym];
   var _favTitle = _isFav ? 'Favorilerden çıkar' : 'Favorilere ekle';
@@ -5804,6 +5804,12 @@ function _mwBuildRowHtml(it2, gid) {
     var _logoUrl = 'https://cdn.jsdelivr.net/gh/ahmeterenodaci/Istanbul-Stock-Exchange--BIST--including-symbols-and-logos/logos/' + it2.sym + '.png';
     html += '<div class="mw-icon" onclick="' + _favOnclick + '" style="display:flex;align-items:center;justify-content:center;" title="' + _favTitle + '">'
           + '<img src="' + _logoUrl + '" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
+          + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span>'
+          + '</div>';
+  } else if (gid === 'stocks') {
+    var _logoUrl2 = 'https://financialmodelingprep.com/image-stock/' + it2.sym + '.png';
+    html += '<div class="mw-icon" onclick="' + _favOnclick + '" style="display:flex;align-items:center;justify-content:center;" title="' + _favTitle + '">'
+          + '<img src="' + _logoUrl2 + '" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
           + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span>'
           + '</div>';
   } else {
@@ -8340,7 +8346,7 @@ function symUnpin(sym){
     var chgUp=chgVal>=0;
     var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
     var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
-    var ico=(it2.icon&&it2.icon.trim()&&it2.icon.trim().length<=2)?it2.icon.trim():'';
+    var ico=(it2.icon&&it2.icon.trim()&&Array.from(it2.icon.trim()).length<=2)?it2.icon.trim():'';
     var dotColor=it2.color||'#f0b90b';
     var _favOnclick="event.stopPropagation(); txToggleFavorite('"+it2.sym+"')";
     var icoHtml;
@@ -8348,6 +8354,12 @@ function symUnpin(sym){
       var _logoUrl = 'https://cdn.jsdelivr.net/gh/ahmeterenodaci/Istanbul-Stock-Exchange--BIST--including-symbols-and-logos/logos/' + it2.sym + '.png';
       icoHtml = '<div class="mw-icon" onclick="'+_favOnclick+'" style="display:flex;align-items:center;justify-content:center;">'
         + '<img src="'+_logoUrl+'" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
+        + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span>'
+        + '</div>';
+    } else if (gid === 'stocks') {
+      var _logoUrl2 = 'https://financialmodelingprep.com/image-stock/' + it2.sym + '.png';
+      icoHtml = '<div class="mw-icon" onclick="'+_favOnclick+'" style="display:flex;align-items:center;justify-content:center;">'
+        + '<img src="'+_logoUrl2+'" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
         + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span>'
         + '</div>';
     } else {
