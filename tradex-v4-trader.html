@@ -5800,9 +5800,17 @@ function _mwBuildRowHtml(it2, gid) {
   var _isFav = !!_txFavorites[it2.sym];
   var _favTitle = _isFav ? 'Favorilerden çıkar' : 'Favorilere ekle';
   var _favOnclick = "event.stopPropagation(); txToggleFavorite('" + it2.sym + "')";
+  if (gid === 'bist') {
+    var _logoUrl = 'https://cdn.jsdelivr.net/gh/ahmeterenodaci/Istanbul-Stock-Exchange--BIST--including-symbols-and-logos/logos/' + it2.sym + '.png';
+    html += '<div class="mw-icon" onclick="' + _favOnclick + '" style="display:flex;align-items:center;justify-content:center;" title="' + _favTitle + '">'
+          + '<img src="' + _logoUrl + '" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
+          + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span>'
+          + '</div>';
+  } else {
   html += _ico
     ? '<div class="mw-icon" onclick="' + _favOnclick + '" title="' + _favTitle + '">' + _ico + '</div>'
     : '<div class="mw-icon" onclick="' + _favOnclick + '" style="display:flex;align-items:center;justify-content:center;" title="' + _favTitle + '"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span></div>';
+  }
   var chgVal = (mwPrices[it2.sym] && mwPrices[it2.sym].chg !== undefined) ? mwPrices[it2.sym].chg : 0;
   var chgAbs = Math.abs(chgVal).toFixed(2);
   var chgUp = chgVal >= 0;
