@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<script>(function(){
+  try {
+    var t = localStorage.getItem('tx_theme');
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.setAttribute('data-theme', t);
+    }
+  } catch(e){}
+})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
@@ -28,6 +36,8 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-be
   --border2:  #3a3a3a;
   --text:     #e2e2e2;
   --muted:    #a0a0a0;
+  --faint:    #888888;
+  --faint2:   #555555;
   --buy:      #2979ff;
   --buy-dim:  #0d1f3c;
   --sell:     #ef5350;
@@ -36,6 +46,24 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-be
   --mono:     'IBM Plex Mono', monospace;
   --sans:     'IBM Plex Sans', sans-serif;
 }
+html[data-theme="light"] {
+  --bg:       #f4f4f4;
+  --panel:    #ffffff;
+  --panel2:   #f0f0f0;
+  --border:   #e0e0e0;
+  --border2:  #cfcfcf;
+  --text:     #1a1a1a;
+  --muted:    #6e6e6e;
+  --faint:    #9a9a9a;
+  --faint2:   #c2c2c2;
+  --buy:      #1565d8;
+  --buy-dim:  #e3edfb;
+  --sell:     #d32f2f;
+  --sell-dim: #fbe4e4;
+  --accent:   #b8860b;
+}
+html[data-theme="light"] .kyc-modal,
+html[data-theme="light"] .pw-modal { background: rgba(0,0,0,.4); }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { height:100%; overflow:hidden; }
 body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; position:fixed; width:100%; }
@@ -43,6 +71,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* ── USER DROPDOWN ── */
 .tb-user-badge { position:relative; }
+.tb-theme-toggle {
+  display:flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:4px; cursor:pointer;
+  font-size:14px; color:var(--muted); transition:background .12s;
+  flex-shrink:0;
+}
+.tb-theme-toggle:hover { background:var(--panel2); color:var(--text); }
 .user-dropdown {
   position:absolute; top:calc(100% + 4px); right:0;
   background:var(--panel); border:1px solid var(--border2);
@@ -156,7 +191,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* ── TICKER STRIP ── */
 .ticker-strip {
-  background:#1a1a1a; border-bottom:1px solid var(--border);
+  background:var(--panel); border-bottom:1px solid var(--border);
   height:24px; overflow:hidden; flex-shrink:0;
 }
 .ticker-inner { display:flex; gap:32px; animation:ticker 35s linear infinite; white-space:nowrap; width:max-content; height:100%; align-items:center; padding:0 16px; }
@@ -217,7 +252,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .bp-section.active { display:block; }
 .orders-table { width:100%; border-collapse:collapse; table-layout:fixed; }
 .orders-table th { font-family:var(--mono); font-size:10px; font-weight:600; color:var(--muted); text-align:left; padding:4px 8px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); overflow:hidden; white-space:nowrap; }
-.orders-table td { font-family:var(--mono); font-size:11px; padding:5px 8px; border-bottom:1px solid #2a2a2a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.orders-table td { font-family:var(--mono); font-size:11px; padding:5px 8px; border-bottom:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .orders-table tr:hover td { background:var(--panel2); }
 .orders-table tr:last-child td { border-bottom:none; }
 /* Sabit sütun genişlikleri — K/Z değişse de layout oynamaz */
@@ -339,7 +374,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mgr-content { flex:1; overflow-y:auto; padding:20px; }.mgr-section.active { display:block; }/* MANAGER FORM ELEMENTS */
 .mgr-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
 .mgr-table th { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:left; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; }
-.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid #2a2a2a; vertical-align:middle; }
+.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
 .mgr-table tr:last-child td { border-bottom:none; }
 .mgr-table tr:hover td { background:rgba(255,255,255,.02); }.mgr-row.cols2 { grid-template-columns:1fr 1fr; }
 .mgr-row.cols3 { grid-template-columns:1fr 1fr 1fr; }
@@ -380,7 +415,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ── İNDİKATÖR TOOLBAR ── */
 .ind-toolbar {
   display:flex; align-items:center; gap:0;
-  background:#1a1a1a; border-bottom:1px solid var(--border);
+  background:var(--panel); border-bottom:1px solid var(--border);
   height:28px; flex-shrink:0; overflow-x:auto;
 }
 .ind-toolbar::-webkit-scrollbar { height:0; }
@@ -447,7 +482,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .wallet-overlay.open { display:flex; }
 .wallet-panel {
-  background:#1a1a1a; border:1px solid var(--border2);
+  background:var(--panel); border:1px solid var(--border2);
   width:480px; max-width:96vw; max-height:90vh;
   border-radius:4px; box-shadow:0 24px 64px rgba(0,0,0,.8);
   display:flex; flex-direction:column; overflow:hidden;
@@ -482,7 +517,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--bg); border:1px solid var(--border); border-radius:3px;
   padding:14px; margin:12px 0; font-family:var(--mono); font-size:11px;
 }
-.wallet-info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:6px 0; border-bottom:1px solid #2a2a2a; gap:8px; }
+.wallet-info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--border); gap:8px; }
 .wallet-info-row:last-child { border-bottom:none; }
 .wallet-info-key { color:var(--muted); flex-shrink:0; padding-top:1px; }
 .wallet-info-val { color:var(--text); font-weight:600; word-break:break-word; text-align:right; min-width:0; flex:1; }
@@ -548,7 +583,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:flex; align-items:center; justify-content:space-between;
   padding:5px 8px 3px; cursor:pointer; user-select:none;
   border-bottom:1px solid var(--border);
-  position:sticky; top:0; z-index:5; background:#1a1a1a;
+  position:sticky; top:0; z-index:5; background:var(--panel);
 }
 .mw-group-title { font-family:var(--mono); font-size:9px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
 .mw-group-arrow { color:var(--muted); transition:transform .2s; display:inline-flex; align-items:center; }
@@ -577,7 +612,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Desktop'ta chg badge gizle */
 #mwBody .mw-chg { display: none !important; }
-.mw-sym-full { font-family:var(--mono); font-size:9px; color:#a0a0a0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mw-sym-full { font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; transition: color .3s; }
 .mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
@@ -592,7 +627,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   grid-template-columns:24px 1fr 58px 58px 36px;
   padding:3px 8px;
   border-bottom:1px solid var(--border);
-  background:#181818;
+  background:var(--panel2);
   flex-shrink:0;
 }
 .mw-col-hdr { font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; }
@@ -713,7 +748,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .auth-overlay.open { display:flex; }
 .auth-panel {
   width:420px; max-width:96vw;
-  background:#181818; border:1px solid #333;
+  background:var(--panel2); border:1px solid var(--border2);
   border-radius:4px; overflow:hidden;
   box-shadow:0 32px 80px rgba(0,0,0,.9);
 }
@@ -731,7 +766,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .auth-tabs {
   display:grid; grid-template-columns:1fr 1fr;
-  border-bottom:1px solid #2a2a2a;
+  border-bottom:1px solid var(--border);
   margin:0 32px;
 }
 .auth-tab {
@@ -753,13 +788,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   letter-spacing:.8px; margin-bottom:5px; display:block;
 }
 .auth-input {
-  width:100%; background:#181818; border:1px solid #333;
+  width:100%; background:var(--panel2); border:1px solid var(--border2);
   border-radius:2px; padding:10px 12px;
   color:var(--text); font-family:var(--mono); font-size:12px;
   outline:none; transition:border-color .15s;
 }
 .auth-input:focus { border-color:var(--accent); }
-.auth-input::placeholder { color:#777; }
+.auth-input::placeholder { color:var(--faint); }
 .auth-row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
 .auth-btn {
@@ -768,14 +803,14 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   letter-spacing:1px; cursor:pointer; margin-top:6px;
   transition:all .2s;
 }
-.auth-btn.primary { background:var(--accent); color:#1a1a1a; }
+.auth-btn.primary { background:var(--accent); color:var(--panel); }
 .auth-btn.primary:hover { filter:brightness(1.1); }
 
 .auth-divider {
   display:flex; align-items:center; gap:12px; margin:16px 0;
 }
-.auth-divider-line { flex:1; height:1px; background:#222; }
-.auth-divider-text { font-family:var(--mono); font-size:10px; color:#777; }
+.auth-divider-line { flex:1; height:1px; background:var(--panel2); }
+.auth-divider-text { font-family:var(--mono); font-size:10px; color:var(--faint); }
 
 .auth-note {
   font-family:var(--mono); font-size:10px; color:var(--muted);
@@ -807,7 +842,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-user-badge:hover { background:var(--panel2); }
 .tb-user-avatar {
   width:22px; height:22px; border-radius:50%;
-  background:var(--accent); color:#1a1a1a;
+  background:var(--accent); color:var(--panel);
   font-weight:700; font-size:11px;
   display:flex; align-items:center; justify-content:center;
 }
@@ -824,9 +859,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* Account type selector */
 .acc-type-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
 .acc-type-opt {
-  border:1px solid #333; border-radius:2px; padding:10px;
+  border:1px solid var(--border2); border-radius:2px; padding:10px;
   cursor:pointer; transition:all .2s; text-align:center;
-  background:#181818;
+  background:var(--panel2);
 }
 .acc-type-opt:hover { border-color:var(--accent); }
 .acc-type-opt.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
@@ -843,7 +878,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .apikey-modal.open { display:flex; }
 .apikey-box {
-  background:#181818; border:1px solid #333;
+  background:var(--panel2); border:1px solid var(--border2);
   border-radius:4px; padding:28px 32px; width:400px; max-width:94vw;
   box-shadow:0 24px 60px rgba(0,0,0,.8);
 }
@@ -856,22 +891,22 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   margin-bottom:20px; line-height:1.7;
 }
 .apikey-input {
-  width:100%; background:#181818; border:1px solid #333;
+  width:100%; background:var(--panel2); border:1px solid var(--border2);
   border-radius:2px; padding:10px 12px; color:var(--text);
   font-family:var(--mono); font-size:12px; outline:none;
   transition:border-color .15s; margin-bottom:10px;
 }
 .apikey-input:focus { border-color:var(--accent); }
-.apikey-input::placeholder { color:#777; }
+.apikey-input::placeholder { color:var(--faint); }
 .apikey-btns { display:flex; gap:8px; margin-top:4px; }
 .apikey-btn {
   flex:1; padding:10px; border:none; border-radius:2px;
   font-family:var(--mono); font-size:11px; font-weight:700;
   letter-spacing:.5px; cursor:pointer; transition:all .2s;
 }
-.apikey-btn.primary { background:var(--accent); color:#1a1a1a; }
+.apikey-btn.primary { background:var(--accent); color:var(--panel); }
 .apikey-btn.primary:hover { filter:brightness(1.1); }
-.apikey-btn.secondary { background:#1a1a1a; border:1px solid #333; color:var(--muted); }
+.apikey-btn.secondary { background:var(--panel); border:1px solid var(--border2); color:var(--muted); }
 .apikey-link {
   font-family:var(--mono); font-size:10px; color:var(--muted);
   text-align:center; margin-top:12px; line-height:1.8;
@@ -894,7 +929,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-api-btn:hover { color:var(--accent); }
 .tb-api-dot {
   width:7px; height:7px; border-radius:50%;
-  background:#999999; flex-shrink:0; transition:background .3s;
+  background:var(--muted); flex-shrink:0; transition:background .3s;
 }
 .tb-api-dot.live { background:#2979ff; box-shadow:0 0 6px #2979ff; }
 .tb-api-dot.err  { background:var(--sell); }
@@ -906,12 +941,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* Mobile nav hidden on desktop */
 
-.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }.ct-type-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
-.ct-type-btn.active { color:#fff; background:#181818; }
-.ct-type-btn:hover { color:#aaa; }
-.draw-tool-btn { background:transparent; border:none; color:#c0c0c0; cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
-.draw-tool-btn.active { color:#f0b90b; background:#181818; }
-.draw-tool-btn:hover { color:#aaa; }
+.ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }.ct-type-btn { background:transparent; border:none; color:var(--text); cursor:pointer; padding:3px 7px; font-size:13px; border-radius:3px; }
+.ct-type-btn.active { color:#fff; background:var(--panel2); }
+.ct-type-btn:hover { color:var(--muted); }
+.draw-tool-btn { background:transparent; border:none; color:var(--text); cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
+.draw-tool-btn.active { color:#f0b90b; background:var(--panel2); }
+.draw-tool-btn:hover { color:var(--muted); }
 
 
 
@@ -942,7 +977,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tx-modal-btn{flex:1;padding:9px 0;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;transition:filter .12s,opacity .12s;}
 .tx-modal-btn:hover{filter:brightness(1.12);}
 .tx-modal-btn.ghost{background:var(--panel2);color:var(--muted);border:1px solid var(--border2);}
-.tx-modal-btn.primary{background:var(--accent);color:#1a1a1a;}
+.tx-modal-btn.primary{background:var(--accent);color:var(--panel);}
 .tx-modal-btn.danger{background:var(--sell);color:#fff;}
 
 </style>
@@ -1711,6 +1746,7 @@ function initAuth(){
       <span id="connTxt">Bağlanıyor...</span>
       <span id="apiDot" style="display:none;"></span>
     </div>
+    <div class="tb-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Görünüm">🌙</div>
     <div class="tb-login-btn" id="tbLoginBtn" onclick="openAuth('login')">◉ GİRİŞ / KAYIT</div>
     <div class="tb-user-badge" id="tbUserBadge" style="display:none" onclick="toggleUserDropdown(event)">
       <div class="tb-user-avatar" id="tbUserAvatar">?</div>
@@ -1718,7 +1754,7 @@ function initAuth(){
         <div class="tb-user-name" id="tbUserName">—</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div class="tb-user-type" id="tbUserType">Demo</div>
-          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:#b0b0b0;letter-spacing:.5px"></div>
+          <div id="tbUserLogin" style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px"></div>
         </div>
       </div>
       <!-- Dropdown -->
@@ -2035,13 +2071,13 @@ function initAuth(){
           <table class="orders-table">
             <thead><tr>
   <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#2979ff;font-size:9px;">↓</span></th>
-  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Yön</th>
-  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:#777;font-size:9px;">⇅</span></th>
-  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th>
   <th>Swap</th>
-  <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Kapat</th>
 </tr></thead>
             <tbody id="posBody"><tr><td colspan="11" class="empty-msg">Açık pozisyon yok</td></tr></tbody>
@@ -2052,13 +2088,13 @@ function initAuth(){
           <table class="orders-table">
             <thead><tr>
   <th onclick="sortHist('time')" style="cursor:pointer;user-select:none">Zaman <span id="hsort-time" style="color:#2979ff;font-size:9px;">↓</span></th>
-  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none">Sembol <span id="hsort-sym" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none">Sembol <span id="hsort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Yön</th>
-  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none">Miktar <span id="hsort-qty" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none">Miktar <span id="hsort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Açılış</th><th>Kapanış</th>
-  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none">K/Z $ <span id="hsort-pnl" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none">K/Z $ <span id="hsort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th>Swap</th>
-  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none">Sebep <span id="hsort-reason" style="color:#777;font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none">Sebep <span id="hsort-reason" style="color:var(--faint);font-size:9px;">⇅</span></th>
 </tr></thead>
             <tbody id="histBody"><tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr></tbody>
           </table>
@@ -2076,7 +2112,7 @@ function initAuth(){
 
         <!-- FİNANS GEÇMİŞİ -->
         <div class="bp-section" id="bp-finans" style="padding:0;">
-          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:#b0b0b0;padding:16px;">Yükleniyor...</div>
+          <div id="bp-finans-content" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:16px;">Yükleniyor...</div>
         </div>
       </div>
     </div>
@@ -2094,10 +2130,10 @@ function initAuth(){
   <!-- Tabs -->
   <div style="padding:24px 28px 0">
     <div style="font-family:monospace;font-size:18px;font-weight:700;color:#f0b90b;letter-spacing:3px;text-align:center;margin-bottom:4px">Trade Academy</div>
-    <div style="font-family:monospace;font-size:10px;color:#c0c0c0;text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
+    <div style="font-family:monospace;font-size:10px;color:var(--text);text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2a2a2a">
       <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer">GİRİŞ YAP</div>
-      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#b0b0b0;border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
+      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
     </div>
   </div>
 
@@ -2105,16 +2141,16 @@ function initAuth(){
   <div id="sec-login" style="padding:20px 28px 24px">
     <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">LOGIN NO / E-POSTA</div>
-      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">LOGIN NO / E-POSTA</div>
+      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">ŞİFRE</div>
-      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">ŞİFRE</div>
+      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">GİRİŞ YAP</button>
-    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:#1a1a1a;color:#a0a0a0;border:1px solid #333;border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
-    <div style="font-family:monospace;font-size:10px;color:#b0b0b0;text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
+    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:#1a1a1a;color:var(--muted);border:1px solid #333;border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
   </div>
 
   <!-- Kayıt -->
@@ -2123,44 +2159,44 @@ function initAuth(){
     <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#2979ff;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">AD</div>
-        <input id="inp-name" placeholder="Adınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">AD</div>
+        <input id="inp-name" placeholder="Adınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">SOYAD</div>
-        <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">SOYAD</div>
+        <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">TELEFON</div>
-      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">TELEFON</div>
+      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">E-POSTA</div>
-      <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">E-POSTA</div>
+      <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">ŞİFRE</div>
-        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">ŞİFRE</div>
+        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:#c0c0c0;margin-bottom:4px">TEKRAR</div>
-        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:#e0e0e0;font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">TEKRAR</div>
+        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:#181818;border:1px solid #333;border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
       <div id="opt-demo" onclick="authAccType('demo')" style="border:1px solid #f0b90b;background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="font-size:16px">🎮</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">DEMO</div>
-        <div style="font-family:monospace;font-size:9px;color:#aaaaaa">$10,000 sanal</div>
+        <div style="font-size:16px">🎮</div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700">DEMO</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--muted)">$10,000 sanal</div>
       </div>
       <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #333;background:#181818;border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="font-size:16px">💼</div><div style="font-family:monospace;font-size:11px;color:#e0e0e0;font-weight:700">GERÇEK</div>
-        <div style="font-family:monospace;font-size:9px;color:#aaaaaa">Canlı hesap</div>
+        <div style="font-size:16px">💼</div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700">GERÇEK</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--muted)">Canlı hesap</div>
       </div>
     </div>
     <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:#1a1a1a;border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">HESAP OLUŞTUR</button>
-    <div style="font-family:monospace;font-size:10px;color:#b0b0b0;text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
   </div>
 
 </div>
@@ -2241,7 +2277,7 @@ function initAuth(){
     <!-- İŞLEM GEÇMİŞİ -->
     <div class="wallet-section" id="ws-history" style="overflow-y:auto;max-height:400px;">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;">FİNANS GEÇMİŞİ</div>
-      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:#b0b0b0;">Yükleniyor...</div>
+      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:var(--muted);">Yükleniyor...</div>
     </div>
 
   </div>
@@ -2818,7 +2854,7 @@ function startCandleWs(sym, interval) {
         msg.className = 'no-chart-msg';
         msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;';
         msg.innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:#a8a8a8;">Grafik verisi bekleniyor</div>'
-          + '<div style="font-family:var(--mono);font-size:10px;color:#777;">Twelvedata API bağlantısı gerekli</div>';
+          + '<div style="font-family:var(--mono);font-size:10px;color:var(--faint);">Twelvedata API bağlantısı gerekli</div>';
         wrap.appendChild(msg);
       }
       return;
@@ -3976,8 +4012,8 @@ function renderPositions() {
       <td style="font-size:10px;color:${_posSortCol==='time'?'#aaa':'var(--muted)'};white-space:nowrap">${pos.time ? fmtDate(pos.time) : '—'}</td>
       <td>$${fp(pos.openPrice, pos.decimals||2)}</td>
       <td data-cur="${pos.id}">$${fp(cur, pos.decimals||2)}</td>
-      <td onclick="txEditField(${pos.id},'sl')" title="Düzenlemek için tıkla" style="font-size:10px;color:#ef5350;cursor:pointer">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style="color:#555;border-bottom:1px dashed #555">—</span>'}</td>
-      <td onclick="txEditField(${pos.id},'tp')" title="Düzenlemek için tıkla" style="font-size:10px;color:#2979ff;cursor:pointer">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style="color:#555;border-bottom:1px dashed #555">—</span>'}</td>
+      <td onclick="txEditField(${pos.id},'sl')" title="Düzenlemek için tıkla" style="font-size:10px;color:#ef5350;cursor:pointer">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed #555">—</span>'}</td>
+      <td onclick="txEditField(${pos.id},'tp')" title="Düzenlemek için tıkla" style="font-size:10px;color:#2979ff;cursor:pointer">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed #555">—</span>'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#2979ff':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor};text-align:right">${pnlSign}$${fp(Math.abs(pnl))}</td>
       <td><button class="close-ord" onclick="txPartialClose(${pos.id})" title="Parçalı kapat" style="margin-right:4px">◐</button><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
@@ -4219,7 +4255,7 @@ function renderHistory() {
   }
 
   var _reasonMap = {
-    'manuel':   '<span style="color:#a0a0a0;font-size:10px">Manuel</span>',
+    'manuel':   '<span style="color:var(--muted);font-size:10px">Manuel</span>',
     'stop_out': '<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>',
     'sl':       '<span style="color:#ef5350;font-size:10px">Stop Loss</span>',
     'tp':       '<span style="color:#2979ff;font-size:10px">Take Profit</span>',
@@ -4244,7 +4280,7 @@ function renderHistory() {
     var cls  = pnl >= 0 ? 'up' : 'down';
     var pnlColor = pnl >= 0 ? '#2979ff' : '#ef5350';
     var r    = h.closeReason || 'manuel';
-    var rl   = _reasonMap[r] || ('<span style="color:#a0a0a0;font-size:10px">' + r + '</span>');
+    var rl   = _reasonMap[r] || ('<span style="color:var(--muted);font-size:10px">' + r + '</span>');
     var pnlStyle = _histSortCol === 'pnl' ? 'font-weight:700;' : '';
     return '<tr>'
       + '<td style="color:' + (_histSortCol==='time'?'#aaa':'var(--muted)') + ';font-size:10px;white-space:nowrap">' + (h.closeTime ? fmtDate(h.closeTime) : '—') + '</td>'
@@ -4481,7 +4517,7 @@ function _renderBpFinansTable(el) {
   var rows = '';
   var log = (typeof finlog !== 'undefined' && Array.isArray(finlog)) ? finlog : [];
   if(!log.length) {
-    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#777;font-size:11px;">Henüz finansal işlem yok</td></tr>';
+    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-size:11px;">Henüz finansal işlem yok</td></tr>';
   } else {
     var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
     sorted.forEach(function(l) {
@@ -4489,19 +4525,19 @@ function _renderBpFinansTable(el) {
       var sign = (l.type==='deposit'||l.type==='bonus_in') ? '+' : (l.type==='swap' ? (rawAmt>=0?'+':'-') : '-');
       var color = cl[l.type]||'#888';
       rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-        + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+        + '<td style="padding:6px 12px;color:var(--muted);font-size:10px;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:11px;">' + (tp[l.type]||l.type) + '</td>'
         + '<td style="padding:6px 12px;color:'+color+';font-weight:700;font-size:12px;text-align:right;">' + sign + '$' + Math.abs(rawAmt).toFixed(2) + '</td>'
-        + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (l.note||'—') + '</td>'
+        + '<td style="padding:6px 12px;color:var(--muted);font-size:10px;">' + (l.note||'—') + '</td>'
         + '</tr>';
     });
   }
   el.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
     + '<thead><tr style="background:#181818;position:sticky;top:0;z-index:1;">'
-    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
-    + '<th style="padding:7px 12px;text-align:right;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#b0b0b0;font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TARİH</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">TİP</th>'
+    + '<th style="padding:7px 12px;text-align:right;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">MİKTAR</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid #222;letter-spacing:1px;">NOT</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
@@ -5293,27 +5329,27 @@ function renderWalletHistory() {
     var cl = {deposit:'#2979ff',withdraw:'#ef5350',bonus_in:'#f5c518',bonus_out:'#f5a623'};
     var rows = '';
     if(!log || !log.length) {
-      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:#777;font-family:var(--mono);font-size:11px;">Henüz işlem yok</td></tr>';
+      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-family:var(--mono);font-size:11px;">Henüz işlem yok</td></tr>';
     } else {
       var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
       sorted.forEach(function(l) {
         var sign  = (l.type==='deposit'||l.type==='bonus_in') ? '+' : '-';
         var color = cl[l.type]||'#888';
         rows += '<tr style="border-bottom:1px solid #1a1a1a;">'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#c0c0c0;">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--text);">' + (l.date ? fmtDate(l.date) : '—') + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:'+color+';font-weight:700;">' + (tp[l.type]||l.type) + '</td>'
           + '<td style="padding:8px 10px;font-family:var(--mono);font-size:12px;color:'+color+';font-weight:700;text-align:right;">' + sign + '$' + parseFloat(l.amount||0).toFixed(2) + '</td>'
-          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:#b0b0b0;">' + (l.note||'—') + '</td>'
+          + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--muted);">' + (l.note||'—') + '</td>'
           + '</tr>';
       });
     }
     el.innerHTML = '<div style="padding:4px 0;">'
       + '<table style="width:100%;border-collapse:collapse;">'
       + '<thead><tr style="background:#181818;">'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">TARİH</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">TİP</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:#c0c0c0;text-align:left;border-bottom:1px solid #222;">NOT</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid #222;">TARİH</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid #222;">TİP</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:right;border-bottom:1px solid #222;">MİKTAR</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid #222;">NOT</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -5321,7 +5357,7 @@ function renderWalletHistory() {
 
   // Taze veri Firebase'den çek
   if(_cu && _cu.id && typeof fbLoadUserData === 'function') {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#b0b0b0;font-size:11px;">Yükleniyor...</div>';
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:11px;">Yükleniyor...</div>';
     fbLoadUserData(_cu.id, function(data) {
       if(data && Array.isArray(data.finlog)) finlog = data.finlog;
       _doRender(finlog || []);
@@ -6047,7 +6083,7 @@ if (!symConfig) {
     {sym:'USDTRY',   label:'USD/TRY',   s:'TRY',  spread:0.05,   color:'#ff9900', minLot:0.01,  active:true, contractSize:100000, margin:5, decimals:4, category:'forex'},
     {sym:'EURTRY',   label:'EUR/TRY',   s:'ETRY', spread:0.08,   color:'#cc3300', minLot:0.01,  active:true, contractSize:100000, margin:5, decimals:4, category:'forex'},
     {sym:'XAUUSD',   label:'XAU/USD',   s:'GOLD', spread:0.5,    color:'#ffd700', minLot:0.01,  active:true, contractSize:100,    margin:1, decimals:2, category:'commodity'},
-    {sym:'XAGUSD',   label:'XAG/USD',   s:'SLVR', spread:0.03,   color:'#c0c0c0', minLot:0.1,   active:true, contractSize:5000,   margin:1, decimals:3, category:'commodity'},
+    {sym:'XAGUSD',   label:'XAG/USD',   s:'SLVR', spread:0.03,   color:'var(--text)', minLot:0.1,   active:true, contractSize:5000,   margin:1, decimals:3, category:'commodity'},
     {sym:'USOIL',    label:'US OIL',    s:'OIL',  spread:0.05,   color:'#8b4513', minLot:0.1,   active:true, contractSize:1000,   margin:1, decimals:2, category:'commodity'},
     {sym:'BRTUSD',   label:'BRENT OIL', s:'BRENT',spread:0.05,   color:'#a05020', minLot:0.1,   active:true, contractSize:1000,   margin:1, decimals:2, category:'commodity'},
     {sym:'XPTUSD',   label:'XPT/USD',   s:'PLT',  spread:0.50,   color:'#d0d0d0', minLot:0.1,   active:true, contractSize:50,     margin:1, decimals:2, category:'commodity'},
@@ -6083,12 +6119,12 @@ if (!symConfig) {
     {sym:'USDTRY',label:'USD/TRY',s:'TRY',spread:0.05,color:'#ff9900',minLot:0.01,active:true,contractSize:100000,margin:5,decimals:4,category:'forex'},
     {sym:'EURTRY',label:'EUR/TRY',s:'ETRY',spread:0.08,color:'#cc3300',minLot:0.01,active:true,contractSize:100000,margin:5,decimals:4,category:'forex'},
     {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
-    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
+    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'var(--text)',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
     {sym:'USOIL',label:'US OIL',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
 
     // Emtia (Yahoo Finance)
     {sym:'XAUUSD',label:'XAU/USD',s:'GOLD',spread:0.5,color:'#ffd700',minLot:0.01,active:true,contractSize:100,margin:1,decimals:2,category:'commodity'},
-    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'#c0c0c0',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
+    {sym:'XAGUSD',label:'XAG/USD',s:'SLVR',spread:0.03,color:'var(--text)',minLot:0.1,active:true,contractSize:5000,margin:1,decimals:3,category:'commodity'},
     {sym:'WTIUSD',label:'WTI/USD',s:'OIL',spread:0.05,color:'#8b4513',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
     {sym:'BRTUSD',label:'BRT/USD',s:'BOIL',spread:0.05,color:'#654321',minLot:0.1,active:true,contractSize:1000,margin:1,decimals:2,category:'commodity'},
     // Endeks (Yahoo Finance)
@@ -6776,12 +6812,12 @@ function _txRenderBrokerInfo(d) {
       if(f.link==='tel:') _hv = _hv.replace(/[^\d+]/g,'');   // tel: için boşluk/sembol temizle
       valHtml = '<a href="'+f.link+_hv+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
     } else if(f.small) {
-      valHtml = '<span style="color:#b0b0b0;font-size:9px;line-height:1.4">'+val+'</span>';
+      valHtml = '<span style="color:var(--muted);font-size:9px;line-height:1.4">'+val+'</span>';
     } else {
-      valHtml = '<span style="color:#ccc">'+val+'</span>';
+      valHtml = '<span style="color:var(--text)">'+val+'</span>';
     }
     return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a;gap:8px">'
-      +'<div style="font-family:monospace;font-size:10px;color:#b0b0b0;flex-shrink:0">'+f.label+'</div>'
+      +'<div style="font-family:monospace;font-size:10px;color:var(--muted);flex-shrink:0">'+f.label+'</div>'
       +'<div style="font-family:monospace;font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
       +'</div>';
   }).join('');
@@ -7374,7 +7410,7 @@ function symUnpin(sym){
     touch-action: manipulation;
     border-radius: 0;
   }
-  #mSymBtn .arr { font-size: 7px; color: #999999; }
+  #mSymBtn .arr { font-size: 7px; color: var(--muted); }
   #mSymList {
     display: none;
     position: fixed;
@@ -7394,17 +7430,17 @@ function symUnpin(sym){
     padding: 9px 12px;
     border-bottom: 1px solid #1e1e1e;
     font-family: monospace; font-size: 11px; font-weight: 700;
-    color: #ccc; cursor: pointer;
+    color: var(--text); cursor: pointer;
     display: flex; align-items: center; gap: 8px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
   #mSymList .msl-item:active { background: #1a1a1a; }
   #mSymList .msl-item.active { color: #f0b90b; }
-  #mSymList .msl-item .msl-full { font-size: 10px; color: #444; font-weight: 400; }
+  #mSymList .msl-item .msl-full { font-size: 10px; color: var(--faint2); font-weight: 400; }
   #mSymList .msl-close {
     padding: 10px 16px; text-align: center;
-    font-family: monospace; font-size: 11px; color: #444;
+    font-family: monospace; font-size: 11px; color: var(--faint2);
     border-top: 1px solid #222; cursor: pointer;
     touch-action: manipulation;
   }
@@ -7482,7 +7518,7 @@ function symUnpin(sym){
     gap: 3px;
     background: none;
     border: none;
-    color: #aaaaaa;
+    color: var(--muted);
     font-family: 'Courier New', monospace;
     font-size: 9px;
     font-weight: 700;
@@ -7569,10 +7605,10 @@ function symUnpin(sym){
   #mPanMarket .mw-sym-block { flex: 1; min-width: 0; }
   #mPanMarket .mw-sym-name {
     font-size: 13px !important; font-weight: 700 !important;
-    color: #e0e0e0 !important; letter-spacing: .3px;
+    color: var(--text) !important; letter-spacing: .3px;
   }
   #mPanMarket .mw-sym-full {
-    font-size: 10px !important; color: #888 !important;
+    font-size: 10px !important; color: var(--faint) !important;
     margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 140px;
   }
@@ -7621,7 +7657,7 @@ function symUnpin(sym){
     font-family: monospace;
     font-size: 8px;
     font-weight: 700;
-    color: #a0a0a0;
+    color: var(--muted);
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 20px;
@@ -7640,7 +7676,7 @@ function symUnpin(sym){
   }
   #mPanMarket .mw-group-title {
     font-size: 10px !important; letter-spacing: 1.5px !important;
-    color: #999999 !important;
+    color: var(--muted) !important;
   }
 
   /* Değişim yüzdesi badge */
@@ -7661,7 +7697,7 @@ function symUnpin(sym){
     background: #111 !important;
     border: 1px solid #1e1e1e !important;
     border-radius: 10px !important;
-    color: #ccc !important;
+    color: var(--text) !important;
     font-size: 13px !important;
   }
 
@@ -7685,7 +7721,7 @@ function symUnpin(sym){
     gap: 3px;
   }
   .m-side:active { background: #111; }
-  .m-slbl { font-family: monospace; font-size: 9px; color: #a0a0a0; letter-spacing: 1px; }
+  .m-slbl { font-family: monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
   .m-sprc { font-family: monospace; font-size: 28px; font-weight: 700; }
   .m-side.sell .m-sprc { color: #ef5350; }
   .m-side.buy  .m-sprc { color: #2979ff; }
@@ -7700,7 +7736,7 @@ function symUnpin(sym){
   .m-lb {
     width: 52px; height: 52px;
     background: #181818;
-    border: none; color: #aaa;
+    border: none; color: var(--muted);
     font-size: 26px; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     display: flex; align-items: center; justify-content: center;
@@ -7710,7 +7746,7 @@ function symUnpin(sym){
   .m-li {
     flex: 1; text-align: center;
     background: transparent; border: none;
-    color: #e0e0e0; font-family: monospace;
+    color: var(--text); font-family: monospace;
     font-size: 20px; font-weight: 700; height: 52px;
   }
   .m-li:focus { outline: none; }
@@ -7718,16 +7754,16 @@ function symUnpin(sym){
   .m-pr {
     padding: 5px 13px; border-radius: 20px;
     border: 1px solid #2a2a2a; background: #111;
-    color: #a0a0a0; font-family: monospace; font-size: 11px;
+    color: var(--muted); font-family: monospace; font-size: 11px;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .m-pr.on { border-color: #2979ff; color: #2979ff; background: #0a1a2a; }
   .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
-  .m-il { font-family: monospace; font-size: 9px; color: #a0a0a0; letter-spacing: .5px; }
+  .m-il { font-family: monospace; font-size: 9px; color: var(--muted); letter-spacing: .5px; }
   .m-in {
     background: #111; border: 1px solid #2a2a2a;
-    border-radius: 6px; color: #ddd;
+    border-radius: 6px; color: var(--text);
     font-family: monospace; font-size: 14px;
     padding: 10px 12px; width: 100%; box-sizing: border-box;
   }
@@ -7757,7 +7793,7 @@ function symUnpin(sym){
   .m-tab {
     flex: 1; padding: 10px; text-align: center;
     font-family: monospace; font-size: 11px; font-weight: 700;
-    color: #a0a0a0; background: none; border: none;
+    color: var(--muted); background: none; border: none;
     border-bottom: 2px solid transparent; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -7776,23 +7812,23 @@ function symUnpin(sym){
   .m-cl { flex: 1; }
   .m-csym {
     font-family: monospace; font-size: 13px; font-weight: 700;
-    color: #ccc; display: flex; align-items: center; gap: 6px;
+    color: var(--text); display: flex; align-items: center; gap: 6px;
   }
   .m-bdg {
     font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
   }
   .m-bdg.b { background: #081a14; color: #2979ff; }
   .m-bdg.s { background: #1a0808; color: #ef5350; }
-  .m-cmeta { font-family: monospace; font-size: 10px; color: #999; margin-top: 2px; }
+  .m-cmeta { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
   .m-cr { text-align: right; }
   .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
   .m-cpnl.u { color: #2979ff; }
   .m-cpnl.d { color: #ef5350; }
-  .m-ccur { font-family: monospace; font-size: 10px; color: #999; margin-top: 2px; }
+  .m-ccur { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
   .m-cx {
     width: 32px; height: 32px; flex-shrink: 0;
     background: #111; border: 1px solid #1e1e1e;
-    border-radius: 6px; color: #333; font-size: 14px;
+    border-radius: 6px; color: var(--faint2); font-size: 14px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
   }
@@ -7807,12 +7843,12 @@ function symUnpin(sym){
   }
   .m-stat { background: #0f0f0f; padding: 14px 16px; }
   .m-stl { font-family: monospace; font-size: 9px; color: #d4d4d4; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-  .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: #bbb; }
+  .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: var(--muted); }
   .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
   .m-abt {
     padding: 14px 16px; border-radius: 10px;
     border: 1px solid #1e1e1e; background: #111;
-    color: #bbb; font-family: monospace; font-size: 13px; font-weight: 600;
+    color: var(--muted); font-family: monospace; font-size: 13px; font-weight: 600;
     text-align: left; cursor: pointer;
     display: flex; align-items: center; gap: 12px;
     -webkit-tap-highlight-color: transparent;
@@ -7827,11 +7863,11 @@ function symUnpin(sym){
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
   <div style="padding:10px 12px;flex-shrink:0;position:relative">
-    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:#181818;border:1px solid #1e1e1e;color:#ddd;box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
+    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:#181818;border:1px solid #1e1e1e;color:var(--text);box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
     <span style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center"><svg style="width:15px;height:15px;opacity:.5;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
   </div>
   <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid #1a1a1a;">
-    <div style="flex:1;font-family:monospace;font-size:9px;color:#333;letter-spacing:1px;text-transform:uppercase">Sembol</div>
+    <div style="flex:1;font-family:monospace;font-size:9px;color:var(--faint2);letter-spacing:1px;text-transform:uppercase">Sembol</div>
     <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#ef5350;letter-spacing:.5px">SAT</div>
     <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#2979ff;letter-spacing:.5px;margin-left:6px">AL</div>
   </div>
@@ -7845,7 +7881,7 @@ function symUnpin(sym){
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
     <input id="mOtSymSearch" type="text" placeholder="Sembol ara..."
-      style="width:100%;padding:9px 14px;background:#181818;border:1px solid #1e1e1e;border-radius:8px;color:#ddd;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
+      style="width:100%;padding:9px 14px;background:#181818;border:1px solid #1e1e1e;border-radius:8px;color:var(--text);font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
       oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
     <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:#141414;border:1px solid #2a2a2a;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
   </div>
@@ -7862,7 +7898,7 @@ function symUnpin(sym){
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:#c0c0c0;letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -7879,7 +7915,7 @@ function symUnpin(sym){
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:#c0c0c0;letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -7921,7 +7957,7 @@ function symUnpin(sym){
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#c0c0c0;letter-spacing:.5px;pointer-events:none">SAT</span>
+    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none">SAT</span>
     <span id="mqBid" style="pointer-events:none">—</span>
   </button>
   <div style="
@@ -7930,11 +7966,11 @@ function symUnpin(sym){
     gap:2px; background:#151515;
     border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a;
   ">
-    <div style="font-family:monospace;font-size:8px;color:#a0a0a0;letter-spacing:.5px">LOT</div>
+    <div style="font-family:monospace;font-size:8px;color:var(--muted);letter-spacing:.5px">LOT</div>
     <div style="display:flex;align-items:center;gap:6px">
-      <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:#a0a0a0;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
-      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:#ddd;min-width:34px;text-align:center;display:inline-block">0.01</span>
-      <button onclick="mQLA(1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:#a0a0a0;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
+      <button onclick="mQLA(-1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
+      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text);min-width:34px;text-align:center;display:inline-block">0.01</span>
+      <button onclick="mQLA(1)" style="width:26px;height:26px;background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
     </div>
   </div>
   <button onclick="mQOrd('buy')" style="
@@ -7944,7 +7980,7 @@ function symUnpin(sym){
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:#c0c0c0;letter-spacing:.5px;pointer-events:none">AL</span>
+    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none">AL</span>
     <span id="mqAsk" style="pointer-events:none">—</span>
   </button>
 </div>
@@ -7952,34 +7988,34 @@ function symUnpin(sym){
 <div id="mPanPos" class="m-pan">
   <!-- Açık K/Z büyük -->
   <div style="padding:18px 16px 12px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:10px;color:#a0a0a0;letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
     <div id="mPSPnl" style="font-family:monospace;font-size:28px;font-weight:700;color:#2979ff">—</div>
   </div>
 
   <!-- Hesap listesi -->
   <div style="border-bottom:1px solid #1a1a1a;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="balance">Bakiye</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mPSBal">—</div>
+      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="balance">Bakiye</div>
+      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSBal">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="equity">Varlık</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mPSEq">—</div>
+      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="equity">Varlık</div>
+      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSEq">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid #111" id="mPosBonusRow">
-      <div style="font-family:monospace;font-size:12px;color:#999" data-lang="bonus">Bonus</div>
+      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="bonus">Bonus</div>
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:11px;color:#999">Teminat</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mPSMar">—</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Teminat</div>
+      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSMar">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid #111">
-      <div style="font-family:monospace;font-size:11px;color:#999">Serbest Teminat</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mPSFr">—</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Serbest Teminat</div>
+      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSFr">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px">
-      <div style="font-family:monospace;font-size:11px;color:#999">Teminat Seviyesi</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Teminat Seviyesi</div>
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:#2979ff" id="mPSML">—</div>
     </div>
   </div>
@@ -7997,12 +8033,12 @@ function symUnpin(sym){
   <!-- Üst: Hesap başlığı + login -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
     <div style="font-family:monospace;font-size:11px;font-weight:700;color:#2979ff;letter-spacing:1px" data-lang="myAccount">HESABIM</div>
-    <div style="font-family:monospace;font-size:10px;color:#888" id="mALg">—</div>
+    <div style="font-family:monospace;font-size:10px;color:var(--faint)" id="mALg">—</div>
   </div>
 
   <!-- Açık K/Z - büyük göster -->
   <div style="padding:10px 16px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:9px;color:#a0a0a0;letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div style="font-family:monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
     <div id="mSPnl" style="font-family:monospace;font-size:22px;font-weight:700;color:#2979ff">—</div>
   </div>
 
@@ -8011,32 +8047,32 @@ function symUnpin(sym){
     <div style="padding:0 0 8px">
       <!-- Bakiye -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:11px;color:#999">Bakiye</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mSBal">—</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Bakiye</div>
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSBal">—</div>
       </div>
       <!-- Varlık -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:11px;color:#999">Varlık</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mSEq">—</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Varlık</div>
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSEq">—</div>
       </div>
       <!-- Bonus -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111" id="mAccBonusRow">
-        <div style="font-family:monospace;font-size:11px;color:#999">Bonus</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Bonus</div>
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:#f5c518" id="mSBon">—</div>
       </div>
       <!-- Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:11px;color:#999" data-lang="margin">Teminat</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mSMar">—</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSMar">—</div>
       </div>
       <!-- Serbest Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:11px;color:#999" data-lang="freeMargin">Serbest Teminat</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#ccc" id="mSFr">—</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSFr">—</div>
       </div>
       <!-- Teminat Seviyesi -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid #111">
-        <div style="font-family:monospace;font-size:11px;color:#999" data-lang="marginLvl">Teminat Seviyesi</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:#2979ff" id="mSML">—</div>
       </div>
     </div>
@@ -8080,15 +8116,15 @@ function symUnpin(sym){
 
       <!-- Dil seçim paneli -->
       <div id="mLangPanel" style="display:none;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden">
-        <div onclick="mSetLang('tr')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangTR">
+        <div onclick="mSetLang('tr')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangTR">
           <span style="font-size:18px">🇹🇷</span> Türkçe
           <span style="margin-left:auto;color:#2979ff;display:none" id="mLangTRCheck">✓</span>
         </div>
-        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangEN">
+        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangEN">
           <span style="font-size:18px">🇬🇧</span> English
           <span style="margin-left:auto;color:#2979ff;display:none" id="mLangENCheck">✓</span>
         </div>
-        <div onclick="mSetLang('ar')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:#bbb;-webkit-tap-highlight-color:transparent" id="mLangAR">
+        <div onclick="mSetLang('ar')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangAR">
           <span style="font-size:18px">🇸🇦</span> العربية
           <span style="margin-left:auto;color:#2979ff;display:none" id="mLangARCheck">✓</span>
         </div>
@@ -8182,6 +8218,22 @@ function symUnpin(sym){
 (function(){
   var _ct='market', _lot=0.01, _ptab='open';
   function mob(){ return window.innerWidth<=768; }
+
+  // ── TEMA (Açık/Koyu Mod) ──
+  function applyThemeIcon(){
+    var btn = document.getElementById('themeToggleBtn');
+    if(!btn) return;
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    btn.textContent = isLight ? '☀️' : '🌙';
+  }
+  window.toggleTheme = function(){
+    var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    var next = cur === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('tx_theme', next); } catch(e){}
+    applyThemeIcon();
+  };
+  applyThemeIcon();
 
   // Nav + panelleri sadece mobilde göster
   function mShow(){
@@ -8981,33 +9033,33 @@ function symUnpin(sym){
     <!-- Header kompakt -->
     <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
       <div style="flex:1">
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#e0e0e0" id="mPMSym">—</div>
-        <div style="font-family:monospace;font-size:9px;color:#c0c0c0;margin-top:1px" id="mPMType">—</div>
+        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPMSym">—</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--text);margin-top:1px" id="mPMType">—</div>
       </div>
       <div style="text-align:right;margin-right:12px">
         <div style="font-family:monospace;font-size:16px;font-weight:700" id="mPMPnl">—</div>
-        <div style="font-family:monospace;font-size:9px;color:#aaaaaa" id="mPMCur">—</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--muted)" id="mPMCur">—</div>
       </div>
-      <button onclick="mPosModalClose()" style="background:#181818;border:none;color:#c0c0c0;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
+      <button onclick="mPosModalClose()" style="background:#181818;border:none;color:var(--text);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
     </div>
     <!-- Detaylar kompakt -->
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#181818;margin:8px;border-radius:6px;overflow:hidden">
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Açılış</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMOpen">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Açılış</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMOpen">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCurPrice">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCurPrice">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Lot</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMLot">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Lot</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMLot">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Swap</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMSwap">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Swap</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMSwap">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
           <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:2px">Stop Loss</div>
@@ -9018,12 +9070,12 @@ function symUnpin(sym){
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#2979ff" id="mPMTP">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Teminat</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ccc" id="mPMCost">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Teminat</div>
+          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCost">—</div>
         </div>
         <div style="background:#0f0f0f;padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#b0b0b0;margin-bottom:2px">Saat</div>
-          <div style="font-family:monospace;font-size:9px;font-weight:700;color:#ccc" id="mPMTime">—</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Saat</div>
+          <div style="font-family:monospace;font-size:9px;font-weight:700;color:var(--text)" id="mPMTime">—</div>
         </div>
       </div>
       <!-- SL/TP Güncelle kompakt -->
