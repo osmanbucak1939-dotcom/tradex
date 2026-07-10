@@ -38,6 +38,14 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-be
   --muted:    #a0a0a0;
   --faint:    #888888;
   --faint2:   #555555;
+  --overlay:  rgba(22,22,22,.95);
+  --overlay2: rgba(15,15,15,.9);
+  --mwbid-bg:     rgba(200,0,0,.6);
+  --mwbid-text:   #ff2222;
+  --mwbid-border: rgba(220,0,0,.9);
+  --mwask-bg:     rgba(41,121,255,.45);
+  --mwask-text:   #82b1ff;
+  --mwask-border: rgba(41,121,255,.9);
   --buy:      #2979ff;
   --buy-dim:  #0d1f3c;
   --sell:     #ef5350;
@@ -56,6 +64,14 @@ html[data-theme="light"] {
   --muted:    #6e6e6e;
   --faint:    #9a9a9a;
   --faint2:   #c2c2c2;
+  --overlay:  rgba(255,255,255,.95);
+  --overlay2: rgba(255,255,255,.92);
+  --mwbid-bg:     #fbdede;
+  --mwbid-text:   #c62828;
+  --mwbid-border: #e8a3a3;
+  --mwask-bg:     #dce9ff;
+  --mwask-text:   #14479e;
+  --mwask-border: #a9c8f5;
   --buy:      #1565d8;
   --buy-dim:  #e3edfb;
   --sell:     #d32f2f;
@@ -644,7 +660,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   position:absolute; top:8px; left:8px;
   z-index:50;
   display:flex; align-items:stretch; gap:0;
-  background:rgba(22,22,22,.95);
+  background:var(--overlay);
   border:1px solid var(--border2);
   border-radius:3px;
   box-shadow:0 4px 20px rgba(0,0,0,.6);
@@ -722,7 +738,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .qt-toggle {
   position:absolute; top:10px; right:10px; z-index:49;
   width:36px; height:36px;
-  background:rgba(15,15,15,.9);
+  background:var(--overlay2);
   border:1px solid rgba(240,185,11,.25);
   border-radius:50%;
   display:none; align-items:center; justify-content:center;
@@ -1746,7 +1762,7 @@ function initAuth(){
       <span id="connTxt">Bağlanıyor...</span>
       <span id="apiDot" style="display:none;"></span>
     </div>
-    <div class="tb-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Görünüm">🌙</div>
+    <div class="tb-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Görünüm"></div>
     <div class="tb-login-btn" id="tbLoginBtn" onclick="openAuth('login')">◉ GİRİŞ / KAYIT</div>
     <div class="tb-user-badge" id="tbUserBadge" style="display:none" onclick="toggleUserDropdown(event)">
       <div class="tb-user-avatar" id="tbUserAvatar">?</div>
@@ -7638,16 +7654,16 @@ function symUnpin(sym){
     font-family: monospace !important;
   }
   #mPanMarket .mw-bid {
-    background: rgba(200,0,0,.6);
-    color: #ff2222 !important;
-    border: 1px solid rgba(220,0,0,.9);
+    background: var(--mwbid-bg);
+    color: var(--mwbid-text) !important;
+    border: 1px solid var(--mwbid-border);
     border-radius: 8px !important;
     transition: background .4s, border-color .4s;
   }
   #mPanMarket .mw-ask {
-    background: rgba(41,121,255,.45);
-    color: #82b1ff !important;
-    border: 1px solid rgba(41,121,255,.9);
+    background: var(--mwask-bg);
+    color: var(--mwask-text) !important;
+    border: 1px solid var(--mwask-border);
     border-radius: 8px !important;
     transition: background .4s, border-color .4s;
   }
@@ -7764,7 +7780,7 @@ function symUnpin(sym){
     color: var(--muted); font-family: monospace; font-size: 11px;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-  .m-pr.on { border-color: #2979ff; color: #2979ff; background: #0a1a2a; }
+  .m-pr.on { border-color: #2979ff; color: #2979ff; background: var(--buy-dim); }
   .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
   .m-il { font-family: monospace; font-size: 9px; color: var(--muted); letter-spacing: .5px; }
@@ -7778,20 +7794,20 @@ function symUnpin(sym){
   .m-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-bs {
     padding: 16px; border-radius: 10px;
-    border: 2px solid #ef5350; background: #140505;
+    border: 2px solid #ef5350; background: var(--sell-dim);
     color: #ef5350; font-family: monospace;
     font-size: 17px; font-weight: 700; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .m-bs:active { background: #1f0707; }
+  .m-bs:active { background: var(--sell-dim); filter:brightness(0.9); }
   .m-bb {
     padding: 16px; border-radius: 10px;
-    border: 2px solid #2979ff; background: #051410;
+    border: 2px solid #2979ff; background: var(--buy-dim);
     color: #2979ff; font-family: monospace;
     font-size: 17px; font-weight: 700; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .m-bb:active { background: #081f18; }
+  .m-bb:active { background: var(--buy-dim); filter:brightness(0.9); }
 
   /* ── Pozisyonlar ── */
   .m-tabs {
@@ -7824,8 +7840,8 @@ function symUnpin(sym){
   .m-bdg {
     font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
   }
-  .m-bdg.b { background: #081a14; color: #2979ff; }
-  .m-bdg.s { background: #1a0808; color: #ef5350; }
+  .m-bdg.b { background: var(--buy-dim); color: #2979ff; }
+  .m-bdg.s { background: var(--sell-dim); color: #ef5350; }
   .m-cmeta { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
   .m-cr { text-align: right; }
   .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
@@ -7839,7 +7855,7 @@ function symUnpin(sym){
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
   }
-  .m-cx:active { background: #1a0808; border-color: #ef5350; color: #ef5350; }
+  .m-cx:active { background: var(--sell-dim); border-color: #ef5350; color: #ef5350; }
 
   /* ── Hesap ── */
   #mPanAcc { overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -8227,11 +8243,13 @@ function symUnpin(sym){
   function mob(){ return window.innerWidth<=768; }
 
   // ── TEMA (Açık/Koyu Mod) ──
+  var _svgSun = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.55 1.55M18.25 18.25l1.55 1.55M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.55-1.55M18.25 5.75l1.55-1.55"></path></svg>';
+  var _svgMoon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.6 8.6 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7z"></path></svg>';
   function applyThemeIcon(){
     var btn = document.getElementById('themeToggleBtn');
     if(!btn) return;
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    btn.textContent = isLight ? '☀️' : '🌙';
+    btn.innerHTML = isLight ? _svgSun : _svgMoon;
   }
   window.toggleTheme = function(){
     var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
