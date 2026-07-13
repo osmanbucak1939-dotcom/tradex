@@ -2641,18 +2641,16 @@ var posCounter = Date.now();
 var fp = (p, d=2) => p === undefined ? '—' : (p > 10 ? p.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : p.toFixed(p<0.01?5:d));
 var save = () => {
   // 2026-04-20, 5. pass: tx_pos/tx_hist ve positions/tradeHistory Firebase yazımı kaldırıldı (trader kopyası).
-  // Admin canonical akışı adSaveUserTrades() kullanır. save() artık sadece portfolio/alarms için.
+  // 2026-07-13: Firebase'e yazma TAMAMEN KALDIRILDI. Bu fonksiyon, admin panelindeki
+  // kullanılmayan/leftover demo trader widget'ına ait — _cu, sayfa açılışında
+  // localStorage.tx_current_user'dan (o tarayıcıda trader'a EN SON hangi müşteriyle
+  // girildiyse ondan) okunuyordu. Bu widget'taki bir fiyat alarmı tetiklendiğinde
+  // (koşulsuz olarak her admin açılışında kuruluyordu), bu sahte balance=10000
+  // değeri doğrudan o müşterinin GERÇEK Firestore bakiyesinin üzerine yazılıyordu.
+  // (Bkz. Neta hesap 10014 vakası — bakiye deposit+kapanan P/L toplamından ~$7300 fazla çıktı.)
+  // localStorage'a yazmak zararsız (sadece bu tarayıcıda kalır), o yüzden korundu.
   localStorage.setItem('tx_pf', JSON.stringify(portfolio));
   localStorage.setItem('tx_al', JSON.stringify(alarms));
-  // Firebase'e kaydet (giriş yapmışsa) — sadece portfolio/alarms
-  if(typeof _cu !== 'undefined' && _cu && _cu.id) {
-    fbSaveUserData(_cu.id, {
-      portfolio:    JSON.stringify(portfolio),
-      alarms:       JSON.stringify(alarms),
-      balance:      typeof balance !== 'undefined' ? balance : 0,
-      updatedAt:    new Date().toISOString()
-    });
-  }
 };
 
 function initChart() {
