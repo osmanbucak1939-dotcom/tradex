@@ -5218,7 +5218,8 @@ function adRenderTab(tab) {
             adIR('Durum', '<span style="color:'+(a.active?'#26a69a':'#ef5350')+'">'+(a.active?'Aktif':'Pasif')+'</span>') +
           '</table>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      adKycSectionHtml(a);
 
   } else if(tab === 'trades') {
     var a2 = accounts.find(function(x){ return String(x.id)===String(_adAccId); }) || {};
@@ -5468,6 +5469,56 @@ function adRenderTab(tab) {
 }
 
 function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
+
+// ── KYC BELGE İNCELEME (admin) ──
+var _adKycTypes = { id:'Kimlik Doğrulama', addr:'Adres Doğrulama', selfie:'Selfie Doğrulama' };
+function adKycSectionHtml(a) {
+  var kyc = a.kyc || {};
+  var rows = Object.keys(_adKycTypes).map(function(type){
+    var label = _adKycTypes[type];
+    var entry = kyc[type];
+    var status = entry ? entry.status : null;
+    var badge, actions = '';
+    if(status==='approved') {
+      badge = '<span style="color:#26a69a;font-weight:700;">✓ Onaylandı</span>';
+    } else if(status==='rejected') {
+      badge = '<span style="color:#ef5350;font-weight:700;">✕ Reddedildi</span>';
+    } else if(status==='review') {
+      badge = '<span style="color:#f5c518;font-weight:700;">⏳ İnceleniyor</span>';
+      actions = '<button class="ad-btn" style="background:#1a3a2e;color:#26a69a;border-color:#26a69a;margin-right:6px;" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'approved\')">Onayla</button>'
+              + '<button class="ad-btn ad-btn-danger" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'rejected\')">Reddet</button>';
+    } else {
+      badge = '<span style="color:#888;">— Yüklenmedi</span>';
+    }
+    var viewLink = (entry && entry.url) ? '<a href="'+entry.url+'" target="_blank" rel="noopener" style="color:#64b5f6;font-size:10px;margin-left:8px;">Belgeyi Görüntüle ↗</a>' : '';
+    return '<tr>' +
+      '<td style="padding:6px 0;width:35%;">'+label+'</td>' +
+      '<td style="padding:6px 0;">'+badge+viewLink+'</td>' +
+      '<td style="padding:6px 0;text-align:right;">'+actions+'</td>' +
+    '</tr>';
+  }).join('');
+  return '<div style="margin-top:18px;">' +
+    '<div class="ad-section-title">KYC Belgeleri</div>' +
+    '<table style="width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;">' + rows + '</table>' +
+  '</div>';
+}
+function adKycDecide(accId, type, decision) {
+  if(!db) return;
+  db.collection('users').doc(String(accId)).get().then(function(doc){
+    var kyc = (doc.exists && doc.data().kyc) || {};
+    if(!kyc[type]) return;
+    kyc[type].status = decision;
+    kyc[type].reviewedAt = new Date().toISOString();
+    kyc[type].reviewedBy = (typeof _currentStaff!=='undefined' && _currentStaff && _currentStaff.name) || 'admin';
+    var patch = { kyc: {} }; patch.kyc[type] = kyc[type];
+    db.collection('users').doc(String(accId)).set(patch, {merge:true}).then(function(){
+      showToast(decision==='approved' ? 'Belge onaylandı ✓' : 'Belge reddedildi', _adKycTypes[type]);
+      var acc = accounts.find(function(x){ return String(x.id)===String(accId); });
+      if(acc) { if(!acc.kyc) acc.kyc={}; acc.kyc[type]=kyc[type]; }
+      if(String(_adAccId)===String(accId)) adRenderTab('info');
+    }).catch(function(e){ console.warn('adKycDecide error:', e); showToast('Hata', e.message||'Kaydedilemedi'); });
+  });
+}
 
 function adDeposit() {
   if(typeof hasPerm==='function'&&!hasPerm('finance.deposit')){showAdminToast('Yetkisiz','Para yatırma yetkiniz yok','danger');return;}
