@@ -1665,6 +1665,17 @@ console.log('Firebase bağlandı ✓');
               var _nb2 = parseFloat(ud.bonus)||0;
               if(acc.bonus !== _nb2) acc.bonus = _nb2;
             }
+            // KYC belgeleri — admin'in Sembol/BİLGİLER sekmesinde göstermesi için
+            if(ud.kyc !== undefined) {
+              acc.kyc = ud.kyc;
+              // Şu an bu hesabın BİLGİLER sekmesi açıksa, canlı yenile
+              if(String(acc.id)===String(_adAccId) && typeof adRenderTab==='function') {
+                var _infoTabBtn = document.querySelector('.ad-tab[data-tab="info"]');
+                if(_infoTabBtn && _infoTabBtn.classList.contains('ad-active')) {
+                  try { adRenderTab('info'); } catch(e){}
+                }
+              }
+            }
             // Son giriş DOM güncelle
             if(ud.lastLogin && acc.lastLogin !== ud.lastLogin) {
               acc.lastLogin = ud.lastLogin;
