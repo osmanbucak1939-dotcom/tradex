@@ -6959,24 +6959,39 @@ var _kycTypes = {
   selfie: { label:'Selfie Doğrulama',  statusEl:'kyc-selfie-status', stepEl:'kyc-selfie-step' }
 };
 
-function _kycStatusHtml(state) {
+function _kycStatusHtml(state, type) {
   // state: 'todo' | 'uploading' | 'review' | 'approved' | 'rejected'
   if(state==='approved')  return {cls:'done',    html:'✓ Onaylandı'};
-  if(state==='review')    return {cls:'pending', html:'⏳ İnceleniyor'};
+  if(state==='review')    return {cls:'pending', html:'⏳ İnceleniyor <span onclick="kycCancelUpload(\''+type+'\',event)" style="color:var(--sell);text-decoration:underline;cursor:pointer;margin-left:6px;">İptal Et</span>'};
   if(state==='uploading') return {cls:'pending', html:'↑ Yükleniyor...'};
   if(state==='rejected')  return {cls:'rejected',html:'✕ Reddedildi — Tekrar Yükle'};
   return {cls:'todo', html:'— Bekliyor, yüklemek için tıklayın'};
 }
 
-function _kycSyncStatus() {
-  if(!_cu || !_cu.id) return;
-  var kyc = _cu.kyc || {};
+function kycCancelUpload(type, event) {
+  if(event) event.stopPropagation();
+  if(!_cu || !_cu.id || !db) return;
+  if(!confirm('Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.')) return;
+  var patch = { kyc: {} };
+  patch.kyc[type] = firebase.firestore.FieldValue.delete();
+  db.collection('users').doc(String(_cu.id)).set(patch, {merge:true}).then(function(){
+    if(_cu.kyc) delete _cu.kyc[type];
+    try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
+    showToast('İptal edildi', _kycTypes[type].label + ' tekrar yüklenebilir');
+    _kycSyncStatus();
+  }).catch(function(err){
+    console.error('KYC iptal hatası:', err);
+    showToast('İptal edilemedi', err.message || 'Firestore hatası');
+  });
+}
+
+function _kycApplyStatuses(kyc) {
   Object.keys(_kycTypes).forEach(function(type){
     var info = _kycTypes[type];
     var el = document.getElementById(info.statusEl);
     if(!el) return;
     var state = (kyc[type] && kyc[type].status) || 'todo';
-    var s = _kycStatusHtml(state);
+    var s = _kycStatusHtml(state, type);
     el.className = 'kyc-step-status ' + s.cls;
     el.innerHTML = s.html;
     var stepEl = document.getElementById(info.stepEl);
@@ -6986,20 +7001,17 @@ function _kycSyncStatus() {
       stepEl.style.opacity = (state==='approved') ? '0.7' : '1';
     }
   });
+}
+
+function _kycSyncStatus() {
+  if(!_cu || !_cu.id) return;
+  _kycApplyStatuses(_cu.kyc || {});
   // En güncel veriyi Firebase'den de çek (başka cihazda onaylanmış olabilir)
   if(typeof fbLoadUserData === 'function') {
     fbLoadUserData(_cu.id, function(data){
       if(data && data.kyc) {
         _cu.kyc = data.kyc;
-        Object.keys(_kycTypes).forEach(function(type){
-          var info = _kycTypes[type];
-          var el = document.getElementById(info.statusEl);
-          if(!el) return;
-          var state = (data.kyc[type] && data.kyc[type].status) || 'todo';
-          var s = _kycStatusHtml(state);
-          el.className = 'kyc-step-status ' + s.cls;
-          el.innerHTML = s.html;
-        });
+        _kycApplyStatuses(data.kyc);
       }
     });
   }
