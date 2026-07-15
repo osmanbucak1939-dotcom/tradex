@@ -143,6 +143,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .kyc-step-status.done { color:var(--buy); }
 .kyc-step-status.pending { color:var(--accent); }
 .kyc-step-status.todo { color:var(--muted); }
+.kyc-step-status.rejected { color:var(--sell); }
 /* Şifre Modal */
 .pw-modal {
   position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:10000;
@@ -1472,6 +1473,7 @@ function initAuth(){
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -1486,6 +1488,7 @@ function initAuth(){
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
     var rtdb = firebase.database();   // Realtime DB — yüksek frekanslı fiyat akışı için
+    var fbStorage = firebase.storage();   // KYC belge yükleme için
     // 2026-04-27: Konsoldaki "overriding the original host" uyarısı zararsız.
     // Firestore SDK 9.x'te db.settings() default ayarları üzerine yazıyor — bu kasıtlı davranış,
     // sadece bilgilendirme uyarısı. Uygulama davranışı etkilenmiyor, görmezden gel.
@@ -6942,10 +6945,121 @@ document.addEventListener('click', function(e) {
 function openKycModal() {
   var m = document.getElementById('kycModal');
   if(m) m.classList.add('open');
+  _kycSyncStatus();
 }
 function closeKycModal() {
   var m = document.getElementById('kycModal');
   if(m) m.classList.remove('open');
+}
+
+// ── KYC BELGE YÜKLEME ──
+var _kycTypes = {
+  id:     { label:'Kimlik Doğrulama',  statusEl:'kyc-id-status',     stepEl:'kyc-id-step' },
+  addr:   { label:'Adres Doğrulama',   statusEl:'kyc-addr-status',   stepEl:'kyc-addr-step' },
+  selfie: { label:'Selfie Doğrulama',  statusEl:'kyc-selfie-status', stepEl:'kyc-selfie-step' }
+};
+
+function _kycStatusHtml(state) {
+  // state: 'todo' | 'uploading' | 'review' | 'approved' | 'rejected'
+  if(state==='approved')  return {cls:'done',    html:'✓ Onaylandı'};
+  if(state==='review')    return {cls:'pending', html:'⏳ İnceleniyor'};
+  if(state==='uploading') return {cls:'pending', html:'↑ Yükleniyor...'};
+  if(state==='rejected')  return {cls:'rejected',html:'✕ Reddedildi — Tekrar Yükle'};
+  return {cls:'todo', html:'— Bekliyor, yüklemek için tıklayın'};
+}
+
+function _kycSyncStatus() {
+  if(!_cu || !_cu.id) return;
+  var kyc = _cu.kyc || {};
+  Object.keys(_kycTypes).forEach(function(type){
+    var info = _kycTypes[type];
+    var el = document.getElementById(info.statusEl);
+    if(!el) return;
+    var state = (kyc[type] && kyc[type].status) || 'todo';
+    var s = _kycStatusHtml(state);
+    el.className = 'kyc-step-status ' + s.cls;
+    el.innerHTML = s.html;
+    var stepEl = document.getElementById(info.stepEl);
+    if(stepEl) {
+      var clickable = (state==='todo' || state==='rejected');
+      stepEl.style.cursor = clickable ? 'pointer' : 'default';
+      stepEl.style.opacity = (state==='approved') ? '0.7' : '1';
+    }
+  });
+  // En güncel veriyi Firebase'den de çek (başka cihazda onaylanmış olabilir)
+  if(typeof fbLoadUserData === 'function') {
+    fbLoadUserData(_cu.id, function(data){
+      if(data && data.kyc) {
+        _cu.kyc = data.kyc;
+        Object.keys(_kycTypes).forEach(function(type){
+          var info = _kycTypes[type];
+          var el = document.getElementById(info.statusEl);
+          if(!el) return;
+          var state = (data.kyc[type] && data.kyc[type].status) || 'todo';
+          var s = _kycStatusHtml(state);
+          el.className = 'kyc-step-status ' + s.cls;
+          el.innerHTML = s.html;
+        });
+      }
+    });
+  }
+}
+
+function kycUploadClick(type) {
+  var kyc = (_cu && _cu.kyc) || {};
+  var state = (kyc[type] && kyc[type].status) || 'todo';
+  if(state==='review' || state==='approved' || state==='uploading') return; // tıklanamaz durumlar
+  var input = document.getElementById('kycFileInput');
+  if(!input) return;
+  input.dataset.kycType = type;
+  input.value = '';
+  input.click();
+}
+
+function _kycOnFileSelected(e) {
+  var file = e.target.files && e.target.files[0];
+  var type = e.target.dataset.kycType;
+  if(!file || !type || !_cu || !_cu.id) return;
+
+  // Doğrulama: sadece resim veya PDF, max 10MB
+  var okType = file.type.indexOf('image/')===0 || file.type==='application/pdf';
+  if(!okType) { showToast('Geçersiz dosya', 'Sadece resim (jpg/png) veya PDF yükleyebilirsiniz'); return; }
+  if(file.size > 10*1024*1024) { showToast('Dosya çok büyük', 'Maksimum 10MB yükleyebilirsiniz'); return; }
+
+  var info = _kycTypes[type];
+  var statusEl = document.getElementById(info.statusEl);
+  if(statusEl) { statusEl.className = 'kyc-step-status pending'; statusEl.innerHTML = '↑ Yükleniyor...'; }
+
+  var ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  var path = 'kyc/' + _cu.id + '/' + type + '_' + Date.now() + '.' + ext;
+  var ref = fbStorage.ref(path);
+  var task = ref.put(file);
+
+  task.on('state_changed',
+    function progress(snap) {
+      if(statusEl) {
+        var pct = Math.round((snap.bytesTransferred/snap.totalBytes)*100);
+        statusEl.innerHTML = '↑ Yükleniyor... %' + pct;
+      }
+    },
+    function error(err) {
+      console.warn('KYC upload error:', err);
+      if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Yükleme başarısız — tekrar deneyin'; }
+      showToast('Yükleme başarısız', err.message || 'Bilinmeyen hata');
+    },
+    function complete() {
+      task.snapshot.ref.getDownloadURL().then(function(url){
+        var kycEntry = { status:'review', url:url, fileName:file.name, uploadedAt:new Date().toISOString() };
+        if(!_cu.kyc) _cu.kyc = {};
+        _cu.kyc[type] = kycEntry;
+        var patch = { kyc: {} }; patch.kyc[type] = kycEntry;
+        fbSaveUserData(_cu.id, patch);
+        try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
+        if(statusEl) { statusEl.className = 'kyc-step-status pending'; statusEl.innerHTML = '⏳ İnceleniyor'; }
+        showToast('Belge yüklendi ✓', info.label + ' incelemeye alındı');
+      });
+    }
+  );
 }
 function openPwModal() {
   var m = document.getElementById('pwModal');
@@ -7282,7 +7396,7 @@ function symUnpin(sym){
       </div>
       <div class="kyc-step-status done" id="kyc-email-status">✓ Tamamlandı</div>
     </div>
-    <div class="kyc-step">
+    <div class="kyc-step" id="kyc-id-step" onclick="kycUploadClick('id')">
       <div class="kyc-step-icon">🪪</div>
       <div class="kyc-step-info">
         <div class="kyc-step-title">Kimlik Doğrulama</div>
@@ -7290,22 +7404,23 @@ function symUnpin(sym){
       </div>
       <div class="kyc-step-status pending" id="kyc-id-status">⏳ Beklemede</div>
     </div>
-    <div class="kyc-step">
+    <div class="kyc-step" id="kyc-addr-step" onclick="kycUploadClick('addr')">
       <div class="kyc-step-icon">🏠</div>
       <div class="kyc-step-info">
         <div class="kyc-step-title">Adres Doğrulama</div>
         <div class="kyc-step-desc">Fatura veya banka ekstresi</div>
       </div>
-      <div class="kyc-step-status todo" id="kyc-addr-status">— Bekliyor</div>
+      <div class="kyc-step-status todo" id="kyc-addr-status">— Bekliyor, yüklemek için tıklayın</div>
     </div>
-    <div class="kyc-step">
+    <div class="kyc-step" id="kyc-selfie-step" onclick="kycUploadClick('selfie')">
       <div class="kyc-step-icon">🤳</div>
       <div class="kyc-step-info">
         <div class="kyc-step-title">Selfie Doğrulama</div>
         <div class="kyc-step-desc">Kimlikle birlikte fotoğraf</div>
       </div>
-      <div class="kyc-step-status todo" id="kyc-selfie-status">— Bekliyor</div>
+      <div class="kyc-step-status todo" id="kyc-selfie-status">— Bekliyor, yüklemek için tıklayın</div>
     </div>
+    <input type="file" id="kycFileInput" accept="image/*,.pdf" style="display:none" onchange="_kycOnFileSelected(event)">
     <div style="margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--mono)">
       KYC doğrulama işlemleri 1-3 iş günü içinde tamamlanır.
     </div>
