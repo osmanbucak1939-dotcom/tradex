@@ -1803,6 +1803,7 @@ console.log('Firebase bağlandı ✓');
     <div id="sec-accounts" class="admin-section" style="flex:1;display:flex;flex-direction:column;min-height:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;"><span style="font-family:var(--mono);font-size:13px;font-weight:700;">HESAPLAR</span><div style="display:flex;gap:8px;"><button class="mgr-btn" onclick="adminNav('newaccount',null)" style="font-size:11px;">+ Yeni</button><button class="mgr-btn" onclick="exportAccounts()" style="font-size:11px;">↓ Export</button></div></div>
       <div id="accTableContainer" style="flex:1;min-height:0;display:flex;flex-direction:column;"></div>
+      <div id="accFooterCount" style="flex-shrink:0;padding:8px 4px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;border-top:1px solid var(--border);"></div>
     </div>
     <div id="sec-finance" class="admin-section" style="display:none;">
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">FİNANS</div>
@@ -5322,6 +5323,7 @@ function adRenderTab(tab) {
             '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:16px;">Yükleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
+        '<div id="adOpenFooter" style="padding:8px 6px;font-family:var(--mono);font-size:10px;color:#a0a0a0;text-align:right;border-top:1px solid #2a2a2a;"></div>' +
       '</div>' +
 
       // ── KAPALI pozisyonlar ──
@@ -6041,6 +6043,16 @@ function renderAccTable(){
       var ib=_ord.indexOf(String(b.id)); if(ib<0) ib=1e9;
       return ia-ib;
     });
+  }
+
+  // ── Alt bilgi çubuğu: gösterilen hesap sayısı + online sayısı (sadece ekler, mevcut mantığa dokunmaz) ──
+  var _accFooterEl = document.getElementById('accFooterCount');
+  if(_accFooterEl) {
+    var _onlineCount = rows.filter(function(a){
+      var ms=a.lastSeen?new Date(a.lastSeen).getTime():0;
+      return (a.online===true)&&ms&&(now-ms)<300000;
+    }).length;
+    _accFooterEl.textContent = 'Toplam ' + rows.length + ' hesap gösteriliyor, ' + _onlineCount + ' online';
   }
 
   var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
@@ -10396,9 +10408,11 @@ function adTickOpenTable(){
 function adRenderOpenTable(){
   var tb = document.getElementById('adOpenBody');
   if(!tb) return;
+  var _footEl = document.getElementById('adOpenFooter');
 
   if(!_adPositions.length){
     tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Açık pozisyon yok</td></tr>';
+    if(_footEl) _footEl.textContent = '';
     return;
   }
 
@@ -10449,6 +10463,10 @@ function adRenderOpenTable(){
       +'</td>'
     +'</tr>';
   }).join('');
+  if(_footEl) {
+    var _pc = totalPnl>=0 ? '#26a69a' : '#ef5350';
+    _footEl.innerHTML = 'Toplam ' + sorted.length + ' açık pozisyon &nbsp;·&nbsp; Toplam K/Z: <span style="color:'+_pc+';font-weight:700;">'+(totalPnl>=0?'+':'-')+'$'+adFp(Math.abs(totalPnl))+'</span>';
+  }
 }
 
 // ── Geçmiş işlem tablosu ──────────────────────────────────────
