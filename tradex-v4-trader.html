@@ -7050,13 +7050,24 @@ function _kycOnFileSelected(e) {
     function complete() {
       task.snapshot.ref.getDownloadURL().then(function(url){
         var kycEntry = { status:'review', url:url, fileName:file.name, uploadedAt:new Date().toISOString() };
-        if(!_cu.kyc) _cu.kyc = {};
-        _cu.kyc[type] = kycEntry;
         var patch = { kyc: {} }; patch.kyc[type] = kycEntry;
-        fbSaveUserData(_cu.id, patch);
-        try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
-        if(statusEl) { statusEl.className = 'kyc-step-status pending'; statusEl.innerHTML = '⏳ İnceleniyor'; }
-        showToast('Belge yüklendi ✓', info.label + ' incelemeye alındı');
+        if(!db || !_cu || !_cu.id) {
+          console.error('KYC Firestore yazım hatası: db veya _cu.id yok', {db:!!db, cu:_cu});
+          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Kayıt hatası — tekrar deneyin'; }
+          showToast('Kayıt hatası', 'Oturum bilgisi bulunamadı, sayfayı yenileyip tekrar deneyin');
+          return;
+        }
+        db.collection('users').doc(String(_cu.id)).set(patch, {merge:true}).then(function(){
+          if(!_cu.kyc) _cu.kyc = {};
+          _cu.kyc[type] = kycEntry;
+          try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
+          if(statusEl) { statusEl.className = 'kyc-step-status pending'; statusEl.innerHTML = '⏳ İnceleniyor'; }
+          showToast('Belge yüklendi ✓', info.label + ' incelemeye alındı');
+        }).catch(function(err){
+          console.error('KYC Firestore yazım hatası:', err);
+          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Kayıt hatası — tekrar deneyin'; }
+          showToast('Belge kaydedilemedi', err.message || 'Firestore yazım hatası');
+        });
       });
     }
   );
