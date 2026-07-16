@@ -3505,17 +3505,6 @@ function updateOrderTicket(price) {
   var _el_otBid=document.getElementById('otBid'); if(_el_otBid) _el_otBid.textContent = fp(bid, price>100?2:4);
   var _el_otAsk=document.getElementById('otAsk'); if(_el_otAsk) _el_otAsk.textContent = fp(ask, price>100?2:4);
   var _el_otSpread=document.getElementById('otSpread'); if(_el_otSpread) _el_otSpread.textContent = 'Spread: '+spread.toFixed(price>100?2:5);
-  // SL/TP/Limit/Alarm alanları boşsa güncel fiyatla doldur — yukarı/aşağı ok
-  // tuşları 1'den değil gerçek fiyattan başlasın. Kullanıcı zaten bir şey
-  // yazmışsa üzerine yazılmaz. NOT: fp() virgüllü (1,234.56) döndürebiliyor,
-  // number input'a öyle basarsa değer sessizce boşa düşer — o yüzden burada
-  // ham toFixed kullanılıyor.
-  var dec = price > 100 ? 2 : (price > 1 ? 4 : 5);
-  var rawVal = price.toFixed(dec);
-  ['ordSL','ordTP','limitPrice','alPrice'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el && !el.value) el.value = rawVal;
-  });
 }
 
 function otSymFilter(val, mode) {
@@ -8675,15 +8664,6 @@ function symUnpin(sym){
     set('mTSpr',sp?'Spread: '+sp:'');
     set('mBid',mid?(mid-sp/2).toFixed(dec):'—');
     set('mAsk',mid?(mid+sp/2).toFixed(dec):'—');
-    // SL/TP/Limit alanları boşsa güncel fiyatla doldur — ok tuşları 1'den
-    // değil gerçek fiyattan başlasın. Kullanıcı yazdıysa üzerine yazılmaz.
-    if(mid){
-      var rawVal = mid.toFixed(dec);
-      ['mSL','mTP','mLimitPrice'].forEach(function(id){
-        var el = document.getElementById(id);
-        if(el && !el.value) el.value = rawVal;
-      });
-    }
     var minL=sc?parseFloat(sc.minLot)||0.01:0.01;
     var li=document.getElementById('mLI');
     // Kullanıcı input'a yazıyorsa _lot'u input'tan al, üzerine yazma
@@ -8931,9 +8911,9 @@ function symUnpin(sym){
     set('mPMTP', pos.tp?fp2(pos.tp,dec):'—');
     set('mPMSwap', pos.swapTotal?'$'+fp2(pos.swapTotal):'$0.00');
     set('mPMTime', dt);
-    // Input'ları doldur — boşsa güncel fiyattan başlasın (ok tuşları 1'den değil)
-    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value=pos.sl||cur.toFixed(dec);
-    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value=pos.tp||cur.toFixed(dec);
+    // Input'ları doldur
+    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value=pos.sl||'';
+    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value=pos.tp||'';
     var modal=document.getElementById('mPosModal');
     if(modal){ modal.style.display='flex'; }
   };
