@@ -8345,6 +8345,9 @@ function pcRefresh() {
       var dec = p > 100 ? 2 : p > 1 ? 4 : 6;
       cur.textContent = p.toFixed(dec);
       cur.style.color = _pcOverrides[sym] ? '#f0b90b' : 'var(--accent)';
+      // Override alanı boşsa güncel fiyattan başlasın (ok tuşları 1'den değil)
+      var inp = document.getElementById('pc_price');
+      if(inp && !inp.value) inp.value = p.toFixed(dec);
     }
   }
 }
@@ -10282,6 +10285,8 @@ var AD_SIM={
 // (not: _pcOverrides ve _pcGradTimer L7974-7976'da declare edildi — duplicate var kaldırıldı 2026-04-19)
 
 function pcLoadSym() {
+  var inp = document.getElementById('pc_price');
+  if(inp) inp.value = ''; // sembol değişti — yeni sembolün fiyatıyla yeniden dolsun
   pcRefresh();
 }
 
@@ -10867,8 +10872,8 @@ function adEditPos(btn){
     +'<div><label class="ad-label">YÖN</label><select class="ad-input" id="em_side"><option value="buy"'+(pos.side==='buy'?' selected':'')+'>AL</option><option value="sell"'+(pos.side==='sell'?' selected':'')+'>SAT</option></select></div>'
     +'<div><label class="ad-label">LOT</label><input class="ad-input" id="em_qty" type="number" step="0.01" value="'+pos.qty+'"></div>'
     +'<div><label class="ad-label">AÇILIŞ FİYATI</label><input class="ad-input" id="em_price" type="number" step="any" value="'+pos.openPrice+'"></div>'
-    +'<div><label class="ad-label">STOP LOSS</label><input class="ad-input" id="em_sl" type="number" step="any" value="'+(pos.sl||'')+'"></div>'
-    +'<div><label class="ad-label">TAKE PROFIT</label><input class="ad-input" id="em_tp" type="number" step="any" value="'+(pos.tp||'')+'"></div>'
+    +'<div><label class="ad-label">STOP LOSS</label><input class="ad-input" id="em_sl" type="number" step="any" value="'+(pos.sl||cur)+'"></div>'
+    +'<div><label class="ad-label">TAKE PROFIT</label><input class="ad-input" id="em_tp" type="number" step="any" value="'+(pos.tp||cur)+'"></div>'
     +'<div><label class="ad-label">SWAP</label><input class="ad-input" id="em_swap" type="number" step="any" value="'+(pos.swapTotal||0)+'"></div>'
     +'<div><label class="ad-label">KOMİSYON</label><input class="ad-input" id="em_commission" type="number" step="any" value="'+(pos.commission||0)+'"></div>'
     +'<div style="grid-column:1/-1"><label class="ad-label">AÇILIŞ ZAMANI</label><input class="ad-input" id="em_opentime" type="datetime-local" value="'+openVal+'"></div>'
@@ -11203,6 +11208,15 @@ function adMTFUpdatePrice(){
   var p   = adGetPrice(sym);
   var el  = document.getElementById('ad_tprice_hint');
   if(el && p) el.textContent = '≈ '+adFp(p);
+  // SL/TP alanları boşsa güncel fiyatla doldur — böylece yukarı/aşağı ok
+  // tuşları 1'den değil, gerçek fiyattan başlar. Admin zaten bir şey
+  // yazmışsa (sembol değiştirse bile) üzerine yazılmaz.
+  if(p){
+    var slEl = document.getElementById('ad_tsl');
+    var tpEl = document.getElementById('ad_ttp');
+    if(slEl && !slEl.value) slEl.value = p;
+    if(tpEl && !tpEl.value) tpEl.value = p;
+  }
 }
 
 // ── Toast ─────────────────────────────────────────────────────
