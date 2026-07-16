@@ -1048,11 +1048,29 @@ select { color-scheme: dark; }
 .ad-section-title { font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px; border-bottom:1px solid #222; padding-bottom:6px; }
 .ad-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .ad-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-.ad-btn { padding:8px 16px; border-radius:4px; font-family:var(--mono); font-size:11px; cursor:pointer; font-weight:700; }
-.ad-btn-primary  { background:var(--accent); color:#000; border:none; }
-.ad-btn-secondary{ background:#222; color:var(--text); border:1px solid #444; }
-.ad-btn-danger   { background:transparent; color:#ef5350; border:1px solid #ef5350; }
-.ad-btn-success  { background:transparent; color:#26a69a; border:1px solid #26a69a; }
+.ad-btn {
+  padding:8px 16px; border-radius:6px; font-family:var(--mono); font-size:11px;
+  cursor:pointer; font-weight:700; letter-spacing:.3px;
+  background:#242424; color:var(--text); border:1px solid #3a3a3a;
+  transition:background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+  box-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.ad-btn:hover { background:#2d2d2d; border-color:#4d4d4d; box-shadow:0 3px 10px rgba(0,0,0,.35); transform:translateY(-1px); }
+.ad-btn:active { transform:translateY(0); box-shadow:0 1px 2px rgba(0,0,0,.25); }
+.ad-btn-primary  { background:var(--accent); color:#000; border:none; box-shadow:0 2px 8px rgba(245,197,24,.25); }
+.ad-btn-primary:hover { filter:brightness(1.08); box-shadow:0 4px 14px rgba(245,197,24,.35); }
+.ad-btn-secondary{ background:#242424; color:var(--text); border:1px solid #444; }
+.ad-btn-secondary:hover { background:#2e2e2e; border-color:#555; }
+.ad-btn-danger   { background:rgba(239,83,80,.08); color:#ef5350; border:1px solid rgba(239,83,80,.4); }
+.ad-btn-danger:hover { background:rgba(239,83,80,.16); border-color:#ef5350; box-shadow:0 3px 10px rgba(239,83,80,.2); }
+.ad-btn-success  { background:rgba(38,166,154,.08); color:#26a69a; border:1px solid rgba(38,166,154,.4); }
+.ad-btn-success:hover { background:rgba(38,166,154,.16); border-color:#26a69a; box-shadow:0 3px 10px rgba(38,166,154,.2); }
+.ad-icon-btn { width:26px; height:26px; padding:0 !important; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px !important; }
+.ad-pill-tab { padding:6px 16px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-family:var(--mono); transition:background .15s ease, color .15s ease; }
+.ad-pill-tab.on { background:var(--accent); color:#000; font-weight:700; }
+.ad-pill-tab:not(.on) { background:transparent; color:#999; font-weight:normal; }
+.ad-pill-tab:not(.on):hover { background:#232323; color:#ccc; }
+.ad-table-card { border:1px solid #262626; border-radius:8px; overflow:hidden; background:#161616; box-shadow:0 1px 4px rgba(0,0,0,.25); }
 
 </style>
 <script>
@@ -5271,33 +5289,42 @@ function adRenderTab(tab) {
       : (_opnl >= 0 ? '+' : '') + '$' + Math.abs(_opnl).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
     cnt.innerHTML =
-      // ── Mini finansal özet ──
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0 14px;border-bottom:1px solid #222;margin-bottom:12px;">' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">Bakiye: </span><span id="adBadgeBal" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+bal+'</span></div>' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">Varlık: </span><span id="adBadgeEq" style="font-family:var(--mono);color:#26a69a;font-weight:700;">$'+eq+'</span></div>' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">Bonus: </span><span id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;">$'+bon+'</span></div>' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">Teminat: </span><span id="adBadgeMar" style="font-family:var(--mono);font-weight:700;">$'+mar+'</span></div>' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">S.Teminat: </span><span id="adBadgeFree" style="font-family:var(--mono);font-weight:700;">$'+freeM+'</span></div>' +
-        '<div style="background:#181818;border:1px solid #222;border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">T.Seviyesi: </span><span id="adBadgeMarLv" style="font-family:var(--mono);color:#f5c518;font-weight:700;">'+marLv+'</span></div>' +
-        '<div style="background:#181818;border:1px solid '+((_opnl>0)?'#26a69a44':(_opnl<0)?'#ef535044':'#222')+';border-radius:4px;padding:6px 12px;font-size:11px;">' +
-          '<span style="color:#c0c0c0;">Açık K/Z: </span><span id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;">'+_opnlTxt+'</span></div>' +
-        '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" style="background:#181818;border:1px solid #444;border-radius:4px;padding:6px 12px;font-size:11px;color:#888;cursor:pointer;font-family:var(--mono);">🔍 Teşhis</button>' +
+      // ── Mini finansal özet — stat kartları ──
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 16px;border-bottom:1px solid #222;margin-bottom:14px;">' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #26a69a;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bakiye</div>' +
+          '<div id="adBadgeBal" style="font-family:var(--mono);color:#26a69a;font-weight:700;font-size:14px;">$'+bal+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #26a69a;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Varlık</div>' +
+          '<div id="adBadgeEq" style="font-family:var(--mono);color:#26a69a;font-weight:700;font-size:14px;">$'+eq+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #f5c518;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bonus</div>' +
+          '<div id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;font-size:14px;">$'+bon+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Teminat</div>' +
+          '<div id="adBadgeMar" style="font-family:var(--mono);color:var(--text);font-weight:700;font-size:14px;">$'+mar+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">S.Teminat</div>' +
+          '<div id="adBadgeFree" style="font-family:var(--mono);color:var(--text);font-weight:700;font-size:14px;">$'+freeM+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #f5c518;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">T.Seviyesi</div>' +
+          '<div id="adBadgeMarLv" style="font-family:var(--mono);color:#f5c518;font-weight:700;font-size:14px;">'+marLv+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid '+((_opnl>0)?'#26a69a':(_opnl<0)?'#ef5350':'#555')+';border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Açık K/Z</div>' +
+          '<div id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;font-size:14px;">'+_opnlTxt+'</div></div>' +
+        '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" class="ad-btn ad-btn-secondary" style="align-self:center;font-size:10px;padding:6px 12px;">🔍 Teşhis</button>' +
       '</div>' +
 
-      // ── Sekme butonları ──
-      '<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #222;">' +
-        '<button data-subtab="open" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--accent);border-bottom:2px solid var(--accent);font-weight:700;font-family:var(--mono);">AÇIK</button>' +
-        '<button data-subtab="closed" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#c0c0c0;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">KAPALI</button>' +
-        ((typeof hasPerm!=='function'||hasPerm('finance.view'))?'<button data-subtab="finlog" onclick="adSubTab(this)" style="padding:7px 16px;border:none;background:none;cursor:pointer;font-size:11px;color:#c0c0c0;border-bottom:2px solid transparent;font-weight:normal;font-family:var(--mono);">FİNANS</button>':'') +
+      // ── Sekme butonları — pill tasarım ──
+      '<div style="display:flex;align-items:center;gap:0;margin-bottom:14px;">' +
+        '<div style="display:inline-flex;gap:2px;background:#141414;border:1px solid #232323;border-radius:8px;padding:3px;">' +
+          '<button data-subtab="open" onclick="adSubTab(this)" class="ad-pill-tab on">AÇIK</button>' +
+          '<button data-subtab="closed" onclick="adSubTab(this)" class="ad-pill-tab">KAPALI</button>' +
+          ((typeof hasPerm!=='function'||hasPerm('finance.view'))?'<button data-subtab="finlog" onclick="adSubTab(this)" class="ad-pill-tab">FİNANS</button>':'') +
+        '</div>' +
         '<div style="flex:1;"></div>' +
-        ((typeof hasPerm!=='function'||hasPerm('trades.open'))?'<button id="adBtnNewTrade" class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();" style="margin-bottom:8px;">+ Manuel İşlem</button>':'') +
-        ((typeof hasPerm!=='function'||hasPerm('trades.close'))?'<button id="adBtnCloseAll" class="ad-btn" onclick="adCloseAllPositions()" style="margin-bottom:8px;margin-left:6px;font-size:11px;">Tümünü Kapat</button>':'') +
+        ((typeof hasPerm!=='function'||hasPerm('trades.open'))?'<button id="adBtnNewTrade" class="ad-btn ad-btn-success" onclick="var mtf=document.getElementById(\'adMTF\');mtf.style.display=mtf.style.display===\'none\'?\'block\':\'none\';if(mtf.style.display===\'block\')adMTFUpdatePrice();">+ Manuel İşlem</button>':'') +
+        ((typeof hasPerm!=='function'||hasPerm('trades.close'))?'<button id="adBtnCloseAll" class="ad-btn ad-btn-danger" onclick="adCloseAllPositions()" style="margin-left:8px;font-size:11px;">Tümünü Kapat</button>':'') +
       '</div>' +
 
       // ── Manuel işlem formu ──
@@ -5322,7 +5349,7 @@ function adRenderTab(tab) {
 
       // ── AÇIK pozisyonlar ──
       '<div id="adPanelOpen">' +
-        '<div style="overflow-x:auto;">' +
+        '<div class="ad-table-card" style="overflow-x:auto;">' +
           '<table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
               '<col style="width:50px"><col style="width:75px"><col style="width:50px">' +
@@ -5353,7 +5380,7 @@ function adRenderTab(tab) {
 
       // ── KAPALI pozisyonlar ──
       '<div id="adPanelClosed" style="display:none;">' +
-        '<div style="overflow-x:auto;">' +
+        '<div class="ad-table-card" style="overflow-x:auto;">' +
           '<table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
               '<col style="width:50px"><col style="width:75px"><col style="width:50px">' +
@@ -5701,7 +5728,7 @@ function adRenderFinlog() {
       + (_hp('finance.bonus')   ? '<button data-ftype="bonus_out" onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e1d00','#f5a623','#f5a623')+'">- Bonus Çıkar</button>' : '')
       + '</div>'
       + '<div id="adFinlogForm" style="display:none;background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:14px;margin-bottom:14px;"></div>'
-      + '<div style="overflow-x:auto;">'
+      + '<div class="ad-table-card" style="overflow-x:auto;">'
       + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
       + '<thead><tr style="background:#181818;">'
       + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tip</th>'
@@ -10586,8 +10613,8 @@ function adRenderOpenTable(){
       +'<td style="padding:5px 8px;font-family:var(--mono);font-weight:700;color:'+pc+';" data-pnl="'+pos.id+'">'
         +(pnl>=0?'+':'-')+'$'+adFp(Math.abs(pnl))+'</td>'
       +'<td style="padding:5px 8px;white-space:nowrap;">'
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>':'')
-        +(hasPerm&&hasPerm('trades.close')?'<button class="ad-btn ad-btn-danger" data-id="'+pos.id+'" onclick="adClosePos(this)" style="font-size:10px;padding:2px 6px;">✕</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="margin-right:4px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.close')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-id="'+pos.id+'" onclick="adClosePos(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
   }).join('');
@@ -10643,9 +10670,9 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);font-weight:700;color:'+pc+';">'
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="font-size:10px;padding:2px 6px;margin-right:2px;">⟳</button>':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="font-size:10px;padding:2px 6px;margin-right:2px;">✎</button>':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-btn-danger" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)" style="font-size:10px;padding:2px 6px;">✕</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="margin-right:4px;">⟳</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="margin-right:4px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
   }).join('');
@@ -11209,9 +11236,7 @@ function adSubTab(btn){
   }
   document.querySelectorAll('[data-subtab]').forEach(function(b){
     var active = b.getAttribute('data-subtab')===tab;
-    b.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
-    b.style.color = active ? 'var(--accent)' : '#aaaaaa';
-    b.style.fontWeight = active ? '700' : 'normal';
+    b.classList.toggle('on', active);
   });
   ['adPanelOpen','adPanelClosed','adPanelFinlog'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.style.display='none';
