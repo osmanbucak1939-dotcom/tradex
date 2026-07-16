@@ -1216,7 +1216,7 @@ function _authSuccess(user) {
   // İzleyici modu bandı + buton kilitleri — _applyReadOnlyUI tek yerden yönetir (masaüstü + mobil)
   window._readOnly = !!user._readOnly;
   _applyReadOnlyUI(window._readOnly);
-  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); window._txBalLoaded=true; if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
+  try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); /* ⚠️ 2026-07-16 KRİTİK DÜZELTME: _txBalLoaded burada TRUE yapılmıyor — bu, önbellekten (localStorage/broker meta) gelen olası BAYAT veri. Gerçek onay sadece Firestore canlı snapshot'ından gelmeli (bkz. fbListenUserData, _txBalLoaded=true satırları). Asıl güvenlik kilidi artık _checkStopOut() içinde (_txBalLoaded kontrolü) — updateAccount() burada UI'ı hemen göstermek için yine çağrılıyor ama stop-out tetiklenemez. */ if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
   try { if(typeof showToast==='function') showToast('Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } catch(e){}
   // Gece yarısı swap zamanla
   scheduleSwap();
@@ -3505,6 +3505,17 @@ function updateOrderTicket(price) {
   var _el_otBid=document.getElementById('otBid'); if(_el_otBid) _el_otBid.textContent = fp(bid, price>100?2:4);
   var _el_otAsk=document.getElementById('otAsk'); if(_el_otAsk) _el_otAsk.textContent = fp(ask, price>100?2:4);
   var _el_otSpread=document.getElementById('otSpread'); if(_el_otSpread) _el_otSpread.textContent = 'Spread: '+spread.toFixed(price>100?2:5);
+  // SL/TP/Limit/Alarm alanları boşsa güncel fiyatla doldur — yukarı/aşağı ok
+  // tuşları 1'den değil gerçek fiyattan başlasın. Kullanıcı zaten bir şey
+  // yazmışsa üzerine yazılmaz. NOT: fp() virgüllü (1,234.56) döndürebiliyor,
+  // number input'a öyle basarsa değer sessizce boşa düşer — o yüzden burada
+  // ham toFixed kullanılıyor.
+  var dec = price > 100 ? 2 : (price > 1 ? 4 : 5);
+  var rawVal = price.toFixed(dec);
+  ['ordSL','ordTP','limitPrice','alPrice'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el && !el.value) el.value = rawVal;
+  });
 }
 
 function otSymFilter(val, mode) {
@@ -4391,6 +4402,13 @@ function updateAccount() {
 // Böylece fiyat tick'i gelmese / sekme arka planda olsa bile düzenli kontrol edilir.
 function _checkStopOut(equity, marginUsed, marginLvl) {
   if(!Array.isArray(positions) || positions.length === 0) return;
+  // ⚠️ KRİTİK GÜVENLİK KİLİDİ (2026-07-16): Firestore'dan GERÇEK bakiye verisi
+  // onaylanmadan (_txBalLoaded=true olmadan) stop-out asla tetiklenmez.
+  // Sayfa ilk açıldığında localStorage/broker-meta'dan gelen BAYAT bakiye/pozisyon
+  // önbelleğiyle updateAccount() erken çağrılabiliyordu; bu da gerçek bakiye henüz
+  // yüklenmeden yanlış hesaplanmış marj seviyesiyle pozisyonların hatalı şekilde
+  // stop-out olmasına sebep oluyordu. Bu kilit, o senaryoyu kökten engeller.
+  if(!window._txBalLoaded) { console.warn('[stop-out] _txBalLoaded=false — gerçek veri henüz yok, kontrol atlandı'); return; }
 
   // Aktif hesabın stop out seviyesini al (_cu'dan spreadGroup)
   var stopOutLevel = 50;
@@ -5814,6 +5832,28 @@ function _mwApplyDirColor(row, up, neutral) {
   }
 }
 
+// ── Parite bayrak eşleştirmesi (forex sembol logoları) ──
+// Sembol 6 haneli varsayılır: ilk 3 = baz para birimi, son 3 = karşıt para birimi.
+// Yeni bir parite eklendiğinde buraya dokunmaya GEREK YOK — kod para birimini
+// otomatik ayırıp buradan bayrak kodunu bulur. Sadece yeni bir para birimi
+// (örn. daha önce hiç kullanılmamış bir kod) eklenirse bu listeye satır eklenir.
+var TX_CCY_FLAG = {
+  USD:'us', EUR:'eu', GBP:'gb', JPY:'jp', CHF:'ch', AUD:'au', CAD:'ca', NZD:'nz',
+  TRY:'tr', MXN:'mx', ZAR:'za', SGD:'sg', HKD:'hk', PLN:'pl', SEK:'se', NOK:'no',
+  CNH:'cn', CNY:'cn', INR:'in', BRL:'br', RUB:'ru', KRW:'kr', THB:'th', IDR:'id',
+  ILS:'il', SAR:'sa', AED:'ae', DKK:'dk', HUF:'hu', CZK:'cz', RON:'ro', ISK:'is'
+};
+function _txForexFlagsHtml(sym, favOnclick, favTitle) {
+  if (!sym || sym.length !== 6) return null;
+  var base = sym.slice(0, 3), quote = sym.slice(3, 6);
+  var bCC = TX_CCY_FLAG[base], qCC = TX_CCY_FLAG[quote];
+  if (!bCC || !qCC) return null;
+  return '<div class="mw-icon" onclick="' + favOnclick + '" style="position:relative;width:20px;height:20px;flex-shrink:0;" title="' + favTitle + '">'
+    + '<img src="https://flagcdn.com/24x18/' + bCC + '.png" alt="" loading="lazy" style="position:absolute;top:0;left:0;width:14px;height:11px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px var(--panel);" onerror="this.style.display=\'none\'">'
+    + '<img src="https://flagcdn.com/24x18/' + qCC + '.png" alt="" loading="lazy" style="position:absolute;bottom:0;right:0;width:14px;height:11px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px var(--panel);" onerror="this.style.display=\'none\'">'
+    + '</div>';
+}
+
 function _mwBuildRowHtml(it2, gid) {
   var pr = (mwPrices[it2.sym] && mwPrices[it2.sym].price) ? mwPrices[it2.sym].price : (it2.mockPrice||0);
   var bid = pr ? (pr - it2.spread/2).toFixed(it2.decimals) : '—';
@@ -5840,6 +5880,8 @@ function _mwBuildRowHtml(it2, gid) {
           + '<img src="' + _logoUrl2 + '" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
           + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:' + _dot_color + ';"></span>'
           + '</div>';
+  } else if (gid === 'forex' && _txForexFlagsHtml(it2.sym, _favOnclick, _favTitle)) {
+    html += _txForexFlagsHtml(it2.sym, _favOnclick, _favTitle);
   } else {
   html += _ico
     ? '<div class="mw-icon" onclick="' + _favOnclick + '" title="' + _favTitle + '">' + _ico + '</div>'
@@ -8525,6 +8567,8 @@ function symUnpin(sym){
         + '<img src="'+_logoUrl2+'" alt="" loading="lazy" style="width:20px;height:20px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-block\';">'
         + '<span style="display:none;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span>'
         + '</div>';
+    } else if (gid === 'forex' && _txForexFlagsHtml(it2.sym, _favOnclick, '')) {
+      icoHtml = _txForexFlagsHtml(it2.sym, _favOnclick, '');
     } else {
       icoHtml=ico?'<div class="mw-icon" onclick="'+_favOnclick+'">'+ico+'</div>'
         :'<div class="mw-icon" onclick="'+_favOnclick+'" style="display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+dotColor+';"></span></div>';
@@ -8631,6 +8675,15 @@ function symUnpin(sym){
     set('mTSpr',sp?'Spread: '+sp:'');
     set('mBid',mid?(mid-sp/2).toFixed(dec):'—');
     set('mAsk',mid?(mid+sp/2).toFixed(dec):'—');
+    // SL/TP/Limit alanları boşsa güncel fiyatla doldur — ok tuşları 1'den
+    // değil gerçek fiyattan başlasın. Kullanıcı yazdıysa üzerine yazılmaz.
+    if(mid){
+      var rawVal = mid.toFixed(dec);
+      ['mSL','mTP','mLimitPrice'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && !el.value) el.value = rawVal;
+      });
+    }
     var minL=sc?parseFloat(sc.minLot)||0.01:0.01;
     var li=document.getElementById('mLI');
     // Kullanıcı input'a yazıyorsa _lot'u input'tan al, üzerine yazma
@@ -8878,9 +8931,9 @@ function symUnpin(sym){
     set('mPMTP', pos.tp?fp2(pos.tp,dec):'—');
     set('mPMSwap', pos.swapTotal?'$'+fp2(pos.swapTotal):'$0.00');
     set('mPMTime', dt);
-    // Input'ları doldur
-    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value=pos.sl||'';
-    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value=pos.tp||'';
+    // Input'ları doldur — boşsa güncel fiyattan başlasın (ok tuşları 1'den değil)
+    var slIn=document.getElementById('mPMSLInput'); if(slIn) slIn.value=pos.sl||cur.toFixed(dec);
+    var tpIn=document.getElementById('mPMTPInput'); if(tpIn) tpIn.value=pos.tp||cur.toFixed(dec);
     var modal=document.getElementById('mPosModal');
     if(modal){ modal.style.display='flex'; }
   };
