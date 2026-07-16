@@ -491,6 +491,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   .ind-toolbar { height:32px; }
   .ind-btn { padding:0 8px; font-size:9px; }
 }
+@media(min-width:769px) {
+  #mReadOnlyBand { display: none !important; }
+}
 
 /* ── PARA YATIR / ÇEK PANELİ ── */
 .wallet-overlay {
@@ -1210,10 +1213,7 @@ function _authSuccess(user) {
   if(un) un.textContent=user.name+(user.surname?' '+user.surname:'');
   if(ut) ut.textContent=user.type==='demo'?'Demo Hesap':'Gerçek Hesap';
   var ul=document.getElementById('tbUserLogin'); if(ul) ul.textContent=(user.login||user.id)?'#'+(user.login||user.id):'';
-  // İzleyici modu bandı
-  var _roBand = document.getElementById('readOnlyBand');
-  if(_roBand) _roBand.style.display = user._readOnly ? 'flex' : 'none';
-  // İşlem panelini blokla
+  // İzleyici modu bandı + buton kilitleri — _applyReadOnlyUI tek yerden yönetir (masaüstü + mobil)
   window._readOnly = !!user._readOnly;
   _applyReadOnlyUI(window._readOnly);
   try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); window._txBalLoaded=true; if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
@@ -1681,8 +1681,6 @@ function initAuth(){
         // İzleyici modu (read-only) — admin canlı değiştirebilir, anında uygulanmalı
         if(d._readOnly !== undefined) {
           if(typeof _cu !== 'undefined' && _cu) _cu._readOnly = !!d._readOnly;
-          var _roBandLive = document.getElementById('readOnlyBand');
-          if(_roBandLive) _roBandLive.style.display = d._readOnly ? 'flex' : 'none';
           window._readOnly = !!d._readOnly;
           if(typeof _applyReadOnlyUI === 'function') _applyReadOnlyUI(window._readOnly);
           if(d._readOnly && typeof showToast === 'function') showToast('İzleyici Moduna Alındı', 'Hesabınız artık salt okunur — yeni işlem açılamaz.', 'warning');
@@ -1807,6 +1805,12 @@ function initAuth(){
     </div>
     <div class="tb-wallet-btn" onclick="openWallet()">⬆⬇ PARA</div>
   </div>
+</div>
+
+<!-- İZLEYİCİ MODU BANDI — MOBİL (masaüstünde .bottom-panel içindeki readOnlyBand kullanılır) -->
+<div id="mReadOnlyBand" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2a1f00;border-bottom:1px solid #f5c518;padding:6px 10px;font-family:var(--mono);font-size:10px;color:#f5c518;letter-spacing:.5px;flex-shrink:0;text-align:center;">
+  <span>👁</span>
+  <span>İZLEYİCİ MODU — İşlem açma/kapama devre dışı</span>
 </div>
 
 <!-- TICKER STRIP -->
@@ -3589,15 +3593,25 @@ function setOrdType(type, btn) {
 }
 
 function _applyReadOnlyUI(ro) {
-  // İşlem butonları
+  // Uyarı bantları — masaüstü (bottom-panel içinde) + mobil (topbar altında, tüm sekmelerde ortak)
+  var _roBandD = document.getElementById('readOnlyBand');
+  if(_roBandD) _roBandD.style.display = ro ? 'flex' : 'none';
+  var _roBandM = document.getElementById('mReadOnlyBand');
+  if(_roBandM) _roBandM.style.display = ro ? 'flex' : 'none';
+  // İşlem butonları (masaüstü)
   ['btn-buy','btn-sell','tbWalletBtn'].forEach(function(id){
     var el=document.getElementById(id); if(el){ el.style.opacity=ro?'0.3':'1'; el.style.pointerEvents=ro?'none':''; }
   });
   // Topbar para butonu
   var wb = document.querySelector('.tb-wallet-btn');
   if(wb){ wb.style.opacity=ro?'0.3':'1'; wb.style.pointerEvents=ro?'none':''; }
-  // Kapat butonları
+  // Kapat butonları (masaüstü)
   document.querySelectorAll('.close-ord').forEach(function(b){ b.style.opacity=ro?'0.3':'1'; b.style.pointerEvents=ro?'none':''; });
+  // Mobil AL/SAT butonları (İşlem sekmesi + Grafik sekmesi hızlı çubuğu) ve pozisyon/emir iptal butonları
+  document.querySelectorAll('.m-bs, .m-bb, #mQuickBar button, .m-cx').forEach(function(b){
+    b.style.opacity = ro ? '0.3' : '1';
+    b.style.pointerEvents = ro ? 'none' : '';
+  });
 }
 
 // Pozisyon ve bakiye kaydet (localStorage + Firebase)
