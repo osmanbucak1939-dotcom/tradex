@@ -1244,42 +1244,23 @@ function _authSuccess(user) {
   window._txSetOffline = function _txSetOffline() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     var _now = new Date().toISOString();
-    // users koleksiyonu
+    // users koleksiyonu — TEK gerçek kaynak. Admin buradan senkronize olur.
     db.collection('users').doc(String(_cu.id)).set({online:false, lastSeen:_now},{merge:true}).catch(function(){});
-    // broker/accounts koleksiyonu - admin tablosu buradan okuyor
-    var ref = db.collection('broker').doc('accounts');
-    db.runTransaction(function(tx){
-      return tx.get(ref).then(function(doc){
-        if(!doc.exists) return;
-        var accs = JSON.parse(doc.data().data||'[]');
-        var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
-        if(idx >= 0) {
-          accs[idx].online = false;
-          accs[idx].lastSeen = _now;
-          tx.set(ref, {data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
-        }
-      });
-    }).catch(function(){});
+    // ⚠️ 2026-07-16 KRİTİK GÜVENLİK DÜZELTMESİ: broker/accounts'a yazan blok
+    // buradan KALDIRILDI. O kod, çevrimdışı durumu işaretlemek için TÜM
+    // müşterilerin kaydını (plaintext şifreler dahil!) bu oturumun belleğine
+    // indirip tekrar yazıyordu — hem ciddi bir veri sızıntısıydı (her müşteri
+    // konsoldan herkesin bilgisini görebiliyordu) hem de tek bir belgeye çok
+    // sayıda eşzamanlı yazma denemesi "failed-precondition" hatalarına sebep
+    // oluyordu. Admin zaten users/{id} üzerinden bu bilgiyi güvenli şekilde alıyor.
   }
   function _txSendHeartbeat() {
     if(!_cu || !_cu.id || typeof db==='undefined' || !db) return;
     var now = new Date().toISOString();
-    // broker/accounts içindeki hesabı güncelle (transaction — atomik oku+yaz)
-    var ref = db.collection('broker').doc('accounts');
-    db.runTransaction(function(tx){
-      return tx.get(ref).then(function(doc) {
-        if(!doc.exists) return;
-        var accs = JSON.parse(doc.data().data||'[]');
-        var idx = accs.findIndex(function(a){ return String(a.id)===String(_cu.id); });
-        if(idx >= 0) {
-          accs[idx].lastSeen = now;
-          accs[idx].online = true;
-          tx.set(ref, {data:JSON.stringify(accs),_ts:Date.now()},{merge:true});
-        }
-      });
-    }).catch(function(){});
-    // users koleksiyonuna yaz - 30sn'de bir
+    // users koleksiyonuna yaz - 30sn'de bir — TEK gerçek kaynak, admin buradan okur.
     db.collection('users').doc(String(_cu.id)).set({lastSeen:now, online:true},{merge:true}).catch(function(){});
+    // ⚠️ 2026-07-16 KRİTİK GÜVENLİK DÜZELTMESİ: broker/accounts transaction'ı
+    // buradan da KALDIRILDI — yukarıdaki _txSetOffline ile aynı sebep.
   }
 
   // Hemen bir kez ve sonra her 30 saniyede
@@ -1499,24 +1480,14 @@ function initAuth(){
     var _fbReady = false;
 
     // Hesapları Firebase'e kaydet
+    // ⚠️ 2026-07-16: Bu fonksiyon trader içinde HİÇBİR YERDEN çağrılmıyordu
+    // (kontrol edildi) — admin tarafından kopyalanmış "ölü kod". Trader'ın
+    // TÜM müşteri listesini toptan üzerine yazabilmesi tehlikeli bir yetki,
+    // o yüzden ileride yanlışlıkla çağrılırsa diye kasıtlı olarak no-op
+    // yapıldı. Hesap ekleme için fbAddAccount() (tek hesap, transaction'lı,
+    // güvenli) kullanılmaya devam ediyor.
     function fbSaveAccounts() {
-      if(!db) return;
-      // ⚠️ Aynı veri-kaybı riski: yazmadan önce sunucudaki güncel listeyi kontrol et,
-      // yerelde olmayan (başka oturumlarca eklenmiş) hesapları geri ekle.
-      var ref = db.collection('broker').doc('accounts');
-      ref.get().then(function(doc){
-        var serverAccs = [];
-        if(doc.exists) { try { serverAccs = JSON.parse(doc.data().data||'[]'); } catch(e){} }
-        var localIds = {};
-        accounts.forEach(function(a){ if(a.id) localIds[String(a.id)] = true; });
-        var missing = serverAccs.filter(function(sa){ return sa.id && !localIds[String(sa.id)]; });
-        if(missing.length) accounts = accounts.concat(missing);
-        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
-          .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
-      }).catch(function(){
-        db.collection('broker').doc('accounts').set({ data: JSON.stringify(accounts), updatedAt: new Date().toISOString() })
-          .catch(function(e){ console.warn('fbSaveAccounts error:', e); });
-      });
+      console.warn('fbSaveAccounts() trader tarafında devre dışı bırakıldı — kullanılmamalı.');
     }
 
     // Güvenli hesap ekleme - race condition önler
