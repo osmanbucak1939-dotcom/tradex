@@ -5703,7 +5703,7 @@ function adRenderFinlog() {
       + '</table></div>';
 
     var _footEl = document.getElementById('adOpenFooter');
-    if(_footEl) {
+    if(_footEl && _adActiveSubTab()==='finlog') {
       var _netDW = 0;
       logs.forEach(function(l){
         var amt = parseFloat(l.amount)||0;
@@ -10486,6 +10486,15 @@ function adTickOpenTable(){
 }
 
 // ── Açık pozisyon tablosu ─────────────────────────────────────
+function _adActiveSubTab() {
+  var m = {open:'adPanelOpen', closed:'adPanelClosed', finlog:'adPanelFinlog'};
+  for(var k in m) {
+    var el = document.getElementById(m[k]);
+    if(el && el.style.display !== 'none') return k;
+  }
+  return null;
+}
+
 function adRenderOpenTable(){
   var _footEl = document.getElementById('adOpenFooter');
   var tb = document.getElementById('adOpenBody');
@@ -10544,7 +10553,7 @@ function adRenderOpenTable(){
       +'</td>'
     +'</tr>';
   }).join('');
-  if(_footEl) {
+  if(_footEl && _adActiveSubTab()==='open') {
     var _pc = totalPnl>=0 ? '#26a69a' : '#ef5350';
     _footEl.style.display = 'block';
     _footEl.innerHTML = 'Toplam ' + sorted.length + ' açık pozisyon &nbsp;·&nbsp; Toplam K/Z: <span style="color:'+_pc+';font-weight:700;">'+(totalPnl>=0?'+':'-')+'$'+adFp(Math.abs(totalPnl))+'</span>';
@@ -10602,7 +10611,7 @@ function adRenderHistoryTable(){
       +'</td>'
     +'</tr>';
   }).join('');
-  if(_footEl) {
+  if(_footEl && _adActiveSubTab()==='closed') {
     var _histTotalPnl = sorted.reduce(function(s,h){ return s+(parseFloat(h.pnl)||0); }, 0);
     var _hpc = _histTotalPnl>=0 ? '#26a69a' : '#ef5350';
     _footEl.style.display = 'block';
