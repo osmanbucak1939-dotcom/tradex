@@ -5642,6 +5642,8 @@ function adRenderFinlog() {
   if(!panel) return;
   if(typeof hasPerm==='function' && !hasPerm('finance.view')){
     panel.innerHTML='<div style="padding:24px;text-align:center;color:#ef5350;font-family:var(--mono);font-size:12px;">Finans görüntüleme yetkiniz yok</div>';
+    var _footElNoPerm = document.getElementById('adOpenFooter');
+    if(_footElNoPerm) _footElNoPerm.style.display='none';
     return;
   }
 
@@ -5699,6 +5701,19 @@ function adRenderFinlog() {
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
+
+    var _footEl = document.getElementById('adOpenFooter');
+    if(_footEl) {
+      var _netDW = 0;
+      logs.forEach(function(l){
+        var amt = parseFloat(l.amount)||0;
+        if(l.type==='deposit') _netDW += amt;
+        else if(l.type==='withdraw') _netDW -= amt;
+      });
+      var _ndc = _netDW>=0 ? '#26a69a' : '#ef5350';
+      _footEl.style.display = 'block';
+      _footEl.innerHTML = 'Toplam ' + logs.length + ' finans işlemi &nbsp;·&nbsp; Net Yatırım/Çekim: <span style="color:'+_ndc+';font-weight:700;">'+(_netDW>=0?'+':'-')+'$'+adFp(Math.abs(_netDW))+'</span>';
+    }
   }
 
   // users/{id}'den taze veri çek
@@ -10540,9 +10555,11 @@ function adRenderOpenTable(){
 function adRenderHistoryTable(){
   var tb = document.getElementById('adHistBody');
   if(!tb) return;
+  var _footEl = document.getElementById('adOpenFooter');
 
   if(!_adHistory.length){
     tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
+    if(_footEl) _footEl.style.display='none';
     return;
   }
 
@@ -10585,6 +10602,12 @@ function adRenderHistoryTable(){
       +'</td>'
     +'</tr>';
   }).join('');
+  if(_footEl) {
+    var _histTotalPnl = sorted.reduce(function(s,h){ return s+(parseFloat(h.pnl)||0); }, 0);
+    var _hpc = _histTotalPnl>=0 ? '#26a69a' : '#ef5350';
+    _footEl.style.display = 'block';
+    _footEl.innerHTML = 'Toplam ' + sorted.length + ' kapalı pozisyon &nbsp;·&nbsp; Toplam K/Z: <span style="color:'+_hpc+';font-weight:700;">'+(_histTotalPnl>=0?'+':'-')+'$'+adFp(Math.abs(_histTotalPnl))+'</span>';
+  }
 }
 
 // ── Pozisyon kapat ────────────────────────────────────────────
