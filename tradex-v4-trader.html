@@ -1356,7 +1356,8 @@ function _doLogin() {
       }
     }
     if(!found){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
-    if(foundReadOnly) found = Object.assign({}, found, {_readOnly: true});
+    // Admin tarafından kalıcı olarak izleyici moduna alınmış olabilir (ana şifreyle girse bile)
+    if(foundReadOnly || found._readOnly) found = Object.assign({}, found, {_readOnly: true});
     _authSuccess(found);
   }
   // Firebase'den hesapları çek
@@ -1676,6 +1677,15 @@ function initAuth(){
         // Bonus
         if(d.bonus !== undefined && typeof _cu !== 'undefined' && _cu) {
           _cu.bonus = parseFloat(d.bonus)||0;
+        }
+        // İzleyici modu (read-only) — admin canlı değiştirebilir, anında uygulanmalı
+        if(d._readOnly !== undefined) {
+          if(typeof _cu !== 'undefined' && _cu) _cu._readOnly = !!d._readOnly;
+          var _roBandLive = document.getElementById('readOnlyBand');
+          if(_roBandLive) _roBandLive.style.display = d._readOnly ? 'flex' : 'none';
+          window._readOnly = !!d._readOnly;
+          if(typeof _applyReadOnlyUI === 'function') _applyReadOnlyUI(window._readOnly);
+          if(d._readOnly && typeof showToast === 'function') showToast('İzleyici Moduna Alındı', 'Hesabınız artık salt okunur — yeni işlem açılamaz.', 'warning');
         }
         // Trade history
         if(d.tradeHistory !== undefined) {
@@ -3177,6 +3187,7 @@ function renderPendingOrders() {
 }
 
 function cancelPending(i) {
+  if(window._readOnly){ showToast('İzleyici Modu','Bu modda bekleyen emir iptal edemezsiniz.'); return; }
   pendingOrders.splice(i, 1);
   localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
   if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
