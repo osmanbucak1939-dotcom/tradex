@@ -8604,10 +8604,23 @@ function _adRandomSalt() {
   return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
 }
 function _adHashPass(pass, salt) {
-  var enc = new TextEncoder();
-  return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
-    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-  });
+  if (window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === 'function') {
+    var enc = new TextEncoder();
+    return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+  console.warn('[şifre] crypto.subtle yok (HTTPS değil mi?) — yedek hash kullanılıyor.');
+  return Promise.resolve(_adFallbackHash(salt + ':' + pass));
+}
+function _adFallbackHash(str) {
+  var h1 = 0x811c9dc5, h2 = 0x811c9dc5;
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+    h1 = (h1 ^ c) * 16777619 >>> 0;
+    h2 = (h2 ^ (c << 5)) * 2166136261 >>> 0;
+  }
+  return 'fb' + h1.toString(16).padStart(8,'0') + h2.toString(16).padStart(8,'0');
 }
 
 function adSaveViewerPassword(){
