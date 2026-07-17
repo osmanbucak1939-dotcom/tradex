@@ -1308,6 +1308,73 @@ function _authSuccess(user) {
     }).catch(function(){});
   }
 }
+
+// ── ŞİFRE HASH'LEME (2026-07-17 GÜVENLİK DÜZELTMESİ) ──────────────
+// Önceden şifreler broker/accounts'ta DÜZ METİN saklanıyordu — bu belgeyi
+// okuyabilen (giriş yapmış herkes) tüm şifreleri görebiliyordu. Artık her
+// hesaba özel rastgele bir salt ile SHA-256 hash'i saklanıyor. Eski (henüz
+// hash'lenmemiş) hesaplar, bir sonraki başarılı girişlerinde ARKA PLANDA,
+// kullanıcı fark etmeden otomatik olarak hash'e geçiriliyor.
+function _txRandomSalt() {
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+function _txHashPass(pass, salt) {
+  var enc = new TextEncoder();
+  return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  });
+}
+// Tek bir hesabın şifre alan(lar)ını günceller — broker/accounts'taki TÜM
+// listeyi değil, sadece o hesabı, transaction ile güvenli şekilde.
+function fbMigratePasswordHash(accId, patch) {
+  if(typeof db==='undefined' || !db) return;
+  var ref = db.collection('broker').doc('accounts');
+  db.runTransaction(function(tx){
+    return tx.get(ref).then(function(doc){
+      if(!doc.exists) return;
+      var accs = [];
+      try { accs = JSON.parse(doc.data().data||'[]'); } catch(e){ return; }
+      var idx = accs.findIndex(function(x){ return String(x.id)===String(accId); });
+      if(idx>=0) {
+        Object.keys(patch).forEach(function(k){ accs[idx][k] = patch[k]; });
+        tx.set(ref, {data:JSON.stringify(accs)}, {merge:true});
+      }
+    });
+  }).catch(function(e){ console.warn('[şifre hash geçişi]', e); });
+}
+// Bir hesap adayının şifresini (ana + izleyici) doğrular. Eski düz-metinle
+// eşleşirse, sonucu hemen döner VE arka planda sessizce hash'e geçirir.
+function _txVerifyPassword(a, pass) {
+  var checks = [];
+  if(a.passwordSalt) {
+    checks.push(_txHashPass(pass, a.passwordSalt).then(function(h){ return {type:'main', ok:h===a.password}; }));
+  } else if(a.password !== undefined) {
+    checks.push(Promise.resolve({type:'main', ok:a.password===pass, legacy:true}));
+  }
+  if(a.viewerPasswordSalt) {
+    checks.push(_txHashPass(pass, a.viewerPasswordSalt).then(function(h){ return {type:'viewer', ok:h===a.viewerPassword}; }));
+  } else if(a.viewerPassword) {
+    checks.push(Promise.resolve({type:'viewer', ok:a.viewerPassword===pass, legacy:true}));
+  }
+  return Promise.all(checks).then(function(results){
+    var mainHit = results.filter(function(r){ return r.type==='main' && r.ok; })[0];
+    var viewerHit = results.filter(function(r){ return r.type==='viewer' && r.ok; })[0];
+    if(mainHit && mainHit.legacy) {
+      var salt = _txRandomSalt();
+      _txHashPass(pass, salt).then(function(h){ fbMigratePasswordHash(a.id, {password:h, passwordSalt:salt}); });
+      return {match:true, viewerMatch:false};
+    }
+    if(viewerHit && viewerHit.legacy) {
+      var vsalt = _txRandomSalt();
+      _txHashPass(pass, vsalt).then(function(h){ fbMigratePasswordHash(a.id, {viewerPassword:h, viewerPasswordSalt:vsalt}); });
+      return {match:false, viewerMatch:true};
+    }
+    return {match: !!mainHit, viewerMatch: !!viewerHit};
+  });
+}
+
 function _doLogin() {
   var loginVal = (document.getElementById('inp-email')||{}).value||'';
   var pass     = (document.getElementById('inp-pass')||{}).value||'';
@@ -1327,19 +1394,26 @@ function _doLogin() {
       accs = localAccs;
     }
     var found = null, foundReadOnly = false;
+    var candidates = [];
     for(var i=0;i<accs.length;i++){
       var a = accs[i];
       var matchLogin = (a.login && String(a.login)===loginVal) || (a.id && String(a.id)===loginVal);
       var matchEmail = a.email && a.email.toLowerCase()===loginVal.toLowerCase();
-      if(matchLogin||matchEmail){
-        if(a.password===pass){ found=a; foundReadOnly=false; break; }
-        if(a.viewerPassword && a.viewerPassword===pass){ found=a; foundReadOnly=true; break; }
-      }
+      if(matchLogin||matchEmail) candidates.push(a);
     }
-    if(!found){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
-    // Admin tarafından kalıcı olarak izleyici moduna alınmış olabilir (ana şifreyle girse bile)
-    if(foundReadOnly || found._readOnly) found = Object.assign({}, found, {_readOnly: true});
-    _authSuccess(found);
+    if(!candidates.length){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
+    (function _checkCandidate(idx){
+      if(idx >= candidates.length){ _authErr('err-login','Login no/e-posta veya şifre hatalı!'); return; }
+      var a = candidates[idx];
+      _txVerifyPassword(a, pass).then(function(result){
+        if(!result.match && !result.viewerMatch){ _checkCandidate(idx+1); return; }
+        var found = a;
+        var foundReadOnly = !!result.viewerMatch;
+        // Admin tarafından kalıcı olarak izleyici moduna alınmış olabilir (ana şifreyle girse bile)
+        if(foundReadOnly || found._readOnly) found = Object.assign({}, found, {_readOnly: true});
+        _authSuccess(found);
+      });
+    })(0);
   }
   // Firebase'den hesapları çek
   fbLoadAccounts(function(fbAccs) {
@@ -1381,9 +1455,11 @@ function _doRegister() {
     var _nextLogin = _allIds.length ? Math.max.apply(null,_allIds)+1 : 10000;
     if(_nextLogin < 10000) _nextLogin = 10000;
     var now2 = new Date();
+    var _salt = _txRandomSalt();
+    _txHashPass(pass, _salt).then(function(_hashedPass){
     var acc = {
       id: String(_nextLogin), login: String(_nextLogin),
-      name: name, surname: surname, phone: phone, email: email, password: pass,
+      name: name, surname: surname, phone: phone, email: email, password: _hashedPass, passwordSalt: _salt,
       type: _authType, balance: _authType==='demo'?10000:0, equity: _authType==='demo'?10000:0,
       currency: 'USD', leverage: 100, active: true,
       created: now2.toString(), regDate: now2.toISOString(),
@@ -1401,6 +1477,7 @@ function _doRegister() {
       if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
       setTimeout(function(){_authSuccess(finalAcc);},1200);
     });
+    }); // _txHashPass then sonu
   });
   } // _proceedRegister sonu
 
