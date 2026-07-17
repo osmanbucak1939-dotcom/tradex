@@ -8597,15 +8597,36 @@ function symUnpin(sym){
   buildSymTabs(); showToast('Kaldirildi',sym+' ust bardan kaldirildi');
 }
 
+// ── ŞİFRE HASH'LEME (2026-07-17 GÜVENLİK DÜZELTMESİ) — trader.html'deki ile aynı ──
+function _adRandomSalt() {
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+function _adHashPass(pass, salt) {
+  var enc = new TextEncoder();
+  return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  });
+}
+
 function adSaveViewerPassword(){
   if(typeof hasPerm==='function'&&!hasPerm('accounts.edit')){showAdminToast('Yetkisiz','Hesap düzenleme yetkiniz yok','danger');return;}
   var a=accounts.find(function(x){return String(x.id)===String(_adAccId);}); if(!a) return;
   var vp=(document.getElementById('ad_vpw')||{}).value||'';
   vp=vp.trim();
-  if(vp && vp===a.password){showAdminToast('Hata','İzleyici şifresi ana şifre ile aynı olamaz!','danger');return;}
-  a.viewerPassword = vp||null;
-  saveAccounts();
-  showAdminToast('Kaydedildi', vp ? ('👁 İzleyici şifresi: '+vp) : 'İzleyici şifresi kaldırıldı','success');
+  if(!vp) {
+    a.viewerPassword = null; a.viewerPasswordSalt = null;
+    saveAccounts();
+    showAdminToast('Kaydedildi','İzleyici şifresi kaldırıldı','success');
+    return;
+  }
+  var vsalt = _adRandomSalt();
+  _adHashPass(vp, vsalt).then(function(vhash){
+    a.viewerPassword = vhash; a.viewerPasswordSalt = vsalt;
+    saveAccounts();
+    showAdminToast('Kaydedildi', '👁 İzleyici şifresi güncellendi (hash\'lendi)','success');
+  });
 }
 
 function adChangePassword() {
@@ -8616,27 +8637,31 @@ function adChangePassword() {
   if(!pw1) { showToast('Hata','Yeni şifre boş olamaz!'); return; }
   if(pw1 !== pw2) { showToast('Hata','Şifreler eşleşmiyor!'); return; }
   if(pw1.length < 4) { showToast('Hata','Şifre en az 4 karakter olmalı!'); return; }
-  a.password = pw1;
-  saveAccounts();
-  // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
-  if(typeof db !== 'undefined' && db) {
-    var _refP = db.collection('broker').doc('accounts');
-    db.runTransaction(function(tx){
-      return tx.get(_refP).then(function(doc){
-        if(!doc.exists) return;
-        var accs = JSON.parse(doc.data().data||'[]');
-        var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
-        if(idx >= 0) {
-          accs[idx].password = pw1;
-          tx.set(_refP, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
-        }
-      });
-    }).catch(function(e){ console.warn('[adChangePassword] blob transaction:', e.message); });
-    db.collection('users').doc(String(a.id)).set({password:pw1}, {merge:true}).catch(function(){});
-  }
-  showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi');
-  var p1=document.getElementById('ad_pw1'); if(p1) p1.value='';
-  var p2=document.getElementById('ad_pw2'); if(p2) p2.value='';
+  var _pwSalt = _adRandomSalt();
+  _adHashPass(pw1, _pwSalt).then(function(_pwHash){
+    a.password = _pwHash; a.passwordSalt = _pwSalt;
+    saveAccounts();
+    // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
+    if(typeof db !== 'undefined' && db) {
+      var _refP = db.collection('broker').doc('accounts');
+      db.runTransaction(function(tx){
+        return tx.get(_refP).then(function(doc){
+          if(!doc.exists) return;
+          var accs = JSON.parse(doc.data().data||'[]');
+          var idx = accs.findIndex(function(x){ return String(x.id)===String(a.id); });
+          if(idx >= 0) {
+            accs[idx].password = _pwHash;
+            accs[idx].passwordSalt = _pwSalt;
+            tx.set(_refP, { data: JSON.stringify(accs), updatedAt: new Date().toISOString() });
+          }
+        });
+      }).catch(function(e){ console.warn('[adChangePassword] blob transaction:', e.message); });
+      db.collection('users').doc(String(a.id)).set({password:_pwHash, passwordSalt:_pwSalt}, {merge:true}).catch(function(){});
+    }
+    showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi');
+    var p1=document.getElementById('ad_pw1'); if(p1) p1.value='';
+    var p2=document.getElementById('ad_pw2'); if(p2) p2.value='';
+  });
 }
 
 
