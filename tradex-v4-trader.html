@@ -1321,10 +1321,34 @@ function _txRandomSalt() {
   return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
 }
 function _txHashPass(pass, salt) {
-  var enc = new TextEncoder();
-  return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
-    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-  });
+  // Web Crypto (crypto.subtle) SADECE güvenli bağlamda (HTTPS) çalışır.
+  // HTTP üzerinden erişilirse crypto.subtle undefined olur ve .digest
+  // çağrısı sessizce değil, ÇÖKEREK kaydı tamamen engeller. Bu yüzden
+  // önce varlığını kontrol ediyoruz; yoksa (2026-07-17) tarayıcı bağımsız
+  // bir yedek hash'e düşüyoruz — kriptografik olarak SHA-256 kadar güçlü
+  // değil ama düz metinden kıyaslanamayacak kadar iyi, ve site HTTPS'e
+  // geçtiğinde yeni girişlerde otomatik olarak SHA-256'ya yükseltilir
+  // (_txVerifyPassword zaten her eski/zayıf eşleşmeyi migrate ediyor).
+  if (window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === 'function') {
+    var enc = new TextEncoder();
+    return crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + pass)).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+  console.warn('[şifre] crypto.subtle yok (HTTPS değil mi?) — yedek hash kullanılıyor. Siteyi https:// üzerinden kullanmanız önerilir.');
+  return Promise.resolve(_txFallbackHash(salt + ':' + pass));
+}
+function _txFallbackHash(str) {
+  // Tarayıcı/bağlam bağımsız, hızlı, basit çift-hash (kriptografik değil
+  // ama düz metinden çok daha iyi bir yedek — sadece crypto.subtle
+  // gerçekten yoksa kullanılır).
+  var h1 = 0x811c9dc5, h2 = 0x811c9dc5;
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+    h1 = (h1 ^ c) * 16777619 >>> 0;
+    h2 = (h2 ^ (c << 5)) * 2166136261 >>> 0;
+  }
+  return 'fb' + h1.toString(16).padStart(8,'0') + h2.toString(16).padStart(8,'0');
 }
 // Tek bir hesabın şifre alan(lar)ını günceller — broker/accounts'taki TÜM
 // listeyi değil, sadece o hesabı, transaction ile güvenli şekilde.
@@ -1477,6 +1501,9 @@ function _doRegister() {
       if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
       setTimeout(function(){_authSuccess(finalAcc);},1200);
     });
+    }).catch(function(hashErr){
+      console.error('Şifre hash hatası:', hashErr);
+      _authErr('err-register','Kayıt sırasında bir teknik hata oluştu. Lütfen sayfanın adresinin "https://" ile başladığından emin olup tekrar deneyin. (Hata: '+(hashErr&&hashErr.message||'bilinmeyen')+')');
     }); // _txHashPass then sonu
   });
   } // _proceedRegister sonu
