@@ -10850,34 +10850,46 @@ function adCloseAllPositions(){
   if(!_adPositions.length){ showAdminToast('Bilgi','Açık pozisyon yok','info'); return; }
   if(!confirm(_adPositions.length+' açık pozisyonun TÜMÜ kapatılsın mı?')) return;
   var nowIso = new Date().toISOString();
-  var totalPnl = 0;
-  _adPositions.forEach(function(pos){
-    var cur = adGetPrice(pos.sym);
-    var cs  = parseFloat(pos.contractSize)||1;
-    var qty = parseFloat(pos.qty)||0;
-    var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
-              + (parseFloat(pos.swapTotal)||0);
-    totalPnl  += pnl;
-    _adHistory.unshift(Object.assign({}, pos, {
-      closePrice: cur, pnl: pnl,
-      closeTime: nowIso, closeReason:'admin-tumunu-kapat'
-    }));
-  });
-  // ⚠️ MT4/5 STANDART MODEL: açılışta margin bakiyeden kesilmedi → sadece toplam
-  // gerçekleşen K/Z eklenir, cost/margin iadesi yok — canonical balance üzerinden.
-  var _newBal = getAccBal(a.id) + totalPnl;
   _adPositions = [];
   if(typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
+  // ⚠️ 2026-07-17 DÜZELTME: eskiden admin'in YEREL (bayat olabilir) _adPositions
+  // listesi baz alınıp toptan yazılıyordu — canlı stop-out motoru tam bu sırada
+  // bir pozisyonu ZATEN kapatmışsa, o pozisyon burada İKİNCİ KEZ kapatılıp K/Z'ı
+  // bakiyeye tekrar eklenebiliyordu (çift sayım). Artık transaction içinde
+  // SUNUCUNUN O ANKİ GERÇEK listesi okunup, sadece hâlâ orada duran pozisyonlar
+  // kapatılıyor.
   if(typeof db !== 'undefined' && db) {
-    db.collection('users').doc(String(a.id)).set({
-      balance: _newBal,
-      positions: _adPositions,
-      tradeHistory: _adHistory.slice(0, 100),
-      _balanceSource: 'manager',
-      updatedAt: nowIso
-    }, {merge:true}).catch(function(e){ console.warn('adCloseAllPositions:', e); });
+    var _refCAP = db.collection('users').doc(String(a.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refCAP).then(function(doc){
+        if(!doc.exists) return;
+        var d = doc.data();
+        var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+        if(!serverPos.length) return; // başka biri (stop-out) zaten hepsini kapatmış
+        var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
+        var totalPnl = 0;
+        serverPos.forEach(function(pos){
+          var cur = adGetPrice(pos.sym);
+          var cs  = parseFloat(pos.contractSize)||1;
+          var qty = parseFloat(pos.qty)||0;
+          var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy' ? cur-pos.openPrice : pos.openPrice-cur)*qty*cs)
+                    + (parseFloat(pos.swapTotal)||0);
+          totalPnl += pnl;
+          serverHist.unshift(Object.assign({}, pos, {
+            closePrice: cur, pnl: pnl, closeTime: nowIso, closeReason:'admin-tumunu-kapat'
+          }));
+        });
+        if(serverHist.length > 100) serverHist = serverHist.slice(0,100);
+        var serverBal = (typeof d.balance === 'number') ? d.balance + totalPnl : totalPnl;
+        tx.set(_refCAP, { positions: [], tradeHistory: serverHist, balance: serverBal, _balanceSource: 'manager', updatedAt: nowIso }, { merge: true });
+        return totalPnl;
+      });
+    }).then(function(){
+      // Yerel _adHistory'i de tazele (görsel amaçlı, sunucu zaten doğru)
+      if(typeof adRenderHistoryTable==='function') adRenderHistoryTable();
+    }).catch(function(e){ console.warn('adCloseAllPositions:', e); });
   }
-  if(typeof adAudit==='function') adAudit('trades.closeAll', String(a.id), null, {count:_adHistory.length, totalPnl:totalPnl});
+  if(typeof adAudit==='function') adAudit('trades.closeAll', String(a.id), null, {count:_adPositions.length});
   adRenderOpenTable();
   adRenderHistoryTable();
   adRefreshBadges();
@@ -10935,6 +10947,43 @@ function adCloseEditModal(){
   if(m) m.style.display='none';
 }
 
+// ⚠️ 2026-07-17 GÜVENLİK DÜZELTMESİ: adSaveUserTrades() TÜM _adPositions
+// dizisini toptan yazıyordu — canlı stop-out motoru tam bu sırada BAŞKA bir
+// pozisyonu kapatmışsa (admin'in henüz görmediği), bu blanket-write o
+// kapatmayı "diriltebiliyordu". Aşağıdaki iki yardımcı, sadece İLGİLİ
+// pozisyonu sunucudaki GÜNCEL listede cerrahi olarak günceller/siler —
+// adClosePos'ta zaten kullanılan güvenli desenin aynısı.
+function _adSurgicalUpdatePosition(accId, id, patch) {
+  if(typeof db==='undefined' || !db) return;
+  var ref = db.collection('users').doc(String(accId));
+  db.runTransaction(function(tx){
+    return tx.get(ref).then(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data();
+      var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+      var idx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+      if(idx < 0) { console.warn('[pozisyon güncelle] #'+id+' sunucuda yok (belki kapanmış), atlanıyor'); return; }
+      Object.keys(patch).forEach(function(k){ serverPos[idx][k] = patch[k]; });
+      tx.set(ref, { positions: serverPos }, { merge: true });
+    });
+  }).catch(function(e){ console.warn('[adSurgicalUpdatePosition]', e.message); });
+}
+function _adSurgicalRemovePosition(accId, id) {
+  if(typeof db==='undefined' || !db) return;
+  var ref = db.collection('users').doc(String(accId));
+  db.runTransaction(function(tx){
+    return tx.get(ref).then(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data();
+      var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+      var idx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+      if(idx < 0) { console.warn('[pozisyon sil] #'+id+' sunucuda zaten yok'); return; }
+      serverPos.splice(idx, 1);
+      tx.set(ref, { positions: serverPos }, { merge: true });
+    });
+  }).catch(function(e){ console.warn('[adSurgicalRemovePosition]', e.message); });
+}
+
 function adSaveEdit(){
   if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger');return;}
   var pos = _adPositions.find(function(p){ return p.id===_adEditId; });
@@ -10953,7 +11002,11 @@ function adSaveEdit(){
   if(dev) pos.openDevice = dev;
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(a) pos.cost = (pos.openPrice * pos.qty) / parseFloat((a&&a.leverage)||100);
-  adSaveUserTrades();
+  if(a) _adSurgicalUpdatePosition(a.id, pos.id, {
+    side: pos.side, qty: pos.qty, openPrice: pos.openPrice, sl: pos.sl, tp: pos.tp,
+    swapTotal: pos.swapTotal, commission: pos.commission, openDate: pos.openDate,
+    time: pos.time, openDevice: pos.openDevice, cost: pos.cost
+  });
   adRenderOpenTable();
   adRefreshBadges();
   adCloseEditModal();
@@ -10965,16 +11018,19 @@ function adDeletePos(){
   var idx = _adPositions.findIndex(function(p){ return p.id===_adEditId; });
   if(idx<0) return;
   if(!confirm('Pozisyonu silmek istediğinizden emin misiniz?')) return;
+  var _delId = _adPositions[idx].id;
   _adPositions.splice(idx, 1);
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   // ⚠️ a.positions'a DOKUNMA
   if(a && typeof _allAccountPositions!=='undefined') _allAccountPositions[a.id]=_adPositions;
-  adSaveUserTrades();
+  if(a) _adSurgicalRemovePosition(a.id, _delId);
   adRenderOpenTable();
   adRefreshBadges();
   adCloseEditModal();
   showAdminToast('Silindi','Pozisyon kaldırıldı','info');
 }
+
+
 
 // ── Manuel işlem aç ───────────────────────────────────────────
 function adOpenTrade(btn){
@@ -11051,12 +11107,17 @@ function adOpenTrade(btn){
 }
 
 // ── Trades kaydet — SADECE users/{id}, broker/accounts'a DOKUNMAZ ─────
+// ⚠️ 2026-07-17 DÜZELTME: bu fonksiyon artık SADECE geçmiş (tradeHistory)
+// düzenleme/silmede kullanılıyor (adEditHistory, adDeleteHistory) — pozisyon
+// düzenleme/silme artık kendi cerrahi fonksiyonlarını kullanıyor (yukarı
+// bakın). Bu yüzden 'positions' alanını artık HİÇ yazmıyor — açık
+// pozisyonlarla hiç ilgisi olmayan bir işlem için onları toptan yeniden
+// yazıp canlı stop-out motoruyla yarışma riski yaratmasın diye.
 function adSaveUserTrades(){
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   // ⚠️ balance canonical'dan — a.balance GÜVENİLMEZ
   var payload = {
-    positions:    _adPositions,
     tradeHistory: _adHistory.slice(0,100),
     balance:      getAccBal(a.id),
     updatedAt:    new Date().toISOString()
@@ -11217,14 +11278,26 @@ function adReopenHistory(btn){
   // Canonical balance'ı anında güncelle (UI tutarlı olsun; snapshot da teyit eder)
   if(_accCanon[String(a.id)]) _accCanon[String(a.id)].balance = _newBal;
 
+  // ⚠️ 2026-07-17 DÜZELTME: eskiden admin'in YEREL _adPositions/_adHistory
+  // dizileri toptan yazılıyordu — canlı stop-out motoru bu sırada BAŞKA bir
+  // pozisyonu kapatmışsa, bu blanket-write onu diriltebiliyordu. Artık
+  // transaction ile sunucunun GÜNCEL listesine sadece bu pozisyon eklenip,
+  // sadece bu geçmiş kaydı çıkarılıyor.
   if(typeof db!=='undefined' && db){
-    db.collection('users').doc(String(a.id)).set({
-      balance: _newBal,
-      positions: _adPositions,
-      tradeHistory: _adHistory.slice(0,100),
-      _balanceSource: 'manager',
-      updatedAt: new Date().toISOString()
-    }, {merge:true}).catch(function(e){ console.warn('adReopenHistory:', e); });
+    var _refRH = db.collection('users').doc(String(a.id));
+    db.runTransaction(function(tx){
+      return tx.get(_refRH).then(function(doc){
+        if(!doc.exists) return;
+        var d = doc.data();
+        var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+        var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
+        serverPos.push(pos);
+        var hIdx2 = serverHist.findIndex(function(x){ return String(x.id)===String(h.id); });
+        if(hIdx2 >= 0) serverHist.splice(hIdx2, 1);
+        var serverBal = (typeof d.balance === 'number') ? d.balance - pnl : _newBal;
+        tx.set(_refRH, { positions: serverPos, tradeHistory: serverHist, balance: serverBal, _balanceSource: 'manager', updatedAt: new Date().toISOString() }, { merge: true });
+      });
+    }).catch(function(e){ console.warn('adReopenHistory:', e); });
   }
 
   var m = document.getElementById('adHistEditModal'); if(m) m.style.display='none';
