@@ -1080,7 +1080,32 @@ function applyDailySwap() {
     // Finlog'a yazılmaz (finlog: sadece para yatırma/çekme/bonus işlemleri)
   });
   if(changed) {
-    save(); // finlog + positions birlikte yazılır
+    try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+    // ⚠️ 2026-07-17 DÜZELTME: eskiden burada save() (TÜM positions dizisini
+    // toptan yazan) kullanılıyordu — canlı stop-out motoruyla aynı anda
+    // çalışırsa, motorun az önce kapattığı bir pozisyonu "diriltme" riski
+    // taşıyordu. Artık sunucudaki GÜNCEL listeye göre, sadece hâlâ açık olan
+    // pozisyonlara (yerel hesaplanan swapTotal farkını uygulayarak) yazıyoruz.
+    if(typeof db !== 'undefined' && db && typeof _cu !== 'undefined' && _cu) {
+      var _refSwap = db.collection('users').doc(String(_cu.id));
+      db.runTransaction(function(tx){
+        return tx.get(_refSwap).then(function(doc){
+          if(!doc.exists) return;
+          var d = doc.data();
+          var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+          positions.forEach(function(localPos){
+            var idx = serverPos.findIndex(function(p){ return String(p.id)===String(localPos.id); });
+            if(idx < 0) return; // sunucuda artık yok (kapanmış) — dokunma
+            serverPos[idx].swapTotal = localPos.swapTotal;
+            serverPos[idx].swapBuy = localPos.swapBuy;
+            serverPos[idx].swapSell = localPos.swapSell;
+          });
+          tx.set(_refSwap, { positions: serverPos }, { merge: true });
+        });
+      }).catch(function(e){ console.warn('[applyDailySwap] transaction:', e.message); });
+    } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
+      fbSaveUserData(_cu.id, {positions:positions});
+    }
     renderPositions();
     updateAccount();
     showToast('Swap', 'Gece swapı uygulandı');
@@ -1480,12 +1505,17 @@ function _doRegister() {
     if(_nextLogin < 10000) _nextLogin = 10000;
     var now2 = new Date();
     var _salt = _txRandomSalt();
+    // ⚠️ 2026-07-17 DÜZELTME: kaldıraç eskiden sabit 100 yazılıyordu, admin'in
+    // 'standard' grubu için ayarladığı gerçek varsayılan kaldıracı (örn. 1/200)
+    // hiç görmüyordu. Artık gruptan okunuyor.
+    var _regGroup = (tradingGroups||[]).find(function(g){ return g.id==='standard'; });
+    var _regLeverage = (_regGroup && _regGroup.defaultLeverage) || 100;
     _txHashPass(pass, _salt).then(function(_hashedPass){
     var acc = {
       id: String(_nextLogin), login: String(_nextLogin),
       name: name, surname: surname, phone: phone, email: email, password: _hashedPass, passwordSalt: _salt,
       type: _authType, balance: _authType==='demo'?10000:0, equity: _authType==='demo'?10000:0,
-      currency: 'USD', leverage: 100, active: true,
+      currency: 'USD', leverage: _regLeverage, active: true,
       created: now2.toString(), regDate: now2.toISOString(),
       spreadGroup: 'standard', bonus: 0, lastSeen: null, online: false
     };
@@ -3573,8 +3603,8 @@ function setInt(intv, btn) {
 }
 
 function updateOrderTicket(price) {
-  const sym = SYMS.find(s=>s.sym===curSym);
-  const spread = sym ? sym.spread : price*0.0001;
+  const _mwItem = (typeof MW_MAP !== 'undefined') ? MW_MAP[curSym] : null;
+  const spread = _mwItem ? (_mwItem.spread || 0) : (function(){ var s=SYMS.find(function(x){return x.sym===curSym;}); return s ? s.spread : price*0.0001; })();
   const bid = price - spread/2;
   const ask = price + spread/2;
   var _el_otBid=document.getElementById('otBid'); if(_el_otBid) _el_otBid.textContent = fp(bid, price>100?2:4);
@@ -3703,6 +3733,20 @@ function save() {
       bonus: (_cu && _cu.bonus !== undefined) ? parseFloat(_cu.bonus)||0 : 0,
       updatedAt: _now
     });
+  }
+}
+
+// ⚠️ 2026-07-17 DÜZELTME: fiyat alarmları değiştiğinde eskiden save()
+// çağrılıyordu — ama save() 'alarms' alanını Firestore'a HİÇ yazmıyor
+// (yalnızca positions/tradeHistory/balance/bonus), yani alarm değişikliği
+// zaten kalıcı olmuyordu; üstüne bir de gereksiz yere TÜM positions
+// dizisini toptan yeniden yazıp (alarmla hiç ilgisi yokken) canlı stop-out
+// motoruyla yarışma riski yaratıyordu. Artık alarmlar kendi, pozisyona
+// dokunmayan yolundan kaydediliyor.
+function saveAlarms() {
+  try { localStorage.setItem('tx_al', JSON.stringify(alarms)); } catch(e){}
+  if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu && _cu.id) {
+    fbSaveUserData(_cu.id, { alarms: alarms });
   }
 }
 
@@ -4189,12 +4233,45 @@ function closePosition(id, reason='', closeQty) {
     pos.cost = Math.round((_costC - _costPart)*100)/100;
     pos.swapTotal = Math.round((_swapC - _swapPart)*100)/100;
     // Geçmişe parça kaydı — YENİ id (açık pozisyonla çakışmasın), izlenebilirlik için parentId
-    tradeHistory.unshift({ ...pos, id: Date.now(), parentId: pos.id, qty: _pq, cost: _costPart, swapTotal: _swapPart,
-      closePrice, pnl: pnlPart, closeTime: new Date().toISOString(), closeReason: reason||'parçalı' });
+    const _histPart = { ...pos, id: Date.now(), parentId: pos.id, qty: _pq, cost: _costPart, swapTotal: _swapPart,
+      closePrice, pnl: pnlPart, closeTime: new Date().toISOString(), closeReason: reason||'parçalı' };
+    tradeHistory.unshift(_histPart);
     if (tradeHistory.length > 50) tradeHistory.pop();
-    save();
-    if(typeof fbSaveUserData==='function' && typeof _cu!=='undefined' && _cu) {
-      fbSaveUserData(_cu.id, {balance:balance, positions:positions});
+    try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+    try { localStorage.setItem('tx_hist', JSON.stringify(tradeHistory)); } catch(e){}
+    // ⚠️ 2026-07-17 DÜZELTME: eskiden burada save() (TÜM positions dizisini
+    // toptan yazan) kullanılıyordu — tam kapatmadaki/açmadaki cerrahi transaction
+    // korumasına sahip değildi. Artık canlı stop-out motoruyla aynı anda
+    // yarışma riskine karşı (server'ın az önce kapattığı BAŞKA bir pozisyonu
+    // "diriltmemek" için) aynı cerrahi desen kullanılıyor.
+    if(typeof db !== 'undefined' && db && typeof _cu !== 'undefined' && _cu) {
+      var _refPC = db.collection('users').doc(String(_cu.id));
+      db.runTransaction(function(tx){
+        return tx.get(_refPC).then(function(doc){
+          if(!doc.exists) return;
+          var d = doc.data();
+          var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+          var serverHist = Array.isArray(d.tradeHistory) ? d.tradeHistory.slice() : [];
+          var sIdx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+          if(sIdx < 0) {
+            console.warn('[closePosition][parçalı] #'+id+' sunucuda yok (belki tam kapanmış), atlanıyor');
+            return;
+          }
+          // Sunucudaki pozisyonu AYNI oranla azalt (yerel pos objesini değil, sunucudakini baz al)
+          var sp = serverPos[sIdx];
+          var sQty = parseFloat(sp.qty)||0, sCost = parseFloat(sp.cost)||0, sSwap = parseFloat(sp.swapTotal)||0;
+          sp.qty = Math.round((sQty - _pq)*1e6)/1e6;
+          sp.cost = Math.round((sCost - _costPart)*100)/100;
+          sp.swapTotal = Math.round((sSwap - _swapPart)*100)/100;
+          var _alreadyAdded = serverHist.some(function(h){ return String(h.id)===String(_histPart.id); });
+          if(!_alreadyAdded) serverHist.unshift(_histPart);
+          if(serverHist.length > 50) serverHist.pop();
+          var serverBal = (typeof d.balance === 'number') ? d.balance + pnlPart : balance;
+          tx.set(_refPC, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
+        });
+      }).catch(function(e){ console.warn('[closePosition][parçalı] transaction:', e.message); });
+    } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
+      fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,50)});
     }
     renderPositions();
     renderHistory();
@@ -4292,6 +4369,34 @@ function txPartialClose(id){
 }
 
 // Masaüstü: SL veya TP hücresine tıklayınca o alanı düzenle (mobil mPosUpdate eşleniği)
+// ⚠️ 2026-07-17 GÜVENLİK DÜZELTMESİ: SL/TP gibi tek bir pozisyon alanını
+// güncellerken TÜM positions dizisini toptan yazmak (save()) tehlikeli —
+// sunucu tarafı risk motoru (stop-out, artık CANLI) tam bu sırada BAŞKA bir
+// pozisyonu kapatmışsa, bu blanket-write o kapatmayı "diriltebilir". Bunun
+// yerine sadece ilgili pozisyonu, sunucudaki EN GÜNCEL listede cerrahi
+// olarak güncelleyen ortak bir yardımcı — closePosition/placeOrder'daki
+// aynı desen.
+function _txSurgicalUpdatePosition(id, patch, onDone) {
+  if(typeof db === 'undefined' || !db || typeof _cu === 'undefined' || !_cu) {
+    if(typeof fbSaveUserData === 'function' && _cu) fbSaveUserData(_cu.id, {positions:positions});
+    if(onDone) onDone();
+    return;
+  }
+  var ref = db.collection('users').doc(String(_cu.id));
+  db.runTransaction(function(tx){
+    return tx.get(ref).then(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data();
+      var serverPos = Array.isArray(d.positions) ? d.positions.slice() : [];
+      var idx = serverPos.findIndex(function(p){ return String(p.id)===String(id); });
+      if(idx < 0) { console.warn('[pozisyon güncelle] #'+id+' sunucuda yok (belki kapanmış), atlanıyor'); return; }
+      Object.keys(patch).forEach(function(k){ serverPos[idx][k] = patch[k]; });
+      tx.set(ref, { positions: serverPos }, { merge: true });
+    });
+  }).then(function(){ if(onDone) onDone(); })
+    .catch(function(e){ console.warn('[pozisyon güncelle] transaction:', e.message); if(onDone) onDone(); });
+}
+
 function txEditField(id, field){
   var pos = positions.find(function(p){ return String(p.id)===String(id); });
   if(!pos) return;
@@ -4331,8 +4436,8 @@ function txEditField(id, field){
     var v=parseFloat(String(raw).replace(',','.'));
     v=(String(raw).trim()!=='' && v>0) ? v : null;
     if(isSL) pos.sl = v; else pos.tp = v;
-    if(typeof save==='function') save();
-    if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {positions:positions});
+    try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+    _txSurgicalUpdatePosition(id, isSL ? {sl:v} : {tp:v});
     if(typeof renderPositions==='function') renderPositions();
     showToast('Güncellendi ✓', (isSL?'SL':'TP')+': '+(v?fp(v,dec):'kaldırıldı'));
   });
@@ -4576,14 +4681,14 @@ function addAlarm() {
   const t = parseFloat(document.getElementById('alPrice').value);
   if (!t||t<=0) { showToast('Hata','Hedef fiyat girin!'); return; }
   alarms.push({ sym, dir, target:t, id:Date.now(), active:true });
-  save(); renderAlarms();
+  saveAlarms(); renderAlarms();
   var _g49e24e=document.getElementById('alPrice'); if(_g49e24e) _g49e24e.value = '';
   var _st_alarmForm=document.getElementById('alarmForm'); if(_st_alarmForm) _st_alarmForm.style.display = 'none';
   showToast('Alarm Kuruldu 🔔', `${sym} $${t} ${dir==='above'?'üzeri':'altı'}`);
   if (Notification.permission==='default') Notification.requestPermission();
 }
 
-function delAlarm(id) { alarms=alarms.filter(a=>a.id!==id); triggered.delete(id); save(); renderAlarms(); }
+function delAlarm(id) { alarms=alarms.filter(a=>a.id!==id); triggered.delete(id); saveAlarms(); renderAlarms(); }
 
 function checkAlarms(sym, price) {
   const s = sym.replace('USDT','');
@@ -4592,7 +4697,7 @@ function checkAlarms(sym, price) {
     if (a.sym!==s||!a.active||triggered.has(a.id)) return;
     const hit = a.dir==='above' ? price>=a.target : price<=a.target;
     if (hit) {
-      triggered.add(a.id); a.active=false; save(); renderAlarms();
+      triggered.add(a.id); a.active=false; saveAlarms(); renderAlarms();
       showToast(`🔔 ${s} ALARM!`, `$${fp(price)} → hedef $${a.target}`);
       if (Notification.permission==='granted') new Notification(`Trade Academy: ${s}`,{body:`$${fp(price)}`});
     }
@@ -6524,15 +6629,22 @@ function txApplyPrice(sym, rawMid, _synthetic) {
   if(!_synthetic){ if(!window._txBase) window._txBase = {}; window._txBase[sym] = rawMid; }
 
   // Spread hesapla
+  // ⚠️ 2026-07-17 DÜZELTME: öncelik SIRASI TERSTİ — temel (grup düzeltmesi
+  // uygulanmamış) symConfig spread'i, admin'in grup bazlı ayarladığı
+  // (MW_MAP) spread'in ÖNÜNE geçiyordu. Admin bir sembolün spread'ini
+  // değiştirdiğinde bu yüzden hiçbir yerde (fiyat gösterimi, grafik,
+  // market watch) yansımıyordu — sadece gerçek işlem anında (placeOrder,
+  // zaten MW_MAP kullanıyordu) doğruydu. Artık öncelik MW_MAP'te.
   var spread = 0, _spreadType = 'fixed', _spreadVariance = 20;
   var sc = _txGetSymConf(sym);
-  if(sc && sc.spread !== undefined) {
+  if(typeof MW_MAP !== 'undefined' && MW_MAP[sym] && MW_MAP[sym].spread !== undefined) {
+    spread = parseFloat(MW_MAP[sym].spread)||0;
+  } else if(sc && sc.spread !== undefined) {
     spread = parseFloat(sc.spread)||0;
+  }
+  if(sc) {
     _spreadType = sc.spreadType || 'fixed';
     _spreadVariance = parseFloat(sc.spreadVariance)||20;
-  }
-  if(!spread && typeof MW_MAP !== 'undefined' && MW_MAP[sym]) {
-    spread = parseFloat(MW_MAP[sym].spread)||0;
   }
   // Dinamik spread kaldırıldı - tüm cihazlarda tutarlı fiyat için sabit spread
 
@@ -6625,7 +6737,8 @@ function txApplyPrice(sym, rawMid, _synthetic) {
       _sp = rawMid * _factor + _offset;
     }
     var _sc2   = _txGetSymConf(s.sym);
-    var _ss    = _sc2 ? (parseFloat(_sc2.spread)||0) : 0;
+    var _mwItemS = (typeof MW_MAP !== 'undefined') ? MW_MAP[s.sym] : null;
+    var _ss    = _mwItemS ? (parseFloat(_mwItemS.spread)||0) : (_sc2 ? (parseFloat(_sc2.spread)||0) : 0);
     var _sh    = _ss / 2;
     var _sBid  = _sp - _sh;
     var _sAsk  = _sp + _sh;
@@ -8731,7 +8844,8 @@ function symUnpin(sym){
     var sym=typeof curSym!=='undefined'?curSym:'';
     var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
     var dec=sc?parseInt(sc.decimals)||2:2;
-    var sp=sc?parseFloat(sc.spread)||0:0;
+    var _mwItemM = (typeof MW_MAP !== 'undefined') ? MW_MAP[sym] : null;
+    var sp = _mwItemM ? (parseFloat(_mwItemM.spread)||0) : (sc?parseFloat(sc.spread)||0:0);
     var p=(typeof prices!=='undefined'&&prices[sym])?prices[sym]:null;
     var mid=p?p.price:0;
     var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
@@ -9065,8 +9179,8 @@ function symUnpin(sym){
     if(!pos) return;
     pos.sl = slVal;
     pos.tp = tpVal;
-    if(typeof save==='function') save();
-    if(typeof fbSaveUserData==='function'&&_cu) fbSaveUserData(_cu.id,{positions:positions});
+    try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
+    _txSurgicalUpdatePosition(_mPosId, {sl:slVal, tp:tpVal});
     if(typeof showToast==='function') showToast('Güncellendi ✓','SL/TP ayarlandı');
     mPosModalClose();
     setTimeout(mFP,200);
@@ -9203,7 +9317,8 @@ function symUnpin(sym){
         var _sym=typeof curSym!=='undefined'?curSym:'';
         var _sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===_sym;}):null;
         var _dec=_sc?parseInt(_sc.decimals)||2:2;
-        var _sp=_sc?parseFloat(_sc.spread)||0:0;
+        var _mwItemT = (typeof MW_MAP !== 'undefined') ? MW_MAP[_sym] : null;
+        var _sp = _mwItemT ? (parseFloat(_mwItemT.spread)||0) : (_sc?parseFloat(_sc.spread)||0:0);
         var _p=(typeof prices!=='undefined'&&prices[_sym])?prices[_sym]:null;
         var _mid=_p?_p.price:0;
         var _bid=document.getElementById('mBid'); if(_bid&&_mid) _bid.textContent=(_mid-_sp/2).toFixed(_dec);
@@ -9251,7 +9366,8 @@ function symUnpin(sym){
     if(lbl && sym) lbl.textContent=sym;
     var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===sym;}):null;
     var dec=sc?parseInt(sc.decimals)||2:2;
-    var sp=sc?parseFloat(sc.spread)||0:0;
+    var _mwItemQ = (typeof MW_MAP !== 'undefined') ? MW_MAP[sym] : null;
+    var sp = _mwItemQ ? (parseFloat(_mwItemQ.spread)||0) : (sc?parseFloat(sc.spread)||0:0);
     var p=(typeof prices!=='undefined'&&prices[sym])?prices[sym]:null;
     var mid=p?p.price:0;
     var bid=document.getElementById('mqBid');
