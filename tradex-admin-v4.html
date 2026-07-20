@@ -10678,15 +10678,16 @@ function adRenderOpenTable(){
 function _adCloseReasonLabel(h){
   var r = h.closeReason;
   var byEngine = h.closedBy === 'risk_engine';
-  var _sub = function(t){ return '<span style="color:#777;font-size:9px;margin-left:5px;">'+t+'</span>'; };
-  var _badge = function(color, bg, txt){ return '<span style="display:inline-block;background:'+bg+';color:'+color+';padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.4px;vertical-align:middle;">'+txt+'</span>'; };
-  if(r === 'tp') return _badge('#26a69a','rgba(38,166,154,.14)','TAKE PROFIT') + _sub(byEngine?'Sunucu':'Tarayıcı');
-  if(r === 'sl') return _badge('#ef5350','rgba(239,83,80,.14)','STOP LOSS') + _sub(byEngine?'Sunucu':'Tarayıcı');
-  if(r === 'stop_out') return _badge('#f5a623','rgba(245,166,35,.14)','STOP-OUT') + _sub(byEngine?'Sunucu':'Tarayıcı');
-  if(r === 'admin-tumunu-kapat') return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin - Tümü');
-  if(r === 'admin-kapat') return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin');
+  var _sub = function(t){ return '<div style="color:#777;font-size:9px;margin-top:2px;">'+t+'</div>'; };
+  var _badge = function(color, bg, txt){ return '<span style="display:inline-block;background:'+bg+';color:'+color+';padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.4px;white-space:nowrap;">'+txt+'</span>'; };
+  var _wrap = function(inner){ return '<div style="line-height:1.5;">'+inner+'</div>'; };
+  if(r === 'tp') return _wrap(_badge('#26a69a','rgba(38,166,154,.14)','TAKE PROFIT') + _sub(byEngine?'Sunucu':'Tarayıcı'));
+  if(r === 'sl') return _wrap(_badge('#ef5350','rgba(239,83,80,.14)','STOP LOSS') + _sub(byEngine?'Sunucu':'Tarayıcı'));
+  if(r === 'stop_out' || r === 'margin') return _wrap(_badge('#f5a623','rgba(245,166,35,.14)','STOP-OUT') + _sub(byEngine?'Sunucu':'Tarayıcı'));
+  if(r === 'admin-tumunu-kapat') return _wrap(_badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin - Tümü'));
+  if(r === 'admin-kapat') return _wrap(_badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin'));
   if(r === 'parçalı') return _badge('#2979ff','rgba(41,121,255,.14)','PARÇALI KAPATMA');
-  if(!r) return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Müşteri');
+  if(!r || r === 'manuel') return _wrap(_badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Müşteri'));
   return r;
 }
 
@@ -10726,7 +10727,7 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);">'+adFpSym(h.openPrice,h.sym)+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);">'+adFpSym(h.closePrice,h.sym)+'</td>'
       +'<td style="padding:5px 6px;font-size:10px;color:#aaa;">'+(h.closeTime||h.closeDate ? fmtDate(h.closeTime||h.closeDate) : '—')+'</td>'
-      +'<td style="padding:5px 6px;font-size:10px;white-space:nowrap;">'+_adCloseReasonLabel(h)+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;">'+_adCloseReasonLabel(h)+'</td>'
       +'<td style="padding:5px 6px;">'+adDeviceIcon(h.closeDevice||h.device)+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);color:#aaa;">'
         +((parseFloat(h.swapTotal)||0)!==0?(parseFloat(h.swapTotal)>=0?'+':'')+adFp(h.swapTotal):'—')+'</td>'
