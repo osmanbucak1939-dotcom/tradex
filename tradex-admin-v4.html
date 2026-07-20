@@ -5398,13 +5398,14 @@ function adRenderTab(tab) {
               '<th onclick="adSortHist(\'openPrice\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Acilis Fiyati <span id="adSortH_openPrice"></span></th>' +
               '<th onclick="adSortHist(\'closePrice\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Kapanis Fiyati <span id="adSortH_closePrice"></span></th>' +
               '<th onclick="adSortHist(\'closeTime\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Kapanis Saati <span id="adSortH_closeTime"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Sebep</th>' +
               '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Cihaz (Kapanis)</th>' +
               '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Swap</th>' +
               '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Komisyon</th>' +
               '<th onclick="adSortHist(\'pnl\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">K/Z <span id="adSortH_pnl"></span></th>' +
               '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Islem</th>' +
             '</tr></thead>' +
-            '<tbody id="adHistBody"><tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:16px;">Yukleniyor...</td></tr></tbody>' +
+            '<tbody id="adHistBody"><tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:16px;">Yukleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -10436,10 +10437,15 @@ function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFracti
 
 // Cihaz ikonu
 function adDeviceIcon(d){
-  if(!d||d==='web'||d==='Web') return '<span style="color:#c0c0c0;font-size:10px;">💻</span>';
-  if(/mobile|ios|android/i.test(d)) return '<span style="color:#26a69a;font-size:10px;">📱</span>';
-  if(/manager|admin/i.test(d)) return '<span style="color:#f5c518;font-size:10px;">👤</span>';
-  return '<span style="color:#c0c0c0;font-size:10px;">🌐</span>';
+  var _svgWrap = function(color, path, title){
+    return '<span title="'+title+'" style="display:inline-flex;align-items:center;color:'+color+';" title="'+title+'">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>'
+    + '</span>';
+  };
+  if(!d||d==='web'||d==='Web') return _svgWrap('#9aa0a6', '<rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>', 'Web');
+  if(/mobile|ios|android/i.test(d)) return _svgWrap('#26a69a', '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>', 'Mobil');
+  if(/manager|admin/i.test(d)) return _svgWrap('#f5c518', '<path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/>', 'Admin');
+  return _svgWrap('#9aa0a6', '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/>', 'Diğer');
 }
 
 // ── Badge güncelle — her zaman güncel fiyatla hesapla ─────────
@@ -10669,13 +10675,28 @@ function adRenderOpenTable(){
 }
 
 // ── Geçmiş işlem tablosu ──────────────────────────────────────
+function _adCloseReasonLabel(h){
+  var r = h.closeReason;
+  var byEngine = h.closedBy === 'risk_engine';
+  var _sub = function(t){ return '<span style="color:#777;font-size:9px;margin-left:5px;">'+t+'</span>'; };
+  var _badge = function(color, bg, txt){ return '<span style="display:inline-block;background:'+bg+';color:'+color+';padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.4px;vertical-align:middle;">'+txt+'</span>'; };
+  if(r === 'tp') return _badge('#26a69a','rgba(38,166,154,.14)','TAKE PROFIT') + _sub(byEngine?'Sunucu':'Tarayıcı');
+  if(r === 'sl') return _badge('#ef5350','rgba(239,83,80,.14)','STOP LOSS') + _sub(byEngine?'Sunucu':'Tarayıcı');
+  if(r === 'stop_out') return _badge('#f5a623','rgba(245,166,35,.14)','STOP-OUT') + _sub(byEngine?'Sunucu':'Tarayıcı');
+  if(r === 'admin-tumunu-kapat') return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin - Tümü');
+  if(r === 'admin-kapat') return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Admin');
+  if(r === 'parçalı') return _badge('#2979ff','rgba(41,121,255,.14)','PARÇALI KAPATMA');
+  if(!r) return _badge('#9aa0a6','rgba(255,255,255,.06)','MANUEL') + _sub('Müşteri');
+  return r;
+}
+
 function adRenderHistoryTable(){
   var tb = document.getElementById('adHistBody');
   if(!tb) return;
   var _footEl = document.getElementById('adOpenFooter');
 
   if(!_adHistory.length){
-    tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
+    tb.innerHTML='<tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
     if(_footEl) _footEl.style.display='none';
     return;
   }
@@ -10705,6 +10726,7 @@ function adRenderHistoryTable(){
       +'<td style="padding:5px 6px;font-family:var(--mono);">'+adFpSym(h.openPrice,h.sym)+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);">'+adFpSym(h.closePrice,h.sym)+'</td>'
       +'<td style="padding:5px 6px;font-size:10px;color:#aaa;">'+(h.closeTime||h.closeDate ? fmtDate(h.closeTime||h.closeDate) : '—')+'</td>'
+      +'<td style="padding:5px 6px;font-size:10px;white-space:nowrap;">'+_adCloseReasonLabel(h)+'</td>'
       +'<td style="padding:5px 6px;">'+adDeviceIcon(h.closeDevice||h.device)+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--mono);color:#aaa;">'
         +((parseFloat(h.swapTotal)||0)!==0?(parseFloat(h.swapTotal)>=0?'+':'')+adFp(h.swapTotal):'—')+'</td>'
