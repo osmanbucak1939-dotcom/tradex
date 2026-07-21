@@ -1377,6 +1377,11 @@ function _txFallbackHash(str) {
 }
 // Tek bir hesabın şifre alan(lar)ını günceller — broker/accounts'taki TÜM
 // listeyi değil, sadece o hesabı, transaction ile güvenli şekilde.
+// ⚠️ 2026-07-17 DÜZELTME (acil): eskiden SADECE broker/accounts'a yazıyordu,
+// users/{id} (asıl/canonical kayıt) hiç güncellenmiyordu. Bu, iki kayıt
+// arasında sapmaya (broker/accounts'ta salt eksik kalması) yol açıp
+// müşterilerin şifre değiştirdikten/otomatik geçtikten sonra giriş
+// yapamamasına sebep oluyordu (hesap 10000 vakası). Artık ikisine de yazıyor.
 function fbMigratePasswordHash(accId, patch) {
   if(typeof db==='undefined' || !db) return;
   var ref = db.collection('broker').doc('accounts');
@@ -1391,36 +1396,57 @@ function fbMigratePasswordHash(accId, patch) {
         tx.set(ref, {data:JSON.stringify(accs)}, {merge:true});
       }
     });
-  }).catch(function(e){ console.warn('[şifre hash geçişi]', e); });
+  }).catch(function(e){ console.warn('[şifre hash geçişi] broker/accounts:', e); });
+  db.collection('users').doc(String(accId)).set(patch, {merge:true})
+    .catch(function(e){ console.warn('[şifre hash geçişi] users:', e); });
 }
 // Bir hesap adayının şifresini (ana + izleyici) doğrular. Eski düz-metinle
 // eşleşirse, sonucu hemen döner VE arka planda sessizce hash'e geçirir.
+// ⚠️ 2026-07-17 DÜZELTME (acil): artık önce users/{id} (asıl/canonical kayıt)
+// üzerinden GÜNCEL şifre alanlarını çekip ONLARI kullanıyor — broker/accounts
+// listesi (giriş için hesap ARAMAKTA hâlâ kullanılıyor) zamanla sapabiliyordu.
 function _txVerifyPassword(a, pass) {
-  var checks = [];
-  if(a.passwordSalt) {
-    checks.push(_txHashPass(pass, a.passwordSalt).then(function(h){ return {type:'main', ok:h===a.password}; }));
-  } else if(a.password !== undefined) {
-    checks.push(Promise.resolve({type:'main', ok:a.password===pass, legacy:true}));
+  var _lookup = Promise.resolve(a);
+  if(typeof db !== 'undefined' && db && a && a.id) {
+    _lookup = db.collection('users').doc(String(a.id)).get().then(function(doc){
+      if(doc.exists) {
+        var d = doc.data();
+        if(d.password !== undefined) {
+          return Object.assign({}, a, { password: d.password, passwordSalt: d.passwordSalt,
+            viewerPassword: d.viewerPassword !== undefined ? d.viewerPassword : a.viewerPassword,
+            viewerPasswordSalt: d.viewerPasswordSalt !== undefined ? d.viewerPasswordSalt : a.viewerPasswordSalt });
+        }
+      }
+      return a;
+    }).catch(function(){ return a; });
   }
-  if(a.viewerPasswordSalt) {
-    checks.push(_txHashPass(pass, a.viewerPasswordSalt).then(function(h){ return {type:'viewer', ok:h===a.viewerPassword}; }));
-  } else if(a.viewerPassword) {
-    checks.push(Promise.resolve({type:'viewer', ok:a.viewerPassword===pass, legacy:true}));
-  }
-  return Promise.all(checks).then(function(results){
-    var mainHit = results.filter(function(r){ return r.type==='main' && r.ok; })[0];
-    var viewerHit = results.filter(function(r){ return r.type==='viewer' && r.ok; })[0];
-    if(mainHit && mainHit.legacy) {
-      var salt = _txRandomSalt();
-      _txHashPass(pass, salt).then(function(h){ fbMigratePasswordHash(a.id, {password:h, passwordSalt:salt}); });
-      return {match:true, viewerMatch:false};
+  return _lookup.then(function(acct){
+    var checks = [];
+    if(acct.passwordSalt) {
+      checks.push(_txHashPass(pass, acct.passwordSalt).then(function(h){ return {type:'main', ok:h===acct.password}; }));
+    } else if(acct.password !== undefined) {
+      checks.push(Promise.resolve({type:'main', ok:acct.password===pass, legacy:true}));
     }
-    if(viewerHit && viewerHit.legacy) {
-      var vsalt = _txRandomSalt();
-      _txHashPass(pass, vsalt).then(function(h){ fbMigratePasswordHash(a.id, {viewerPassword:h, viewerPasswordSalt:vsalt}); });
-      return {match:false, viewerMatch:true};
+    if(acct.viewerPasswordSalt) {
+      checks.push(_txHashPass(pass, acct.viewerPasswordSalt).then(function(h){ return {type:'viewer', ok:h===acct.viewerPassword}; }));
+    } else if(acct.viewerPassword) {
+      checks.push(Promise.resolve({type:'viewer', ok:acct.viewerPassword===pass, legacy:true}));
     }
-    return {match: !!mainHit, viewerMatch: !!viewerHit};
+    return Promise.all(checks).then(function(results){
+      var mainHit = results.filter(function(r){ return r.type==='main' && r.ok; })[0];
+      var viewerHit = results.filter(function(r){ return r.type==='viewer' && r.ok; })[0];
+      if(mainHit && mainHit.legacy) {
+        var salt = _txRandomSalt();
+        _txHashPass(pass, salt).then(function(h){ fbMigratePasswordHash(acct.id, {password:h, passwordSalt:salt}); });
+        return {match:true, viewerMatch:false};
+      }
+      if(viewerHit && viewerHit.legacy) {
+        var vsalt = _txRandomSalt();
+        _txHashPass(pass, vsalt).then(function(h){ fbMigratePasswordHash(acct.id, {viewerPassword:h, viewerPasswordSalt:vsalt}); });
+        return {match:false, viewerMatch:true};
+      }
+      return {match: !!mainHit, viewerMatch: !!viewerHit};
+    });
   });
 }
 
