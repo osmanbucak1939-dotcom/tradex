@@ -7350,18 +7350,32 @@ function submitPwChange() {
   if(!cur||!nw||!conf){ if(err){err.textContent='Tüm alanları doldurun.';err.style.display='block';} return; }
   if(nw.length<6){ if(err){err.textContent='Şifre en az 6 karakter olmalı.';err.style.display='block';} return; }
   if(nw!==conf){ if(err){err.textContent='Yeni şifreler eşleşmiyor.';err.style.display='block';} return; }
-  if(_cu&&_cu.password&&_cu.password!==cur){ if(err){err.textContent='Mevcut şifre yanlış.';err.style.display='block';} return; }
-  if(_cu) {
-    _cu.password=nw;
-    try {
-      var users=JSON.parse(localStorage.getItem('tx_users')||'[]');
-      var ui=users.findIndex(function(u){return u.email===_cu.email;});
-      if(ui>=0){users[ui].password=nw;localStorage.setItem('tx_users',JSON.stringify(users));}
-      localStorage.setItem('tx_current_user',JSON.stringify(_cu));
-    } catch(ex){}
-  }
-  closePwModal();
-  showToast('Şifre Güncellendi ✓','Şifreniz başarıyla değiştirildi.');
+  if(!_cu) return;
+  if(err) err.style.display='none';
+  // ⚠️ 2026-07-17 DÜZELTME (acil): iki ayrı hata vardı —
+  // 1) Mevcut şifre burada düz metinle karşılaştırılıyordu; şifreler artık
+  //    hash'lendiği için bu kontrol her zaman "yanlış" diyordu.
+  // 2) Yeni şifre SADECE localStorage'a yazılıyordu, Firestore'a HİÇ
+  //    yazılmıyordu — yani değişiklik aslında hiçbir zaman kalıcı olmuyordu.
+  // Artık zaten var olan güvenli altyapı (_txVerifyPassword, hash+salt,
+  // fbMigratePasswordHash) kullanılıyor.
+  _txVerifyPassword(_cu, cur).then(function(result){
+    if(!result.match) {
+      if(err){err.textContent='Mevcut şifre yanlış.';err.style.display='block';}
+      return;
+    }
+    var salt = _txRandomSalt();
+    _txHashPass(nw, salt).then(function(hash){
+      _cu.password = hash; _cu.passwordSalt = salt;
+      try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
+      if(typeof fbMigratePasswordHash === 'function') fbMigratePasswordHash(_cu.id, {password:hash, passwordSalt:salt});
+      if(typeof db !== 'undefined' && db) {
+        db.collection('users').doc(String(_cu.id)).set({password:hash, passwordSalt:salt}, {merge:true}).catch(function(e){ console.warn('[submitPwChange] users yazımı:', e); });
+      }
+      closePwModal();
+      showToast('Şifre Güncellendi ✓','Şifreniz başarıyla değiştirildi.');
+    });
+  });
 }
 
 (function() {
