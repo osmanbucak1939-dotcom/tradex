@@ -6520,24 +6520,46 @@ function _txFilterDeletedAccs(arr) {
   }).catch(function(e){ console.warn('[tombstone load]', e); });
 })();
 function deleteAccount(id) {
-  // 1) Tombstone kaydet — diğer sekmeler/tarayıcılar diriltemesin
-  _txMarkAccDeleted(id);
-  // 2) Bellekten çıkar
-  accounts = accounts.filter(function(a){ return a.id!==id; });
-  localStorage.setItem('tx_accounts', JSON.stringify(accounts));
-  // 3) broker/accounts güncelle
-  fbSaveAccounts();
-  // 4) users/{id} belgesini sil — kalırsa canonical listener diriltebilir
+  function _proceedWithDelete() {
+    // 1) Tombstone kaydet — diğer sekmeler/tarayıcılar diriltemesin
+    _txMarkAccDeleted(id);
+    // 2) Bellekten çıkar
+    accounts = accounts.filter(function(a){ return a.id!==id; });
+    localStorage.setItem('tx_accounts', JSON.stringify(accounts));
+    // 3) broker/accounts güncelle
+    fbSaveAccounts();
+    // 4) users/{id} belgesini sil — kalırsa canonical listener diriltebilir
+    if(typeof db !== 'undefined' && db) {
+      db.collection('users').doc(String(id)).delete()
+        .catch(function(e){ console.warn('[deleteAccount] users/'+id+' silinemedi:', e); });
+    }
+    // 5) Canon listener'ı kapat
+    if(typeof _accCanon !== 'undefined' && _accCanon[String(id)] && _accCanon[String(id)]._unsub) {
+      try{ _accCanon[String(id)]._unsub(); }catch(e){}
+      delete _accCanon[String(id)];
+    }
+    renderAccCards(); renderAccListSmall();
+  }
+
+  // 0) SİLMEDEN ÖNCE YEDEKLE — geri dönüşsüz silme öncesi tam veriyi
+  // (bakiye, pozisyonlar, işlem/finans geçmişi) ayrı, pasif bir arşive
+  // (backup_users) kopyala. Bu arşiv normal sistem tarafından HİÇBİR YERDE
+  // okunmuyor — hesabı "diriltmez", sadece ileride (elle, bilinçli bir
+  // işlemle) bakılabilecek soğuk bir kopya.
+  // ⚠️ Yedekleme SİLMEDEN ÖNCE tamamlanmalı — aksi halde ikisi yarışırsa
+  // (silme önce biterse) yedekleme boş/silinmiş bir belge okuyabilirdi.
   if(typeof db !== 'undefined' && db) {
-    db.collection('users').doc(String(id)).delete()
-      .catch(function(e){ console.warn('[deleteAccount] users/'+id+' silinemedi:', e); });
+    db.collection('users').doc(String(id)).get().then(function(doc){
+      if(!doc.exists) { _proceedWithDelete(); return; }
+      var dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      db.collection('backup_users').doc('deleted_'+id+'_'+dateStr).set(
+        Object.assign({_deletedAt: new Date().toISOString(), _deletedAccountId: String(id)}, doc.data())
+      ).then(_proceedWithDelete)
+       .catch(function(e){ console.warn('[deleteAccount] yedekleme başarısız, yine de siliniyor:', e.message); _proceedWithDelete(); });
+    }).catch(function(e){ console.warn('[deleteAccount] yedekleme için okuma başarısız, yine de siliniyor:', e.message); _proceedWithDelete(); });
+  } else {
+    _proceedWithDelete();
   }
-  // 5) Canon listener'ı kapat
-  if(typeof _accCanon !== 'undefined' && _accCanon[String(id)] && _accCanon[String(id)]._unsub) {
-    try{ _accCanon[String(id)]._unsub(); }catch(e){}
-    delete _accCanon[String(id)];
-  }
-  renderAccCards(); renderAccListSmall();
 }
 
 function loadSettingsForm() {
