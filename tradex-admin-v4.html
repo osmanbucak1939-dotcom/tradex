@@ -8675,6 +8675,7 @@ function adChangePassword() {
   if(pw1.length < 4) { showToast('Hata','Şifre en az 4 karakter olmalı!'); return; }
   var _pwSalt = _adRandomSalt();
   _adHashPass(pw1, _pwSalt).then(function(_pwHash){
+    var _pwChangedAt = new Date().toISOString();
     a.password = _pwHash; a.passwordSalt = _pwSalt;
     saveAccounts();
     // ⚠️ Cerrahi transaction — bkz. adUpdateName'deki aynı koruma.
@@ -8692,9 +8693,13 @@ function adChangePassword() {
           }
         });
       }).catch(function(e){ console.warn('[adChangePassword] blob transaction:', e.message); });
-      db.collection('users').doc(String(a.id)).set({password:_pwHash, passwordSalt:_pwSalt}, {merge:true}).catch(function(){});
+      // ⚠️ 2026-07-17: passwordChangedAt — trader'ın canlı dinleyicisi bunu
+      // görüp, o an açık olan (eski şifreyle girilmiş) oturumu anında
+      // sonlandırıyor. Böylece admin şifre değiştirince müşteri hemen
+      // yeni şifreyle tekrar giriş yapmak zorunda kalıyor.
+      db.collection('users').doc(String(a.id)).set({password:_pwHash, passwordSalt:_pwSalt, passwordChangedAt:_pwChangedAt}, {merge:true}).catch(function(){});
     }
-    showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi');
+    showToast('Şifre Güncellendi ✓', a.name+' şifresi değiştirildi — aktif oturumu varsa sonlandırılacak');
     var p1=document.getElementById('ad_pw1'); if(p1) p1.value='';
     var p2=document.getElementById('ad_pw2'); if(p2) p2.value='';
   });
