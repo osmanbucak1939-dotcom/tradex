@@ -1411,11 +1411,16 @@ function _txVerifyPassword(a, pass) {
     _lookup = db.collection('users').doc(String(a.id)).get().then(function(doc){
       if(doc.exists) {
         var d = doc.data();
+        var merged = Object.assign({}, a);
         if(d.password !== undefined) {
-          return Object.assign({}, a, { password: d.password, passwordSalt: d.passwordSalt,
-            viewerPassword: d.viewerPassword !== undefined ? d.viewerPassword : a.viewerPassword,
-            viewerPasswordSalt: d.viewerPasswordSalt !== undefined ? d.viewerPasswordSalt : a.viewerPasswordSalt });
+          merged.password = d.password; merged.passwordSalt = d.passwordSalt;
+          merged.viewerPassword = d.viewerPassword !== undefined ? d.viewerPassword : a.viewerPassword;
+          merged.viewerPasswordSalt = d.viewerPasswordSalt !== undefined ? d.viewerPasswordSalt : a.viewerPasswordSalt;
         }
+        // ⚠️ 2026-07-17: 'active' durumu da canonical'dan — broker/accounts'taki
+        // kopya bayat olabilir, "Hesabı Durdur" anında güncel yansımalı.
+        if(d.active !== undefined) merged.active = d.active;
+        return merged;
       }
       return a;
     }).catch(function(){ return a; });
@@ -1438,14 +1443,14 @@ function _txVerifyPassword(a, pass) {
       if(mainHit && mainHit.legacy) {
         var salt = _txRandomSalt();
         _txHashPass(pass, salt).then(function(h){ fbMigratePasswordHash(acct.id, {password:h, passwordSalt:salt}); });
-        return {match:true, viewerMatch:false};
+        return {match:true, viewerMatch:false, active:acct.active, account:acct};
       }
       if(viewerHit && viewerHit.legacy) {
         var vsalt = _txRandomSalt();
         _txHashPass(pass, vsalt).then(function(h){ fbMigratePasswordHash(acct.id, {viewerPassword:h, viewerPasswordSalt:vsalt}); });
-        return {match:false, viewerMatch:true};
+        return {match:false, viewerMatch:true, active:acct.active, account:acct};
       }
-      return {match: !!mainHit, viewerMatch: !!viewerHit};
+      return {match: !!mainHit, viewerMatch: !!viewerHit, active:acct.active, account:acct};
     });
   });
 }
@@ -1482,6 +1487,14 @@ function _doLogin() {
       var a = candidates[idx];
       _txVerifyPassword(a, pass).then(function(result){
         if(!result.match && !result.viewerMatch){ _checkCandidate(idx+1); return; }
+        // ⚠️ 2026-07-17 DÜZELTME (acil): "Hesabı Durdur" (active:false) admin'de
+        // basılabiliyordu ama trader bunu hiç kontrol etmiyordu — durdurulmuş
+        // hesapla giriş yapılabiliyordu. Artık şifre doğru olsa bile,
+        // hesap durdurulmuşsa giriş tamamen engelleniyor.
+        if(result.active === false) {
+          _authErr('err-login','Hesabınız durdurulmuş. Lütfen yönetici ile iletişime geçin.');
+          return;
+        }
         var found = a;
         var foundReadOnly = !!result.viewerMatch;
         // Admin tarafından kalıcı olarak izleyici moduna alınmış olabilir (ana şifreyle girse bile)
@@ -1619,6 +1632,13 @@ function initAuth(){
         _txClearDeletedSession();
         return;
       }
+      // ⚠️ 2026-07-17 DÜZELTME (acil): "Hesabı Durdur" — hesap durdurulmuşsa
+      // önbellekle otomatik giriş yapılmasın, oturum temizlenip girişe dönsün.
+      if(userDoc.data().active === false) {
+        console.warn('[initAuth] Hesap #'+_cu.id+' durdurulmuş — oturum kapatılıyor.');
+        _txClearSuspendedSession();
+        return;
+      }
       _authSuccess(_cu);
     }).catch(function(e){
       // Ağ/izin hatası: kilitlemek yerine iyimser davran, mevcut önbellekle devam et
@@ -1637,6 +1657,18 @@ function _txClearDeletedSession() {
     localStorage.removeItem('tx_pending');
     localStorage.removeItem('tx_al');
     localStorage.removeItem('tx_accounts');
+  } catch(e){}
+  location.reload();
+}
+function _txClearSuspendedSession() {
+  try {
+    localStorage.removeItem('tx_current_user');
+    localStorage.removeItem('tx_pos');
+    localStorage.removeItem('tx_hist');
+    localStorage.removeItem('tx_pending');
+    localStorage.removeItem('tx_al');
+    localStorage.removeItem('tx_accounts');
+    localStorage.setItem('tx_suspended_notice', '1');
   } catch(e){}
   location.reload();
 }
@@ -1822,6 +1854,13 @@ function _txClearDeletedSession() {
           return;
         }
         var d = doc.data(); if(!d) return;
+        // ⚠️ 2026-07-17 DÜZELTME (acil): "Hesabı Durdur" — hesap aktif
+        // kullanımda iken durdurulursa da anında oturum kapatılsın.
+        if(d.active === false) {
+          console.warn('[fbListenUserData] Hesap #'+userId+' durduruldu — oturum kapatılıyor.');
+          if(typeof _txClearSuspendedSession === 'function') _txClearSuspendedSession();
+          return;
+        }
 
         // SpreadGroup değişimi
         if(d.spreadGroup && typeof _cu !== 'undefined' && _cu && d.spreadGroup !== _cu.spreadGroup) {
@@ -6601,6 +6640,15 @@ initMwPrices();
 startLiveFeed();  // WS bağlantıları — auth gerekmez
 // Firebase snapshot'ları _authSuccess → signInAnonymously tamamlandıktan sonra başlar
 try { initAuth(); } catch(e) { console.error('initAuth:', e); }
+try {
+  if(localStorage.getItem('tx_suspended_notice')) {
+    localStorage.removeItem('tx_suspended_notice');
+    setTimeout(function(){
+      if(typeof showToast === 'function') showToast('Hesap Durduruldu', 'Hesabınız yönetici tarafından durduruldu. Lütfen destek ile iletişime geçin.');
+      else alert('Hesabınız yönetici tarafından durduruldu. Lütfen destek ile iletişime geçin.');
+    }, 400);
+  }
+} catch(e){}
 
   window._mainInit = _mainInit;
   window.saveSymConfig = saveSymConfig;
