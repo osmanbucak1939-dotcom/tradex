@@ -1420,6 +1420,7 @@ function _txVerifyPassword(a, pass) {
         // ⚠️ 2026-07-17: 'active' durumu da canonical'dan — broker/accounts'taki
         // kopya bayat olabilir, "Hesabı Durdur" anında güncel yansımalı.
         if(d.active !== undefined) merged.active = d.active;
+        if(d.passwordChangedAt !== undefined) merged.passwordChangedAt = d.passwordChangedAt;
         return merged;
       }
       return a;
@@ -1499,6 +1500,10 @@ function _doLogin() {
         var foundReadOnly = !!result.viewerMatch;
         // Admin tarafından kalıcı olarak izleyici moduna alınmış olabilir (ana şifreyle girse bile)
         if(foundReadOnly || found._readOnly) found = Object.assign({}, found, {_readOnly: true});
+        // ⚠️ 2026-07-17: Giriş anındaki passwordChangedAt'i oturuma damgalıyoruz —
+        // admin daha sonra şifreyi değiştirirse (bu değer farklılaşırsa), canlı
+        // dinleyici bu oturumu otomatik sonlandıracak.
+        found._sessionPwStamp = (result.account && result.account.passwordChangedAt) || null;
         _authSuccess(found);
       });
     })(0);
@@ -1639,6 +1644,12 @@ function initAuth(){
         _txClearSuspendedSession();
         return;
       }
+      var _udata = userDoc.data();
+      if(_udata.passwordChangedAt && _cu._sessionPwStamp !== undefined && _udata.passwordChangedAt !== _cu._sessionPwStamp) {
+        console.warn('[initAuth] Hesap #'+_cu.id+' şifresi admin tarafından değiştirilmiş — oturum kapatılıyor.');
+        _txClearPasswordChangedSession();
+        return;
+      }
       _authSuccess(_cu);
     }).catch(function(e){
       // Ağ/izin hatası: kilitlemek yerine iyimser davran, mevcut önbellekle devam et
@@ -1669,6 +1680,18 @@ function _txClearSuspendedSession() {
     localStorage.removeItem('tx_al');
     localStorage.removeItem('tx_accounts');
     localStorage.setItem('tx_suspended_notice', '1');
+  } catch(e){}
+  location.reload();
+}
+function _txClearPasswordChangedSession() {
+  try {
+    localStorage.removeItem('tx_current_user');
+    localStorage.removeItem('tx_pos');
+    localStorage.removeItem('tx_hist');
+    localStorage.removeItem('tx_pending');
+    localStorage.removeItem('tx_al');
+    localStorage.removeItem('tx_accounts');
+    localStorage.setItem('tx_pwchanged_notice', '1');
   } catch(e){}
   location.reload();
 }
@@ -1859,6 +1882,17 @@ function _txClearSuspendedSession() {
         if(d.active === false) {
           console.warn('[fbListenUserData] Hesap #'+userId+' durduruldu — oturum kapatılıyor.');
           if(typeof _txClearSuspendedSession === 'function') _txClearSuspendedSession();
+          return;
+        }
+        // ⚠️ 2026-07-17: Admin şifreyi değiştirdiyse (bu oturum açılırken kaydedilen
+        // değerden farklıysa), oturumu sonlandır — müşteri yeni şifreyle tekrar
+        // giriş yapsın. Sadece admin'in değiştirmesi (passwordChangedAt yazması)
+        // tetikler; müşterinin kendi şifre değişimi bu alanı YAZMIYOR, o yüzden
+        // kendi kendini kapatmaz.
+        if(d.passwordChangedAt && typeof _cu !== 'undefined' && _cu && _cu._sessionPwStamp !== undefined
+           && d.passwordChangedAt !== _cu._sessionPwStamp) {
+          console.warn('[fbListenUserData] Hesap #'+userId+' şifresi admin tarafından değiştirildi — oturum kapatılıyor.');
+          if(typeof _txClearPasswordChangedSession === 'function') _txClearPasswordChangedSession();
           return;
         }
 
@@ -6646,6 +6680,13 @@ try {
     setTimeout(function(){
       if(typeof showToast === 'function') showToast('Hesap Durduruldu', 'Hesabınız yönetici tarafından durduruldu. Lütfen destek ile iletişime geçin.');
       else alert('Hesabınız yönetici tarafından durduruldu. Lütfen destek ile iletişime geçin.');
+    }, 400);
+  }
+  if(localStorage.getItem('tx_pwchanged_notice')) {
+    localStorage.removeItem('tx_pwchanged_notice');
+    setTimeout(function(){
+      if(typeof showToast === 'function') showToast('Şifreniz Değiştirildi', 'Yönetici şifrenizi değiştirdi. Lütfen yeni şifrenizle tekrar giriş yapın.');
+      else alert('Yönetici şifrenizi değiştirdi. Lütfen yeni şifrenizle tekrar giriş yapın.');
     }, 400);
   }
 } catch(e){}
