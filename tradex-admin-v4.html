@@ -1320,16 +1320,40 @@ function fbSaveAccounts() {
         // (id bazında) geri ekle, sonra yaz. Yerel listedeki hesaplar (admin'in az önce
         // düzenlediği/oluşturduğu) öncelikli kalır — onlar için yereldeki versiyon yazılır.
         var ref = db.collection('broker').doc('accounts');
-        ref.get().then(function(doc){
+        Promise.all([
+          ref.get(),
+          db.collection('broker').doc('config').get()
+        ]).then(function(results){
+          var doc = results[0], cfgDoc = results[1];
           var serverAccs = [];
           if(doc.exists) { try { serverAccs = JSON.parse(doc.data().data||'[]'); } catch(e){} }
+          // ⚠️ 2026-07-17 DÜZELTME (kritik): "yerelde olmayan hesabı sunucuda bulup
+          // geri ekleme" koruması, silinmiş (tombstone'lu) hesapları TANIMIYORDU —
+          // bayat/eski bir tarayıcı sekmesi bu fonksiyonu tetiklerse, o sekmenin
+          // hâlâ belleğinde duran SİLİNMİŞ hesaplar geri diriliyordu (gerçekten
+          // yaşandı: tüm hesaplar silindikten saatler sonra hepsi geri geldi).
+          // Artık tombstone listesindeki HİÇBİR hesap, ne yerelde ne sunucuda
+          // görünse de, asla geri eklenmiyor/yazılmıyor.
+          var deletedIds = {};
+          if(cfgDoc.exists && Array.isArray(cfgDoc.data().deletedAccIds)) {
+            cfgDoc.data().deletedAccIds.forEach(function(id){ deletedIds[String(id)] = true; });
+          }
           var localIds = {};
           accounts.forEach(function(a){ if(a.id) localIds[String(a.id)] = true; });
-          var missing = serverAccs.filter(function(sa){ return sa.id && !localIds[String(sa.id)]; });
+          var missing = serverAccs.filter(function(sa){
+            return sa.id && !localIds[String(sa.id)] && !deletedIds[String(sa.id)];
+          });
           if(missing.length) {
             console.warn('[fbSaveAccounts] Yerel listede olmayan '+missing.length+' hesap sunucuda bulundu, geri ekleniyor:',
               missing.map(function(a){ return a.login||a.id; }).join(', '));
             accounts = accounts.concat(missing);
+          }
+          // Yereldeki (muhtemelen bayat) listede silinmiş/tombstone'lu bir hesap
+          // varsa da (eski sekme senaryosu) burada kesin olarak çıkar.
+          var _beforeLen = accounts.length;
+          accounts = accounts.filter(function(a){ return !a.id || !deletedIds[String(a.id)]; });
+          if(accounts.length !== _beforeLen) {
+            console.warn('[fbSaveAccounts] '+(_beforeLen-accounts.length)+' silinmiş (tombstone) hesap yerel listeden çıkarıldı, yazılmayacak.');
           }
           _fbSaveAccountsCommit();
         }).catch(function(e){
