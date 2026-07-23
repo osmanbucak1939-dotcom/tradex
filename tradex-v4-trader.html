@@ -2486,19 +2486,19 @@ function _txClearPasswordChangedSession() {
 <div class="wallet-panel" onclick="event.stopPropagation()">
 
   <div class="wallet-header">
-    <div class="wallet-title" id="walletTitle">⬆⬇ PARA İŞLEMLERİ</div>
+    <div class="wallet-title" id="walletTitle" data-lang="walletTitle">⬆⬇ PARA İŞLEMLERİ</div>
     <button class="wallet-close" onclick="closeWallet()">✕</button>
   </div>
 
   <div class="wallet-tabs">
     <div class="wallet-tab active" data-tab="deposit" onclick="walletTab('deposit',this)">
-      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v14M5 10l7 7 7-7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>Para Yatır
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v14M5 10l7 7 7-7"/><line x1="3" y1="21" x2="21" y2="21"/></svg><span data-lang="deposit">Para Yatır</span>
     </div>
     <div class="wallet-tab" data-tab="withdraw" onclick="walletTab('withdraw',this)">
-      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 21V7M5 14l7-7 7 7"/><line x1="3" y1="3" x2="21" y2="3"/></svg>Para Çek
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 21V7M5 14l7-7 7 7"/><line x1="3" y1="3" x2="21" y2="3"/></svg><span data-lang="withdraw">Para Çek</span>
     </div>
     <div class="wallet-tab" data-tab="history" onclick="walletTab('history',this)">
-      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>Geçmiş
+      <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg><span data-lang="histTab2">Geçmiş</span>
     </div>
   </div>
 
@@ -2506,13 +2506,13 @@ function _txClearPasswordChangedSession() {
 
     <!-- PARA YATIR -->
     <div class="wallet-section active" id="ws-deposit">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px">YATIRIM YÖNTEMİ SEÇİN</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectDepositMethod">YATIRIM YÖNTEMİ SEÇİN</div>
       <div class="wallet-method-grid" id="depositMethodGrid">
         <!-- Dinamik olarak doldurulacak -->
       </div>
       <div id="depositDetails" style="display:none">
         <div class="wallet-info-box" id="depositInfoBox"></div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px">MİKTAR</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
         <div class="wallet-amount-row">
           <input class="wallet-amount-input" id="depositAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="depositCurrency">USD</div>
@@ -2524,18 +2524,18 @@ function _txClearPasswordChangedSession() {
           <div class="wallet-quick" onclick="setDepositAmt(5000)">5.000</div>
         </div>
         <div class="wallet-note" id="depositNote"></div>
-        <button class="wallet-submit deposit" onclick="submitDeposit()">PARA YATIRMA TALEBİ GÖNDER</button>
+        <button class="wallet-submit deposit" onclick="submitDeposit()" data-lang="submitDeposit">PARA YATIRMA TALEBİ GÖNDER</button>
       </div>
     </div>
 
     <!-- PARA ÇEK -->
     <div class="wallet-section" id="ws-withdraw">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px">ÇEKİM YÖNTEMİ SEÇİN</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectWithdrawMethod">ÇEKİM YÖNTEMİ SEÇİN</div>
       <div class="wallet-method-grid" id="withdrawMethodGrid"></div>
       <div id="withdrawDetails" style="display:none">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px">ALICI BİLGİSİ</div>
-        <input class="wallet-amount-input" id="withdrawAddress" placeholder="IBAN / Cüzdan Adresi" style="width:100%;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px">MİKTAR</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="recipientInfo">ALICI BİLGİSİ</div>
+        <input class="wallet-amount-input" id="withdrawAddress" placeholder="IBAN / Cüzdan Adresi" data-lang-ph="ibanPlaceholder" style="width:100%;margin-bottom:10px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
         <div class="wallet-amount-row">
           <input class="wallet-amount-input" id="withdrawAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="withdrawCurrency">USD</div>
@@ -2544,17 +2544,17 @@ function _txClearPasswordChangedSession() {
           <div class="wallet-quick" onclick="setWithdrawAmt(100)">100</div>
           <div class="wallet-quick" onclick="setWithdrawAmt(500)">500</div>
           <div class="wallet-quick" onclick="setWithdrawAmt(1000)">1.000</div>
-          <div class="wallet-quick" onclick="setWithdrawAmt('all')">Tümü</div>
+          <div class="wallet-quick" onclick="setWithdrawAmt('all')" data-lang="allAmount">Tümü</div>
         </div>
         <div class="wallet-note" id="withdrawNote"></div>
-        <button class="wallet-submit withdraw" onclick="submitWithdraw()">ÇEKİM TALEBİ GÖNDER</button>
+        <button class="wallet-submit withdraw" onclick="submitWithdraw()" data-lang="submitWithdraw">ÇEKİM TALEBİ GÖNDER</button>
       </div>
     </div>
 
     <!-- İŞLEM GEÇMİŞİ -->
     <div class="wallet-section" id="ws-history" style="overflow-y:auto;max-height:400px;">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;">FİNANS GEÇMİŞİ</div>
-      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:var(--muted);">Yükleniyor...</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;" data-lang="history">FİNANS GEÇMİŞİ</div>
+      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:var(--muted);" data-lang="loadingTxt">Yükleniyor...</div>
     </div>
 
   </div>
@@ -7231,17 +7231,18 @@ function _txRenderBrokerInfo(d) {
   var box = document.getElementById('mBrokerInfo');
   var rows = document.getElementById('mBIRows');
   if(!box||!rows) return;
+  var _L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
   var fields = [
-    {k:'name',       label:'Broker'},
-    {k:'company',    label:'Şirket'},
-    {k:'website',    label:'Web Sitesi', link:true},
-    {k:'email',      label:'E-posta',    link:'mailto:'},
-    {k:'phone',      label:'Telefon',   link:'tel:'},
-    {k:'license',    label:'Lisans'},
-    {k:'regulator',  label:'Düzenleyici'},
-    {k:'address',    label:'Adres'},
-    {k:'support',    label:'Destek',     link:true},
-    {k:'disclaimer', label:'Yasal Uyarı', small:true},
+    {k:'name',       label:_L?_L.brokerLbl:'Broker'},
+    {k:'company',    label:_L?_L.companyLbl:'Şirket'},
+    {k:'website',    label:_L?_L.websiteLbl:'Web Sitesi', link:true},
+    {k:'email',      label:_L?_L.emailLbl:'E-posta',    link:'mailto:'},
+    {k:'phone',      label:_L?_L.phoneLbl:'Telefon',   link:'tel:'},
+    {k:'license',    label:_L?_L.licenseLbl:'Lisans'},
+    {k:'regulator',  label:_L?_L.regulatorLbl:'Düzenleyici'},
+    {k:'address',    label:_L?_L.addressLbl:'Adres'},
+    {k:'support',    label:_L?_L.supportLbl:'Destek',     link:true},
+    {k:'disclaimer', label:_L?_L.disclaimerLbl:'Yasal Uyarı', small:true},
   ];
   var html = fields.filter(function(f){ return d[f.k]; }).map(function(f){
     var val = d[f.k];
@@ -8455,7 +8456,7 @@ function symUnpin(sym){
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
   <div style="padding:10px 12px;flex-shrink:0;position:relative">
-    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:var(--panel2);border:1px solid var(--panel);color:var(--text);box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
+    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:var(--panel2);border:1px solid var(--panel);color:var(--text);box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." data-lang-ph="searchSymbol" oninput="mwFilter(this.value)">
     <span style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center"><svg style="width:15px;height:15px;opacity:.5;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
   </div>
   <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid var(--panel);">
@@ -8472,7 +8473,7 @@ function symUnpin(sym){
     <span style="color:var(--panel);font-size:10px" id="mTSpr">—</span>
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
-    <input id="mOtSymSearch" type="text" placeholder="Sembol ara..."
+    <input id="mOtSymSearch" type="text" placeholder="Sembol ara..." data-lang-ph="searchSymbol"
       style="width:100%;padding:9px 14px;background:var(--panel2);border:1px solid var(--panel);border-radius:8px;color:var(--text);font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
       oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
     <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:var(--bg);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
@@ -8502,7 +8503,7 @@ function symUnpin(sym){
     <!-- Limit fiyat - sadece market dışında göster -->
     <div id="mLimitRow" style="display:none">
       <div class="m-ig">
-        <div class="m-il" id="mLimitLabel">Emir Fiyatı</div>
+        <div class="m-il" id="mLimitLabel" data-lang="orderPrice">Emir Fiyatı</div>
         <input class="m-in" id="mLimitPrice" type="number" placeholder="0.00" step="any">
       </div>
     </div>
@@ -8520,11 +8521,11 @@ function symUnpin(sym){
       <div class="m-ig"><div class="m-il" data-lang="takeProfit">TAKE PROFIT</div><input class="m-in" id="mTP" type="number" placeholder="—" step="any"></div>
     </div>
     <div class="m-btns" id="mMarketBtns">
-      <button class="m-bs" onclick="mOrd('sell')">▼ SAT</button>
-      <button class="m-bb" onclick="mOrd('buy')">▲ AL</button>
+      <button class="m-bs" onclick="mOrd('sell')">▼ <span data-lang="sell">SAT</span></button>
+      <button class="m-bb" onclick="mOrd('buy')">▲ <span data-lang="buy">AL</span></button>
     </div>
     <div id="mPendingBtn" style="display:none">
-      <button style="width:100%;padding:14px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px" onclick="mPlacePending()"><svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> EMİR VER</button>
+      <button style="width:100%;padding:14px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px" onclick="mPlacePending()"><svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> <span data-lang="placeOrder">EMİR VER</span></button>
     </div>
   </div>
 </div>
@@ -8549,7 +8550,7 @@ function symUnpin(sym){
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none">SAT</span>
+    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none" data-lang="sell">SAT</span>
     <span id="mqBid" style="pointer-events:none">—</span>
   </button>
   <div style="
@@ -8558,7 +8559,7 @@ function symUnpin(sym){
     gap:2px; background:var(--bg);
     border-left:1px solid var(--panel); border-right:1px solid var(--panel);
   ">
-    <div style="font-family:monospace;font-size:8px;color:var(--muted);letter-spacing:.5px">LOT</div>
+    <div style="font-family:monospace;font-size:8px;color:var(--muted);letter-spacing:.5px" data-lang="lot">LOT</div>
     <div style="display:flex;align-items:center;gap:6px">
       <button onclick="mQLA(-1)" style="width:26px;height:26px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
       <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text);min-width:34px;text-align:center;display:inline-block">0.01</span>
@@ -8572,7 +8573,7 @@ function symUnpin(sym){
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
   ">
-    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none">AL</span>
+    <span style="font-size:9px;color:var(--text);letter-spacing:.5px;pointer-events:none" data-lang="buy">AL</span>
     <span id="mqAsk" style="pointer-events:none">—</span>
   </button>
 </div>
@@ -8599,15 +8600,15 @@ function symUnpin(sym){
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Teminat</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSMar">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Serbest Teminat</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSFr">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)">Teminat Seviyesi</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
       <div style="font-family:monospace;font-size:12px;font-weight:700;color:#2979ff" id="mPSML">—</div>
     </div>
   </div>
@@ -9090,7 +9091,7 @@ function symUnpin(sym){
         var cls=pnl>=0?'u':'d'; var sgn=pnl>=0?'+':'-';
         return '<div class="m-card" onclick="mPosDetail('+p.id+')" style="cursor:pointer">'
           +'<div class="m-cl">'
-            +'<div class="m-csym">'+(p.label||p.sym)+'<span class="m-bdg '+(p.side==='buy'?'b':'s')+'">'+(p.side==='buy'?'AL':'SAT')+'</span></div>'
+            +'<div class="m-csym">'+(p.label||p.sym)+'<span class="m-bdg '+(p.side==='buy'?'b':'s')+'">'+(p.side==='buy'?(_LANGS[_curLang]||_LANGS.tr).buy:(_LANGS[_curLang]||_LANGS.tr).sell)+'</span></div>'
             +'<div class="m-cmeta">'+p.qty+' lot · '+fp(p.openPrice,dec)+(p.sl?' · SL:'+fp(p.sl,dec):'')+(p.tp?' · TP:'+fp(p.tp,dec):'')+'</div>'
           +'</div>'
           +'<div class="m-cr">'
@@ -9110,7 +9111,7 @@ function symUnpin(sym){
         var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
         return '<div class="m-card" data-hid="'+h.id+'" onclick="mHistDetail(this)" style="cursor:pointer">'
           +'<div class="m-cl">'
-            +'<div class="m-csym">'+(h.label||h.sym)+'<span class="m-bdg '+(h.side==='buy'?'b':'s')+'">'+(h.side==='buy'?'AL':'SAT')+'</span></div>'
+            +'<div class="m-csym">'+(h.label||h.sym)+'<span class="m-bdg '+(h.side==='buy'?'b':'s')+'">'+(h.side==='buy'?(_LANGS[_curLang]||_LANGS.tr).buy:(_LANGS[_curLang]||_LANGS.tr).sell)+'</span></div>'
             +'<div class="m-cmeta">'+h.qty+' lot · '+dt+'</div>'
           +'</div>'
           +'<div class="m-cr">'
@@ -9130,7 +9131,7 @@ function symUnpin(sym){
         return '<div class="m-card">'
           +'<div class="m-cl">'
             +'<div class="m-csym">'+(po.label||po.sym)+'<span class="m-bdg '+sideClass+'">'+typeLabel+'</span></div>'
-            +'<div class="m-cmeta">'+po.qty+' lot · Fiyat: '+po.price+'</div>'
+            +'<div class="m-cmeta">'+po.qty+' lot · '+((_LANGS[_curLang]||_LANGS.tr).priceLbl)+': '+po.price+'</div>'
             +(po.sl?'<div class="m-cmeta">SL: '+po.sl+(po.tp?' · TP: '+po.tp:'')+'</div>':'')
           +'</div>'
           +'<div class="m-cr">'
@@ -9174,7 +9175,15 @@ function symUnpin(sym){
       errTitle:'Hata', msgInvalidLot:'Geçerli bir lot girin', msgUpdatedTitle:'Güncellendi ✓',
       msgSlTpSet:'SL/TP ayarlandı', msgEnterOrderPrice:'Emir fiyatı girin!', msgSelectPendingType:'Bekleyen emir tipi seçin!',
       noPos:'Açık pozisyon yok', noHist:'Geçmiş yok', noPending:'Bekleyen emir yok',
-      myAccount:'HESABIM', brokerInfo:'Broker Bilgileri', dir:'rtl-no'
+      myAccount:'HESABIM', brokerInfo:'Broker Bilgileri', dir:'rtl-no',
+      searchSymbol:'Sembol ara...', orderPrice:'Emir Fiyatı', placeOrder:'EMİR VER', priceLbl:'Fiyat',
+      openPriceLbl:'Açılış', swap:'Swap', timeLbl:'Saat',
+      walletTitle:'⬆⬇ PARA İŞLEMLERİ', histTab2:'Geçmiş', selectDepositMethod:'YATIRIM YÖNTEMİ SEÇİN',
+      amount:'MİKTAR', submitDeposit:'PARA YATIRMA TALEBİ GÖNDER', selectWithdrawMethod:'ÇEKİM YÖNTEMİ SEÇİN',
+      recipientInfo:'ALICI BİLGİSİ', ibanPlaceholder:'IBAN / Cüzdan Adresi', allAmount:'Tümü',
+      submitWithdraw:'ÇEKİM TALEBİ GÖNDER', loadingTxt:'Yükleniyor...',
+      brokerLbl:'Broker', companyLbl:'Şirket', websiteLbl:'Web Sitesi', emailLbl:'E-posta', phoneLbl:'Telefon',
+      licenseLbl:'Lisans', regulatorLbl:'Düzenleyici', addressLbl:'Adres', supportLbl:'Destek', disclaimerLbl:'Yasal Uyarı'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9190,7 +9199,15 @@ function symUnpin(sym){
       errTitle:'Error', msgInvalidLot:'Enter a valid lot size', msgUpdatedTitle:'Updated ✓',
       msgSlTpSet:'SL/TP set', msgEnterOrderPrice:'Enter order price!', msgSelectPendingType:'Select a pending order type!',
       noPos:'No open positions', noHist:'No history', noPending:'No pending orders',
-      myAccount:'MY ACCOUNT', brokerInfo:'Broker Info', dir:'rtl-no'
+      myAccount:'MY ACCOUNT', brokerInfo:'Broker Info', dir:'rtl-no',
+      searchSymbol:'Search symbol...', orderPrice:'Order Price', placeOrder:'PLACE ORDER', priceLbl:'Price',
+      openPriceLbl:'Open', swap:'Swap', timeLbl:'Time',
+      walletTitle:'⬆⬇ FUNDS', histTab2:'History', selectDepositMethod:'SELECT DEPOSIT METHOD',
+      amount:'AMOUNT', submitDeposit:'SUBMIT DEPOSIT REQUEST', selectWithdrawMethod:'SELECT WITHDRAWAL METHOD',
+      recipientInfo:'RECIPIENT INFO', ibanPlaceholder:'IBAN / Wallet Address', allAmount:'All',
+      submitWithdraw:'SUBMIT WITHDRAWAL REQUEST', loadingTxt:'Loading...',
+      brokerLbl:'Broker', companyLbl:'Company', websiteLbl:'Website', emailLbl:'Email', phoneLbl:'Phone',
+      licenseLbl:'License', regulatorLbl:'Regulator', addressLbl:'Address', supportLbl:'Support', disclaimerLbl:'Disclaimer'
     },
     ar: {
       markets:'الأسواق', chart:'الرسم', trade:'تداول', pos:'المراكز', acc:'الحساب',
@@ -9206,7 +9223,15 @@ function symUnpin(sym){
       errTitle:'خطأ', msgInvalidLot:'أدخل حجم لوت صحيح', msgUpdatedTitle:'تم التحديث ✓',
       msgSlTpSet:'تم ضبط وقف الخسارة/جني الأرباح', msgEnterOrderPrice:'أدخل سعر الأمر!', msgSelectPendingType:'اختر نوع الأمر المعلق!',
       noPos:'لا توجد مراكز مفتوحة', noHist:'لا يوجد سجل', noPending:'لا توجد أوامر معلقة',
-      myAccount:'حسابي', brokerInfo:'معلومات الوسيط', dir:'rtl'
+      myAccount:'حسابي', brokerInfo:'معلومات الوسيط', dir:'rtl',
+      searchSymbol:'بحث عن رمز...', orderPrice:'سعر الأمر', placeOrder:'تنفيذ الأمر', priceLbl:'السعر',
+      openPriceLbl:'الافتتاح', swap:'المبادلة', timeLbl:'الوقت',
+      walletTitle:'⬆⬇ المعاملات المالية', histTab2:'السجل', selectDepositMethod:'اختر طريقة الإيداع',
+      amount:'المبلغ', submitDeposit:'إرسال طلب الإيداع', selectWithdrawMethod:'اختر طريقة السحب',
+      recipientInfo:'معلومات المستلم', ibanPlaceholder:'IBAN / عنوان المحفظة', allAmount:'الكل',
+      submitWithdraw:'إرسال طلب السحب', loadingTxt:'جارٍ التحميل...',
+      brokerLbl:'الوسيط', companyLbl:'الشركة', websiteLbl:'الموقع الإلكتروني', emailLbl:'البريد الإلكتروني', phoneLbl:'الهاتف',
+      licenseLbl:'الترخيص', regulatorLbl:'الجهة المنظمة', addressLbl:'العنوان', supportLbl:'الدعم', disclaimerLbl:'إخلاء المسؤولية'
     }
   };
   var _curLang = localStorage.getItem('_txLang') || 'tr';
@@ -9225,6 +9250,11 @@ function symUnpin(sym){
       var key = el.dataset.lang;
       if(L[key]) el.textContent = L[key];
     });
+    // Placeholder metinleri - data-lang-ph ile
+    document.querySelectorAll('[data-lang-ph]').forEach(function(el){
+      var key = el.dataset.langPh;
+      if(L[key]) el.placeholder = L[key];
+    });
     // RTL
     var accPan = document.getElementById('mPanAcc');
     if(accPan) accPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
@@ -9237,6 +9267,8 @@ function symUnpin(sym){
       var el = document.getElementById('mLang'+l.toUpperCase()+'Check');
       if(el) el.style.display = (l===lang) ? 'block' : 'none';
     });
+    // Broker bilgileri paneli açıksa etiketlerini de tazele
+    if(window._txBrokerInfo && typeof _txRenderBrokerInfo === 'function') _txRenderBrokerInfo(window._txBrokerInfo);
   }
 
   window.mLangToggle = function(){
@@ -9688,7 +9720,7 @@ function symUnpin(sym){
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--panel2);margin:8px;border-radius:6px;overflow:hidden">
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Açılış</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="openPriceLbl">Açılış</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMOpen">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
@@ -9696,27 +9728,27 @@ function symUnpin(sym){
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCurPrice">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Lot</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="lot">Lot</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMLot">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Swap</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="swap">Swap</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMSwap">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:2px">Stop Loss</div>
+          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:2px" data-lang="stopLoss">Stop Loss</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ef5350" id="mPMSL">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#2979ff;margin-bottom:2px">Take Profit</div>
+          <div style="font-family:monospace;font-size:8px;color:#2979ff;margin-bottom:2px" data-lang="takeProfit">Take Profit</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:#2979ff" id="mPMTP">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Teminat</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="margin">Teminat</div>
           <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCost">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px">Saat</div>
+          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="timeLbl">Saat</div>
           <div style="font-family:monospace;font-size:9px;font-weight:700;color:var(--text)" id="mPMTime">—</div>
         </div>
       </div>
