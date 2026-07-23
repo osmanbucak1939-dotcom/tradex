@@ -1242,7 +1242,7 @@ function _authSuccess(user) {
   window._readOnly = !!user._readOnly;
   _applyReadOnlyUI(window._readOnly);
   try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); /* ⚠️ 2026-07-16 KRİTİK DÜZELTME: _txBalLoaded burada TRUE yapılmıyor — bu, önbellekten (localStorage/broker meta) gelen olası BAYAT veri. Gerçek onay sadece Firestore canlı snapshot'ından gelmeli (bkz. fbListenUserData, _txBalLoaded=true satırları). Asıl güvenlik kilidi artık _checkStopOut() içinde (_txBalLoaded kontrolü) — updateAccount() burada UI'ı hemen göstermek için yine çağrılıyor ama stop-out tetiklenemez. */ if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
-  try { if(typeof showToast==='function') showToast('Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } catch(e){}
+  try { if(typeof showToast==='function') { var _wL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_wL?_wL.welcomeTitle:'Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } } catch(e){}
   // Gece yarısı swap zamanla
   scheduleSwap();
 
@@ -1927,7 +1927,7 @@ function _txClearPasswordChangedSession() {
           if(typeof _cu !== 'undefined' && _cu) _cu._readOnly = !!d._readOnly;
           window._readOnly = !!d._readOnly;
           if(typeof _applyReadOnlyUI === 'function') _applyReadOnlyUI(window._readOnly);
-          if(d._readOnly && typeof showToast === 'function') showToast('İzleyici Moduna Alındı', 'Hesabınız artık salt okunur — yeni işlem açılamaz.', 'warning');
+          if(d._readOnly && typeof showToast === 'function') { var _roL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_roL?_roL.readOnlySetTitle:'İzleyici Moduna Alındı', _roL?_roL.readOnlySetMsg:'Hesabınız artık salt okunur — yeni işlem açılamaz.', 'warning'); }
         }
         // Trade history
         if(d.tradeHistory !== undefined) {
@@ -3402,7 +3402,7 @@ function checkPendingOrders(sym, price) {
     if(slEl) slEl.value=_os;
     if(tpEl) tpEl.value=_ot;
     ordType = _origOrdType;
-    showToast('Emir Tetiklendi ✓', po2.type.replace('_',' ').toUpperCase()+' '+po2.sym+' @ '+po2.price);
+    { var _otL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_otL?_otL.orderTriggeredTitle:'Emir Tetiklendi ✓', po2.type.replace('_',' ').toUpperCase()+' '+po2.sym+' @ '+po2.price); }
   }
   if(triggered.length) {
     localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
@@ -3435,12 +3435,12 @@ function renderPendingOrders() {
 }
 
 function cancelPending(i) {
-  if(window._readOnly){ showToast('İzleyici Modu','Bu modda bekleyen emir iptal edemezsiniz.'); return; }
+  if(window._readOnly){ var _ro1=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ro1?_ro1.readOnlyTitle:'İzleyici Modu', _ro1?_ro1.readOnlyCancelPending:'Bu modda bekleyen emir iptal edemezsiniz.'); return; }
   pendingOrders.splice(i, 1);
   localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
   if(typeof fbSaveUserData==='function' && _cu) fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
   renderPendingOrders();
-  showToast('İptal Edildi', 'Bekleyen emir iptal edildi');
+  { var _cnL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_cnL?_cnL.cancelledTitle:'İptal Edildi', _cnL?_cnL.pendingCancelledMsg:'Bekleyen emir iptal edildi'); }
 }
 
 /* ── Canlı tick güncelleme (her saniye) ────────── */
@@ -3890,7 +3890,7 @@ function saveAlarms() {
 }
 
 function placeOrder(side) {
-  if(window._readOnly){ showToast('İzleyici Modu','Bu modda işlem açamazsınız.'); return; }
+  if(window._readOnly){ var _ro2=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ro2?_ro2.readOnlyTitle:'İzleyici Modu', _ro2?_ro2.readOnlyNoTrade:'Bu modda işlem açamazsınız.'); return; }
 
   // Trading group symbolWhitelist kontrolü (hard block)
   if(typeof canTradeSymbol === 'function' && _cu) {
@@ -3903,7 +3903,7 @@ function placeOrder(side) {
 
   // Piyasa saatleri kontrolü
   if(typeof _marketHours !== 'undefined' && !_marketHours.isOpen(curSym)) {
-    showToast('Piyasa Kapalı', 'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.', 'warning');
+    { var _mcL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_mcL?_mcL.marketClosedTitle:'Piyasa Kapalı', _mcL?_mcL.marketClosedMsg:'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.', 'warning'); }
     return;
   }
   var _qtyEl = document.getElementById('ordQty');
@@ -3966,7 +3966,7 @@ function placeOrder(side) {
     localStorage.setItem('tx_pending', JSON.stringify(pendingOrders));
     if(typeof fbSaveUserData==='function') fbSaveUserData(_cu.id, {pendingOrders: pendingOrders});
     renderPendingOrders();
-    showToast('Emir Verildi ✓', ordType.replace('_',' ').toUpperCase()+' @ '+lp+' ('+qty+' lot)');
+    { var _ovL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ovL?_ovL.orderPlacedTitle:'Emir Verildi ✓', ordType.replace('_',' ').toUpperCase()+' @ '+lp+' ('+qty+' lot)'); }
     var _lpEl=document.getElementById('limitPrice'); if(_lpEl) _lpEl.value='';
     return; // Market işlemi açma, bekleyen emir oluşturuldu
   }
@@ -4045,7 +4045,7 @@ function placeOrder(side) {
   var _freeMarginNow = _curEquity - _curMarginUsed;
   // netCost > 0 ise (net pozisyon artıyor) serbest teminat yeterliliğini kontrol et
   if(netCost > 0 && netCost > _freeMarginNow) {
-    showToast('Yetersiz Serbest Teminat', 'Gerekli: $'+fp(netCost)+' — Serbest: $'+fp(_freeMarginNow));
+    { var _imL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_imL?_imL.insufficientMarginTitle:'Yetersiz Serbest Teminat', (_imL?_imL.requiredLbl:'Gerekli')+': $'+fp(netCost)+' — '+(_imL?_imL.freeLbl:'Serbest')+': $'+fp(_freeMarginNow)); }
     return;
   }
 
@@ -4095,7 +4095,7 @@ function placeOrder(side) {
   var _newMarginLvl = _newMarginUsed > 0 ? (_newEquity / _newMarginUsed * 100) : null;
 
   if(_newMarginLvl !== null && _newMarginLvl <= _stopOutLvl) {
-    showToast('Yetersiz Marj', 'İşlem açılamaz — Marj seviyesi %' + _newMarginLvl.toFixed(0) + ' (Min: %' + _stopOutLvl + ')');
+    { var _im2L=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_im2L?_im2L.insufficientMarginTitle2:'Yetersiz Marj', (_im2L?_im2L.marginLvlTooLow:'İşlem açılamaz — Marj seviyesi %') + _newMarginLvl.toFixed(0) + ' (Min: %' + _stopOutLvl + ')'); }
     return;
   }
 
@@ -4150,7 +4150,7 @@ function placeOrder(side) {
   if (ordType !== 'market') var _gebac64=document.getElementById('limitPrice'); if(_gebac64) _gebac64.value = '';
 
   const sideLabel = side === 'buy' ? '▲ ALIM' : '▼ SATIM';
-  showToast(`${sideLabel} Gerçekleşti`, `${qty} ${curSym.replace('USDT','')} @ $${fp(execPrice)}`);
+  { var _teL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(`${sideLabel} `+(_teL?_teL.executedSuffix:'Gerçekleşti'), `${qty} ${curSym.replace('USDT','')} @ $${fp(execPrice)}`); }
 }
 
 
@@ -4769,7 +4769,7 @@ function _checkStopOut(equity, marginUsed, marginLvl) {
   var _cuData = (typeof _cu!=='undefined'&&_cu) ? _cu : null;
   if(!_cuData) { try{ _cuData=JSON.parse(localStorage.getItem('tx_current_user')||'null'); }catch(e){} }
   var _soAccName = _cuData ? '#'+((_cuData.login||_cuData.id)||'?')+' '+(_cuData.name||'') : '';
-  showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · Tem: %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger');
+  { var _soL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · '+(_soL?_soL.marginAbbr:'Tem')+': %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger'); }
 
   // Kilit garantili serbest bırakma
   var _releaseLock = function(){
@@ -5641,7 +5641,7 @@ function fbLoadRequests(callback) {
 }
 
 function openWallet(tab) {
-  if(window._readOnly){ showToast('İzleyici Modu','Bu modda para işlemi yapamazsınız.'); return; }
+  if(window._readOnly){ var _ro3=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ro3?_ro3.readOnlyTitle:'İzleyici Modu', _ro3?_ro3.readOnlyNoFinance:'Bu modda para işlemi yapamazsınız.'); return; }
   tab = tab || 'deposit';
   // Firebase'den taze bakiye + finlog + talepler çek, sonra aç
   var doOpen = function() {
@@ -5702,11 +5702,13 @@ function renderWalletHistory() {
   if(!el) return;
 
   function _doRender(log) {
-    var tp = {deposit:'Para Yatırım',withdraw:'Para Çekim',bonus_in:'Bonus Eklendi',bonus_out:'Bonus Çıkarıldı'};
+    var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+    var tp = L ? {deposit:L.txDeposit,withdraw:L.txWithdraw,bonus_in:L.txBonusIn,bonus_out:L.txBonusOut}
+               : {deposit:'Para Yatırım',withdraw:'Para Çekim',bonus_in:'Bonus Eklendi',bonus_out:'Bonus Çıkarıldı'};
     var cl = {deposit:'#2979ff',withdraw:'#ef5350',bonus_in:'#f5c518',bonus_out:'#f5a623'};
     var rows = '';
     if(!log || !log.length) {
-      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-family:var(--mono);font-size:11px;">Henüz işlem yok</td></tr>';
+      rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-family:var(--mono);font-size:11px;">'+(L?L.noTxYet:'Henüz işlem yok')+'</td></tr>';
     } else {
       var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
       sorted.forEach(function(l) {
@@ -5723,10 +5725,10 @@ function renderWalletHistory() {
     el.innerHTML = '<div style="padding:4px 0;">'
       + '<table style="width:100%;border-collapse:collapse;">'
       + '<thead><tr style="background:var(--panel2);">'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">TARİH</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">TİP</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:right;border-bottom:1px solid var(--panel2);">MİKTAR</th>'
-      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">NOT</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">'+(L?L.dateLbl:'TARİH')+'</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">'+(L?L.typeLbl:'TİP')+'</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:right;border-bottom:1px solid var(--panel2);">'+(L?L.amount:'MİKTAR')+'</th>'
+      + '<th style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text);text-align:left;border-bottom:1px solid var(--panel2);">'+(L?L.noteLbl:'NOT')+'</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -7509,9 +7511,10 @@ function submitPwChange() {
   var nw   = (document.getElementById('pwNew')||{}).value||'';
   var conf = (document.getElementById('pwConfirm')||{}).value||'';
   var err  = document.getElementById('pwError');
-  if(!cur||!nw||!conf){ if(err){err.textContent='Tüm alanları doldurun.';err.style.display='block';} return; }
-  if(nw.length<6){ if(err){err.textContent='Şifre en az 6 karakter olmalı.';err.style.display='block';} return; }
-  if(nw!==conf){ if(err){err.textContent='Yeni şifreler eşleşmiyor.';err.style.display='block';} return; }
+  var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+  if(!cur||!nw||!conf){ if(err){err.textContent=L?L.pwErrFill:'Tüm alanları doldurun.';err.style.display='block';} return; }
+  if(nw.length<6){ if(err){err.textContent=L?L.pwErrLength:'Şifre en az 6 karakter olmalı.';err.style.display='block';} return; }
+  if(nw!==conf){ if(err){err.textContent=L?L.pwErrMismatch:'Yeni şifreler eşleşmiyor.';err.style.display='block';} return; }
   if(!_cu) return;
   if(err) err.style.display='none';
   // ⚠️ 2026-07-17 DÜZELTME (acil): iki ayrı hata vardı —
@@ -7523,7 +7526,7 @@ function submitPwChange() {
   // fbMigratePasswordHash) kullanılıyor.
   _txVerifyPassword(_cu, cur).then(function(result){
     if(!result.match) {
-      if(err){err.textContent='Mevcut şifre yanlış.';err.style.display='block';}
+      if(err){err.textContent=L?L.pwErrWrong:'Mevcut şifre yanlış.';err.style.display='block';}
       return;
     }
     var salt = _txRandomSalt();
@@ -7535,7 +7538,7 @@ function submitPwChange() {
         db.collection('users').doc(String(_cu.id)).set({password:hash, passwordSalt:salt}, {merge:true}).catch(function(e){ console.warn('[submitPwChange] users yazımı:', e); });
       }
       closePwModal();
-      showToast('Şifre Güncellendi ✓','Şifreniz başarıyla değiştirildi.');
+      showToast(L?L.pwSuccessTitle:'Şifre Güncellendi ✓', L?L.pwSuccessMsg:'Şifreniz başarıyla değiştirildi.');
     });
   });
 }
@@ -7874,23 +7877,23 @@ function symUnpin(sym){
 <div class="pw-modal" id="pwModal">
   <div class="pw-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div class="kyc-title">🔑 ŞİFRE GÜNCELLE</div>
+      <div class="kyc-title" data-lang="pwTitle">🔑 ŞİFRE GÜNCELLE</div>
       <button onclick="closePwModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">MEVCUT ŞİFRE</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwCurrentLbl">MEVCUT ŞİFRE</div>
       <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">YENİ ŞİFRE</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwNewLbl">YENİ ŞİFRE</div>
       <input id="pwNew" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:20px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">YENİ ŞİFRE (TEKRAR)</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwConfirmLbl">YENİ ŞİFRE (TEKRAR)</div>
       <input id="pwConfirm" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div id="pwError" style="display:none;color:var(--sell);font-size:11px;font-family:var(--mono);margin-bottom:10px"></div>
-    <button onclick="submitPwChange()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:3px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">ŞİFREYİ GÜNCELLE</button>
+    <button onclick="submitPwChange()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:3px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer" data-lang="pwSubmit">ŞİFREYİ GÜNCELLE</button>
   </div>
 </div>
 
@@ -8642,12 +8645,12 @@ function symUnpin(sym){
     <div style="padding:0 0 8px">
       <!-- Bakiye -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Bakiye</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="balance">Bakiye</div>
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSBal">—</div>
       </div>
       <!-- Varlık -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Varlık</div>
+        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="equity">Varlık</div>
         <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSEq">—</div>
       </div>
       <!-- Bonus -->
@@ -9158,7 +9161,7 @@ function symUnpin(sym){
     setTimeout(mFP, 200);
   };
   // ── DİL SİSTEMİ ──────────────────────────────────────
-  var _LANGS = {
+  window._LANGS = {
     tr: {
       markets:'Piyasalar', chart:'Grafik', trade:'İşlem', pos:'Pozisyon', acc:'Hesap',
       deposit:'Para Yatır', withdraw:'Para Çek', history:'Finans Geçmişi',
@@ -9192,7 +9195,21 @@ function symUnpin(sym){
       kycApproved:'✓ Onaylandı', kycReview:'⏳ İnceleniyor', kycCancelLink:'İptal Et',
       kycUploading:'↑ Yükleniyor...', kycRejected:'✕ Reddedildi — Tekrar Yükle',
       kycCancelConfirm:'Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.',
-      kycCancelledTitle:'İptal edildi', kycCancelledMsg:' tekrar yüklenebilir', kycCancelFailTitle:'İptal edilemedi'
+      kycCancelledTitle:'İptal edildi', kycCancelledMsg:' tekrar yüklenebilir', kycCancelFailTitle:'İptal edilemedi',
+      pwTitle:'🔑 ŞİFRE GÜNCELLE', pwCurrentLbl:'MEVCUT ŞİFRE', pwNewLbl:'YENİ ŞİFRE', pwConfirmLbl:'YENİ ŞİFRE (TEKRAR)', pwSubmit:'ŞİFREYİ GÜNCELLE',
+      pwErrFill:'Tüm alanları doldurun.', pwErrLength:'Şifre en az 6 karakter olmalı.', pwErrMismatch:'Yeni şifreler eşleşmiyor.', pwErrWrong:'Mevcut şifre yanlış.',
+      pwSuccessTitle:'Şifre Güncellendi ✓', pwSuccessMsg:'Şifreniz başarıyla değiştirildi.',
+      txDeposit:'Para Yatırım', txWithdraw:'Para Çekim', txBonusIn:'Bonus Eklendi', txBonusOut:'Bonus Çıkarıldı',
+      noTxYet:'Henüz işlem yok', dateLbl:'TARİH', typeLbl:'TİP', noteLbl:'NOT',
+      welcomeTitle:'Hoş Geldiniz ✓', readOnlySetTitle:'İzleyici Moduna Alındı', readOnlySetMsg:'Hesabınız artık salt okunur — yeni işlem açılamaz.',
+      readOnlyTitle:'İzleyici Modu', readOnlyCancelPending:'Bu modda bekleyen emir iptal edemezsiniz.',
+      readOnlyNoTrade:'Bu modda işlem açamazsınız.', readOnlyNoFinance:'Bu modda para işlemi yapamazsınız.',
+      marketClosedTitle:'Piyasa Kapalı', marketClosedMsg:'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.',
+      orderPlacedTitle:'Emir Verildi ✓', orderTriggeredTitle:'Emir Tetiklendi ✓',
+      cancelledTitle:'İptal Edildi', pendingCancelledMsg:'Bekleyen emir iptal edildi',
+      insufficientMarginTitle:'Yetersiz Serbest Teminat', requiredLbl:'Gerekli', freeLbl:'Serbest',
+      insufficientMarginTitle2:'Yetersiz Marj', marginLvlTooLow:'İşlem açılamaz — Marj seviyesi %',
+      executedSuffix:'Gerçekleşti', marginAbbr:'Tem'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9227,13 +9244,28 @@ function symUnpin(sym){
       kycApproved:'✓ Approved', kycReview:'⏳ Under review', kycCancelLink:'Cancel',
       kycUploading:'↑ Uploading...', kycRejected:'✕ Rejected — Upload again',
       kycCancelConfirm:'Are you sure you want to cancel this uploaded document? You can upload it again.',
-      kycCancelledTitle:'Cancelled', kycCancelledMsg:' can be uploaded again', kycCancelFailTitle:'Could not cancel'
+      kycCancelledTitle:'Cancelled', kycCancelledMsg:' can be uploaded again', kycCancelFailTitle:'Could not cancel',
+      pwTitle:'🔑 UPDATE PASSWORD', pwCurrentLbl:'CURRENT PASSWORD', pwNewLbl:'NEW PASSWORD', pwConfirmLbl:'NEW PASSWORD (CONFIRM)', pwSubmit:'UPDATE PASSWORD',
+      pwErrFill:'Please fill in all fields.', pwErrLength:'Password must be at least 6 characters.', pwErrMismatch:'New passwords do not match.', pwErrWrong:'Current password is wrong.',
+      pwSuccessTitle:'Password Updated ✓', pwSuccessMsg:'Your password has been changed successfully.',
+      txDeposit:'Deposit', txWithdraw:'Withdrawal', txBonusIn:'Bonus Added', txBonusOut:'Bonus Removed',
+      noTxYet:'No transactions yet', dateLbl:'DATE', typeLbl:'TYPE', noteLbl:'NOTE',
+      welcomeTitle:'Welcome ✓', readOnlySetTitle:'Set to Viewer Mode', readOnlySetMsg:'Your account is now read-only — no new trades can be opened.',
+      readOnlyTitle:'Viewer Mode', readOnlyCancelPending:'You cannot cancel pending orders in this mode.',
+      readOnlyNoTrade:'You cannot open trades in this mode.', readOnlyNoFinance:'You cannot make financial transactions in this mode.',
+      marketClosedTitle:'Market Closed', marketClosedMsg:'Forex/commodity trading is unavailable on weekends. Crypto trading continues.',
+      orderPlacedTitle:'Order Placed ✓', orderTriggeredTitle:'Order Triggered ✓',
+      cancelledTitle:'Cancelled', pendingCancelledMsg:'Pending order cancelled',
+      insufficientMarginTitle:'Insufficient Free Margin', requiredLbl:'Required', freeLbl:'Free',
+      insufficientMarginTitle2:'Insufficient Margin', marginLvlTooLow:'Cannot open trade — Margin level %',
+      executedSuffix:'Executed', marginAbbr:'Mgn'
     }
   };
   // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
   // kalmış olabilir, o durumda güvenli şekilde Türkçe'ye dön.
-  var _curLang = localStorage.getItem('_txLang') || 'tr';
-  if(_curLang === 'ar') { _curLang = 'tr'; try{ localStorage.setItem('_txLang','tr'); }catch(e){} }
+  window._curLang = localStorage.getItem('_txLang') || 'tr';
+  if(window._curLang === 'ar') { window._curLang = 'tr'; try{ localStorage.setItem('_txLang','tr'); }catch(e){} }
+  var _LANGS = window._LANGS, _curLang = window._curLang; // yerel kısayol, aşağıdaki kod aynı kalsın
 
   function mApplyLang(lang) {
     var L = _LANGS[lang] || _LANGS['tr'];
@@ -9273,6 +9305,7 @@ function symUnpin(sym){
 
   window.mSetLang = function(lang){
     _curLang = lang;
+    window._curLang = lang;
     localStorage.setItem('_txLang', lang);
     mApplyLang(lang);
     var p = document.getElementById('mLangPanel');
