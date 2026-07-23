@@ -2018,6 +2018,17 @@ function _txClearPasswordChangedSession() {
       <span id="apiDot" style="display:none;"></span>
     </div>
     <div class="tb-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Görünüm"></div>
+    <div style="position:relative">
+      <div class="tb-theme-toggle" id="dLangBtn" onclick="dToggleLangMenu(event)" title="Language" style="display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);cursor:pointer">🌐</div>
+      <div id="dLangMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:9999;min-width:130px;box-shadow:0 12px 32px rgba(0,0,0,.4)">
+        <div onclick="dSetLang('tr')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-family:monospace;font-size:12px;color:var(--muted)" id="dLangTR">
+          <span style="font-size:15px">🇹🇷</span> Türkçe <span style="margin-left:auto;color:var(--accent);display:none" id="dLangTRCheck">✓</span>
+        </div>
+        <div onclick="dSetLang('en')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-family:monospace;font-size:12px;color:var(--muted)" id="dLangEN">
+          <span style="font-size:15px">🇬🇧</span> English <span style="margin-left:auto;color:var(--accent);display:none" id="dLangENCheck">✓</span>
+        </div>
+      </div>
+    </div>
     <div class="tb-login-btn" id="tbLoginBtn" onclick="openAuth('login')">◉ GİRİŞ / KAYIT</div>
     <div class="tb-user-badge" id="tbUserBadge" style="display:none" onclick="toggleUserDropdown(event)">
       <div class="tb-user-avatar" id="tbUserAvatar">?</div>
@@ -2036,18 +2047,18 @@ function _txClearPasswordChangedSession() {
           <div id="ddLogin" style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-top:3px;letter-spacing:.5px"></div>
         </div>
         <button class="user-dd-item" onclick="openPwModal();closeUserDropdown()">
-          <span class="dd-icon">🔑</span> Şifre Güncelle
+          <span class="dd-icon">🔑</span> <span data-lang="changePw">Şifre Güncelle</span>
         </button>
         <button class="user-dd-item" onclick="openKycModal();closeUserDropdown()">
-          <span class="dd-icon">🪪</span> KYC Doğrulama
+          <span class="dd-icon">🪪</span> <span data-lang="kyc">KYC Doğrulama</span>
         </button>
         <div class="user-dd-divider"></div>
         <button class="user-dd-item danger" onclick="logoutUser();closeUserDropdown()">
-          <span class="dd-icon">⏻</span> Çıkış Yap
+          <span class="dd-icon">⏻</span> <span data-lang="logout">Çıkış Yap</span>
         </button>
       </div>
     </div>
-    <div class="tb-wallet-btn" onclick="openWallet()">⬆⬇ PARA</div>
+    <div class="tb-wallet-btn" onclick="openWallet()" data-lang="fundsBtn">⬆⬇ PARA</div>
   </div>
 </div>
 
@@ -2069,17 +2080,17 @@ function _txClearPasswordChangedSession() {
 
     <!-- PANEL TABS -->
     <div class="lp-tabs">
-      <div class="lp-tab active" onclick="lpSwitch('market',this)">PİYASALAR</div>
-      <div class="lp-tab" onclick="lpSwitch('order',this)">EMİR</div>
+      <div class="lp-tab active" onclick="lpSwitch('market',this)" data-lang="markets">PİYASALAR</div>
+      <div class="lp-tab" onclick="lpSwitch('order',this)" data-lang="orderTab">EMİR</div>
     </div>
 
     <!-- ORDER SECTION -->
     <div class="lp-section" id="lp-order">
       <div class="order-ticket">
-        <div class="ot-header">EMİR EKRANI</div>
+        <div class="ot-header" data-lang="orderScreen">EMİR EKRANI</div>
         <!-- Sembol Arama -->
         <div style="position:relative;margin-bottom:8px">
-          <input id="otSymSearch" type="text" placeholder="Sembol ara..."
+          <input id="otSymSearch" type="text" placeholder="Sembol ara..." data-lang-ph="searchSymbol"
             style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;box-sizing:border-box"
             oninput="otSymFilter(this.value)" onfocus="otSymFilter(this.value)" autocomplete="off">
           <div id="otSymList" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--panel2);border:1px solid var(--border2);border-top:none;border-radius:0 0 3px 3px;max-height:180px;overflow-y:auto;z-index:500"></div>
@@ -2088,11 +2099,11 @@ function _txClearPasswordChangedSession() {
         <div class="ot-price-row">
           <div class="ot-side">
             <div class="ot-bid" id="otBid">—</div>
-            <div class="ot-bid-lbl">SATIŞ (BID)</div>
+            <div class="ot-bid-lbl" data-lang="sellBid">SATIŞ (BID)</div>
           </div>
           <div class="ot-side">
             <div class="ot-ask" id="otAsk">—</div>
-            <div class="ot-ask-lbl">ALIŞ (ASK)</div>
+            <div class="ot-ask-lbl" data-lang="buyAsk">ALIŞ (ASK)</div>
           </div>
         </div>
         <div class="ot-spread" id="otSpread">Spread: —</div>
@@ -2104,36 +2115,36 @@ function _txClearPasswordChangedSession() {
           <div class="ot-type-btn" onclick="setOrdType('sell_stop',this)" title="Piyasa fiyatının altından satış emri">Sell Stop</div>
         </div>
         <div class="ot-row" id="limitPriceRow" style="display:none">
-          <div class="ot-label" id="limitPriceLabel">Limit Fiyat ($)</div>
+          <div class="ot-label" id="limitPriceLabel" data-lang="limitPriceLbl">Limit Fiyat ($)</div>
           <input class="ot-input" id="limitPrice" type="number" placeholder="0.00" step="any">
         </div>
         <div class="ot-row">
-          <div class="ot-label">Miktar (adet)</div>
+          <div class="ot-label" data-lang="amountUnits">Miktar (adet)</div>
           <input class="ot-input" id="ordQty" value="0.01" type="number" placeholder="0.001" step="any" min="0">
         </div>
         <div class="ot-input-row">
           <div class="ot-row">
-            <div class="ot-label">Stop Loss ($)</div>
-            <input class="ot-input" id="ordSL" type="number" placeholder="İsteğe bağlı" step="any">
+            <div class="ot-label" data-lang="stopLossUsd">Stop Loss ($)</div>
+            <input class="ot-input" id="ordSL" type="number" placeholder="İsteğe bağlı" data-lang-ph="optional" step="any">
           </div>
           <div class="ot-row">
-            <div class="ot-label">Take Profit ($)</div>
-            <input class="ot-input" id="ordTP" type="number" placeholder="İsteğe bağlı" step="any">
+            <div class="ot-label" data-lang="takeProfitUsd">Take Profit ($)</div>
+            <input class="ot-input" id="ordTP" type="number" placeholder="İsteğe bağlı" data-lang-ph="optional" step="any">
           </div>
         </div>
         <div class="ot-btns">
-          <button class="btn-sell" onclick="placeOrder('sell')">▼ SAT</button>
-          <button class="btn-buy" onclick="placeOrder('buy')">▲ AL</button>
+          <button class="btn-sell" onclick="placeOrder('sell')">▼ <span data-lang="sell">SAT</span></button>
+          <button class="btn-buy" onclick="placeOrder('buy')">▲ <span data-lang="buy">AL</span></button>
         </div>
       </div>
       <!-- ALARMLAR -->
       <div class="alarm-box">
         <div class="alarm-title">
-          <span>ALARMLAR</span>
+          <span data-lang="alarmsTitle">ALARMLAR</span>
           <button class="alarm-add-btn" onclick="toggleAlarmForm()">+ Ekle</button>
         </div>
         <div class="alarm-items" id="alarmItems">
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Alarm yok</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" data-lang="noAlarms">Alarm yok</span>
         </div>
         <div class="alarm-form" id="alarmForm" style="display:none">
           <select class="oi" id="alSym">
@@ -2153,7 +2164,7 @@ function _txClearPasswordChangedSession() {
     <!-- MARKET WATCH SECTION -->
     <div class="lp-section active" id="lp-market">
       <div class="mw-search">
-        <input class="mw-search-input" id="mwSearch" placeholder="Sembol ara..." oninput="mwFilter(this.value)">
+        <input class="mw-search-input" id="mwSearch" placeholder="Sembol ara..." data-lang-ph="searchSymbol" oninput="mwFilter(this.value)">
       </div>
       <div class="mw-col-headers">
         <div class="mw-col-hdr"></div>
@@ -2263,11 +2274,11 @@ function _txClearPasswordChangedSession() {
       <!-- HIZLI AL/SAT -->
       <div class="quick-trade" id="quickTrade">
         <button class="qt-sell" onclick="qtOrder('sell')">
-          <span class="qt-dir">▼</span><span>SAT</span>
+          <span class="qt-dir">▼</span><span data-lang="sell">SAT</span>
           <span class="qt-price" id="qtBid">—</span>
         </button>
         <div class="qt-mid">
-          <div class="qt-lot-label">LOT MİKTARI</div>
+          <div class="qt-lot-label" data-lang="lotAmount">LOT MİKTARI</div>
           <div class="qt-lot-row">
             <button class="qt-lot-btn" onclick="qtLotStep(-1)">−</button>
             <input class="qt-lot-val" id="qtLotVal" type="number" value="0.01" min="0.01" max="50" step="0.01" onclick="this.select()" onchange="qtLotSet(parseFloat(this.value)||0.01)">
@@ -2280,7 +2291,7 @@ function _txClearPasswordChangedSession() {
           </div>
         </div>
         <button class="qt-buy" onclick="qtOrder('buy')">
-          <span class="qt-dir">▲</span><span>AL</span>
+          <span class="qt-dir">▲</span><span data-lang="buy">AL</span>
           <span class="qt-price" id="qtAsk">—</span>
         </button>
       </div>
@@ -4845,7 +4856,7 @@ function checkAlarms(sym, price) {
 
 function renderAlarms() {
   const el = document.getElementById('alarmItems');
-  if (!alarms.length) { el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Alarm yok</span>'; return; }
+  if (!alarms.length) { var _naL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">'+(_naL?_naL.noAlarms:'Alarm yok')+'</span>'; return; }
   el.innerHTML = alarms.map(a => {
     const up = a.dir==='above';
     const col = a.active ? (up?'var(--buy)':'var(--sell)') : 'var(--muted)';
@@ -9209,7 +9220,10 @@ function symUnpin(sym){
       cancelledTitle:'İptal Edildi', pendingCancelledMsg:'Bekleyen emir iptal edildi',
       insufficientMarginTitle:'Yetersiz Serbest Teminat', requiredLbl:'Gerekli', freeLbl:'Serbest',
       insufficientMarginTitle2:'Yetersiz Marj', marginLvlTooLow:'İşlem açılamaz — Marj seviyesi %',
-      executedSuffix:'Gerçekleşti', marginAbbr:'Tem'
+      executedSuffix:'Gerçekleşti', marginAbbr:'Tem', fundsBtn:'⬆⬇ PARA',
+      orderTab:'EMİR', orderScreen:'EMİR EKRANI', limitPriceLbl:'Limit Fiyat ($)',
+      amountUnits:'Miktar (adet)', stopLossUsd:'Stop Loss ($)', takeProfitUsd:'Take Profit ($)',
+      optional:'İsteğe bağlı', alarmsTitle:'ALARMLAR', noAlarms:'Alarm yok'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9258,7 +9272,10 @@ function symUnpin(sym){
       cancelledTitle:'Cancelled', pendingCancelledMsg:'Pending order cancelled',
       insufficientMarginTitle:'Insufficient Free Margin', requiredLbl:'Required', freeLbl:'Free',
       insufficientMarginTitle2:'Insufficient Margin', marginLvlTooLow:'Cannot open trade — Margin level %',
-      executedSuffix:'Executed', marginAbbr:'Mgn'
+      executedSuffix:'Executed', marginAbbr:'Mgn', fundsBtn:'⬆⬇ FUNDS',
+      orderTab:'ORDER', orderScreen:'ORDER TICKET', limitPriceLbl:'Limit Price ($)',
+      amountUnits:'Amount (units)', stopLossUsd:'Stop Loss ($)', takeProfitUsd:'Take Profit ($)',
+      optional:'Optional', alarmsTitle:'ALARMS', noAlarms:'No alarms'
     }
   };
   // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
@@ -9290,6 +9307,8 @@ function symUnpin(sym){
     ['tr','en'].forEach(function(l){
       var el = document.getElementById('mLang'+l.toUpperCase()+'Check');
       if(el) el.style.display = (l===lang) ? 'block' : 'none';
+      var del = document.getElementById('dLang'+l.toUpperCase()+'Check');
+      if(del) del.style.display = (l===lang) ? 'inline' : 'none';
     });
     // Broker bilgileri paneli açıksa etiketlerini de tazele
     if(window._txBrokerInfo && typeof _txRenderBrokerInfo === 'function') _txRenderBrokerInfo(window._txBrokerInfo);
@@ -9311,6 +9330,25 @@ function symUnpin(sym){
     var p = document.getElementById('mLangPanel');
     if(p) p.style.display = 'none';
   };
+
+  // ── MASAÜSTÜ DİL DÜĞMESİ ───────────────────────────
+  window.dToggleLangMenu = function(e){
+    if(e) e.stopPropagation();
+    var m = document.getElementById('dLangMenu');
+    if(!m) return;
+    m.style.display = (m.style.display==='none'||!m.style.display) ? 'block' : 'none';
+  };
+  window.dSetLang = function(lang){
+    window.mSetLang(lang);
+    var men = document.getElementById('dLangMenu');
+    if(men) men.style.display = 'none';
+  };
+  document.addEventListener('click', function(e){
+    var m = document.getElementById('dLangMenu');
+    var btn = document.getElementById('dLangBtn');
+    if(m && m.style.display==='block' && !m.contains(e.target) && e.target!==btn) m.style.display='none';
+  });
+  // ──────────────────────────────────────────────────
 
   // Başlangıçta uygula
   setTimeout(function(){ mApplyLang(_curLang); }, 500);
