@@ -1236,7 +1236,7 @@ function _authSuccess(user) {
   var ut = document.getElementById('tbUserType');
   if(av) av.textContent=(user.name||'?')[0].toUpperCase();
   if(un) un.textContent=user.name+(user.surname?' '+user.surname:'');
-  if(ut) ut.textContent=user.type==='demo'?'Demo Hesap':'Gerçek Hesap';
+  if(ut) { var _atL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); ut.textContent=user.type==='demo'?(_atL?_atL.demoAcc:'Demo Hesap'):(_atL?_atL.realAcc:'Gerçek Hesap'); }
   var ul=document.getElementById('tbUserLogin'); if(ul) ul.textContent=(user.login||user.id)?'#'+(user.login||user.id):'';
   // İzleyici modu bandı + buton kilitleri — _applyReadOnlyUI tek yerden yönetir (masaüstü + mobil)
   window._readOnly = !!user._readOnly;
@@ -2019,7 +2019,9 @@ function _txClearPasswordChangedSession() {
     </div>
     <div class="tb-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Görünüm"></div>
     <div style="position:relative">
-      <div class="tb-theme-toggle" id="dLangBtn" onclick="dToggleLangMenu(event)" title="Language" style="display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);cursor:pointer">🌐</div>
+      <div class="tb-theme-toggle" id="dLangBtn" onclick="dToggleLangMenu(event)" title="Language" style="display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></svg>
+      </div>
       <div id="dLangMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:9999;min-width:130px;box-shadow:0 12px 32px rgba(0,0,0,.4)">
         <div onclick="dSetLang('tr')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-family:monospace;font-size:12px;color:var(--muted)" id="dLangTR">
           <span style="font-size:15px">🇹🇷</span> Türkçe <span style="margin-left:auto;color:var(--accent);display:none" id="dLangTRCheck">✓</span>
@@ -2058,7 +2060,10 @@ function _txClearPasswordChangedSession() {
         </button>
       </div>
     </div>
-    <div class="tb-wallet-btn" onclick="openWallet()" data-lang="fundsBtn">⬆⬇ PARA</div>
+    <div class="tb-wallet-btn" onclick="openWallet()" style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-6a2 2 0 0 1 0-4h6Z"/><circle cx="16" cy="12" r="0.6" fill="currentColor" stroke="none"/></svg>
+      <span data-lang="fundsBtn">Cüzdan</span>
+    </div>
   </div>
 </div>
 
@@ -2168,10 +2173,10 @@ function _txClearPasswordChangedSession() {
       </div>
       <div class="mw-col-headers">
         <div class="mw-col-hdr"></div>
-        <div class="mw-col-hdr">Sembol</div>
-        <div class="mw-col-hdr">Satış</div>
-        <div class="mw-col-hdr">Alış</div>
-        <div class="mw-col-hdr">Spread</div>
+        <div class="mw-col-hdr" data-lang="symbolLbl">Sembol</div>
+        <div class="mw-col-hdr" data-lang="sellBidShort">Satış</div>
+        <div class="mw-col-hdr" data-lang="buyAskShort">Alış</div>
+        <div class="mw-col-hdr" data-lang="spreadLbl">Spread</div>
       </div>
       <div class="mw-body" id="mwBody" onclick="var t=event.target; while(t&&t.id!=='mwBody'){if(t.dataset&&t.dataset.sym){mwSelect(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
     </div><!-- /lp-market -->
@@ -2309,10 +2314,10 @@ function _txClearPasswordChangedSession() {
   <div class="resize-handle-y" id="rhY" title="Yüksekliği ayarla"></div>
   <div class="bottom-panel" style="overflow:hidden;display:flex;flex-direction:column;">
       <div class="bp-tabs" style="flex-shrink:0;display:flex;height:28px;">
-        <div class="bp-tab active" onclick="bpSwitch('pos',this)">Pozisyonlar</div>
-        <div class="bp-tab" onclick="bpSwitch('hist',this)">İşlem Geçmişi</div>
-        <div class="bp-tab" onclick="bpSwitch('pending',this)">Bekleyen</div>
-        <div class="bp-tab" onclick="bpSwitch('finans',this)">Finans</div>
+        <div class="bp-tab active" onclick="bpSwitch('pos',this)" data-lang="positionsTab">Pozisyonlar</div>
+        <div class="bp-tab" onclick="bpSwitch('hist',this)" data-lang="tradeHistTab">İşlem Geçmişi</div>
+        <div class="bp-tab" onclick="bpSwitch('pending',this)" data-lang="pendingTab">Bekleyen</div>
+        <div class="bp-tab" onclick="bpSwitch('finans',this)" data-lang="financeTab">Finans</div>
       </div>
 
       <!-- İZLEYİCİ MODU BANDI -->
@@ -2324,11 +2329,11 @@ function _txClearPasswordChangedSession() {
       <!-- ACCOUNT STATUS BAR -->
       <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--panel);overflow-x:auto">
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">BAKİYE</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="balanceCaps">BAKİYE</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbBalance">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">VARLIK</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="equityCaps">VARLIK</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbEquity">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:90px">
@@ -2336,19 +2341,19 @@ function _txClearPasswordChangedSession() {
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#f5c518" id="sbBonus">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">TEMİNAT</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginCaps">TEMİNAT</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbMargin">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:130px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">SERBEST TEMİNAT</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="freeMarginCaps">SERBEST TEMİNAT</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbFreeMargin">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">AÇIK K/Z</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="openPnlShort">AÇIK K/Z</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700" id="sbPL">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;white-space:nowrap;flex-shrink:0;min-width:120px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px">TEMİNAT SEVİYESİ</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginLvlCaps">TEMİNAT SEVİYESİ</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--buy)" id="sbMarginLvl">—</span>
         </div>
       </div>
@@ -4898,14 +4903,16 @@ function renderBpFinans() {
 }
 
 function _renderBpFinansTable(el) {
-  var tp = {deposit:'Para Yatırım', withdraw:'Para Çekim', bonus_in:'Bonus Eklendi', bonus_out:'Bonus Çıkarıldı'};
+  var _dL = (typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null);
+  var tp = _dL ? {deposit:_dL.txDeposit, withdraw:_dL.txWithdraw, bonus_in:_dL.txBonusIn, bonus_out:_dL.txBonusOut}
+               : {deposit:'Para Yatırım', withdraw:'Para Çekim', bonus_in:'Bonus Eklendi', bonus_out:'Bonus Çıkarıldı'};
   var cl = {deposit:'#2979ff', withdraw:'#ef5350', bonus_in:'#f5c518', bonus_out:'#f5a623'};
   // Eski finlog kayıtlarında swap tipi varsa gösterme
   finlog = (Array.isArray(finlog) ? finlog : []).filter(function(l){ return l.type !== 'swap'; });
   var rows = '';
   var log = (typeof finlog !== 'undefined' && Array.isArray(finlog)) ? finlog : [];
   if(!log.length) {
-    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-size:11px;">Henüz finansal işlem yok</td></tr>';
+    rows = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--faint);font-size:11px;">'+(_dL?_dL.noFinanceTxYet:'Henüz finansal işlem yok')+'</td></tr>';
   } else {
     var sorted = log.slice().sort(function(a,b){ return parseFinlogDate(b.date) - parseFinlogDate(a.date); });
     sorted.forEach(function(l) {
@@ -4922,10 +4929,10 @@ function _renderBpFinansTable(el) {
   }
   el.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
     + '<thead><tr style="background:var(--panel2);position:sticky;top:0;z-index:1;">'
-    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">TARİH</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">TİP</th>'
-    + '<th style="padding:7px 12px;text-align:right;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">MİKTAR</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">NOT</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">'+(_dL?_dL.dateLbl:'TARİH')+'</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">'+(_dL?_dL.typeLbl:'TİP')+'</th>'
+    + '<th style="padding:7px 12px;text-align:right;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">'+(_dL?_dL.amount:'MİKTAR')+'</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:var(--muted);font-size:9px;font-weight:600;border-bottom:1px solid var(--panel2);letter-spacing:1px;">'+(_dL?_dL.noteLbl:'NOT')+'</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
@@ -9220,10 +9227,15 @@ function symUnpin(sym){
       cancelledTitle:'İptal Edildi', pendingCancelledMsg:'Bekleyen emir iptal edildi',
       insufficientMarginTitle:'Yetersiz Serbest Teminat', requiredLbl:'Gerekli', freeLbl:'Serbest',
       insufficientMarginTitle2:'Yetersiz Marj', marginLvlTooLow:'İşlem açılamaz — Marj seviyesi %',
-      executedSuffix:'Gerçekleşti', marginAbbr:'Tem', fundsBtn:'⬆⬇ PARA',
+      executedSuffix:'Gerçekleşti', marginAbbr:'Tem', fundsBtn:'Cüzdan',
       orderTab:'EMİR', orderScreen:'EMİR EKRANI', limitPriceLbl:'Limit Fiyat ($)',
       amountUnits:'Miktar (adet)', stopLossUsd:'Stop Loss ($)', takeProfitUsd:'Take Profit ($)',
-      optional:'İsteğe bağlı', alarmsTitle:'ALARMLAR', noAlarms:'Alarm yok'
+      optional:'İsteğe bağlı', alarmsTitle:'ALARMLAR', noAlarms:'Alarm yok',
+      demoAcc:'Demo Hesap', realAcc:'Gerçek Hesap',
+      symbolLbl:'Sembol', sellBidShort:'Satış', buyAskShort:'Alış', spreadLbl:'Spread',
+      positionsTab:'Pozisyonlar', tradeHistTab:'İşlem Geçmişi', financeTab:'Finans', pendingTab:'Bekleyen',
+      balanceCaps:'BAKİYE', equityCaps:'VARLIK', marginCaps:'TEMİNAT', freeMarginCaps:'SERBEST TEMİNAT',
+      openPnlShort:'AÇIK K/Z', marginLvlCaps:'TEMİNAT SEVİYESİ', noFinanceTxYet:'Henüz finansal işlem yok'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9272,10 +9284,15 @@ function symUnpin(sym){
       cancelledTitle:'Cancelled', pendingCancelledMsg:'Pending order cancelled',
       insufficientMarginTitle:'Insufficient Free Margin', requiredLbl:'Required', freeLbl:'Free',
       insufficientMarginTitle2:'Insufficient Margin', marginLvlTooLow:'Cannot open trade — Margin level %',
-      executedSuffix:'Executed', marginAbbr:'Mgn', fundsBtn:'⬆⬇ FUNDS',
+      executedSuffix:'Executed', marginAbbr:'Mgn', fundsBtn:'Wallet',
       orderTab:'ORDER', orderScreen:'ORDER TICKET', limitPriceLbl:'Limit Price ($)',
       amountUnits:'Amount (units)', stopLossUsd:'Stop Loss ($)', takeProfitUsd:'Take Profit ($)',
-      optional:'Optional', alarmsTitle:'ALARMS', noAlarms:'No alarms'
+      optional:'Optional', alarmsTitle:'ALARMS', noAlarms:'No alarms',
+      demoAcc:'Demo Account', realAcc:'Real Account',
+      symbolLbl:'Symbol', sellBidShort:'Sell', buyAskShort:'Buy', spreadLbl:'Spread',
+      positionsTab:'Positions', tradeHistTab:'Trade History', financeTab:'Finance', pendingTab:'Pending',
+      balanceCaps:'BALANCE', equityCaps:'EQUITY', marginCaps:'MARGIN', freeMarginCaps:'FREE MARGIN',
+      openPnlShort:'OPEN P&L', marginLvlCaps:'MARGIN LEVEL', noFinanceTxYet:'No financial transactions yet'
     }
   };
   // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
