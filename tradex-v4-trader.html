@@ -6081,6 +6081,10 @@ function _txJitterTick(){
     if(sc && sc.priceSource) continue;
     // yalnızca ekranda görünenler
     if(!(document.getElementById('mwr-'+sym) || document.getElementById('mmwb-'+sym))) continue;
+    // ⚠️ 2026-07-17: piyasa kapalıyken sentetik titremeyi durdur — gerçek
+    // fiyat akışına/hesaplamalara dokunmuyor, sadece bu görsel efekti
+    // atlıyor (emir açmada zaten kullanılan aynı _marketHours.isOpen ile).
+    if(typeof _marketHours !== 'undefined' && !_marketHours.isOpen(sym)) continue;
     var b = base[sym];
     if(!(b>0)){
       // Taban henüz yok (yeni eklenen sembol / köprü dışı kaynak) → mevcut gerçek fiyattan başlat.
@@ -8475,18 +8479,18 @@ function symUnpin(sym){
   </div>
   <div class="m-prices">
     <div class="m-side sell" style="cursor:default">
-      <div class="m-slbl">SAT / BID</div>
+      <div class="m-slbl" data-lang="sellBid">SAT / BID</div>
       <div class="m-sprc" id="mBid">—</div>
     </div>
     <div class="m-side buy" style="cursor:default">
-      <div class="m-slbl">AL / ASK</div>
+      <div class="m-slbl" data-lang="buyAsk">AL / ASK</div>
       <div class="m-sprc" id="mAsk">—</div>
     </div>
   </div>
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px">EMİR TİPİ</div>
+      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="orderType">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -8503,7 +8507,7 @@ function symUnpin(sym){
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px">LOT MİKTARI</div>
+      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="lotAmount">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -8512,8 +8516,8 @@ function symUnpin(sym){
       <div class="m-prs" style="margin-top:8px" id="mPrs"></div>
     </div>
     <div class="m-sltp">
-      <div class="m-ig"><div class="m-il">STOP LOSS</div><input class="m-in" id="mSL" type="number" placeholder="—" step="any"></div>
-      <div class="m-ig"><div class="m-il">TAKE PROFIT</div><input class="m-in" id="mTP" type="number" placeholder="—" step="any"></div>
+      <div class="m-ig"><div class="m-il" data-lang="stopLoss">STOP LOSS</div><input class="m-in" id="mSL" type="number" placeholder="—" step="any"></div>
+      <div class="m-ig"><div class="m-il" data-lang="takeProfit">TAKE PROFIT</div><input class="m-in" id="mTP" type="number" placeholder="—" step="any"></div>
     </div>
     <div class="m-btns" id="mMarketBtns">
       <button class="m-bs" onclick="mOrd('sell')">▼ SAT</button>
@@ -8610,9 +8614,9 @@ function symUnpin(sym){
 
   <!-- Sekme: Açık / Geçmiş -->
   <div class="m-tabs" style="flex-shrink:0">
-    <button class="m-tab on" onclick="mPT('open',this)">AÇIK</button>
-    <button class="m-tab" onclick="mPT('hist',this)">GEÇMİŞ</button>
-    <button class="m-tab" onclick="mPT('pending',this)">BEKLEYEN</button>
+    <button class="m-tab on" onclick="mPT('open',this)" data-lang="open">AÇIK</button>
+    <button class="m-tab" onclick="mPT('hist',this)" data-lang="histTab">GEÇMİŞ</button>
+    <button class="m-tab" onclick="mPT('pending',this)" data-lang="pending">BEKLEYEN</button>
   </div>
   <div class="m-plist" id="mPL"></div>
 </div>
@@ -8689,7 +8693,7 @@ function symUnpin(sym){
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/>
         </svg>
-        Finans Geçmişi
+        <span data-lang="history">Finans Geçmişi</span>
         <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
 
@@ -8723,7 +8727,7 @@ function symUnpin(sym){
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Şifre Değiştir
+        <span data-lang="changePw">Şifre Değiştir</span>
         <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
 
@@ -8732,7 +8736,7 @@ function symUnpin(sym){
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 11h8M8 15h5"/><circle cx="7" cy="9" r="1.5"/>
         </svg>
-        KYC Doğrulama
+        <span data-lang="kyc">KYC Doğrulama</span>
         <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
 
@@ -8742,7 +8746,7 @@ function symUnpin(sym){
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
         </svg>
-        Broker Bilgileri
+        <span data-lang="brokerInfo">Broker Bilgileri</span>
         <svg id="mBIChevron" style="width:14px;height:14px;margin-left:auto;opacity:.4;transition:transform .2s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
       <div id="mBrokerInfo" style="display:none;background:var(--bg);border:1px solid var(--panel);border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-6px">
@@ -8753,7 +8757,7 @@ function symUnpin(sym){
         <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        <span style="color:#ef5350">Çıkış Yap</span>
+        <span style="color:#ef5350" data-lang="logout">Çıkış Yap</span>
         <svg style="width:14px;height:14px;margin-left:auto;opacity:.4" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
 
@@ -9073,7 +9077,7 @@ function symUnpin(sym){
     var fp=function(n,d){return parseFloat(n||0).toFixed(d||2);};
     if(_ptab==='open'){
       var pos=typeof positions!=='undefined'?positions:[];
-      if(!pos.length){el.innerHTML='<div class="m-empty">Açık pozisyon yok</div>';return;}
+      if(!pos.length){el.innerHTML='<div class="m-empty">'+((_LANGS[_curLang]||_LANGS.tr).noPos)+'</div>';return;}
       // En son açılandan eskiye sırala
       pos = pos.slice().sort(function(a,b){ return (parseFloat(b.id)||0)-(parseFloat(a.id)||0); });
       el.innerHTML=pos.map(function(p){
@@ -9098,7 +9102,7 @@ function symUnpin(sym){
       }).join('');
     } else {
       var hist=typeof tradeHistory!=='undefined'?tradeHistory.slice(0,50):[];
-      if(!hist.length){el.innerHTML='<div class="m-empty">Geçmiş yok</div>';return;}
+      if(!hist.length){el.innerHTML='<div class="m-empty">'+((_LANGS[_curLang]||_LANGS.tr).noHist)+'</div>';return;}
       el.innerHTML=hist.map(function(h){
         var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===h.sym;}):null;
         var dec=sc?parseInt(sc.decimals)||2:2;
@@ -9118,7 +9122,7 @@ function symUnpin(sym){
     }
     if(_ptab==='pending') {
       var pords=typeof pendingOrders!=='undefined'?pendingOrders:[];
-      if(!pords.length){el.innerHTML='<div class="m-empty">Bekleyen emir yok</div>';return;}
+      if(!pords.length){el.innerHTML='<div class="m-empty">'+((_LANGS[_curLang]||_LANGS.tr).noPending)+'</div>';return;}
       el.innerHTML=pords.map(function(po,i){
         var typeLabel={buy_limit:'Buy Limit',sell_limit:'Sell Limit',buy_stop:'Buy Stop',sell_stop:'Sell Stop'}[po.type]||po.type;
         var sideColor=po.side==='buy'?'#2979ff':'#ef5350';
@@ -9147,7 +9151,7 @@ function symUnpin(sym){
     var inp = document.getElementById('mPMPartialQty');
     var v = parseFloat(String((inp&&inp.value)||'').replace(',','.'));
     var maxQ = parseFloat(pos.qty)||0;
-    if(!(v>0)){ if(typeof showToast==='function') showToast('Hata','Geçerli bir lot girin'); return; }
+    if(!(v>0)){ if(typeof showToast==='function') showToast((_LANGS[_curLang]||_LANGS.tr).errTitle,(_LANGS[_curLang]||_LANGS.tr).msgInvalidLot); return; }
     if(v >= maxQ - 1e-9){ window.mPosClose(); return; }   // tamamı → normal kapatma
     if(typeof closePosition==='function') closePosition(_mPosId, '', v);
     if(inp) inp.value='';
@@ -9162,10 +9166,15 @@ function symUnpin(sym){
       changePw:'Şifre Değiştir', kyc:'KYC Doğrulama', logout:'Çıkış Yap',
       lang:'Dil: Türkçe', balance:'Bakiye', equity:'Varlık', bonus:'Bonus',
       margin:'Teminat', freeMargin:'Serbest Teminat', marginLvl:'Teminat Seviyesi',
-      openPnl:'AÇIK KAR / ZARAR', open:'AÇIK', histTab:'GEÇMİŞ', pending:'⏳ BEKLEYEN',
+      openPnl:'AÇIK KAR / ZARAR', open:'AÇIK', histTab:'GEÇMİŞ', pending:'BEKLEYEN',
       sell:'SAT', buy:'AL', lot:'LOT', orderType:'EMİR TİPİ', stopLoss:'STOP LOSS', takeProfit:'TAKE PROFIT',
+      sellBid:'SAT / BID', buyAsk:'AL / ASK', lotAmount:'LOT MİKTARI',
+      currentLbl:'Güncel', closedLbl:'Kapanış', closedStatus:'KAPALI',
+      update:'Güncelle', partialClose:'Parçalı Kapat', closePos:'Pozisyonu Kapat',
+      errTitle:'Hata', msgInvalidLot:'Geçerli bir lot girin', msgUpdatedTitle:'Güncellendi ✓',
+      msgSlTpSet:'SL/TP ayarlandı', msgEnterOrderPrice:'Emir fiyatı girin!', msgSelectPendingType:'Bekleyen emir tipi seçin!',
       noPos:'Açık pozisyon yok', noHist:'Geçmiş yok', noPending:'Bekleyen emir yok',
-      myAccount:'HESABIM', dir:'rtl-no'
+      myAccount:'HESABIM', brokerInfo:'Broker Bilgileri', dir:'rtl-no'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9173,10 +9182,15 @@ function symUnpin(sym){
       changePw:'Change Password', kyc:'KYC Verification', logout:'Logout',
       lang:'Lang: English', balance:'Balance', equity:'Equity', bonus:'Bonus',
       margin:'Margin', freeMargin:'Free Margin', marginLvl:'Margin Level',
-      openPnl:'OPEN P&L', open:'OPEN', histTab:'HISTORY', pending:'⏳ PENDING',
+      openPnl:'OPEN P&L', open:'OPEN', histTab:'HISTORY', pending:'PENDING',
       sell:'SELL', buy:'BUY', lot:'LOT', orderType:'ORDER TYPE', stopLoss:'STOP LOSS', takeProfit:'TAKE PROFIT',
+      sellBid:'SELL / BID', buyAsk:'BUY / ASK', lotAmount:'LOT AMOUNT',
+      currentLbl:'Current', closedLbl:'Closed', closedStatus:'CLOSED',
+      update:'Update', partialClose:'Partial Close', closePos:'Close Position',
+      errTitle:'Error', msgInvalidLot:'Enter a valid lot size', msgUpdatedTitle:'Updated ✓',
+      msgSlTpSet:'SL/TP set', msgEnterOrderPrice:'Enter order price!', msgSelectPendingType:'Select a pending order type!',
       noPos:'No open positions', noHist:'No history', noPending:'No pending orders',
-      myAccount:'MY ACCOUNT', dir:'rtl-no'
+      myAccount:'MY ACCOUNT', brokerInfo:'Broker Info', dir:'rtl-no'
     },
     ar: {
       markets:'الأسواق', chart:'الرسم', trade:'تداول', pos:'المراكز', acc:'الحساب',
@@ -9184,10 +9198,15 @@ function symUnpin(sym){
       changePw:'تغيير كلمة المرور', kyc:'التحقق من الهوية', logout:'تسجيل الخروج',
       lang:'اللغة: العربية', balance:'الرصيد', equity:'حقوق الملكية', bonus:'مكافأة',
       margin:'الهامش', freeMargin:'الهامش الحر', marginLvl:'مستوى الهامش',
-      openPnl:'الربح/الخسارة', open:'مفتوح', histTab:'السجل', pending:'⏳ معلق',
+      openPnl:'الربح/الخسارة', open:'مفتوح', histTab:'السجل', pending:'معلق',
       sell:'بيع', buy:'شراء', lot:'حجم', orderType:'نوع الأمر', stopLoss:'وقف الخسارة', takeProfit:'جني الأرباح',
+      sellBid:'بيع / عرض', buyAsk:'شراء / طلب', lotAmount:'كمية اللوت',
+      currentLbl:'الحالي', closedLbl:'مغلق', closedStatus:'مغلق',
+      update:'تحديث', partialClose:'إغلاق جزئي', closePos:'إغلاق المركز',
+      errTitle:'خطأ', msgInvalidLot:'أدخل حجم لوت صحيح', msgUpdatedTitle:'تم التحديث ✓',
+      msgSlTpSet:'تم ضبط وقف الخسارة/جني الأرباح', msgEnterOrderPrice:'أدخل سعر الأمر!', msgSelectPendingType:'اختر نوع الأمر المعلق!',
       noPos:'لا توجد مراكز مفتوحة', noHist:'لا يوجد سجل', noPending:'لا توجد أوامر معلقة',
-      myAccount:'حسابي', dir:'rtl'
+      myAccount:'حسابي', brokerInfo:'معلومات الوسيط', dir:'rtl'
     }
   };
   var _curLang = localStorage.getItem('_txLang') || 'tr';
@@ -9256,13 +9275,13 @@ function symUnpin(sym){
     var _ot = pos.openTime || pos.time || null;
     var dt = _ot ? new Date(_ot).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
     set('mPMSym', (pos.label||pos.sym));
-    set('mPMType', (pos.side==='buy'?'▲ AL':'▼ SAT')+' · #'+pos.id);
+    set('mPMType', (pos.side==='buy'?'▲ '+((_LANGS[_curLang]||_LANGS.tr).buy):'▼ '+((_LANGS[_curLang]||_LANGS.tr).sell))+' · #'+pos.id);
     set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
     setc('mPMPnl', pnl>=0?'#2979ff':'#ef5350');
-    set('mPMCur', 'Güncel: '+fp2(cur,dec));
+    set('mPMCur', ((_LANGS[_curLang]||_LANGS.tr).currentLbl)+': '+fp2(cur,dec));
     set('mPMOpen', fp2(pos.openPrice,dec));
     set('mPMCurPrice', fp2(cur,dec));
-    var curLbl2=document.getElementById('mPMCurLabel'); if(curLbl2) curLbl2.textContent='Mevcut';
+    var curLbl2=document.getElementById('mPMCurLabel'); if(curLbl2) curLbl2.textContent=(_LANGS[_curLang]||_LANGS.tr).currentLbl;
     set('mPMLot', pos.qty);
     set('mPMCost', pos.cost?'$'+fp2(pos.cost):'—');
     set('mPMSL', pos.sl?fp2(pos.sl,dec):'—');
@@ -9292,14 +9311,14 @@ function symUnpin(sym){
     var dtOpen = h.openTime?new Date(h.openTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     _mPosId = null;
     set('mPMSym', (h.label||h.sym));
-    set('mPMType', (h.side==='buy'?'▲ AL':'▼ SAT')+' · KAPALI');
+    set('mPMType', (h.side==='buy'?'▲ '+((_LANGS[_curLang]||_LANGS.tr).buy):'▼ '+((_LANGS[_curLang]||_LANGS.tr).sell))+' · '+((_LANGS[_curLang]||_LANGS.tr).closedStatus));
     set('mPMPnl', (pnl>=0?'+':'')+('$'+fp2(pnl)));
     setc('mPMPnl', pnl>=0?'#2979ff':'#ef5350');
     var _cp = h.closePrice || h.close_price || h.exitPrice || 0;
-    set('mPMCur', 'Kapanış: '+fp2(_cp,dec));
+    set('mPMCur', ((_LANGS[_curLang]||_LANGS.tr).closedLbl)+': '+fp2(_cp,dec));
     set('mPMOpen', fp2(h.openPrice,dec));
     set('mPMCurPrice', fp2(_cp,dec));
-    var curLbl=document.getElementById('mPMCurLabel'); if(curLbl) curLbl.textContent='Kapanış';
+    var curLbl=document.getElementById('mPMCurLabel'); if(curLbl) curLbl.textContent=(_LANGS[_curLang]||_LANGS.tr).closedLbl;
     set('mPMLot', h.qty);
     set('mPMCost', '—');
     set('mPMSL', h.sl?fp2(h.sl,dec):'—');
@@ -9350,7 +9369,7 @@ function symUnpin(sym){
     pos.tp = tpVal;
     try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
     _txSurgicalUpdatePosition(_mPosId, {sl:slVal, tp:tpVal});
-    if(typeof showToast==='function') showToast('Güncellendi ✓','SL/TP ayarlandı');
+    if(typeof showToast==='function') showToast((_LANGS[_curLang]||_LANGS.tr).msgUpdatedTitle,(_LANGS[_curLang]||_LANGS.tr).msgSlTpSet);
     mPosModalClose();
     setTimeout(mFP,200);
   };
@@ -9393,8 +9412,8 @@ function symUnpin(sym){
     var sl = parseFloat((document.getElementById('mSL')||{}).value)||null;
     var tp = parseFloat((document.getElementById('mTP')||{}).value)||null;
 
-    if(!limitPriceVal) { if(typeof showToast==='function') showToast('Hata','Emir fiyatı girin!'); return; }
-    if(ordType==='market') { if(typeof showToast==='function') showToast('Hata','Bekleyen emir tipi seçin!'); return; }
+    if(!limitPriceVal) { if(typeof showToast==='function') showToast((_LANGS[_curLang]||_LANGS.tr).errTitle,(_LANGS[_curLang]||_LANGS.tr).msgEnterOrderPrice); return; }
+    if(ordType==='market') { if(typeof showToast==='function') showToast((_LANGS[_curLang]||_LANGS.tr).errTitle,(_LANGS[_curLang]||_LANGS.tr).msgSelectPendingType); return; }
 
     // Desktop input'larını doldur
     var lpDt=document.getElementById('limitPrice'); if(lpDt) lpDt.value=limitPriceVal;
@@ -9522,7 +9541,7 @@ function symUnpin(sym){
         _se('mPMCurPrice', _fp2(_mcur,_mdec));
         _se('mPMPnl', (_mpnl>=0?'+':'')+('$'+_fp2(_mpnl)));
         _sc2('mPMPnl', _mpnl>=0?'#2979ff':'#ef5350');
-        _se('mPMCur', 'Güncel: '+_fp2(_mcur,_mdec));
+        _se('mPMCur', ((_LANGS[_curLang]||_LANGS.tr).currentLbl)+': '+_fp2(_mcur,_mdec));
       }
     }
   };
@@ -9714,7 +9733,7 @@ function symUnpin(sym){
             style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:#2979ff;font-family:monospace;font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
         </div>
         <button onclick="mPosUpdate()" style="padding:8px 4px;background:#1a1400;border:1px solid #f0b90b;border-radius:5px;color:#f0b90b;font-family:monospace;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
-          ✓ Güncelle
+          ✓ <span data-lang="update">Güncelle</span>
         </button>
       </div>
     </div>
@@ -9725,12 +9744,12 @@ function symUnpin(sym){
           style="flex:1;padding:10px;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:#e8e8e8;font-family:monospace;font-size:13px">
         <button onclick="mPosPartial()"
           style="padding:10px 14px;background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.35);border-radius:8px;color:#f0b90b;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
-          ◐ Parçalı Kapat
+          ◐ <span data-lang="partialClose">Parçalı Kapat</span>
         </button>
       </div>
       <button onclick="mPosClose()" id="mPMCloseBtn"
         style="width:100%;padding:11px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;color:#ef5350;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">
-        ✕ Pozisyonu Kapat
+        ✕ <span data-lang="closePos">Pozisyonu Kapat</span>
       </button>
     </div>
   </div>
@@ -9810,7 +9829,7 @@ function _checkMarketStatus() {
             var badge = document.createElement('span');
             badge.className = 'market-closed-badge';
             badge.style.cssText = 'font-size:9px;background:#ef5350;color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:monospace;';
-            badge.textContent = 'KAPALI';
+            badge.textContent = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr).closedStatus : 'KAPALI';
             row.appendChild(badge);
           }
         }
