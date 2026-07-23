@@ -2364,32 +2364,32 @@ function _txClearPasswordChangedSession() {
           <table class="orders-table">
             <thead><tr>
   <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#2979ff;font-size:9px;">↓</span></th>
-  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none">Sembol <span id="psort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Yön</th>
-  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none">Miktar <span id="psort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none">Tarih/Saat <span id="psort-time" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Açılış</th><th>Güncel</th><th>SL</th><th>TP</th>
-  <th>Swap</th>
-  <th onclick="sortPos('pnl')" title="K/Z'a göre sırala" style="cursor:pointer;user-select:none">K/Z <span id="psort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Kapat</th>
+  <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none" data-lang="symbolLbl">Sembol <span id="psort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="sideLbl">Yön</th>
+  <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none" data-lang="amountLbl">Miktar <span id="psort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th onclick="sortPos('time')" title="Tarihe göre sırala" style="cursor:pointer;user-select:none" data-lang="dateTimeLbl">Tarih/Saat <span id="psort-time" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="openPriceLbl">Açılış</th><th data-lang="currentLbl">Güncel</th><th>SL</th><th>TP</th>
+  <th data-lang="swap">Swap</th>
+  <th onclick="sortPos('pnl')" title="K/Z\'a göre sırala" style="cursor:pointer;user-select:none" data-lang="pnlLbl">K/Z <span id="psort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="closeLbl">Kapat</th>
 </tr></thead>
-            <tbody id="posBody"><tr><td colspan="11" class="empty-msg">Açık pozisyon yok</td></tr></tbody>
+            <tbody id="posBody"><tr><td colspan="11" class="empty-msg" data-lang="noPos">Açık pozisyon yok</td></tr></tbody>
           </table>
         </div>
         <!-- HISTORY -->
         <div class="bp-section" id="bp-hist">
           <table class="orders-table">
             <thead><tr>
-  <th onclick="sortHist('time')" style="cursor:pointer;user-select:none">Zaman <span id="hsort-time" style="color:#2979ff;font-size:9px;">↓</span></th>
-  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none">Sembol <span id="hsort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Yön</th>
-  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none">Miktar <span id="hsort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Açılış</th><th>Kapanış</th>
-  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none">K/Z $ <span id="hsort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
-  <th>Swap</th>
-  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none">Sebep <span id="hsort-reason" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th onclick="sortHist('time')" style="cursor:pointer;user-select:none" data-lang="dateTimeLbl2">Zaman <span id="hsort-time" style="color:#2979ff;font-size:9px;">↓</span></th>
+  <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none" data-lang="symbolLbl">Sembol <span id="hsort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="sideLbl">Yön</th>
+  <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none" data-lang="amountLbl">Miktar <span id="hsort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="openPriceLbl">Açılış</th><th data-lang="closedLbl">Kapanış</th>
+  <th onclick="sortHist('pnl')" style="cursor:pointer;user-select:none" data-lang="pnlDollarLbl">K/Z $ <span id="hsort-pnl" style="color:var(--faint);font-size:9px;">⇅</span></th>
+  <th data-lang="swap">Swap</th>
+  <th onclick="sortHist('reason')" style="cursor:pointer;user-select:none" data-lang="reasonLbl">Sebep <span id="hsort-reason" style="color:var(--faint);font-size:9px;">⇅</span></th>
 </tr></thead>
-            <tbody id="histBody"><tr><td colspan="7" class="empty-msg">İşlem geçmişi boş</td></tr></tbody>
+            <tbody id="histBody"><tr><td colspan="7" class="empty-msg" data-lang="noHistDesktop">İşlem geçmişi boş</td></tr></tbody>
           </table>
         </div>
         
@@ -2397,9 +2397,9 @@ function _txClearPasswordChangedSession() {
         <div class="bp-section" id="bp-pending" style="padding:0;">
           <table class="orders-table" style="width:100%">
             <thead><tr>
-              <th>Tür</th><th>Sembol</th><th>Miktar</th><th>Fiyat</th><th>SL</th><th>TP</th><th>İşlem</th>
+              <th data-lang="typeLbl2">Tür</th><th data-lang="symbolLbl">Sembol</th><th data-lang="amountLbl">Miktar</th><th data-lang="priceLbl">Fiyat</th><th>SL</th><th>TP</th><th data-lang="actionLbl">İşlem</th>
             </tr></thead>
-            <tbody id="pendingOrdersBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:12px">Bekleyen emir yok</td></tr></tbody>
+            <tbody id="pendingOrdersBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:12px" data-lang="noPending">Bekleyen emir yok</td></tr></tbody>
           </table>
         </div>
 
@@ -4293,7 +4293,7 @@ function renderPositions() {
   const tb = document.getElementById('posBody');
   if (!tb) return;
   if (!positions.length) {
-    tb.innerHTML = '<tr><td colspan="12" class="empty-msg">Açık pozisyon yok</td></tr>';
+    { var _npL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); tb.innerHTML = '<tr><td colspan="12" class="empty-msg">'+(_npL?_npL.noPos:'Açık pozisyon yok')+'</td></tr>'; }
     return;
   }
 
@@ -9235,7 +9235,10 @@ function symUnpin(sym){
       symbolLbl:'Sembol', sellBidShort:'Satış', buyAskShort:'Alış', spreadLbl:'Spread',
       positionsTab:'Pozisyonlar', tradeHistTab:'İşlem Geçmişi', financeTab:'Finans', pendingTab:'Bekleyen',
       balanceCaps:'BAKİYE', equityCaps:'VARLIK', marginCaps:'TEMİNAT', freeMarginCaps:'SERBEST TEMİNAT',
-      openPnlShort:'AÇIK K/Z', marginLvlCaps:'TEMİNAT SEVİYESİ', noFinanceTxYet:'Henüz finansal işlem yok'
+      openPnlShort:'AÇIK K/Z', marginLvlCaps:'TEMİNAT SEVİYESİ', noFinanceTxYet:'Henüz finansal işlem yok',
+      sideLbl:'Yön', amountLbl:'Miktar', dateTimeLbl:'Tarih/Saat', closeLbl:'Kapat', pnlLbl:'K/Z',
+      dateTimeLbl2:'Zaman', pnlDollarLbl:'K/Z $', reasonLbl:'Sebep', noHistDesktop:'İşlem geçmişi boş',
+      typeLbl2:'Tür', actionLbl:'İşlem'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9292,7 +9295,10 @@ function symUnpin(sym){
       symbolLbl:'Symbol', sellBidShort:'Sell', buyAskShort:'Buy', spreadLbl:'Spread',
       positionsTab:'Positions', tradeHistTab:'Trade History', financeTab:'Finance', pendingTab:'Pending',
       balanceCaps:'BALANCE', equityCaps:'EQUITY', marginCaps:'MARGIN', freeMarginCaps:'FREE MARGIN',
-      openPnlShort:'OPEN P&L', marginLvlCaps:'MARGIN LEVEL', noFinanceTxYet:'No financial transactions yet'
+      openPnlShort:'OPEN P&L', marginLvlCaps:'MARGIN LEVEL', noFinanceTxYet:'No financial transactions yet',
+      sideLbl:'Side', amountLbl:'Amount', dateTimeLbl:'Date/Time', closeLbl:'Close', pnlLbl:'P&L',
+      dateTimeLbl2:'Time', pnlDollarLbl:'P&L $', reasonLbl:'Reason', noHistDesktop:'No trade history',
+      typeLbl2:'Type', actionLbl:'Action'
     }
   };
   // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
@@ -9331,6 +9337,9 @@ function symUnpin(sym){
     if(window._txBrokerInfo && typeof _txRenderBrokerInfo === 'function') _txRenderBrokerInfo(window._txBrokerInfo);
     // KYC modalı açıksa durum metinlerini de tazele
     if(typeof _kycSyncStatus === 'function' && typeof _cu !== 'undefined' && _cu) _kycSyncStatus();
+    // Hesap rozetindeki Demo/Gerçek Hesap etiketini de tazele
+    var _utEl = document.getElementById('tbUserType');
+    if(_utEl && typeof _cu !== 'undefined' && _cu) { _utEl.textContent = _cu.type==='demo'?L.demoAcc:L.realAcc; }
   }
 
   window.mLangToggle = function(){
