@@ -7365,27 +7365,29 @@ var _kycTypes = {
 
 function _kycStatusHtml(state, type) {
   // state: 'todo' | 'uploading' | 'review' | 'approved' | 'rejected'
-  if(state==='approved')  return {cls:'done',    html:'✓ Onaylandı'};
-  if(state==='review')    return {cls:'pending', html:'⏳ İnceleniyor <span onclick="kycCancelUpload(\''+type+'\',event)" style="color:var(--sell);text-decoration:underline;cursor:pointer;margin-left:6px;">İptal Et</span>'};
-  if(state==='uploading') return {cls:'pending', html:'↑ Yükleniyor...'};
-  if(state==='rejected')  return {cls:'rejected',html:'✕ Reddedildi — Tekrar Yükle'};
-  return {cls:'todo', html:'— Bekliyor, yüklemek için tıklayın'};
+  var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+  if(state==='approved')  return {cls:'done',    html: L ? L.kycApproved : '✓ Onaylandı'};
+  if(state==='review')    return {cls:'pending', html:(L?L.kycReview:'⏳ İnceleniyor')+' <span onclick="kycCancelUpload(\''+type+'\',event)" style="color:var(--sell);text-decoration:underline;cursor:pointer;margin-left:6px;">'+(L?L.kycCancelLink:'İptal Et')+'</span>'};
+  if(state==='uploading') return {cls:'pending', html: L ? L.kycUploading : '↑ Yükleniyor...'};
+  if(state==='rejected')  return {cls:'rejected',html: L ? L.kycRejected : '✕ Reddedildi — Tekrar Yükle'};
+  return {cls:'todo', html: L ? L.kycTodo : '— Bekliyor, yüklemek için tıklayın'};
 }
 
 function kycCancelUpload(type, event) {
   if(event) event.stopPropagation();
   if(!_cu || !_cu.id || !db) return;
-  if(!confirm('Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.')) return;
+  var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+  if(!confirm(L ? L.kycCancelConfirm : 'Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.')) return;
   var patch = { kyc: {} };
   patch.kyc[type] = firebase.firestore.FieldValue.delete();
   db.collection('users').doc(String(_cu.id)).set(patch, {merge:true}).then(function(){
     if(_cu.kyc) delete _cu.kyc[type];
     try { localStorage.setItem('tx_current_user', JSON.stringify(_cu)); } catch(ex){}
-    showToast('İptal edildi', _kycTypes[type].label + ' tekrar yüklenebilir');
+    showToast(L ? L.kycCancelledTitle : 'İptal edildi', _kycTypes[type].label + (L ? L.kycCancelledMsg : ' tekrar yüklenebilir'));
     _kycSyncStatus();
   }).catch(function(err){
     console.error('KYC iptal hatası:', err);
-    showToast('İptal edilemedi', err.message || 'Firestore hatası');
+    showToast(L ? L.kycCancelFailTitle : 'İptal edilemedi', err.message || 'Firestore hatası');
   });
 }
 
@@ -7826,43 +7828,43 @@ function symUnpin(sym){
 <div class="kyc-modal" id="kycModal">
   <div class="kyc-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="kyc-title">🪪 KYC DOĞRULAMA</div>
+      <div class="kyc-title" data-lang="kycTitle">🪪 KYC DOĞRULAMA</div>
       <button onclick="closeKycModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div class="kyc-step">
       <div class="kyc-step-icon">📧</div>
       <div class="kyc-step-info">
-        <div class="kyc-step-title">E-posta Doğrulama</div>
-        <div class="kyc-step-desc">E-posta adresinizi doğrulayın</div>
+        <div class="kyc-step-title" data-lang="kycEmailTitle">E-posta Doğrulama</div>
+        <div class="kyc-step-desc" data-lang="kycEmailDesc">E-posta adresinizi doğrulayın</div>
       </div>
-      <div class="kyc-step-status done" id="kyc-email-status">✓ Tamamlandı</div>
+      <div class="kyc-step-status done" id="kyc-email-status" data-lang="kycDone">✓ Tamamlandı</div>
     </div>
     <div class="kyc-step" id="kyc-id-step" onclick="kycUploadClick('id')">
       <div class="kyc-step-icon">🪪</div>
       <div class="kyc-step-info">
-        <div class="kyc-step-title">Kimlik Doğrulama</div>
-        <div class="kyc-step-desc">TC Kimlik veya Pasaport</div>
+        <div class="kyc-step-title" data-lang="kycIdTitle">Kimlik Doğrulama</div>
+        <div class="kyc-step-desc" data-lang="kycIdDesc">TC Kimlik veya Pasaport</div>
       </div>
-      <div class="kyc-step-status pending" id="kyc-id-status">⏳ Beklemede</div>
+      <div class="kyc-step-status pending" id="kyc-id-status" data-lang="kycPending">⏳ Beklemede</div>
     </div>
     <div class="kyc-step" id="kyc-addr-step" onclick="kycUploadClick('addr')">
       <div class="kyc-step-icon">🏠</div>
       <div class="kyc-step-info">
-        <div class="kyc-step-title">Adres Doğrulama</div>
-        <div class="kyc-step-desc">Fatura veya banka ekstresi</div>
+        <div class="kyc-step-title" data-lang="kycAddrTitle">Adres Doğrulama</div>
+        <div class="kyc-step-desc" data-lang="kycAddrDesc">Fatura veya banka ekstresi</div>
       </div>
-      <div class="kyc-step-status todo" id="kyc-addr-status">— Bekliyor, yüklemek için tıklayın</div>
+      <div class="kyc-step-status todo" id="kyc-addr-status" data-lang="kycTodo">— Bekliyor, yüklemek için tıklayın</div>
     </div>
     <div class="kyc-step" id="kyc-selfie-step" onclick="kycUploadClick('selfie')">
       <div class="kyc-step-icon">🤳</div>
       <div class="kyc-step-info">
-        <div class="kyc-step-title">Selfie Doğrulama</div>
-        <div class="kyc-step-desc">Kimlikle birlikte fotoğraf</div>
+        <div class="kyc-step-title" data-lang="kycSelfieTitle">Selfie Doğrulama</div>
+        <div class="kyc-step-desc" data-lang="kycSelfieDesc">Kimlikle birlikte fotoğraf</div>
       </div>
-      <div class="kyc-step-status todo" id="kyc-selfie-status">— Bekliyor, yüklemek için tıklayın</div>
+      <div class="kyc-step-status todo" id="kyc-selfie-status" data-lang="kycTodo">— Bekliyor, yüklemek için tıklayın</div>
     </div>
     <input type="file" id="kycFileInput" accept="image/*,.pdf" style="display:none" onchange="_kycOnFileSelected(event)">
-    <div style="margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--mono)">
+    <div style="margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--mono)" data-lang="kycFooterNote">
       KYC doğrulama işlemleri 1-3 iş günü içinde tamamlanır.
     </div>
   </div>
@@ -8713,13 +8715,9 @@ function symUnpin(sym){
           <span style="font-size:18px">🇹🇷</span> Türkçe
           <span style="margin-left:auto;color:#2979ff;display:none" id="mLangTRCheck">✓</span>
         </div>
-        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--panel);cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangEN">
+        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangEN">
           <span style="font-size:18px">🇬🇧</span> English
           <span style="margin-left:auto;color:#2979ff;display:none" id="mLangENCheck">✓</span>
-        </div>
-        <div onclick="mSetLang('ar')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangAR">
-          <span style="font-size:18px">🇸🇦</span> العربية
-          <span style="margin-left:auto;color:#2979ff;display:none" id="mLangARCheck">✓</span>
         </div>
       </div>
 
@@ -9183,7 +9181,18 @@ function symUnpin(sym){
       recipientInfo:'ALICI BİLGİSİ', ibanPlaceholder:'IBAN / Cüzdan Adresi', allAmount:'Tümü',
       submitWithdraw:'ÇEKİM TALEBİ GÖNDER', loadingTxt:'Yükleniyor...',
       brokerLbl:'Broker', companyLbl:'Şirket', websiteLbl:'Web Sitesi', emailLbl:'E-posta', phoneLbl:'Telefon',
-      licenseLbl:'Lisans', regulatorLbl:'Düzenleyici', addressLbl:'Adres', supportLbl:'Destek', disclaimerLbl:'Yasal Uyarı'
+      licenseLbl:'Lisans', regulatorLbl:'Düzenleyici', addressLbl:'Adres', supportLbl:'Destek', disclaimerLbl:'Yasal Uyarı',
+      kycTitle:'🪪 KYC DOĞRULAMA',
+      kycEmailTitle:'E-posta Doğrulama', kycEmailDesc:'E-posta adresinizi doğrulayın',
+      kycIdTitle:'Kimlik Doğrulama', kycIdDesc:'TC Kimlik veya Pasaport',
+      kycAddrTitle:'Adres Doğrulama', kycAddrDesc:'Fatura veya banka ekstresi',
+      kycSelfieTitle:'Selfie Doğrulama', kycSelfieDesc:'Kimlikle birlikte fotoğraf',
+      kycFooterNote:'KYC doğrulama işlemleri 1-3 iş günü içinde tamamlanır.',
+      kycDone:'✓ Tamamlandı', kycPending:'⏳ Beklemede', kycTodo:'— Bekliyor, yüklemek için tıklayın',
+      kycApproved:'✓ Onaylandı', kycReview:'⏳ İnceleniyor', kycCancelLink:'İptal Et',
+      kycUploading:'↑ Yükleniyor...', kycRejected:'✕ Reddedildi — Tekrar Yükle',
+      kycCancelConfirm:'Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.',
+      kycCancelledTitle:'İptal edildi', kycCancelledMsg:' tekrar yüklenebilir', kycCancelFailTitle:'İptal edilemedi'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9207,34 +9216,24 @@ function symUnpin(sym){
       recipientInfo:'RECIPIENT INFO', ibanPlaceholder:'IBAN / Wallet Address', allAmount:'All',
       submitWithdraw:'SUBMIT WITHDRAWAL REQUEST', loadingTxt:'Loading...',
       brokerLbl:'Broker', companyLbl:'Company', websiteLbl:'Website', emailLbl:'Email', phoneLbl:'Phone',
-      licenseLbl:'License', regulatorLbl:'Regulator', addressLbl:'Address', supportLbl:'Support', disclaimerLbl:'Disclaimer'
-    },
-    ar: {
-      markets:'الأسواق', chart:'الرسم', trade:'تداول', pos:'المراكز', acc:'الحساب',
-      deposit:'إيداع', withdraw:'سحب', history:'السجل المالي',
-      changePw:'تغيير كلمة المرور', kyc:'التحقق من الهوية', logout:'تسجيل الخروج',
-      lang:'اللغة: العربية', balance:'الرصيد', equity:'حقوق الملكية', bonus:'مكافأة',
-      margin:'الهامش', freeMargin:'الهامش الحر', marginLvl:'مستوى الهامش',
-      openPnl:'الربح/الخسارة', open:'مفتوح', histTab:'السجل', pending:'معلق',
-      sell:'بيع', buy:'شراء', lot:'حجم', orderType:'نوع الأمر', stopLoss:'وقف الخسارة', takeProfit:'جني الأرباح',
-      sellBid:'بيع / عرض', buyAsk:'شراء / طلب', lotAmount:'كمية اللوت',
-      currentLbl:'الحالي', closedLbl:'مغلق', closedStatus:'مغلق',
-      update:'تحديث', partialClose:'إغلاق جزئي', closePos:'إغلاق المركز',
-      errTitle:'خطأ', msgInvalidLot:'أدخل حجم لوت صحيح', msgUpdatedTitle:'تم التحديث ✓',
-      msgSlTpSet:'تم ضبط وقف الخسارة/جني الأرباح', msgEnterOrderPrice:'أدخل سعر الأمر!', msgSelectPendingType:'اختر نوع الأمر المعلق!',
-      noPos:'لا توجد مراكز مفتوحة', noHist:'لا يوجد سجل', noPending:'لا توجد أوامر معلقة',
-      myAccount:'حسابي', brokerInfo:'معلومات الوسيط', dir:'rtl',
-      searchSymbol:'بحث عن رمز...', orderPrice:'سعر الأمر', placeOrder:'تنفيذ الأمر', priceLbl:'السعر',
-      openPriceLbl:'الافتتاح', swap:'المبادلة', timeLbl:'الوقت',
-      walletTitle:'⬆⬇ المعاملات المالية', histTab2:'السجل', selectDepositMethod:'اختر طريقة الإيداع',
-      amount:'المبلغ', submitDeposit:'إرسال طلب الإيداع', selectWithdrawMethod:'اختر طريقة السحب',
-      recipientInfo:'معلومات المستلم', ibanPlaceholder:'IBAN / عنوان المحفظة', allAmount:'الكل',
-      submitWithdraw:'إرسال طلب السحب', loadingTxt:'جارٍ التحميل...',
-      brokerLbl:'الوسيط', companyLbl:'الشركة', websiteLbl:'الموقع الإلكتروني', emailLbl:'البريد الإلكتروني', phoneLbl:'الهاتف',
-      licenseLbl:'الترخيص', regulatorLbl:'الجهة المنظمة', addressLbl:'العنوان', supportLbl:'الدعم', disclaimerLbl:'إخلاء المسؤولية'
+      licenseLbl:'License', regulatorLbl:'Regulator', addressLbl:'Address', supportLbl:'Support', disclaimerLbl:'Disclaimer',
+      kycTitle:'🪪 KYC VERIFICATION',
+      kycEmailTitle:'Email Verification', kycEmailDesc:'Verify your email address',
+      kycIdTitle:'ID Verification', kycIdDesc:'National ID or Passport',
+      kycAddrTitle:'Address Verification', kycAddrDesc:'Utility bill or bank statement',
+      kycSelfieTitle:'Selfie Verification', kycSelfieDesc:'Photo holding your ID',
+      kycFooterNote:'KYC verification is completed within 1-3 business days.',
+      kycDone:'✓ Completed', kycPending:'⏳ Pending', kycTodo:'— Waiting, tap to upload',
+      kycApproved:'✓ Approved', kycReview:'⏳ Under review', kycCancelLink:'Cancel',
+      kycUploading:'↑ Uploading...', kycRejected:'✕ Rejected — Upload again',
+      kycCancelConfirm:'Are you sure you want to cancel this uploaded document? You can upload it again.',
+      kycCancelledTitle:'Cancelled', kycCancelledMsg:' can be uploaded again', kycCancelFailTitle:'Could not cancel'
     }
   };
+  // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
+  // kalmış olabilir, o durumda güvenli şekilde Türkçe'ye dön.
   var _curLang = localStorage.getItem('_txLang') || 'tr';
+  if(_curLang === 'ar') { _curLang = 'tr'; try{ localStorage.setItem('_txLang','tr'); }catch(e){} }
 
   function mApplyLang(lang) {
     var L = _LANGS[lang] || _LANGS['tr'];
@@ -9255,20 +9254,15 @@ function symUnpin(sym){
       var key = el.dataset.langPh;
       if(L[key]) el.placeholder = L[key];
     });
-    // RTL
-    var accPan = document.getElementById('mPanAcc');
-    if(accPan) accPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
-    var posPan = document.getElementById('mPanPos');
-    if(posPan) posPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
-    var trdPan = document.getElementById('mPanTrade');
-    if(trdPan) trdPan.style.direction = lang==='ar' ? 'rtl' : 'ltr';
     // Checkmark güncelle
-    ['tr','en','ar'].forEach(function(l){
+    ['tr','en'].forEach(function(l){
       var el = document.getElementById('mLang'+l.toUpperCase()+'Check');
       if(el) el.style.display = (l===lang) ? 'block' : 'none';
     });
     // Broker bilgileri paneli açıksa etiketlerini de tazele
     if(window._txBrokerInfo && typeof _txRenderBrokerInfo === 'function') _txRenderBrokerInfo(window._txBrokerInfo);
+    // KYC modalı açıksa durum metinlerini de tazele
+    if(typeof _kycSyncStatus === 'function' && typeof _cu !== 'undefined' && _cu) _kycSyncStatus();
   }
 
   window.mLangToggle = function(){
