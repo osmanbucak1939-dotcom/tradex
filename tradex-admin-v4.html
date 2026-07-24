@@ -3439,18 +3439,25 @@ var AD_TD_BUILTIN = {
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
   // Emtia
-  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'USOIL':'WTI/USD',
+  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',
+  'USOIL':'WTI/USD',   'WTIUSD':'WTI/USD',
   // Cross pair'ler (minor forex) — köprü TD WS'e abone olur
   'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
   'EURAUD':'EUR/AUD',  'EURCHF':'EUR/CHF',
   'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'GBPCHF':'GBP/CHF',
   'AUDCAD':'AUD/CAD',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
   'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
-  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK', 'USDNOK':'USD/NOK'
+  'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK', 'USDNOK':'USD/NOK',
+  'NZDJPY':'NZD/JPY',  'USDDKK':'USD/DKK',  'GBPZAR':'GBP/ZAR',
+  'EURSEK':'EUR/SEK',  'EURPLN':'EUR/PLN',  'EURNOK':'EUR/NOK',
+  'EURMXN':'EUR/MXN',  'EURHUF':'EUR/HUF',  'AUDJPY':'AUD/JPY',
+  'GBPTRY':'GBP/TRY',  'CHFAED':'CHF/AED'
   // DAX40X TD'den çıkarıldı → köprü artık DAX'ı Yahoo'dan çekiyor.
-  // TD planında KAPALI olanlar (eklersen köprü 'subscribe fail' verir, fiyat akmaz):
+  // XPTUSD/XPDUSD/BRTUSD ve ABD hisseleri artık Yahoo köprüsünden (INDEX_MAP) —
+  // TD planında güvenilmiyor/yok. TD planında KAPALI olanlar (eklersen köprü
+  // 'subscribe fail' verir, fiyat akmaz):
   //   SPX500X (SPX/GSPC), NAS100X (NDX), DJ30X (DJI), FTSE100X (FTSE) → gerçek endeks lisanslı.
+  //   EURRUB → RUB çiftleri TD'de yok (yaptırımlar).
 };
 function _txLoadTdMap(){
   try {
