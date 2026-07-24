@@ -1004,7 +1004,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 <script>
 var _cu = null;
 try { _cu = JSON.parse(localStorage.getItem('tx_current_user')||'null'); } catch(e){}
-var _authType = 'demo';
+var _authType = 'live';
 
 function _authShow(sec) {
   var l = document.getElementById('sec-login');
@@ -2245,7 +2245,7 @@ function _txClearPasswordChangedSession() {
       <div class="ind-sep"></div>
       <span style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 8px" id="indValueDisplay"></span>
       <div style="position:relative;margin-left:auto">
-        <button class="ind-settings-btn" onclick="toggleIndPopup()">⚙ Ayarlar</button>
+        <button class="ind-settings-btn" onclick="toggleIndPopup()">⚙ <span data-lang="settingsBtn">Ayarlar</span></button>
         <div class="ind-popup" id="indPopup">
           <div class="ind-popup-title">İNDİKATÖR AYARLARI</div>
           <div class="ind-popup-row"><span class="ind-popup-label">MA Periyot</span><input class="ind-popup-input" id="cfg_ma" type="number" value="20" min="2"></div>
@@ -2425,8 +2425,8 @@ function _txClearPasswordChangedSession() {
     <div style="font-family:monospace;font-size:18px;font-weight:700;color:#f0b90b;letter-spacing:3px;text-align:center;margin-bottom:4px">Trade Academy</div>
     <div style="font-family:monospace;font-size:10px;color:var(--text);text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
-      <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer">GİRİŞ YAP</div>
-      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">HESAP AÇ</div>
+      <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer" data-lang="loginTab">GİRİŞ YAP</div>
+      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer" data-lang="registerTab">HESAP AÇ</div>
     </div>
   </div>
 
@@ -2438,12 +2438,12 @@ function _txClearPasswordChangedSession() {
       <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">ŞİFRE</div>
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
       <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
-    <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">GİRİŞ YAP</button>
-    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 DEMO HESAP İLE DEVAM ET</button>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center">Hesabınız yok mu? <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer">Kayıt olun</span></div>
+    <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px" data-lang="loginBtn">GİRİŞ YAP</button>
+    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span data-lang="noAccountQ">Hesabınız yok mu?</span> <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer" data-lang="registerLink">Kayıt olun</span></div>
   </div>
 
   <!-- Kayıt -->
@@ -2453,11 +2453,11 @@ function _txClearPasswordChangedSession() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
         <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">AD</div>
-        <input id="inp-name" placeholder="Adınız" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <input id="inp-name" placeholder="Adınız" data-lang-ph="firstNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
         <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">SOYAD</div>
-        <input id="inp-surname" placeholder="Soyadınız" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <input id="inp-surname" placeholder="Soyadınız" data-lang-ph="lastNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
@@ -2470,7 +2470,7 @@ function _txClearPasswordChangedSession() {
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">ŞİFRE</div>
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
         <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
@@ -2479,17 +2479,17 @@ function _txClearPasswordChangedSession() {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-      <div id="opt-demo" onclick="authAccType('demo')" style="border:1px solid #f0b90b;background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="font-size:16px">🎮</div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700">DEMO</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted)">$10,000 sanal</div>
+      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #f0b90b;background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
+        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg></div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700" data-lang="realAccCaps">GERÇEK</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--muted)" data-lang="liveAccDesc">Canlı hesap</div>
       </div>
-      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid var(--border2);background:var(--panel2);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="font-size:16px">💼</div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700">GERÇEK</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted)">Canlı hesap</div>
+      <div id="opt-demo" onclick="authAccType('demo')" style="border:1px solid var(--border2);background:var(--bg);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
+        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="7" y1="12" x2="11" y2="12"/><line x1="9" y1="10" x2="9" y2="14"/><circle cx="16" cy="10.5" r="1"/><circle cx="18" cy="13" r="1"/></svg></div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700" data-lang="demoAccCaps">DEMO</div>
+        <div style="font-family:monospace;font-size:9px;color:var(--muted)" data-lang="virtualAccDesc">$10,000 sanal</div>
       </div>
     </div>
-    <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">HESAP OLUŞTUR</button>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center">Hesabınız var mı? <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer">Giriş yapın</span></div>
+    <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="registerBtn">HESAP OLUŞTUR</button>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span data-lang="hasAccountQ">Hesabınız var mı?</span> <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer" data-lang="loginLink">Giriş yapın</span></div>
   </div>
 
 </div>
@@ -2894,6 +2894,12 @@ function _lwPriceFormat(sym) {
 
 /* ── Binance REST klines çek ─────────────────────── */
 // Köprüden beslenen endeksler (Yahoo) — grafik geçmişi de köprünün /klines proxy'sinden gelir.
+function _txCatLabel(g) {
+  var _L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+  if(!_L) return g.label;
+  var map = {bist:_L.catBist, forex:_L.catForex, commodity:_L.catCommodity, indices:_L.catIndices, crypto:_L.catCrypto, stocks:_L.catStocks};
+  return map[g.id] || g.label;
+}
 var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY',
   'BRTUSD','XPDUSD','XPTUSD','AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
 // BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
@@ -6281,7 +6287,7 @@ function renderMarketWatch(filter) {
   if(favItems.length) {
     var favOpen = mwGroupState['favorites'] !== false;
     html += '<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">';
-    html += '<span class="mw-group-title">⭐ FAVORİLER <span style="opacity:.5">(' + favItems.length + ')</span></span>';
+    html += '<span class="mw-group-title">⭐ '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">(' + favItems.length + ')</span></span>';
     html += '<span class="mw-group-arrow" style="display:flex;align-items:center">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;transition:transform .2s;transform:' + (favOpen ? 'rotate(90deg)' : 'rotate(0deg)') + '"><path d=\"M9 18l6-6-6-6\"/></svg></span></div>';
     if(favOpen) {
       for(var fi=0; fi<favItems.length; fi++) {
@@ -6298,7 +6304,7 @@ function renderMarketWatch(filter) {
 
     var isOpen = mwGroupState[g.id] !== false;
     html += '<div class="mw-group-header" data-gid="' + g.id + '" onclick="toggleMwGroup(this.dataset.gid)">';
-    html += '<span class="mw-group-title">' + g.label + ' <span style="opacity:.5">(' + items.length + ')</span></span>';
+    html += '<span class="mw-group-title">' + _txCatLabel(g) + ' <span style="opacity:.5">(' + items.length + ')</span></span>';
     html += '<span class="mw-group-arrow" style="display:flex;align-items:center">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;transition:transform .2s;transform:' + (isOpen ? 'rotate(90deg)' : 'rotate(0deg)') + '"><path d=\"M9 18l6-6-6-6\"/></svg></span></div>';
 
     if(isOpen) {
@@ -6313,6 +6319,10 @@ function renderMarketWatch(filter) {
 function toggleMwGroup(id) {
   mwGroupState[id] = !mwGroupState[id];
   renderMarketWatch((document.getElementById('mwSearch') ? document.getElementById('mwSearch').value : ''));
+  // ⚠️ 2026-07-24 DÜZELTME: mobil piyasalar listesi ayrı bir fonksiyonla
+  // (mFM) çiziliyor — burada tetiklenmediği için mobilde gruplar
+  // tıklanınca açılıp kapanmıyordu, sadece masaüstü güncelleniyordu.
+  if(typeof window.mFM === 'function') { try { window.mFM(); } catch(e){} }
 }
 
 function mwFilter(val) {
@@ -8998,7 +9008,7 @@ function symUnpin(sym){
     if(favItems.length){
       var favOpen=mwGroupState['favorites']!==false;
       html+='<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">'
-        +'<span class="mw-group-title">⭐ FAVORİLER <span style="opacity:.5">('+favItems.length+')</span></span>'
+        +'<span class="mw-group-title">⭐ '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">('+favItems.length+')</span></span>'
         +'<span class="mw-group-arrow'+(favOpen?' open':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg></span></div>';
       if(favOpen){
         for(var fi=0;fi<favItems.length;fi++){
@@ -9014,7 +9024,7 @@ function symUnpin(sym){
       if(!items||!items.length) continue;
       var isOpen=(typeof mwGroupState!=='undefined'&&mwGroupState[g.id]!==false);
       html+='<div class="mw-group-header" data-gid="'+g.id+'" onclick="toggleMwGroup(this.dataset.gid)">'
-        +'<span class="mw-group-title">'+g.label+' <span style="opacity:.5">('+items.length+')</span></span>'
+        +'<span class="mw-group-title">'+_txCatLabel(g)+' <span style="opacity:.5">('+items.length+')</span></span>'
         +'<span class="mw-group-arrow'+(isOpen?' open':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg></span></div>';
       if(isOpen){
         for(var ri=0;ri<items.length;ri++){
@@ -9246,7 +9256,16 @@ function symUnpin(sym){
       openPnlShort:'AÇIK K/Z', marginLvlCaps:'TEMİNAT SEVİYESİ', noFinanceTxYet:'Henüz finansal işlem yok',
       sideLbl:'Yön', amountLbl:'Miktar', dateTimeLbl:'Tarih/Saat', closeLbl:'Kapat', pnlLbl:'K/Z',
       dateTimeLbl2:'Zaman', pnlDollarLbl:'K/Z $', reasonLbl:'Sebep', noHistDesktop:'İşlem geçmişi boş',
-      typeLbl2:'Tür', actionLbl:'İşlem'
+      typeLbl2:'Tür', actionLbl:'İşlem',
+      catBist:'BİST', catForex:'PARİTELER (FOREX)', catCommodity:'EMTİALAR',
+      catIndices:'ENDEKSLER', catCrypto:'KRİPTO', catStocks:'HİSSELER', catFav:'FAVORİLER',
+      settingsBtn:'Ayarlar',
+      loginTab:'GİRİŞ YAP', registerTab:'HESAP AÇ', firstNamePh:'Adınız', lastNamePh:'Soyadınız',
+      passwordLbl:'ŞİFRE', loginBtn:'GİRİŞ YAP', demoBtn:'DEMO HESAP İLE DEVAM ET',
+      noAccountQ:'Hesabınız yok mu?', registerLink:'Kayıt olun',
+      realAccCaps:'GERÇEK', liveAccDesc:'Canlı hesap', registerBtn:'HESAP OLUŞTUR',
+      demoAccCaps:'DEMO', virtualAccDesc:'$10,000 sanal',
+      hasAccountQ:'Hesabınız var mı?', loginLink:'Giriş yapın'
     },
     en: {
       markets:'Markets', chart:'Chart', trade:'Trade', pos:'Positions', acc:'Account',
@@ -9306,7 +9325,16 @@ function symUnpin(sym){
       openPnlShort:'OPEN P&L', marginLvlCaps:'MARGIN LEVEL', noFinanceTxYet:'No financial transactions yet',
       sideLbl:'Side', amountLbl:'Amount', dateTimeLbl:'Date/Time', closeLbl:'Close', pnlLbl:'P&L',
       dateTimeLbl2:'Time', pnlDollarLbl:'P&L $', reasonLbl:'Reason', noHistDesktop:'No trade history',
-      typeLbl2:'Type', actionLbl:'Action'
+      typeLbl2:'Type', actionLbl:'Action',
+      catBist:'BIST', catForex:'FOREX PAIRS', catCommodity:'COMMODITIES',
+      catIndices:'INDICES', catCrypto:'CRYPTO', catStocks:'STOCKS', catFav:'FAVORITES',
+      settingsBtn:'Settings',
+      loginTab:'LOGIN', registerTab:'REGISTER', firstNamePh:'First Name', lastNamePh:'Last Name',
+      passwordLbl:'PASSWORD', loginBtn:'LOGIN', demoBtn:'CONTINUE WITH DEMO ACCOUNT',
+      noAccountQ:"Don't have an account?", registerLink:'Register',
+      realAccCaps:'REAL', liveAccDesc:'Live account', registerBtn:'CREATE ACCOUNT',
+      demoAccCaps:'DEMO', virtualAccDesc:'$10,000 virtual',
+      hasAccountQ:'Already have an account?', loginLink:'Sign in'
     }
   };
   // ⚠️ Arapça seçeneği kaldırıldı — daha önce 'ar' seçmiş bir tarayıcı önbelleğinde
