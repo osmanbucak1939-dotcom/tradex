@@ -1009,8 +1009,19 @@ var _authType = 'live';
 function _authShow(sec) {
   var l = document.getElementById('sec-login');
   var r = document.getElementById('sec-register');
+  var f = document.getElementById('sec-forgot');
   var tl = document.getElementById('tab-login');
   var tr = document.getElementById('tab-register');
+  var tabsRow = tl && tl.parentElement;
+  if(sec === 'forgot') {
+    if(l) l.style.display='none';
+    if(r) r.style.display='none';
+    if(f) f.style.display='block';
+    if(tabsRow) tabsRow.style.display='none';
+    return;
+  }
+  if(tabsRow) tabsRow.style.display='grid';
+  if(f) f.style.display='none';
   if(sec === 'login') {
     if(l) l.style.display='block';
     if(r) r.style.display='none';
@@ -1021,6 +1032,22 @@ function _authShow(sec) {
     if(r) r.style.display='block';
     if(tl){ tl.style.color='var(--muted)'; tl.style.borderBottomColor='transparent'; }
     if(tr){ tr.style.color='#f0b90b'; tr.style.borderBottomColor='#f0b90b'; }
+  }
+}
+// ⚠️ 2026-07-24: Şifremi Unuttum — şimdilik sadece arayüz. Hesaplar gerçek
+// Firebase Authentication kullanmadığı için (anonim auth + kendi şifre
+// hash sistemi), otomatik e-posta gönderimi YOK — bu, admin'in elle
+// müdahale ettiği (adChangePassword) mevcut akışla tutarlı. İleride bir
+// Cloud Function/e-posta servisi bağlanmak istenirse, bu fonksiyon o
+// entegrasyonun gireceği yer.
+function _doForgotPassword() {
+  var email = (document.getElementById('inp-forgot-email')||{}).value || '';
+  var ok = document.getElementById('ok-forgot');
+  var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
+  if(!email || email.indexOf('@')===-1) return;
+  if(ok) {
+    ok.textContent = L ? L.forgotPwSentMsg : 'E-posta adresiniz kayıtlıysa, birazdan sıfırlama talimatlarını içeren bir mesaj alacaksınız.';
+    ok.style.display = 'block';
   }
 }
 function authAccType(t) {
@@ -1572,7 +1599,7 @@ function _doRegister() {
       accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
       // renderAccCards/renderAccListSmall çağrıları kaldırıldı (2026-04-20) — manager panel trader'dan silindi.
       var ok=document.getElementById('ok-register');
-      if(ok){ok.textContent='✓ Hesap oluşturuldu! (#'+finalAcc.login+') Giriş yapılıyor...';ok.style.display='block';}
+      if(ok){ var _L2=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); ok.textContent=(_L2?_L2.accCreatedMsg1:'✓ Hesap oluşturuldu! (#')+finalAcc.login+(_L2?_L2.accCreatedMsg2:') Giriş yapılıyor...');ok.style.display='block';}
       setTimeout(function(){_authSuccess(finalAcc);},1200);
     });
     }).catch(function(hashErr){
@@ -2434,16 +2461,29 @@ function _txClearPasswordChangedSession() {
   <div id="sec-login" style="padding:20px 28px 24px">
     <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">LOGIN NO / E-POSTA</div>
-      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="loginNoLbl">LOGIN NO / E-POSTA</div>
+      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" data-lang-ph="loginPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
-    <div style="margin-bottom:16px">
+    <div style="margin-bottom:8px">
       <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
       <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
+    <div style="text-align:right;margin-bottom:16px"><span id="go-forgot" onclick="_authShow('forgot')" style="font-family:monospace;font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline" data-lang="forgotPwLink">Şifremi unuttum</span></div>
     <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px" data-lang="loginBtn">GİRİŞ YAP</button>
     <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
     <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span data-lang="noAccountQ">Hesabınız yok mu?</span> <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer" data-lang="registerLink">Kayıt olun</span></div>
+  </div>
+
+  <!-- Şifremi Unuttum -->
+  <div id="sec-forgot" style="display:none;padding:20px 28px 24px">
+    <div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center" data-lang="forgotPwTitle">🔑 ŞİFRE SIFIRLAMA</div>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);margin-bottom:16px;text-align:center;line-height:1.5" data-lang="forgotPwDesc">Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.</div>
+    <div id="ok-forgot" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
+    <div style="margin-bottom:16px">
+      <input id="inp-forgot-email" type="email" placeholder="ornek@mail.com" data-lang-ph="forgotPwEmailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+    </div>
+    <button id="btn-forgot" onclick="_doForgotPassword()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="forgotPwSubmit">SIFIRLAMA BAĞLANTISI GÖNDER</button>
+    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span id="go-login-from-forgot" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer" data-lang="forgotPwBack">Girişe dön</span></div>
   </div>
 
   <!-- Kayıt -->
@@ -2452,29 +2492,29 @@ function _txClearPasswordChangedSession() {
     <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#2979ff;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">AD</div>
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="firstNameLbl">AD</div>
         <input id="inp-name" placeholder="Adınız" data-lang-ph="firstNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">SOYAD</div>
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="lastNameLbl">SOYAD</div>
         <input id="inp-surname" placeholder="Soyadınız" data-lang-ph="lastNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">TELEFON</div>
+      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="phoneLbl2">TELEFON</div>
       <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
       <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">E-POSTA</div>
-      <input id="inp-remail" type="email" placeholder="ornek@mail.com" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <input id="inp-remail" type="email" placeholder="ornek@mail.com" data-lang-ph="emailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
         <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
-        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" data-lang-ph="min6Ph" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">TEKRAR</div>
+        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="repeatLbl">TEKRAR</div>
         <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
@@ -9265,6 +9305,12 @@ function symUnpin(sym){
       noAccountQ:'Hesabınız yok mu?', registerLink:'Kayıt olun',
       realAccCaps:'GERÇEK', liveAccDesc:'Canlı hesap', registerBtn:'HESAP OLUŞTUR',
       demoAccCaps:'DEMO', virtualAccDesc:'$10,000 sanal',
+      loginPh:'10000 veya ornek@mail.com', firstNameLbl:'AD', lastNameLbl:'SOYAD', phoneLbl2:'TELEFON',
+      emailPh:'ornek@mail.com', min6Ph:'Min 6 karakter', repeatLbl:'TEKRAR',
+      accCreatedMsg1:'✓ Hesap oluşturuldu! (#', accCreatedMsg2:') Giriş yapılıyor...',
+      forgotPwLink:'Şifremi unuttum', forgotPwTitle:'🔑 ŞİFRE SIFIRLAMA', forgotPwDesc:'Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.',
+      forgotPwEmailPh:'ornek@mail.com', forgotPwSubmit:'SIFIRLAMA BAĞLANTISI GÖNDER', forgotPwBack:'Girişe dön',
+      loginNoLbl:'LOGIN NO / E-POSTA', forgotPwSentMsg:'E-posta adresiniz kayıtlıysa, birazdan sıfırlama talimatlarını içeren bir mesaj alacaksınız.',
       hasAccountQ:'Hesabınız var mı?', loginLink:'Giriş yapın'
     },
     en: {
@@ -9334,6 +9380,12 @@ function symUnpin(sym){
       noAccountQ:"Don't have an account?", registerLink:'Register',
       realAccCaps:'REAL', liveAccDesc:'Live account', registerBtn:'CREATE ACCOUNT',
       demoAccCaps:'DEMO', virtualAccDesc:'$10,000 virtual',
+      loginPh:'10000 or email@example.com', firstNameLbl:'FIRST NAME', lastNameLbl:'LAST NAME', phoneLbl2:'PHONE',
+      emailPh:'email@example.com', min6Ph:'Min 6 characters', repeatLbl:'CONFIRM',
+      accCreatedMsg1:'✓ Account created! (#', accCreatedMsg2:') Signing in...',
+      forgotPwLink:'Forgot password', forgotPwTitle:'🔑 RESET PASSWORD', forgotPwDesc:"Enter your registered email address and we'll send you a reset link.",
+      forgotPwEmailPh:'email@example.com', forgotPwSubmit:'SEND RESET LINK', forgotPwBack:'Back to login',
+      loginNoLbl:'LOGIN NO / EMAIL', forgotPwSentMsg:"If your email is registered, you'll receive reset instructions shortly.",
       hasAccountQ:'Already have an account?', loginLink:'Sign in'
     }
   };
