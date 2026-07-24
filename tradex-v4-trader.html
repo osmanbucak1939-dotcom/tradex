@@ -2894,7 +2894,8 @@ function _lwPriceFormat(sym) {
 
 /* ── Binance REST klines çek ─────────────────────── */
 // Köprüden beslenen endeksler (Yahoo) — grafik geçmişi de köprünün /klines proxy'sinden gelir.
-var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY'];
+var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY',
+  'BRTUSD','XPDUSD','XPTUSD','AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
 // BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
 var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
   'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
@@ -2996,14 +2997,20 @@ var TD_KLINE_MAP = {
   'EURUSD':'EUR/USD',  'GBPUSD':'GBP/USD',  'USDJPY':'USD/JPY',
   'USDCHF':'USD/CHF',  'AUDUSD':'AUD/USD',  'USDCAD':'USD/CAD',
   'NZDUSD':'NZD/USD',  'USDTRY':'USD/TRY',  'EURTRY':'EUR/TRY',
-  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',  'XPTUSD':'XPT/USD',
-  'USOIL':'WTI/USD',
+  'XAUUSD':'XAU/USD',  'XAGUSD':'XAG/USD',
+  'USOIL':'WTI/USD',   'WTIUSD':'WTI/USD',
   'EURCAD':'EUR/CAD',  'EURGBP':'EUR/GBP',  'EURJPY':'EUR/JPY',
   'GBPJPY':'GBP/JPY',  'GBPAUD':'GBP/AUD',  'AUDCAD':'AUD/CAD',
   'GBPCHF':'GBP/CHF',  'AUDNZD':'AUD/NZD',  'CADCHF':'CAD/CHF',
   'USDMXN':'USD/MXN',  'USDZAR':'USD/ZAR',  'USDSGD':'USD/SGD',
   'USDHKD':'USD/HKD',  'USDPLN':'USD/PLN',  'USDSEK':'USD/SEK',
-  'USDNOK':'USD/NOK',  'EURCHF':'EUR/CHF',  'EURAUD':'EUR/AUD'
+  'USDNOK':'USD/NOK',  'EURCHF':'EUR/CHF',  'EURAUD':'EUR/AUD',
+  'NZDJPY':'NZD/JPY',  'USDDKK':'USD/DKK',  'GBPZAR':'GBP/ZAR',
+  'EURSEK':'EUR/SEK',  'EURPLN':'EUR/PLN',  'EURNOK':'EUR/NOK',
+  'EURMXN':'EUR/MXN',  'EURHUF':'EUR/HUF',  'AUDJPY':'AUD/JPY',
+  'GBPTRY':'GBP/TRY',  'CHFAED':'CHF/AED'
+  // EURRUB: Twelve Data ve çoğu Batılı sağlayıcı RUB çiftlerini sunmuyor
+  // (yaptırımlar sonrası kaldırıldı) — gerçek veri için başka bir kaynak gerekir.
 };
 // TradeX interval → Twelve Data interval (TD tüm bunları birebir destekler)
 var TD_KLINE_INT = {
@@ -4236,7 +4243,8 @@ function _quoteToUsd(sym, amount) {
   if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
   // USD-sözleşmeli kontratlar — dönüşüm gerekmez
   var _USD_CONTRACTS = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
-    'XAUUSD','XAGUSD','XPTUSD','NGAS','DXY','FTSE100X','DAX40X'];
+    'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
+    'AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
   if(_USD_CONTRACTS.indexOf(sym) >= 0) return amount;
   // Quote currency belirle
   var quoteCur = '';
