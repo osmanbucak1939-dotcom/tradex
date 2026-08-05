@@ -2203,7 +2203,7 @@ console.log('Firebase bağlandı ✓');
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ETİKET *</label><input class="mgr-input" id="ns_label" placeholder="Bitcoin" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KISA AD *</label><input class="mgr-input" id="ns_short" placeholder="BTC" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KATEGORİ</label>
-              <select class="mgr-input" id="ns_category" style="width:100%;">
+              <select class="mgr-input" id="ns_category" style="width:100%;" onchange="_adSuggestContractSize(this.value)">
                 <option value="crypto">Kripto</option>
                 <option value="forex">Forex</option>
                 <option value="commodity">Emtia</option>
@@ -4818,7 +4818,11 @@ function txImportMarketGroups(){
         color: it.color || '#f0b90b',
         minLot: 0.01,
         active:true,
-        contractSize: (cat==='forex') ? 100000 : 1,
+        // ⚠️ 2026-07-24 DÜZELTME (kritik): BIST/hisse sembolleri forex-dışı
+        // genel varsayılana (1) düşüyordu — bu, K/Z hesabını 1000 kat küçük
+        // gösteriyordu (gerçek: 13 TL fark, 0.1 lot'ta $27 olması gerekirken
+        // $2.70 görünüyordu — 1000 yerine contractSize=1 kullanılmasından).
+        contractSize: (cat==='forex') ? 100000 : ((cat==='bist'||cat==='stock') ? 1000 : 1),
         margin: (cat==='forex') ? 2 : 1,
         decimals: parseInt(it.decimals)||2,
         category: cat,
@@ -4907,6 +4911,18 @@ function deleteSymMgr(i) {
   renderSymMgr();
   if(typeof applySymConfig==='function'){ try{ applySymConfig(); }catch(e){} }
   showAdminToast('Silindi', sym + ' sembolü silindi', 'danger');
+}
+// ⚠️ 2026-07-24: Kategoriye göre makul bir sözleşme büyüklüğü öner — BİST/Hisse
+// eskiden hep "1" varsayılanında kalıyordu, bu da K/Z'yi 1000 kat küçük
+// gösteriyordu (gerçek örnek: 13 TL fark, 0.1 lot'ta $27 yerine $2.70/​$0.027
+// çıkıyordu — kullanılan contractSize'a göre).
+function _adSuggestContractSize(cat) {
+  var csEl = document.getElementById('ns_contractSize');
+  var mgEl = document.getElementById('ns_margin');
+  if(!csEl) return;
+  var suggestions = { forex:100000, commodity:100, index:1, stock:1000, bist:1000, crypto:1 };
+  if(suggestions.hasOwnProperty(cat)) csEl.value = suggestions[cat];
+  if(mgEl) mgEl.value = (cat==='forex') ? 2 : 1;
 }
 function saveSymbolMgr() {
   var editIdx      = parseInt(document.getElementById('ns_editIdx').value);
@@ -5819,7 +5835,7 @@ function adOpenFinlogForm(type, editIdx) {
     '<div style="font-size:11px;color:var(--accent);font-family:var(--mono);margin-bottom:10px;font-weight:700;">'+(isEdit?'&#9998; DÜZENLE: ':'')+label.toUpperCase()+'</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">'
     + '<div><label class="ad-label">MİKTAR ($)</label><input class="ad-input" id="afl_amt" type="number" min="0" step="any" value="'+(log?log.amount:'')+'"></div>'
-    + '<div><label class="ad-label">TARİH &amp; SAAT</label><input class="ad-input" id="afl_date" type="datetime-local" value="'+(log?new Date(log.date).toISOString().slice(0,16):nowDt)+'"></div>'
+    + '<div><label class="ad-label">TARİH &amp; SAAT</label><input class="ad-input" id="afl_date" type="datetime-local" value="'+(log?_adToLocalDT(log.date):nowDt)+'"></div>'
     + '<div><label class="ad-label">AÇIKLAMA</label><input class="ad-input" id="afl_note" type="text" placeholder="—" value="'+(log?log.note||'':'')+'"></div>'
     + '</div>'
     + '<input type="hidden" id="afl_type" value="'+type+'">'
@@ -10978,6 +10994,17 @@ function adCloseAllPositions(){
 }
 
 // ── Pozisyon düzenle ──────────────────────────────────────────
+// ⚠️ 2026-07-24: datetime-local inputları YEREL saat bekler, ama tarihler
+// UTC (ISO) saklanıyor — .toISOString() direkt kesilirse tarayıcı saat
+// dilimine göre kaymış görünür. Bu yardımcı, doğru yerel karşılığı üretir.
+// Bağımsız global fonksiyon — hangi modal önce açılırsa açılsın hazır olsun diye.
+function _adToLocalDT(date) {
+  if(!date) return '';
+  var d = new Date(date);
+  if(isNaN(d.getTime())) return '';
+  var tzOff = d.getTimezoneOffset()*60000;
+  return new Date(d.getTime()-tzOff).toISOString().slice(0,16);
+}
 function adEditPos(btn){
   if(typeof hasPerm==='function'&&!hasPerm('trades.edit')){showAdminToast('Yetkisiz','Pozisyon düzenleme yetkiniz yok','danger');return;}
   var id  = parseInt(btn.dataset.id||btn.getAttribute('data-id'));
@@ -10995,7 +11022,14 @@ function adEditPos(btn){
   var cs  = parseFloat(pos.contractSize)||1;
   var pnl = _adQuoteToUsd(pos.sym, (pos.side==='buy'?cur-pos.openPrice:pos.openPrice-cur)*(parseFloat(pos.qty)||0)*cs);
   var pc  = pnl>=0?'#26a69a':'#ef5350';
-  var openVal = (pos.openDate||pos.time) ? new Date(pos.openDate||pos.time).toISOString().slice(0,16) : '';
+  // ⚠️ 2026-07-24 DÜZELTME (kritik): openDate UTC (ISO) olarak saklanıyor,
+  // ama datetime-local input YEREL saat bekliyor. Eskiden .toISOString()
+  // direkt kesilip inputa yazılıyordu — bu, UTC saatini yerel saatmiş gibi
+  // GÖSTERİYORDU (tarayıcı saat dilimine göre kayık). Sonra Kaydet'e
+  // basınca bu (yanlış görünen) değer YEREL saat sayılıp tekrar UTC'ye
+  // çevriliyordu — yani sadece paneli AÇIP KAYDETMEK bile, hiçbir alanı
+  // değiştirmeden, açılış saatini saat dilimi farkı kadar kaydırıyordu.
+  var openVal = _adToLocalDT(pos.openDate||pos.time);
   modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:#f0b90b;">POZİSYON DÜZENLE #'+String(id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
@@ -11223,8 +11257,8 @@ function adEditHistory(btn){
     modal.style.cssText = 'position:fixed;inset:0;z-index:60000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
     document.body.appendChild(modal);
   }
-  var openVal  = (h.openDate||h.time) ? new Date(h.openDate||h.time).toISOString().slice(0,16) : '';
-  var closeVal = (h.closeDate||h.closeTime) ? new Date(h.closeDate||h.closeTime).toISOString().slice(0,16) : '';
+  var openVal  = _adToLocalDT(h.openDate||h.time);
+  var closeVal = _adToLocalDT(h.closeDate||h.closeTime);
   modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:#f0b90b;">GEÇMİŞ DÜZENLE #'+String(h.id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
