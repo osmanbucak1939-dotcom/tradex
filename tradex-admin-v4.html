@@ -11116,7 +11116,14 @@ function adSaveEdit(){
   var dev = (document.getElementById('em_device')||{}).value;
   if(dev) pos.openDevice = dev;
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
-  if(a) pos.cost = (pos.openPrice * pos.qty) / parseFloat((a&&a.leverage)||100);
+  // ⚠️ 2026-07-24 DÜZELTME (kritik): teminat (cost) hesabı KONTRAT BÜYÜKLÜĞÜNÜ
+  // atlıyordu — aynı dosyadaki adOpenTrade ise (fiyat*lot*cs)/kaldıraç kullanıyor.
+  // ASELS gibi cs=100 olan sembollerde, düzenleme sonrası teminat 100 KAT yanlış
+  // hesaplanıyor, bu da marj seviyesini ve stop-out davranışını bozuyordu.
+  if(a) {
+    var _csEdit = parseFloat(pos.contractSize)||1;
+    pos.cost = (pos.openPrice * pos.qty * _csEdit) / parseFloat((a&&a.leverage)||100);
+  }
   if(a) _adSurgicalUpdatePosition(a.id, pos.id, {
     side: pos.side, qty: pos.qty, openPrice: pos.openPrice, sl: pos.sl, tp: pos.tp,
     swapTotal: pos.swapTotal, commission: pos.commission, openDate: pos.openDate,
