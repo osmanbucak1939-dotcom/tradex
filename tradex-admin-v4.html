@@ -5296,6 +5296,7 @@ function adRenderTab(tab) {
             adIR('Kayıt Tarihi', a.regDate ? fmtDate(a.regDate) : (a.created||'—')) +
             adIR('Son Giriş', a.lastLogin ? fmtDate(a.lastLogin) : (a.lastSeen ? fmtDate(a.lastSeen) : '—')) +
             adIR('Hesap Tipi', a.type==='demo'?'Demo':'Gerçek') +
+            adIR('Temsilci', adRepCellHtml(a.id)) +
           '</table>' +
         '</div>' +
         '<div>' +
@@ -5570,6 +5571,143 @@ function adRenderTab(tab) {
 }
 
 function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
+
+// ══════════════════════════════════════════════════════════════
+// TEMSİLCİ (PERSONEL) ATAMA — hesap detayı → BİLGİLER sekmesi
+// ──────────────────────────────────────────────────────────────
+// Atama zaten _staffList[].assignedAccounts dizisinde tutuluyordu; personel
+// sekmesindeki "Ata" modalı da aynı diziyi kullanıyor. Burada sadece aynı
+// veriye hesap tarafından erişim ekleniyor — İKİNCİ BİR KAYIT TUTULMUYOR,
+// yani iki ekran her zaman aynı şeyi gösterir.
+// ══════════════════════════════════════════════════════════════
+
+// Bu hesaba açıkça atanmış personelleri döndür.
+// Not: admin/superadmin rolü zaten tüm hesapları görür; buradaki liste
+// yalnızca AÇIK atamaları gösterir (personel sekmesindeki mantıkla aynı).
+function adGetAccStaff(accId){
+  if(typeof _staffList==='undefined' || !Array.isArray(_staffList)) return [];
+  var id = String(accId);
+  return _staffList.filter(function(s){
+    return Array.isArray(s.assignedAccounts) &&
+           s.assignedAccounts.map(String).indexOf(id) >= 0;
+  });
+}
+
+// BİLGİLER sekmesindeki "Temsilci" satırının içeriği
+function adRepCellHtml(accId){
+  // Personel listesi henüz çekilmemiş olabilir (kullanıcı Personel sekmesine
+  // hiç girmediyse _staffList boş olur). Bir kez çek, sonra satırı tazele.
+  // _adRepLoadTried bayrağı sonsuz döngüyü önler (liste gerçekten boşsa
+  // adRepRefresh tekrar buraya girer).
+  if((typeof _staffList==='undefined' || !_staffList || !_staffList.length)
+     && !window._adRepLoadTried && typeof fbLoadStaff==='function'){
+    window._adRepLoadTried = true;
+    try{ fbLoadStaff(function(list){ _staffList = list||[]; adRepRefresh(accId); }); }catch(e){}
+  }
+  var assigned = adGetAccStaff(accId);
+  var canEdit  = (typeof hasPerm==='function') ? hasPerm('accounts.edit') : true;
+  var html = '<div id="adRepCell" style="display:flex;flex-direction:column;gap:6px;">';
+
+  if(!assigned.length){
+    html += '<span style="color:#777;font-weight:400;">Atanmamış</span>';
+  } else {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+    assigned.forEach(function(s){
+      var roleLbl = (typeof ROLES!=='undefined' && ROLES[s.role]) ? ROLES[s.role].label : (s.role||'');
+      html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#1d2b26;'
+        + 'border:1px solid #26a69a55;border-radius:12px;padding:2px 4px 2px 10px;'
+        + 'font-family:var(--mono);font-size:11px;color:#26a69a;font-weight:600;">'
+        + '<span>'+s.name+'</span>'
+        + '<span style="color:#5b7b73;font-weight:400;font-size:10px;">'+roleLbl+'</span>'
+        + (canEdit
+            ? '<button title="Atamayı kaldır" data-acc="'+accId+'" data-staff="'+s.id+'" '
+              + 'onclick="adRepUnassign(this)" style="background:none;border:none;color:#7a9a92;'
+              + 'cursor:pointer;font-size:12px;line-height:1;padding:2px 5px;">✕</button>'
+            : '<span style="width:4px;"></span>')
+        + '</span>';
+    });
+    html += '</div>';
+  }
+
+  if(canEdit){
+    var opts = '<option value="">+ Personel ata…</option>';
+    if(typeof _staffList!=='undefined' && Array.isArray(_staffList)){
+      var already = assigned.map(function(s){return s.id;});
+      _staffList.forEach(function(s){
+        if(already.indexOf(s.id) >= 0) return;          // zaten atanmış
+        if(s.active === false) return;                  // pasif personel gizli
+        var roleLbl = (typeof ROLES!=='undefined' && ROLES[s.role]) ? ROLES[s.role].label : (s.role||'');
+        opts += '<option value="'+s.id+'">'+s.name+' — '+roleLbl+'</option>';
+      });
+    }
+    html += '<select data-acc="'+accId+'" onchange="adRepAssign(this)" '
+      + 'style="background:#141414;border:1px solid #2e2e2e;border-radius:5px;color:#ddd;'
+      + 'font-family:var(--mono);font-size:11px;padding:4px 6px;max-width:230px;font-weight:400;">'
+      + opts + '</select>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Sadece "Temsilci" satırını yeniden çiz (tüm sekmeyi yeniden kurmadan —
+// böylece sayfa yukarı kaymıyor ve diğer alanlar sıfırlanmıyor)
+function adRepRefresh(accId){
+  var cell = document.getElementById('adRepCell');
+  if(!cell || !cell.parentNode) return;
+  cell.parentNode.innerHTML = adRepCellHtml(accId);
+}
+
+function adRepAssign(sel){
+  var staffId = sel.value;
+  if(!staffId) return;
+  var accId = sel.dataset.acc;
+  if(typeof hasPerm==='function' && !hasPerm('accounts.edit')){
+    showAdminToast('Yetersiz Yetki','Temsilci atama yetkiniz yok','error');
+    sel.value=''; return;
+  }
+  var s = _staffList.find(function(x){ return x.id===staffId; });
+  if(!s){ sel.value=''; return; }
+  if(!Array.isArray(s.assignedAccounts)) s.assignedAccounts = [];
+  if(s.assignedAccounts.map(String).indexOf(String(accId)) < 0){
+    s.assignedAccounts.push(accId);
+  }
+  fbSaveStaff(_staffList);
+  adRepSyncCurrentStaff(s);
+  adRepRefresh(accId);
+  if(typeof renderStaffTable==='function'){ try{ renderStaffTable(); }catch(e){} }
+  showAdminToast('Atandı', s.name+' bu hesaba temsilci olarak atandı', 'success');
+}
+
+function adRepUnassign(btn){
+  var accId = btn.dataset.acc, staffId = btn.dataset.staff;
+  if(typeof hasPerm==='function' && !hasPerm('accounts.edit')){
+    showAdminToast('Yetersiz Yetki','Temsilci atama yetkiniz yok','error'); return;
+  }
+  var s = _staffList.find(function(x){ return x.id===staffId; });
+  if(!s) return;
+  if(!confirm(s.name+' adlı personelin bu hesap üzerindeki ataması kaldırılsın mı?')) return;
+  if(Array.isArray(s.assignedAccounts)){
+    var ix = s.assignedAccounts.map(String).indexOf(String(accId));
+    if(ix >= 0) s.assignedAccounts.splice(ix,1);
+  }
+  fbSaveStaff(_staffList);
+  adRepSyncCurrentStaff(s);
+  adRepRefresh(accId);
+  if(typeof renderStaffTable==='function'){ try{ renderStaffTable(); }catch(e){} }
+  showAdminToast('Kaldırıldı', s.name+' bu hesaptan çıkarıldı', 'info');
+}
+
+// Değişen personel şu an giriş yapmış kişiyse kendi görünümü de anında
+// güncellensin (toggleAssign'daki aynı davranış).
+function adRepSyncCurrentStaff(s){
+  if(!(_currentStaff && _currentStaff.id === s.id)) return;
+  _currentStaff.assignedAccounts = (s.assignedAccounts||[]).slice();
+  try{ localStorage.setItem('tx_admin_user', JSON.stringify(_currentStaff)); }catch(e){}
+  if(typeof renderAccTable==='function'){
+    try{ window._accResortPending=true; renderAccTable(); }catch(e){}
+  }
+}
 
 // ── KYC BELGE İNCELEME (admin) ──
 var _adKycTypes = { id:'Kimlik Doğrulama', addr:'Adres Doğrulama', selfie:'Selfie Doğrulama' };
@@ -10847,7 +10985,10 @@ var TX_ALL_BIST_SYMS = [
 
 function _adQuoteToUsd(sym, amount) {
   if(!sym || !amount) return amount || 0;
-  sym = sym.toUpperCase();
+  // ⚠️ 2026-08-06: sembol normalizasyonu — 'ASELS.IS', 'ASELS ', 'asels#'
+  // gibi varyantlar BIST listesiyle eşleşmeyip çevrimin sessizce ATLANMASINA
+  // ve TL tutarın ın USD gibi gösterilmesine yol açıyordu.
+  sym = String(sym).toUpperCase().trim().split('.')[0].split('#')[0].split(':')[0];
   if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
   var _USD_C = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
@@ -10866,14 +11007,29 @@ function _adQuoteToUsd(sym, amount) {
       }
     }
   }
-  if(!quoteCur) quoteCur = (sym.length === 6) ? sym.slice(3) : 'USD';
+  if(!quoteCur) {
+    quoteCur = (sym.length === 6) ? sym.slice(3) : 'USD';
+    // ⚠️ 2026-08-06: sembol hiçbir listede tanınmadı — sessizce 'USD' varsayıp
+    // TL tutarı olduğu gibi göstermek yerine artık konsola suçluyu yazıyoruz.
+    if(quoteCur === 'USD') console.warn('[quoteToUsd] TANINMAYAN SEMBOL:', sym, '— çevrim YAPILMADI, tutar USD varsayıldı. Listeye eklenmeli.');
+  }
   if(quoteCur === 'USD') return amount;
   var _g = function(s) { return adGetPrice(s) || 0; };
   var conv;
   if(quoteCur==='JPY') conv = _g('USDJPY') > 0 ? 1/_g('USDJPY') : 1/160;
   else if(quoteCur==='CAD') conv = _g('USDCAD') > 0 ? 1/_g('USDCAD') : 1/1.40;
   else if(quoteCur==='CHF') conv = _g('USDCHF') > 0 ? 1/_g('USDCHF') : 1/0.89;
-  else if(quoteCur==='TRY') conv = _g('USDTRY') > 0 ? 1/_g('USDTRY') : 1/38.5;
+  // ⚠️ 2026-08-06 KİLİT: USDTRY feed'i bozuk/placeholder (ör. 1) geldiğinde
+  // conv=1 oluyor ve TL tutar aynen USD gibi gösteriliyordu. Mantıksız değerde
+  // (< 5) artık feed'e GÜVENİLMİYOR, sabit yedek kullanılıyor.
+  else if(quoteCur==='TRY'){
+    var _tl = _g('USDTRY');
+    if(!(_tl > 5)){
+      if(_tl) console.warn('[quoteToUsd] USDTRY feed değeri mantıksız ('+_tl+') — yedek 38.5 kullanıldı. Sembol:', sym);
+      _tl = 38.5;
+    }
+    conv = 1/_tl;
+  }
   else if(quoteCur==='MXN') conv = _g('USDMXN') > 0 ? 1/_g('USDMXN') : 1/17.2;
   else if(quoteCur==='ZAR') conv = _g('USDZAR') > 0 ? 1/_g('USDZAR') : 1/18.5;
   else if(quoteCur==='SGD') conv = _g('USDSGD') > 0 ? 1/_g('USDSGD') : 1/1.33;
