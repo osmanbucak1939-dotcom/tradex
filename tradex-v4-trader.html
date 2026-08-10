@@ -1937,6 +1937,14 @@ function _txClearPasswordChangedSession() {
         if(d.positions !== undefined) {
           try {
             var newPos = Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions||'[]');
+            // ⚠️ 2026-07-24: bu oturumun AZ ÖNCE (son 60sn) kapattığı bir pozisyon,
+            // gecikmeli/sıra dışı gelen bir anlık görüntüde hâlâ "açık" görünüyorsa
+            // — güvenmiyoruz, süzüyoruz. Gerçek bir yeniden-açma olsaydı zaten farklı
+            // bir id ile gelirdi (Date.now() bazlı).
+            if(window._recentlyClosedIds) {
+              var _rc = window._recentlyClosedIds;
+              newPos = newPos.filter(function(p){ return !_rc[String(p.id)]; });
+            }
             positions = newPos;
           } catch(e){ console.warn('positions parse err:', e); }
         }
@@ -3135,6 +3143,12 @@ function lwLoadTwelveDataKlines(sym, interval, cb) {
     + '&interval='  + tdInt
     + '&outputsize=300'
     + '&order=ASC'
+    // ⚠️ 2026-08-06: timezone AÇIKÇA belirtilmeli. Belirtilmezse TD, sembolün
+    // borsasının yerel saatini dönebiliyor; aşağıda datetime'ın sonuna koşulsuz
+    // 'Z' eklendiği için bu saat UTC sanılıyor ve mumlar İLERİ TARİHLİ oluyordu.
+    // İleri tarihli tek bir mum, lwTickUpdate'teki (nowBarTime > last.time)
+    // koşulunu kalıcı olarak bozup yeni mum açılmasını engelliyordu.
+    + '&timezone=UTC'
     + '&apikey='    + _TD_KEY;
 
   fetch(url)
@@ -3224,6 +3238,9 @@ function startCandleWs(sym, interval) {
 
 /* ── Grafik render ───────────────────────────────── */
 function lwRenderCandles(candles, sym) {
+  // Her veri kaynağı (Binance / TwelveData / köprü-Yahoo / sentetik) buradan
+  // geçtiği için ileri tarihli mum ayıklaması tek noktada yapılıyor.
+  candles = _lwSanitizeCandles(candles, curInt);
   if(typeof LightweightCharts === 'undefined') {
     // LW henüz yüklenmedi — yüklenince tekrar dene
     window._lwPendingCandles = candles;
@@ -3513,6 +3530,29 @@ function cancelPending(i) {
 }
 
 /* ── Canlı tick güncelleme (her saniye) ────────── */
+
+// Periyot uzunluğu — tek kaynak (lwTickUpdate ve _lwSanitize birlikte kullanır)
+function _lwPeriodSecs(interval){
+  return {'1m':60,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400}[interval||curInt] || 14400;
+}
+
+// ⚠️ 2026-08-06: İLERİ TARİHLİ MUM KORUMASI
+// Veri kaynağı yanlış zaman dilimiyle mum döndürdüğünde (bkz. TD timezone notu)
+// listenin sonuna gelecek tarihli bir mum girebiliyor. lwTickUpdate yeni mumu
+// yalnızca (nowBarTime > last.time) iken açtığı için böyle tek bir mum, zaman
+// ona yetişene kadar — saatlerce — yeni mum açılmasını engelliyor; tüm canlı
+// fiyat o eski mumun içine yazılıyor ve grafikte saat geride kalmış görünüyor.
+// Bu yüzden mevcut periyodun ötesindeki mumları yüklemede ayıklıyoruz.
+function _lwSanitizeCandles(candles, interval){
+  if(!Array.isArray(candles) || !candles.length) return candles||[];
+  var ps  = _lwPeriodSecs(interval);
+  var max = Math.floor(Math.floor(Date.now()/1000) / ps) * ps;   // içinde bulunduğumuz periyot
+  var out = candles.filter(function(c){ return c && isFinite(c.time) && c.time <= max; });
+  var dropped = candles.length - out.length;
+  if(dropped > 0) console.warn('[grafik] '+dropped+' ileri tarihli mum ayıklandı (veri kaynağı zaman dilimi?)');
+  return out.length ? out : candles;   // hepsi ilerideyse veriyi büsbütün silme
+}
+
 function lwTickUpdate() {
   if(!_lwSeries || !_klineData.length) return;
   var sym = curSym;
@@ -3522,11 +3562,23 @@ function lwTickUpdate() {
   if(!price) return;
 
   var dec        = _lwDecFor(sym);
-  var periodSecs = {'1m':60,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400}[curInt]||14400;
+  var periodSecs = _lwPeriodSecs(curInt);
   var nowTs      = Math.floor(Date.now()/1000);
   // Mevcut interval başlangıcı — interval sınırına hizala
   var nowBarTime = Math.floor(nowTs / periodSecs) * periodSecs;
   var last       = _klineData[_klineData.length-1];
+
+  // ⚠️ Son mum GELECEKTE ise seri bozulmuş demektir: bu durumda (nowBarTime >
+  // last.time) hiç sağlanmaz, yeni mum açılmaz ve grafik saati donar.
+  // Ayıklayıp seriyi yeniden çiz — bir sonraki tick normal akışa döner.
+  if(last && last.time > nowBarTime) {
+    var cleaned = _lwSanitizeCandles(_klineData, curInt);
+    if(cleaned.length && cleaned[cleaned.length-1].time <= nowBarTime) {
+      _klineData = cleaned;
+      lwRenderCandles(_klineData, sym);
+    }
+    return;
+  }
 
   if(nowBarTime > last.time) {
     // Yeni interval başladı — yeni mum aç
@@ -3960,6 +4012,16 @@ function saveAlarms() {
 
 function placeOrder(side) {
   if(window._readOnly){ var _ro2=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ro2?_ro2.readOnlyTitle:'İzleyici Modu', _ro2?_ro2.readOnlyNoTrade:'Bu modda işlem açamazsınız.'); return; }
+
+  // ⚠️ 2026-07-24 DÜZELTME (kritik): çift gönderim kilidi YOKTU — closePosition'da
+  // olan aynı koruma burada eksikti. Hızlı çift tıklama (veya bağlantı gecikmesiyle
+  // çift tetiklenme), Date.now() tabanlı ID'nin AYNI milisaniyede iki kez üretilip
+  // AYNI id'li İKİ AYRI pozisyon kaydı oluşmasına yol açabiliyordu — bu da sonradan
+  // stop-out'un aynı sembolü iki farklı zamanda "iki kez kapanmış" gibi göstermesine
+  // sebep oluyordu (gerçekte iki ayrı, ID'si çakışan kayıttı).
+  if(window._placingOrder) { console.warn('[placeOrder] zaten işlem gönderiliyor, tekrar çağrı yoksayıldı'); return; }
+  window._placingOrder = true;
+  setTimeout(function(){ window._placingOrder = false; }, 1500);
 
   // Trading group symbolWhitelist kontrolü (hard block)
   if(typeof canTradeSymbol === 'function' && _cu) {
@@ -4416,6 +4478,16 @@ function closePosition(id, reason='', closeQty) {
     }
     window._closingPositions[String(id)] = true;
     setTimeout(function(){ if(window._closingPositions) delete window._closingPositions[String(id)]; }, 8000);
+    // ⚠️ 2026-07-24 DÜZELTME (kritik): Firestore anlık görüntüleri, zayıf bağlantıda
+    // teslim SIRASI garantisi vermeyebilir — kapatmadan HEMEN ÖNCEki bir görüntü,
+    // kapatmadan SONRAki görüntüden daha GEÇ gelip yerel listeyi geçici olarak eski
+    // haline döndürebilir ("dirilme"). Bu, gerçekten yaşandı: aynı ID'li bir pozisyon
+    // stop-out ile kapandıktan dakikalar sonra "tekrar açık" görünüp ikinci kez
+    // kapandı. Artık bu oturumun AZ ÖNCE kapattığı bir ID, 60 saniye boyunca
+    // gelen hiçbir anlık görüntüde "açık" kabul edilmiyor (bkz. fbListenUserData).
+    window._recentlyClosedIds = window._recentlyClosedIds || {};
+    window._recentlyClosedIds[String(id)] = Date.now();
+    setTimeout(function(){ if(window._recentlyClosedIds) delete window._recentlyClosedIds[String(id)]; }, 60000);
   }
   const pos = positions[idx];
   const p = prices[pos.sym];
@@ -4780,6 +4852,14 @@ function updateAccount() {
 // Böylece fiyat tick'i gelmese / sekme arka planda olsa bile düzenli kontrol edilir.
 function _checkStopOut(equity, marginUsed, marginLvl) {
   if(!Array.isArray(positions) || positions.length === 0) return;
+  // ⚠️ 2026-07-24: ikinci savunma katmanı — fbListenUserData'da filtrelense bile,
+  // stop-out kendi çalıştığı anda da bu oturumun az önce kapattığı bir ID'yi
+  // asla "açık" kabul etmesin.
+  if(window._recentlyClosedIds) {
+    var _rc0 = window._recentlyClosedIds;
+    positions = positions.filter(function(p){ return !_rc0[String(p.id)]; });
+    if(!positions.length) return;
+  }
   // ⚠️ KRİTİK GÜVENLİK KİLİDİ (2026-07-16): Firestore'dan GERÇEK bakiye verisi
   // onaylanmadan (_txBalLoaded=true olmadan) stop-out asla tetiklenmez.
   // Sayfa ilk açıldığında localStorage/broker-meta'dan gelen BAYAT bakiye/pozisyon
