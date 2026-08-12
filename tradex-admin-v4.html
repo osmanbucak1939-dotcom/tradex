@@ -5605,12 +5605,20 @@ function adAuditBalance(accId){
     else { other += a; otherCnt++; }
   });
 
-  var pnl=0, comm=0, swap=0, n=0;
+  var pnl=0, comm=0, swap=0, n=0, soCost=0, soCnt=0;
   (hist||[]).forEach(function(h){
     pnl  += parseFloat(h.pnl)||0;
     comm += parseFloat(h.commission)||0;
     swap += parseFloat(h.swapTotal)||0;
     n++;
+    // 6 Ağustos 2026 öncesi Cloud Functions kodu stop-out'ta bakiyeye
+    // "cost + pnl" ekliyordu (teminat iadesi). O tarihten önce stop-out ile
+    // kapanmış pozisyonların teminat toplamı, bakiyedeki şişkinliğin
+    // muhtemel kaynağıdır — farkı yorumlayabilmek için ayrıca gösteriliyor.
+    if(h.closeReason==='stop_out'){
+      soCost += parseFloat(h.cost)||0;
+      soCnt++;
+    }
   });
 
   var expected = dep - wd + pnl - comm;
@@ -5642,11 +5650,29 @@ function adAuditBalance(accId){
   } else {
     html += '<div style="margin-top:10px;color:#ef5350;line-height:1.6;">'
       + '⚠ ' + money(Math.abs(diff)) + ' fark var (kayıtlı bakiye beklenenden '
-      + (diff>0?'FAZLA':'EKSİK') + ').<br>'
-      + '<span style="color:#a0a0a0;font-size:11px;">Olası sebepler: elle yapılmış bakiye '
-      + 'düzeltmesi, finlog\'a yazılmamış bir işlem, veya geçmiş listesinin '
-      + 'kırpılmış olması (son 50–100 kayıt tutuluyor). Swap toplamı: '
-      + money(swap) + ' — K/Z rakamına dahildir.</span></div>';
+      + (diff>0?'FAZLA':'EKSİK') + ').</div>';
+
+    // Fazlalık, stop-out'ların teminat toplamına yakınsa neden büyük olasılıkla
+    // 6 Ağustos öncesi risk motorunun teminat iadesi hatasıdır.
+    if(diff > 0 && soCnt > 0){
+      var yakin = Math.abs(diff - soCost) < Math.max(1, soCost*0.05);
+      html += '<div style="margin-top:8px;padding:8px 10px;background:#1d1a12;'
+        + 'border:1px solid #4a3f1a;border-radius:6px;font-size:11px;line-height:1.6;">'
+        + '<b style="color:#f0b90b;">Olası sebep — eski teminat iadesi hatası</b><br>'
+        + 'Stop-out ile kapanan '+soCnt+' pozisyonun toplam teminatı: <b>'+money(soCost)+'</b><br>'
+        + (yakin
+            ? '<span style="color:#ef5350;">Bu tutar farkla neredeyse birebir örtüşüyor — '
+              + 'fazlalık büyük olasılıkla 6 Ağustos 2026 öncesi risk motorunun her '
+              + 'stop-out\'ta teminatı bakiyeye geri eklemesinden kaynaklanıyor. '
+              + 'Hata düzeltildi, ancak o dönemde şişen bakiyeler kendiliğinden düzelmez.</span>'
+            : '<span style="color:#a0a0a0;">Fark bu tutarla örtüşmüyor, sebep başka olabilir.</span>')
+        + '</div>';
+    }
+
+    html += '<div style="margin-top:8px;color:#a0a0a0;font-size:11px;line-height:1.6;">'
+      + 'Diğer olası sebepler: elle yapılmış bakiye düzeltmesi, finlog\'a yazılmamış '
+      + 'bir işlem, veya geçmiş listesinin kırpılmış olması (son 50–100 kayıt tutuluyor). '
+      + 'Swap toplamı: ' + money(swap) + ' — K/Z rakamına dahildir.</div>';
   }
   html += '</div>';
   _adAuditModal(html);
