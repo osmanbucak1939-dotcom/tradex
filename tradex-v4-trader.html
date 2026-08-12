@@ -3547,10 +3547,34 @@ function _lwSanitizeCandles(candles, interval){
   if(!Array.isArray(candles) || !candles.length) return candles||[];
   var ps  = _lwPeriodSecs(interval);
   var max = Math.floor(Math.floor(Date.now()/1000) / ps) * ps;   // içinde bulunduğumuz periyot
-  var out = candles.filter(function(c){ return c && isFinite(c.time) && c.time <= max; });
+  var badOhlc = 0;
+  var out = [];
+  candles.forEach(function(c){
+    if(!c || !isFinite(c.time)) return;
+    if(c.time > max) return;                       // ileri tarihli mum
+
+    // ⚠️ 2026-08-10: GRAFİKTEKİ BOŞLUK SORUNU
+    // LWC'de zaman ekseni indeks tabanlıdır — zamanda delik olsa bile boşluk
+    // çizilmez. Boşluk görünüyorsa, orada OHLC'si eksik/geçersiz mumlar vardır:
+    // LWC bunları "whitespace" sayar, yer kaplar ama hiçbir şey çizmez.
+    // (Kaynak: Yahoo'nun close dolu / open-high-low null döndürdüğü satırlar.)
+    // Eksik alanları close'dan tamamla; close da yoksa mumu tamamen at.
+    var cl = parseFloat(c.close);
+    if(!isFinite(cl)) { badOhlc++; return; }
+    var op = isFinite(parseFloat(c.open)) ? parseFloat(c.open) : cl;
+    var hi = isFinite(parseFloat(c.high)) ? parseFloat(c.high) : Math.max(op, cl);
+    var lo = isFinite(parseFloat(c.low))  ? parseFloat(c.low)  : Math.min(op, cl);
+    if(op!==c.open || hi!==c.high || lo!==c.low || cl!==c.close){
+      badOhlc++;
+      c = {time:c.time, open:op, high:hi, low:lo, close:cl, volume:c.volume||0};
+    }
+    out.push(c);
+  });
+
   var dropped = candles.length - out.length;
-  if(dropped > 0) console.warn('[grafik] '+dropped+' ileri tarihli mum ayıklandı (veri kaynağı zaman dilimi?)');
-  return out.length ? out : candles;   // hepsi ilerideyse veriyi büsbütün silme
+  if(dropped > 0) console.warn('[grafik] '+dropped+' ileri tarihli/geçersiz mum ayıklandı (veri kaynağı zaman dilimi?)');
+  if(badOhlc > 0) console.warn('[grafik] '+badOhlc+' mumun OHLC alanı eksikti, close ile onarıldı (boşluk sebebi)');
+  return out.length ? out : candles;   // hepsi elenirse veriyi büsbütün silme
 }
 
 function lwTickUpdate() {
