@@ -1213,6 +1213,12 @@ function startAccCanonListeners() {
         _accCanon[key].positions    = Array.isArray(d.positions) ? d.positions : [];
         _accCanon[key].tradeHistory = Array.isArray(d.tradeHistory) ? d.tradeHistory : [];
         _accCanon[key].finlog       = Array.isArray(d.finlog) ? d.finlog : [];
+        // ⚠️ 2026-08-12: KYC buradan da okunmalı. Trader belgeyi users/{id}
+        // dokümanına yazıyor, ama admin hesap listesini broker/accounts'tan
+        // yüklüyor ve orada kyc alanı yok. Eskiden kyc yalnızca hesap-listesi
+        // snapshot'ında güncelleniyordu; müşteri belgeyi admin sayfası KAPALIYKEN
+        // yüklediyse o olay hiç tetiklenmiyor ve panelde "yüklenmedi" görünüyordu.
+        _accCanon[key].kyc          = d.kyc || {};
         _accCanon[key].marginLevelPct = parseFloat(d.marginLevelPct)||null;
         _accCanon[key].lastUpdate   = d.updatedAt || '';
         _accCanon[key].ready        = true;
@@ -5846,7 +5852,12 @@ function adRepSyncCurrentStaff(s){
 // ── KYC BELGE İNCELEME (admin) ──
 var _adKycTypes = { id:'Kimlik Doğrulama', addr:'Adres Doğrulama', selfie:'Selfie Doğrulama' };
 function adKycSectionHtml(a) {
-  var kyc = a.kyc || {};
+  // ⚠️ 2026-08-12: KYC'nin GÜNCEL kaynağı users/{id} dokümanıdır (_accCanon).
+  // a.kyc, broker/accounts'tan gelen hesap kopyasıdır ve müşteri belgeyi
+  // admin sayfası kapalıyken yüklediyse boş kalır — "yüklenmedi" görünmesinin
+  // sebebi buydu. Önce canonical'a bak, yoksa eski kopyaya düş.
+  var _c = (typeof _accCanon!=='undefined') ? _accCanon[String(a.id)] : null;
+  var kyc = (_c && _c.ready && _c.kyc && Object.keys(_c.kyc).length) ? _c.kyc : (a.kyc || {});
   var rows = Object.keys(_adKycTypes).map(function(type){
     var label = _adKycTypes[type];
     var entry = kyc[type];
@@ -5888,6 +5899,13 @@ function adKycDecide(accId, type, decision) {
       showToast(decision==='approved' ? 'Belge onaylandı ✓' : 'Belge reddedildi', _adKycTypes[type]);
       var acc = accounts.find(function(x){ return String(x.id)===String(accId); });
       if(acc) { if(!acc.kyc) acc.kyc={}; acc.kyc[type]=kyc[type]; }
+      // Canonical kopyayı da güncelle — adKycSectionHtml artık öncelikle
+      // buraya bakıyor, güncellenmezse karar ekrana yansımaz.
+      if(typeof _accCanon!=='undefined' && _accCanon[String(accId)]) {
+        var _cc = _accCanon[String(accId)];
+        if(!_cc.kyc) _cc.kyc = {};
+        _cc.kyc[type] = kyc[type];
+      }
       if(String(_adAccId)===String(accId)) adRenderTab('info');
     }).catch(function(e){ console.warn('adKycDecide error:', e); showToast('Hata', e.message||'Kaydedilemedi'); });
   });
