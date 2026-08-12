@@ -5297,6 +5297,9 @@ function adRenderTab(tab) {
             adIR('Son Giriş', a.lastLogin ? fmtDate(a.lastLogin) : (a.lastSeen ? fmtDate(a.lastSeen) : '—')) +
             adIR('Hesap Tipi', a.type==='demo'?'Demo':'Gerçek') +
             adIR('Temsilci', adRepCellHtml(a.id)) +
+            adIR('Bakiye', '$'+adFp(getAccBal(a.id))
+              + ' <button onclick="adAuditBalance(\''+a.id+'\')" class="ad-btn" '
+              + 'style="margin-left:8px;font-size:10px;padding:2px 8px;">Denetle</button>') +
           '</table>' +
         '</div>' +
         '<div>' +
@@ -5571,6 +5574,102 @@ function adRenderTab(tab) {
 }
 
 function adIR(l,v){ return '<tr><td style="padding:5px 0;color:var(--muted);width:45%;">'+l+'</td><td style="padding:5px 0;font-weight:600;">'+v+'</td></tr>'; }
+
+// ══════════════════════════════════════════════════════════════
+// BAKİYE DENETİMİ (2026-08-12)
+// ──────────────────────────────────────────────────────────────
+// "Bu hesabın bakiyesi doğru mu?" sorusunu elle toplama yapmadan yanıtlar.
+// Beklenen bakiye = yatırımlar − çekimler + kapanan işlemlerin toplam K/Z
+//                   − toplam komisyon
+// Kapanış K/Z'si swap'i zaten içerir (pos.swapTotal, pnl'e dahil ediliyor).
+// Teminat (cost) hesaba KATILMAZ: açılışta bakiyeden düşülmüyor, dolayısıyla
+// kapanışta iade de edilmiyor (bkz. trader'da "balance += pnl").
+//
+// Fark çıkması TEK BAŞINA hata demek değildir — elle yapılmış bakiye
+// düzeltmeleri, silinmiş geçmiş kayıtları veya 50/100 kayıtla sınırlı
+// tradeHistory kırpması da fark üretir. Araç farkı gösterir, yorumu
+// kullanıcıya bırakır.
+// ══════════════════════════════════════════════════════════════
+function adAuditBalance(accId){
+  var fl   = (typeof getAccFinlog==='function') ? getAccFinlog(accId) : [];
+  var bal  = (typeof getAccBal==='function')    ? getAccBal(accId)    : 0;
+  var _c   = (typeof _accCanon!=='undefined') ? _accCanon[String(accId)] : null;
+  var hist = (_c && Array.isArray(_c.tradeHistory)) ? _c.tradeHistory
+             : (Array.isArray(_adHistory) ? _adHistory : []);
+
+  var dep=0, wd=0, other=0, otherCnt=0;
+  (fl||[]).forEach(function(l){
+    var a = parseFloat(l.amount)||0;
+    if(l.type==='deposit')       dep += a;
+    else if(l.type==='withdraw') wd  += a;
+    else { other += a; otherCnt++; }
+  });
+
+  var pnl=0, comm=0, swap=0, n=0;
+  (hist||[]).forEach(function(h){
+    pnl  += parseFloat(h.pnl)||0;
+    comm += parseFloat(h.commission)||0;
+    swap += parseFloat(h.swapTotal)||0;
+    n++;
+  });
+
+  var expected = dep - wd + pnl - comm;
+  var diff     = bal - expected;
+  var okTol    = Math.abs(diff) < 0.01;
+
+  var row = function(l,v,c){
+    return '<tr><td style="padding:4px 10px 4px 0;color:#a0a0a0;">'+l+'</td>'
+      + '<td style="padding:4px 0;text-align:right;font-family:var(--mono);'
+      + (c?'color:'+c+';':'') + '">'+v+'</td></tr>';
+  };
+  var money = function(x){ return (x<0?'-':'')+'$'+adFp(Math.abs(x)); };
+
+  var html = '<div style="font-size:12px;">'
+    + '<table style="width:100%;border-collapse:collapse;">'
+    + row('Yatırımlar',            money(dep),  '#26a69a')
+    + row('Çekimler',              money(-wd),  '#ef5350')
+    + row('Kapanan işlem K/Z ('+n+' işlem)', money(pnl), pnl>=0?'#26a69a':'#ef5350')
+    + row('Komisyonlar',           money(-comm),'#ef5350')
+    + (otherCnt ? row('Diğer finans kaydı ('+otherCnt+')', money(other), '#f0b90b') : '')
+    + '<tr><td colspan="2" style="border-top:1px solid #2a2a2a;padding-top:4px;"></td></tr>'
+    + row('<b>Beklenen bakiye</b>', '<b>'+money(expected)+'</b>')
+    + row('<b>Kayıtlı bakiye</b>',  '<b>'+money(bal)+'</b>')
+    + row('<b>FARK</b>', '<b>'+money(diff)+'</b>', okTol?'#26a69a':'#ef5350')
+    + '</table>';
+
+  if(okTol){
+    html += '<div style="margin-top:10px;color:#26a69a;">✓ Bakiye kayıtlarla tutarlı.</div>';
+  } else {
+    html += '<div style="margin-top:10px;color:#ef5350;line-height:1.6;">'
+      + '⚠ ' + money(Math.abs(diff)) + ' fark var (kayıtlı bakiye beklenenden '
+      + (diff>0?'FAZLA':'EKSİK') + ').<br>'
+      + '<span style="color:#a0a0a0;font-size:11px;">Olası sebepler: elle yapılmış bakiye '
+      + 'düzeltmesi, finlog\'a yazılmamış bir işlem, veya geçmiş listesinin '
+      + 'kırpılmış olması (son 50–100 kayıt tutuluyor). Swap toplamı: '
+      + money(swap) + ' — K/Z rakamına dahildir.</span></div>';
+  }
+  html += '</div>';
+  _adAuditModal(html);
+}
+
+// Basit, kendi kendine yeten modal (mevcut bir showAdminModal yardımcısı yok)
+function _adAuditModal(inner){
+  var old = document.getElementById('adAuditOverlay');
+  if(old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'adAuditOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;'
+    + 'display:flex;align-items:center;justify-content:center;';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML = '<div style="background:#181818;border:1px solid #2a2a2a;border-radius:10px;'
+    + 'padding:20px 22px;min-width:340px;max-width:460px;color:#ddd;font-family:var(--mono);">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">'
+    + '<span style="font-size:12px;letter-spacing:1px;color:#f0b90b;">BAKİYE DENETİMİ</span>'
+    + '<button onclick="document.getElementById(\'adAuditOverlay\').remove()" '
+    + 'style="background:none;border:none;color:#888;font-size:16px;cursor:pointer;">✕</button>'
+    + '</div>' + inner + '</div>';
+  document.body.appendChild(ov);
+}
 
 // ══════════════════════════════════════════════════════════════
 // TEMSİLCİ (PERSONEL) ATAMA — hesap detayı → BİLGİLER sekmesi
@@ -10824,11 +10923,17 @@ function _adActiveSubTab() {
 function adRenderOpenTable(){
   var _footEl = document.getElementById('adOpenFooter');
   var tb = document.getElementById('adOpenBody');
-  if(!tb) { if(_footEl) _footEl.style.display='none'; return; }
+  // ⚠️ 2026-08-12: adOpenFooter üç alt sekme (açık/kapalı/finlog) tarafından
+  // PAYLAŞILAN tek elemandır. Burada koşulsuz gizlemek, kullanıcı "Kapalı"
+  // sekmesindeyken snapshot tetiklenince o sekmenin toplamını da siliyordu
+  // (toplam bir saniye görünüp kayboluyordu). Artık yalnız kendi sekremiz
+  // aktifken gizliyoruz — göster dalındaki kontrolün aynısı.
+  var _mine = function(){ return _adActiveSubTab()==='open'; };
+  if(!tb) { if(_footEl && _mine()) _footEl.style.display='none'; return; }
 
   if(!_adPositions.length){
     tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Açık pozisyon yok</td></tr>';
-    if(_footEl) _footEl.style.display='none';
+    if(_footEl && _mine()) _footEl.style.display='none';
     return;
   }
 
@@ -10910,7 +11015,8 @@ function adRenderHistoryTable(){
 
   if(!_adHistory.length){
     tb.innerHTML='<tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:20px;font-size:12px;">Kapatılmış pozisyon yok</td></tr>';
-    if(_footEl) _footEl.style.display='none';
+    // Paylaşılan footer — yalnız "kapalı" sekmesi aktifken gizle (bkz. adRenderOpenTable notu)
+    if(_footEl && _adActiveSubTab()==='closed') _footEl.style.display='none';
     return;
   }
 
