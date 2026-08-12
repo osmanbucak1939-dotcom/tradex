@@ -5605,20 +5605,15 @@ function adAuditBalance(accId){
     else { other += a; otherCnt++; }
   });
 
-  var pnl=0, comm=0, swap=0, n=0, soCost=0, soCnt=0;
+  var pnl=0, comm=0, swap=0, n=0, soCost=0, soCnt=0, allCost=0, costCnt=0;
   (hist||[]).forEach(function(h){
     pnl  += parseFloat(h.pnl)||0;
     comm += parseFloat(h.commission)||0;
     swap += parseFloat(h.swapTotal)||0;
     n++;
-    // 6 Ağustos 2026 öncesi Cloud Functions kodu stop-out'ta bakiyeye
-    // "cost + pnl" ekliyordu (teminat iadesi). O tarihten önce stop-out ile
-    // kapanmış pozisyonların teminat toplamı, bakiyedeki şişkinliğin
-    // muhtemel kaynağıdır — farkı yorumlayabilmek için ayrıca gösteriliyor.
-    if(h.closeReason==='stop_out'){
-      soCost += parseFloat(h.cost)||0;
-      soCnt++;
-    }
+    var _c = parseFloat(h.cost)||0;
+    if(_c > 0){ allCost += _c; costCnt++; }
+    if(h.closeReason==='stop_out'){ soCost += _c; soCnt++; }
   });
 
   var expected = dep - wd + pnl - comm;
@@ -5652,21 +5647,35 @@ function adAuditBalance(accId){
       + '⚠ ' + money(Math.abs(diff)) + ' fark var (kayıtlı bakiye beklenenden '
       + (diff>0?'FAZLA':'EKSİK') + ').</div>';
 
-    // Fazlalık, stop-out'ların teminat toplamına yakınsa neden büyük olasılıkla
-    // 6 Ağustos öncesi risk motorunun teminat iadesi hatasıdır.
-    if(diff > 0 && soCnt > 0){
-      var yakin = Math.abs(diff - soCost) < Math.max(1, soCost*0.05);
+    // Fazlalık teminat toplamlarına yakınsa, kapanışta teminatın bakiyeye
+    // geri eklendiği anlamına gelir. Önce TÜM kapanışlar, sonra yalnız
+    // stop-out'lar test edilir.
+    var _yakin = function(x){ return x>0 && Math.abs(diff - x) < Math.max(1, x*0.05); };
+    if(diff > 0 && (costCnt>0 || soCnt>0)){
       html += '<div style="margin-top:8px;padding:8px 10px;background:#1d1a12;'
         + 'border:1px solid #4a3f1a;border-radius:6px;font-size:11px;line-height:1.6;">'
-        + '<b style="color:#f0b90b;">Olası sebep — eski teminat iadesi hatası</b><br>'
-        + 'Stop-out ile kapanan '+soCnt+' pozisyonun toplam teminatı: <b>'+money(soCost)+'</b><br>'
-        + (yakin
-            ? '<span style="color:#ef5350;">Bu tutar farkla neredeyse birebir örtüşüyor — '
-              + 'fazlalık büyük olasılıkla 6 Ağustos 2026 öncesi risk motorunun her '
-              + 'stop-out\'ta teminatı bakiyeye geri eklemesinden kaynaklanıyor. '
-              + 'Hata düzeltildi, ancak o dönemde şişen bakiyeler kendiliğinden düzelmez.</span>'
-            : '<span style="color:#a0a0a0;">Fark bu tutarla örtüşmüyor, sebep başka olabilir.</span>')
+        + '<b style="color:#f0b90b;">Teminat iadesi testi</b><br>'
+        + 'Tüm kapanışların teminat toplamı ('+costCnt+' işlem): <b>'+money(allCost)+'</b><br>'
+        + (soCnt ? 'Bunun stop-out olanları ('+soCnt+' işlem): <b>'+money(soCost)+'</b><br>' : '')
+        + 'İşlem başına ortalama fazlalık: <b>'+money(n?diff/n:0)+'</b><br>'
+        + (_yakin(allCost)
+            ? '<span style="color:#ef5350;">→ Fazlalık, TÜM kapanışların teminat toplamıyla '
+              + 'örtüşüyor. Kapanışta teminat bakiyeye geri ekleniyor(du).</span>'
+            : _yakin(soCost)
+              ? '<span style="color:#ef5350;">→ Fazlalık, stop-out teminatlarıyla örtüşüyor '
+                + '(6 Ağustos 2026 öncesi risk motoru hatası).</span>'
+              : '<span style="color:#a0a0a0;">→ Fazlalık hiçbir teminat toplamıyla '
+                + 'örtüşmüyor; sebep başka.</span>')
         + '</div>';
+    }
+
+    // Geçmiş listesi üst sınırda ise beklenen bakiye eksik hesaplanmış olabilir
+    if(n >= 50){
+      html += '<div style="margin-top:8px;padding:8px 10px;background:#12191d;'
+        + 'border:1px solid #1a3a4a;border-radius:6px;font-size:11px;line-height:1.6;color:#7ec8e3;">'
+        + '<b>Dikkat:</b> Geçmişte tam '+n+' kayıt var — bu, saklanan üst sınır. '
+        + 'Daha eski işlemler kırpılmış olabilir; o durumda "beklenen bakiye" '
+        + 'olduğundan DÜŞÜK çıkar ve farkın bir kısmı gerçek kârdır.</div>';
     }
 
     html += '<div style="margin-top:8px;color:#a0a0a0;font-size:11px;line-height:1.6;">'
