@@ -2730,7 +2730,7 @@ var save = () => {
     window._lastSyncAt = _saveTs; // kendi yazdığımızı tekrar okuyup ezmeyelim
     var _saveData = {
       positions: Array.isArray(positions) ? positions : [],
-      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory.slice(0,100) : [],
+      tradeHistory: Array.isArray(tradeHistory) ? tradeHistory.slice(0,TX_HIST_MAX) : [],
       portfolio: Array.isArray(portfolio) ? portfolio : [],
       alarms: Array.isArray(alarms) ? alarms : [],
       // ⚠️ KÖK SORUN DÜZELTMESİ (2026-06-12): balance burada YAZILMIYORDU.
@@ -2754,6 +2754,16 @@ var save = () => {
 ═══════════════════════════════════════════════════════ */
 
 /* ── İndikatör durumu (global — her yerden erişilebilir) ── */
+// ⚠️ 2026-08-12: KAPANAN İŞLEM GEÇMİŞİ ÜST SINIRI — TEK KAYNAK
+// Eskiden bu sayı trader(50)/köprü(50)/functions(50)/admin(100) diye dört yere
+// dağılmıştı; en düşük olan kazandığı için admin 100 yazsa bile müşteri bir
+// işlem kapattığında liste yine 50'ye iniyordu ve eski kayıtlar KALICI olarak
+// siliniyordu (bakiye denetimini imkânsız kılan asıl sebep buydu).
+// Dört kod tabanında da AYNI sayı kullanılmalı — biri atlanırsa o motor
+// sessizce silmeye devam eder.
+// Boyut: kayıt ~433 byte → 500 kayıt ~211 KB (Firestore 1 MB sınırının ~%21'i).
+var TX_HIST_MAX = 500;
+
 var indActive = {ma:true, ema:true, bb:false, vol:false, macd:false, rsi:false};
 var indCfg    = {ma:20, ema:9, bb:20, bb_std:2, rsi:14, macd_fast:12, macd_slow:26, macd_sig:9};
 
@@ -4012,7 +4022,7 @@ function save() {
     var _now = new Date().toISOString();
     fbSaveUserData(_cu.id, {
       positions: positions,
-      tradeHistory: tradeHistory.slice(0,50),
+      tradeHistory: tradeHistory.slice(0,TX_HIST_MAX),
       balance: balance,
       bonus: (_cu && _cu.bonus !== undefined) ? parseFloat(_cu.bonus)||0 : 0,
       updatedAt: _now
@@ -4541,7 +4551,7 @@ function closePosition(id, reason='', closeQty) {
     const _histPart = { ...pos, id: Date.now(), parentId: pos.id, qty: _pq, cost: _costPart, swapTotal: _swapPart,
       closePrice, pnl: pnlPart, closeTime: new Date().toISOString(), closeReason: reason||'parçalı' };
     tradeHistory.unshift(_histPart);
-    if (tradeHistory.length > 50) tradeHistory.pop();
+    if (tradeHistory.length > TX_HIST_MAX) tradeHistory.pop();
     try { localStorage.setItem('tx_pos', JSON.stringify(positions)); } catch(e){}
     try { localStorage.setItem('tx_hist', JSON.stringify(tradeHistory)); } catch(e){}
     // ⚠️ 2026-07-17 DÜZELTME: eskiden burada save() (TÜM positions dizisini
@@ -4570,13 +4580,13 @@ function closePosition(id, reason='', closeQty) {
           sp.swapTotal = Math.round((sSwap - _swapPart)*100)/100;
           var _alreadyAdded = serverHist.some(function(h){ return String(h.id)===String(_histPart.id); });
           if(!_alreadyAdded) serverHist.unshift(_histPart);
-          if(serverHist.length > 50) serverHist.pop();
+          if(serverHist.length > TX_HIST_MAX) serverHist.pop();
           var serverBal = (typeof d.balance === 'number') ? d.balance + pnlPart : balance;
           tx.set(_refPC, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
         });
       }).catch(function(e){ console.warn('[closePosition][parçalı] transaction:', e.message); });
     } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
-      fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,50)});
+      fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,TX_HIST_MAX)});
     }
     renderPositions();
     renderHistory();
@@ -4593,7 +4603,7 @@ function closePosition(id, reason='', closeQty) {
   positions.splice(idx, 1);
   const _histEntry = { ...pos, closePrice, pnl, swapTotal:_swapC, closeTime:new Date().toISOString(), closeReason:reason||'manuel' };
   tradeHistory.unshift(_histEntry);
-  if (tradeHistory.length > 50) tradeHistory.pop();
+  if (tradeHistory.length > TX_HIST_MAX) tradeHistory.pop();
   // ⚠️ localStorage'ı güncelle ama save()'İ ÇAĞIRMA — save() tüm tradeHistory'yi
   // Firestore'a yazıyor, ardından aşağıdaki transaction sunucudan taze listeyi çekip
   // AYNI kapanışı BİR KEZ DAHA ekliyordu → kapalı listesinde ÇİFT KAYIT (aynı id).
@@ -4624,7 +4634,7 @@ function closePosition(id, reason='', closeQty) {
           return String(h.id)===String(_histEntry.id) && h.closeTime===_histEntry.closeTime;
         });
         if(!_alreadyClosed) serverHist.unshift(_histEntry);
-        if(serverHist.length > 50) serverHist.pop();
+        if(serverHist.length > TX_HIST_MAX) serverHist.pop();
         var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : balance;
         tx.set(_refCP, { positions: serverPos, tradeHistory: serverHist, balance: serverBal }, { merge: true });
       });
@@ -4635,7 +4645,7 @@ function closePosition(id, reason='', closeQty) {
       console.warn('[closePosition] transaction:', e.message);
     });
   } else if(typeof fbSaveUserData === 'function' && typeof _cu !== 'undefined' && _cu) {
-    fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,50)});
+    fbSaveUserData(_cu.id, {balance:balance, positions:positions, tradeHistory:tradeHistory.slice(0,TX_HIST_MAX)});
     if(window._closingPositions) delete window._closingPositions[String(id)];
   }
   renderPositions();
@@ -4799,7 +4809,7 @@ function renderHistory() {
   };
   var _reasonOrder = { 'tp':0, 'sl':1, 'manuel':2, 'margin':3, 'stop_out':4 };
 
-  var sorted = tradeHistory.slice(0, 100).sort(function(a, b) {
+  var sorted = tradeHistory.slice(0, TX_HIST_MAX).sort(function(a, b) {
     var av, bv;
     if (_histSortCol === 'time')   { av = new Date(a.closeTime||0).getTime(); bv = new Date(b.closeTime||0).getTime(); }
     else if (_histSortCol === 'sym')    { av = (a.label||a.sym||'').toUpperCase(); bv = (b.label||b.sym||'').toUpperCase(); return av < bv ? -_histSortDir : av > bv ? _histSortDir : 0; }
@@ -9283,7 +9293,7 @@ function symUnpin(sym){
         +'</div>';
       }).join('');
     } else {
-      var hist=typeof tradeHistory!=='undefined'?tradeHistory.slice(0,50):[];
+      var hist=typeof tradeHistory!=='undefined'?tradeHistory.slice(0,TX_HIST_MAX):[];
       if(!hist.length){el.innerHTML='<div class="m-empty">'+((_LANGS[_curLang]||_LANGS.tr).noHist)+'</div>';return;}
       el.innerHTML=hist.map(function(h){
         var sc=(typeof symConfig!=='undefined'&&symConfig)?symConfig.find(function(s){return s.sym===h.sym;}):null;
