@@ -9979,7 +9979,7 @@ function updateReports(){
           +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--mono);font-size:9px;">K/Z</th>'
           +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--mono);font-size:9px;">TARIH</th>'
           +'</tr></thead><tbody>';
-        allClosed.slice(0,100).forEach(function(h,idx){
+        allClosed.slice(0,TX_HIST_MAX).forEach(function(h,idx){
           var pnl=parseFloat(h.pnl)||0;
           var pc=pnl>=0?'#26a69a':'#ef5350';
           var bg=idx%2===0?'':'background:#0d0d0d;';
@@ -10777,6 +10777,11 @@ function adFpDec(sym) {
   return 5;
 }
 var adFmtMoney=function(n){n=parseFloat(n||0);return(n<0?'-$':'$')+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+// ⚠️ 2026-08-12: Kapanan işlem geçmişi üst sınırı — trader/köprü/functions ile
+// AYNI olmalı (bkz. trader'daki TX_HIST_MAX açıklaması). Admin 100'e kırparken
+// trader 50'ye kırpıyordu; en düşük olan kazandığı için kayıtlar siliniyordu.
+var TX_HIST_MAX = 500;
+
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
 function adFpSym(n, sym){ return parseFloat(n||0).toFixed(adFpDec(sym)); }
 function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -11055,7 +11060,7 @@ function adRenderHistoryTable(){
     return;
   }
 
-  var sorted = _adHistory.slice(0,200).sort(function(a,b){
+  var sorted = _adHistory.slice(0,TX_HIST_MAX).sort(function(a,b){
     var col=_adHistSort.col, d=_adHistSort.dir, va, vb;
     if(col==='pnl'){ va=a.pnl||0; vb=b.pnl||0; }
     else if(col==='time'){ va=new Date(a.openDate||a.time||0).getTime(); vb=new Date(b.openDate||b.time||0).getTime(); }
@@ -11236,7 +11241,7 @@ function adClosePos(btn){
           return String(h.id)===String(_histEntryAd.id) && h.closeTime===_histEntryAd.closeTime;
         });
         if(!_alreadyClosedAd) serverHist.unshift(_histEntryAd);
-        if(serverHist.length > 100) serverHist = serverHist.slice(0,100);
+        if(serverHist.length > TX_HIST_MAX) serverHist = serverHist.slice(0,TX_HIST_MAX);
         var serverBal = (typeof d.balance === 'number') ? d.balance + pnl : _newBal;
         tx.set(_refACP, { balance: serverBal, positions: serverPos, tradeHistory: serverHist,
           _balanceSource: 'manager', updatedAt: new Date().toISOString() }, { merge: true });
@@ -11287,7 +11292,7 @@ function adCloseAllPositions(){
             closePrice: cur, pnl: pnl, closeTime: nowIso, closeReason:'admin-tumunu-kapat'
           }));
         });
-        if(serverHist.length > 100) serverHist = serverHist.slice(0,100);
+        if(serverHist.length > TX_HIST_MAX) serverHist = serverHist.slice(0,TX_HIST_MAX);
         var serverBal = (typeof d.balance === 'number') ? d.balance + totalPnl : totalPnl;
         tx.set(_refCAP, { positions: [], tradeHistory: serverHist, balance: serverBal, _balanceSource: 'manager', updatedAt: nowIso }, { merge: true });
         return totalPnl;
@@ -11551,7 +11556,7 @@ function adSaveUserTrades(){
   if(!a) return;
   // ⚠️ balance canonical'dan — a.balance GÜVENİLMEZ
   var payload = {
-    tradeHistory: _adHistory.slice(0,100),
+    tradeHistory: _adHistory.slice(0,TX_HIST_MAX),
     balance:      getAccBal(a.id),
     updatedAt:    new Date().toISOString()
   };
