@@ -3556,7 +3556,14 @@ function _lwPeriodSecs(interval){
 function _lwSanitizeCandles(candles, interval){
   if(!Array.isArray(candles) || !candles.length) return candles||[];
   var ps  = _lwPeriodSecs(interval);
-  var max = Math.floor(Math.floor(Date.now()/1000) / ps) * ps;   // içinde bulunduğumuz periyot
+  // ⚠️ 2026-08-13 DÜZELTME: Burada sınır olarak "UTC'ye göre hizalanmış mevcut
+  // periyodun başlangıcı" kullanılıyordu. Ancak Yahoo/TwelveData 4s ve 1s
+  // mumlarını BORSA SEANSINA göre hizalar, UTC'ye değil — bu yüzden tamamen
+  // geçerli son mumlar sınırın üstünde kalıp ATILIYOR, geçmişin sonu kesiliyor
+  // ve canlı mumla arasında BOŞLUK oluşuyordu (13 Ağustos'ta tüm sembollerde
+  // görülen sorun buydu). Sınır artık "şimdiden bir periyottan fazla ileri":
+  // sadece açıkça bozuk (zaman dilimi hatası) mumlar elenir.
+  var max = Math.floor(Date.now()/1000) + ps;
   var badOhlc = 0;
   var out = [];
   candles.forEach(function(c){
@@ -3605,7 +3612,10 @@ function lwTickUpdate() {
   // ⚠️ Son mum GELECEKTE ise seri bozulmuş demektir: bu durumda (nowBarTime >
   // last.time) hiç sağlanmaz, yeni mum açılmaz ve grafik saati donar.
   // Ayıklayıp seriyi yeniden çiz — bir sonraki tick normal akışa döner.
-  if(last && last.time > nowBarTime) {
+  // ⚠️ 2026-08-13: Burada da tolerans gerekli — borsa-hizalı mumlarda last.time
+  // meşru olarak nowBarTime'ı biraz aşabilir. Yalnız BİR PERİYOTTAN fazla ileri
+  // ise seri gerçekten bozuktur.
+  if(last && last.time > nowBarTime + periodSecs) {
     var cleaned = _lwSanitizeCandles(_klineData, curInt);
     if(cleaned.length && cleaned[cleaned.length-1].time <= nowBarTime) {
       _klineData = cleaned;
