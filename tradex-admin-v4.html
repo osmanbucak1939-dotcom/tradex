@@ -2005,7 +2005,7 @@ console.log('Firebase bağlandı ✓');
           <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">E-POSTA</label><input class="mgr-input" type="email" id="na_email" style="width:100%;"></div>
           <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ŞİFRE</label><input class="mgr-input" id="na_pass" style="width:100%;"></div>
           <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">TİP</label><select class="mgr-input" id="na_type" style="width:100%;"><option value="real">Real</option><option value="demo">Demo</option></select></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KALDIRAC</label><select class="mgr-input" id="na_lev" style="width:100%;"><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option></select></div>
+          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KALDIRAC</label><select class="mgr-input" id="na_lev" style="width:100%;"><option value="100">1:100</option><option value="200">1:200</option><option value="300">1:300</option><option value="400">1:400</option><option value="500">1:500</option></select></div>
           <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SPREAD GRUBU</label><select class="mgr-input" id="na_sg" style="width:100%;"><option value="standard">Standard</option><option value="ecn">ECN</option><option value="vip">VIP</option><option value="zero">Zero</option></select></div>
         </div>
         <button class="mgr-btn success" onclick="createAccount()" style="margin-top:14px;padding:8px 20px;">Hesap Oluştur</button>
@@ -2044,6 +2044,8 @@ console.log('Firebase bağlandı ✓');
               <option value="50">1:50</option>
               <option value="100">1:100</option>
               <option value="200">1:200</option>
+              <option value="300">1:300</option>
+              <option value="400">1:400</option>
               <option value="500">1:500</option>
               <option value="1000">1:1000</option>
               <option value="2000">1:2000</option>
@@ -2056,6 +2058,8 @@ console.log('Firebase bağlandı ✓');
               <option value="50">1:50</option>
               <option value="100">1:100</option>
               <option value="200">1:200</option>
+              <option value="300">1:300</option>
+              <option value="400">1:400</option>
               <option value="500">1:500</option>
               <option value="1000">1:1000</option>
               <option value="2000">1:2000</option>
@@ -3967,11 +3971,7 @@ function adCalcStats(account, positions) {
     var n=nets[sym], nq=Math.abs(n.buy-n.sell);
     var sc=cfg.find(function(s){return s.sym===sym;});
     var cs=sc?(parseFloat(sc.contractSize)||1):1;
-    // ⚠️ KALDIRILDI: sembolün kendi 'margin' alanı artık hesabın kaldıracını geçersiz
-    // kılmıyor. Çoğu sembolde varsayılan margin:1 olduğu için, eskiden TÜM hesaplar
-    // sembol bazında sabit 1:100'e kilitleniyordu — hesap kaldıracı (1:1000 gibi) hiç
-    // etkisi olmuyordu. Artık her zaman hesabın CANLI kaldıracı kullanılır.
-    var lv=lev;
+    var lv=_txEffLev(sc, lev);
     margin+=(nq*n.price*cs)/lv;
   });
   var freeMargin=Math.max(0,equity-margin);
@@ -5513,7 +5513,7 @@ function adRenderTab(tab) {
             '</div>' +
             '<div><label class="ad-label">Kaldıraç</label>' +
               '<select class="ad-input" id="ad_lev" style="cursor:pointer;">' +
-                '<option value="50">1:50</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1000</option><option value="2000">1:2000</option><option value="5000">1:5000</option>' +
+                '<option value="50">1:50</option><option value="100">1:100</option><option value="200">1:200</option><option value="300">1:300</option><option value="400">1:400</option><option value="500">1:500</option><option value="1000">1:1000</option><option value="2000">1:2000</option><option value="5000">1:5000</option>' +
               '</select>' +
             '</div>' +
             '<div><label class="ad-label">Marjin Seviyesi (%)</label><input class="ad-input" id="ad_ml" type="number" placeholder="100" min="0" value="'+(a.marginLevelPct||100)+'"></div>' +
@@ -9845,23 +9845,20 @@ function updateReports(){
   set('rep-totalBonus-sub', fp2(bo) + ' bonus');
   set('rep-demoreal-sub', _demoLen + ' demo / ' + _realLen + ' gerçek');
 
-  // Finlog'dan yatırım/çekim topla
+  // Yatırım/çekim toplamları — KAYNAK YALNIZCA FİNLOG.
+  // ⚠️ 2026-08-17: Burada finlog'a EK OLARAK depositRequests/withdrawRequests
+  // de toplanıyordu ve her onaylı işlem İKİ KEZ sayılıyordu (10.000$'lık tek
+  // yatırım 20.000$ görünüyordu). Talep toplaması tamamen kaldırıldı; gerekçe:
+  // onay yollarının hepsi (approveReq, approveDepReq, elle yatırım/çekim)
+  // _reqUpdateBalance üzerinden geçiyor ve o da finlog'a MUTLAKA yazıyor —
+  // yani finlog zaten eksiksiz, taleplerden gelecek ek bir bilgi yok.
   var totalDep=0, totalWdr=0;
   c2.forEach(function(a){
-    var _rfl=getAccFinlog(a.id); if(_rfl.length){
-      _rfl.forEach(function(fl){
-        if(fl.type==='deposit') totalDep+=parseFloat(fl.amount)||0;
-        else if(fl.type==='withdraw') totalWdr+=parseFloat(fl.amount)||0;
-      });
-    }
-  });
-
-  // withdrawRequests + depositRequests'ten de topla (onaylananlar)
-  withdrawRequests.forEach(function(r){
-    if(r.status==='approved') totalWdr+=parseFloat(r.amount)||0;
-  });
-  depositRequests.forEach(function(r){
-    if(r.status==='approved') totalDep+=parseFloat(r.amount)||0;
+    getAccFinlog(a.id).forEach(function(fl){
+      var _amt = Math.abs(parseFloat(fl.amount)||0);
+      if(fl.type==='deposit') totalDep+=_amt;
+      else if(fl.type==='withdraw') totalWdr+=_amt;
+    });
   });
 
   set('rep-totalDeposit', fp2(totalDep));
@@ -10250,7 +10247,18 @@ function renderStaffTable(){
       +'<td style="padding:7px 10px;font-size:11px;">'+assignedCell+'</td>'
       +'<td style="padding:7px 10px;white-space:nowrap;">'
         +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">'+ataLabel+'</button> '
-        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openPermModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">⚙ Yetki</button> '
+        +(function(){
+            // Düzenleme izni yoksa düğme soluk ve sebebi ipucunda (bkz. canEditPerms)
+            var _ok = (typeof canEditPerms==='function') ? canEditPerms(s) : true;
+            var _ttl = _ok ? 'Yetkileri düzenle'
+                     : ((_currentStaff && String(s.id)===String(_currentStaff.id))
+                        ? 'Kendi yetkinizi düzenleyemezsiniz'
+                        : 'Admin ve Süper Admin yetkilerini yalnızca Süper Admin düzenleyebilir');
+            return '<button class="mgr-btn secondary" data-id="'+s.id+'" '
+              + (_ok ? 'onclick="openPermModal(this.dataset.id)"' : 'disabled')
+              + ' title="'+_ttl+'" style="font-size:10px;padding:2px 8px;'
+              + (_ok ? '' : 'opacity:.35;cursor:not-allowed;') + '">⚙ Yetki</button> ';
+          })()
         +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
         +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">🔑 Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
       +'</td></tr>';
@@ -10286,12 +10294,37 @@ function saveNewStaff(){
   document.getElementById("addStaffModal").style.display="none";
   showAdminToast('Eklendi',name+' personel olarak eklendi','success');
 }
+// ══════════════════════════════════════════════════════════════
+// YETKİ DÜZENLEME İZNİ (2026-08-17)
+// ──────────────────────────────────────────────────────────────
+// Eskiden yalnız Süper Admin yetki düzenleyebiliyordu. Artık Admin rolü de
+// düzenleyebilir, ancak yetki yükseltmeyi (privilege escalation) önlemek için
+// üç kısıt var:
+//   1) Admin, Süper Admin'in yetkilerine dokunamaz.
+//   2) Admin, başka bir Admin'in yetkilerine dokunamaz (yatay saldırı).
+//   3) Hiç kimse KENDİ yetkisini düzenleyemez — kendine 'all' verip
+//      sistemi ele geçirmenin en kolay yolu buydu.
+// Süper Admin bu kısıtların dışındadır; herkesi düzenleyebilir.
+// ══════════════════════════════════════════════════════════════
+function canEditPerms(target) {
+  if(!_currentStaff || !target) return false;
+  var me = _currentStaff.role;
+  if(me === 'superadmin') return true;
+  if(me !== 'admin') return false;
+  if(String(target.id) === String(_currentStaff.id)) return false;   // kendi kaydı
+  if(target.role === 'superadmin' || target.role === 'admin') return false;
+  return true;
+}
+
 function openPermModal(id) {
-  if(_currentStaff && _currentStaff.role !== 'superadmin') {
-    showAdminToast('Yetersiz Yetki','Sadece Süper Admin yetki düzenleyebilir','error'); return;
-  }
   var s = _staffList.find(function(x){return x.id===id;});
   if(!s) return;
+  if(!canEditPerms(s)) {
+    var _msg = (_currentStaff && String(s.id)===String(_currentStaff.id))
+      ? 'Kendi yetkinizi düzenleyemezsiniz'
+      : 'Admin ve Süper Admin yetkilerini yalnızca Süper Admin düzenleyebilir';
+    showAdminToast('Yetersiz Yetki', _msg, 'error'); return;
+  }
   var currentPerms = s.customPerms || ROLE_DEFAULT_PERMS[s.role] || [];
   
   var m = document.getElementById('permModal');
@@ -10358,6 +10391,11 @@ function savePermModal(id) {
   if(id && id.dataset) id = id.dataset.id;
   var s = _staffList.find(function(x){return x.id===id;});
   if(!s) return;
+  // ⚠️ Yazma tarafında da kontrol et — openPermModal'daki kontrol yalnız arayüzü
+  // korur; bu fonksiyon konsoldan doğrudan çağrılabilir.
+  if(typeof canEditPerms==='function' && !canEditPerms(s)) {
+    showAdminToast('Yetersiz Yetki','Bu personelin yetkilerini düzenleyemezsiniz','error'); return;
+  }
   var perms = [];
   document.querySelectorAll('.perm-cb-'+id+':checked').forEach(function(cb){ perms.push(cb.dataset.key); });
   s.customPerms = perms;
@@ -10799,6 +10837,21 @@ var adFmtMoney=function(n){n=parseFloat(n||0);return(n<0?'-$':'$')+Math.abs(n).t
 // AYNI olmalı (bkz. trader'daki TX_HIST_MAX açıklaması). Admin 100'e kırparken
 // trader 50'ye kırpıyordu; en düşük olan kazandığı için kayıtlar siliniyordu.
 var TX_HIST_MAX = 500;
+
+// ══════════════════════════════════════════════════════════════
+// ETKİN KALDIRAÇ — sembol marjı + hesap kaldıracı (2026-08-17)
+// Trader'daki _txEffLev ile BİREBİR aynı olmalı.
+//  • margin <= 1 → yok sayılır (varsayılan 1 olduğu için eskiden herkesi
+//    sessizce 1:100'e kilitliyordu; bu yüzden bir ara tamamen kaldırılmıştı)
+//  • margin > 1 → sembol kaldıracı 100/margin; hesap kaldıracıyla kıyaslanıp
+//    DAHA SIKI olan uygulanır. Sembol ayarı kaldıracı asla gevşetmez.
+// ══════════════════════════════════════════════════════════════
+function _txEffLev(symCfg, accLev) {
+  var lev = parseFloat(accLev) || 100;
+  var m = symCfg ? parseFloat(symCfg.margin) : 0;
+  if (m > 1) lev = Math.min(lev, 100 / m);
+  return lev > 0 ? lev : 100;
+}
 
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
 function adFpSym(n, sym){ return parseFloat(n||0).toFixed(adFpDec(sym)); }
