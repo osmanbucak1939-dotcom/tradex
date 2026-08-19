@@ -6569,7 +6569,14 @@ function renderAccTable(){
     _accFooterEl.textContent = 'Toplam ' + rows.length + ' hesap gösteriliyor, ' + _onlineCount + ' online';
   }
 
-  var SG={standard:'Standard',ecn:'ECN',vip:'VIP',zero:'Zero'};
+  // ⚠️ 2026-08-19: Burada SG sabit dört elemanlı bir liste idi. Admin panelinden
+  // SONRADAN oluşturulan gruplar listede olmadığı için '|| Standard' yedeğine
+  // düşüyor ve tabloda YANLIŞ grup adı görünüyordu (hesabın gerçek grubu doğruydu,
+  // yalnızca gösterim hatalıydı). Artık canlı tradingGroups listesinden kurulur.
+  var SG = {standard:'Standard', ecn:'ECN', vip:'VIP', zero:'Zero'};
+  if(typeof tradingGroups!=='undefined' && Array.isArray(tradingGroups)){
+    tradingGroups.forEach(function(g){ if(g && g.id) SG[g.id] = g.name || g.label || g.id; });
+  }
   var cols=_accCols;
   var COL_DEFS=[
     {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'90px',  maxw:'90px'},
@@ -6621,10 +6628,12 @@ function renderAccTable(){
       +'<option value="passive"'+(fStatus==='passive'?' selected':'')+'>Pasif</option></select>'
     +'<select id="acc_fsg" class="mgr-input" style="flex:1;min-width:75px;width:auto;" onchange="renderAccTable()">'
       +'<option value="">Grup</option>'
-      +'<option value="standard"'+(fSg==='standard'?' selected':'')+'>Standard</option>'
-      +'<option value="ecn"'+(fSg==='ecn'?' selected':'')+'>ECN</option>'
-      +'<option value="vip"'+(fSg==='vip'?' selected':'')+'>VIP</option>'
-      +'<option value="zero"'+(fSg==='zero'?' selected':'')+'>Zero</option></select>'
+      // ⚠️ 2026-08-19: filtre listesi de sabitti — sonradan eklenen gruplara göre
+      // süzme yapılamıyordu. Artık SG (canlı grup listesi) üzerinden kurulur.
+      + Object.keys(SG).map(function(_gid){
+          return '<option value="'+_gid+'"'+(fSg===_gid?' selected':'')+'>'+SG[_gid]+'</option>';
+        }).join('')
+      +'</select>'
     +'<select id="acc_fonline" class="mgr-input" style="flex:1;min-width:90px;width:auto;" onchange="renderAccTable()">'
       +'<option value="">Tümü</option>'
       +'<option value="online"'+(fOnline==='online'?' selected':'')+'>🟢 Online</option>'
@@ -6699,7 +6708,7 @@ function renderAccTable(){
         }
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>';
         else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:#a0a0a0;">'+(a.type==='demo'?'Demo':'Real')+'</td>';
-        else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||'Standard')+'</td>';
+        else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</td>';
         else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;'+ellipsis+'">'+( a.email||'—')+'</td>';
         else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+regDate+'</td>';
         else if(cid==='seen')    tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;" data-lastseen="'+a.id+'">'+lastSeen+'</td>';
