@@ -2170,7 +2170,7 @@ console.log('Firebase bağlandı ✓');
         </div>
         <div style="margin-top:14px;border-top:1px solid #263326;padding-top:10px;">
           <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:6px;">🎌 TATİL GÜNLERİ</div>
-          <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;">Şablon seçilmezse o gün <b>tüm</b> semboller kapalıdır.</div>
+          <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">Tarihi seçin, sonra o gün <b>kapalı olacak şablonları</b> işaretleyin (örn. sadece ABD Endeks). Hiçbirini işaretlemezseniz o gün <b>tüm</b> piyasalar kapalıdır.</div>
           <div id="sessHolWrap"></div>
           <button class="mgr-btn" onclick="sessAddHoliday()" style="font-size:10px;padding:4px 12px;margin-top:8px;">+ Tatil Ekle</button>
         </div>
@@ -11058,6 +11058,9 @@ function sessLoad(){
   db.collection('broker').doc('sessions').onSnapshot(function(snap){
     var d = snap.exists ? (snap.data()||{}) : {};
     if(d.data){ try{ d = (typeof d.data==='string') ? JSON.parse(d.data) : d.data; }catch(e){} }
+    // ⚠️ Kaydedilmemiş düzenleme varken snapshot'tan gelen veriyle EKRANI
+    // TAZELEME — kullanıcının yazdıkları silinir. Kaydedince zaten temizlenir.
+    if(window._sessDirty){ console.info('[seans] kaydedilmemiş değişiklik var, tazeleme atlandı'); return; }
     _sessCfg = _txSessNorm(d);
     sessRender();
   }, function(e){ console.warn('[seans] okunamadi:', e && e.message); });
@@ -11099,49 +11102,101 @@ function sessRender(){
 
   var hw = document.getElementById('sessHolWrap');
   hw.innerHTML = c.holidays.length ? c.holidays.map(function(h,hi){
-    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">'
-      + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:10px;padding:3px 6px;">'
-      + '<input class="mgr-input" value="'+((h.templates||[]).join(','))+'" onchange="sessSetHol('+hi+',\'templates\',this.value)" placeholder="tüm şablonlar" style="flex:1;font-size:10px;padding:3px 6px;font-family:var(--mono);">'
-      + '<button class="mgr-btn danger" onclick="sessDelHol('+hi+')" style="font-size:10px;padding:2px 8px;">Sil</button>'
+    var sel = h.templates || [];
+    // ⚠️ 2026-08-19: Burası eskiden şablon KODLARININ elle yazıldığı bir metin
+    // kutusuydu ve saat dilimi sanılıyordu. Artık işaret kutusu: hiçbiri
+    // seçilmezse o gün TÜM piyasalar kapalıdır (motor da böyle yorumlar).
+    var boxes = c.templates.map(function(t){
+      var on = sel.indexOf(t.id) >= 0;
+      return '<label style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:'
+        + (on?'#7ec8a9':'#a0a0a0') + ';margin-right:10px;white-space:nowrap;cursor:pointer;">'
+        + '<input type="checkbox" '+(on?'checked':'')+' onchange="sessToggleHolTpl('+hi+',\''+t.id+'\',this.checked)"> '
+        + (t.name||t.id) + '</label>';
+    }).join('');
+    var note = sel.length
+      ? '<span style="font-size:10px;color:#7ec8a9;">Yalnız seçili şablonlar kapalı</span>'
+      : '<span style="font-size:10px;color:#f0b90b;">Hiçbiri seçili değil → <b>TÜM piyasalar kapalı</b></span>';
+    return '<div style="border:1px solid #263326;border-radius:5px;padding:8px;margin-bottom:6px;background:#0f150f;">'
+      + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
+        + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:10px;padding:3px 6px;">'
+        + '<input class="mgr-input" value="'+(h.name||'')+'" onchange="sessSetHol('+hi+',\'name\',this.value)" placeholder="açıklama (örn. Ramazan Bayramı)" style="flex:1;font-size:10px;padding:3px 6px;">'
+        + '<button class="mgr-btn danger" onclick="sessDelHol('+hi+')" style="font-size:10px;padding:2px 8px;">Sil</button>'
+      + '</div>'
+      + '<div style="margin-bottom:4px;">' + (boxes || '<span style="font-size:10px;color:#888;">Önce şablon tanımlayın</span>') + '</div>'
+      + note
       + '</div>';
   }).join('') : '<div style="color:#888;font-size:11px;">Tatil tanımlı değil.</div>';
 }
 
-function sessSetField(ti, key, val){ _sessCfg.templates[ti][key] = val; sessRender(); }
+// ⚠️ 2026-08-19: Eskiden her onchange'de sessRender() çağrılıyordu; tüm
+// kutular silinip yeniden yaratıldığı için kullanıcı Pazartesi'den Salı'ya
+// geçerken tıkladığı kutu yok oluyor ve yazdığı kayboluyor sanılıyordu.
+// Artık yalnız YAPI değişince (şablon/tatil ekle-sil, 7/24 anahtarı) yeniden
+// çiziliyor; metin alanları sadece modeli günceller.
+function sessSetField(ti, key, val){
+  _sessCfg.templates[ti][key] = val;
+  if(key === 'always') sessRender();          // gün satırları görünüp kaybolur
+  else sessTouch();
+}
+
+// Kaydedilmemiş değişiklik göstergesi
+function sessTouch(){
+  window._sessDirty = true;
+  var b = document.getElementById('sessTplCount');
+  if(b && b.parentNode) b.parentNode.style.color = '#f0b90b';
+}
 function sessSetDay(el){
   var ti=+el.dataset.ti, di=+el.dataset.di;
   var t=_sessCfg.templates[ti]; if(!t.days) t.days={};
   var raw=(el.value||'').trim();
-  if(!raw){ delete t.days[di]; delete t.days[String(di)]; sessRender(); return; }
+  if(!raw){ delete t.days[di]; delete t.days[String(di)]; sessTouch(); return; }
   var arr=[];
   raw.split(',').forEach(function(part){
     var m=/^\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*$/.exec(part);
     if(m) arr.push([m[1],m[2]]);
   });
-  if(!arr.length){ showAdminToast('Hatalı format','Örnek: 10:00-18:10 (birden fazlaysa virgülle)','error'); sessRender(); return; }
+  if(!arr.length){
+    showAdminToast('Hatalı format','Örnek: 10:00-18:10 (birden fazlaysa virgülle)','error');
+    el.value = ((t.days && (t.days[di]||t.days[String(di)]))||[]).map(function(p){return p[0]+'-'+p[1];}).join(', ');
+    return;
+  }
   t.days[di]=arr; delete t.days[String(di)];
-  sessRender();
+  // Girdiyi normalize edilmiş haliyle geri yaz (yeniden çizmeden)
+  el.value = arr.map(function(p){ return p[0]+'-'+p[1]; }).join(', ');
+  sessTouch();
 }
 function sessAddTpl(){
   _sessCfg.templates.push({id:'yeni'+(_sessCfg.templates.length+1), name:'Yeni Şablon', tz:3, days:{}});
-  sessRender();
+  sessTouch(); sessRender();
 }
 function sessDelTpl(ti){
   var t=_sessCfg.templates[ti];
   if(!confirm((t.name||t.id)+' şablonu silinsin mi? Bu şablona bağlı semboller varsayılana döner.')) return;
-  _sessCfg.templates.splice(ti,1); sessRender();
+  _sessCfg.templates.splice(ti,1); sessTouch(); sessRender();
 }
-function sessAddHoliday(){ _sessCfg.holidays.push({date:'', templates:[]}); sessRender(); }
-function sessDelHol(hi){ _sessCfg.holidays.splice(hi,1); sessRender(); }
+function sessAddHoliday(){ _sessCfg.holidays.push({date:'', templates:[]}); sessTouch(); sessRender(); }
+function sessDelHol(hi){ _sessCfg.holidays.splice(hi,1); sessTouch(); sessRender(); }
+
+// Tatilde bir şablonu işaretle/kaldır. Hiçbiri seçili değilse motor o günü
+// TÜM şablonlar için tatil sayar (bkz. _txSessIsHoliday).
+function sessToggleHolTpl(hi, tplId, on){
+  var h = _sessCfg.holidays[hi]; if(!h) return;
+  if(!Array.isArray(h.templates)) h.templates = [];
+  var ix = h.templates.indexOf(tplId);
+  if(on && ix < 0) h.templates.push(tplId);
+  if(!on && ix >= 0) h.templates.splice(ix,1);
+  sessTouch(); sessRender();
+}
+
 function sessSetHol(hi,key,val){
   if(key==='templates') _sessCfg.holidays[hi].templates = val.split(',').map(function(x){return x.trim();}).filter(Boolean);
   else _sessCfg.holidays[hi][key]=val;
-  sessRender();
+  sessTouch();
 }
 function sessResetDefaults(){
   if(!confirm('Varsayılan şablonlar (Kripto / Forex / ABD Endeks / BIST) yüklensin mi? Mevcut şablonların üzerine yazılır.')) return;
   _sessCfg = JSON.parse(JSON.stringify(TX_SESSION_DEFAULTS));
-  sessRender();
+  sessTouch(); sessRender();
   showAdminToast('Yüklendi','Kaydet\'e basmayı unutma','info');
 }
 function sessSave(){
@@ -11158,6 +11213,9 @@ function sessSave(){
     defaultTemplate:_sessCfg.defaultTemplate||'forex',
     updatedAt:new Date().toISOString()
   }).then(function(){
+    window._sessDirty = false;
+    var _b=document.getElementById('sessTplCount'); if(_b&&_b.parentNode) _b.parentNode.style.color='';
+    sessRender();
     showAdminToast('Kaydedildi','Seans ayarları güncellendi','success');
     if(typeof adAudit==='function') adAudit('sessions.update','broker/sessions',null,{templates:_sessCfg.templates.length},'Seans ayarları');
   }).catch(function(e){ showAdminToast('Hata', e.message, 'error'); });
