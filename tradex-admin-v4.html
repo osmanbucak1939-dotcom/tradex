@@ -4000,7 +4000,11 @@ function adCalcStats(account, positions) {
     var sc=cfg.find(function(s){return s.sym===sym;});
     var cs=sc?(parseFloat(sc.contractSize)||1):1;
     var lv=_txEffLev(sc, lev);
-    margin+=(nq*n.price*cs)/lv;
+    // ⚠️ 2026-08-19 TEMİNAT PARA BİRİMİ DÜZELTMESİ — nosyonel değer sembolün
+    // KOTASYON para birimindeydi ve USD sanılıyordu (USDJPY 1 lot → ~70.000
+    // "USD" teminat, doğrusu ~1.000). Dolar bacaklı olmayan tüm sembolleri
+    // etkiliyordu. Trader/köprü/functions ile aynı düzeltme.
+    margin+=_adQuoteToUsd(sym, nq*n.price*cs)/lv;
   });
   var freeMargin=Math.max(0,equity-margin);
   var marginLvl=margin>0?(equity/margin*100):null;
