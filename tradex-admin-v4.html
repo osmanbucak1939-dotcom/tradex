@@ -2149,6 +2149,33 @@ console.log('Firebase bağlandı ✓');
         </div>
       </div>
 
+
+      <!-- ── SEANSLAR / PİYASA SAATLERİ (2026-08-19) ─────────────────── -->
+      <div class="ad-sect" id="sessPanel" style="margin-bottom:14px;padding:12px;border:1px solid #2a3a2a;border-radius:6px;background:#121a14;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;">🕒 SEANSLAR (PİYASA SAATLERİ)</span>
+          <span style="font-size:10px;color:#7ec8a9;font-family:var(--mono);">(<span id="sessTplCount">0</span> şablon · <span id="sessHolCount">0</span> tatil)</span>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="sessResetDefaults()">↺ Varsayılan şablonlar</button>
+          <button class="mgr-btn success" style="font-size:10px;padding:4px 10px;" onclick="sessSave()">💾 Kaydet</button>
+        </div>
+        <div style="font-size:10px;color:#b0b0b0;margin-bottom:10px;line-height:1.55;">
+          Her sembol bir <b>seans şablonuna</b> bağlanır (sembol düzenleme ekranındaki “SEANS” kutusu).
+          Seans kapalıyken: fiyat <b>donar</b>, yeni emir açılamaz, SL/TP tetiklenmez ve <b>stop-out verilmez</b>.
+          Saatler şablonun kendi GMT ofsetinde yorumlanır. Bitiş saati başlangıçtan küçükse gece yarısını aşan seans sayılır (örn. 22:00–06:00).
+          <b>Hiç şablon tanımlı değilse</b> sistem eski hâlindeki gibi davranır (her şey açık).
+        </div>
+        <div id="sessTplWrap"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mgr-btn" onclick="sessAddTpl()" style="font-size:10px;padding:4px 12px;">+ Şablon Ekle</button>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid #263326;padding-top:10px;">
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:6px;">🎌 TATİL GÜNLERİ</div>
+          <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;">Şablon seçilmezse o gün <b>tüm</b> semboller kapalıdır.</div>
+          <div id="sessHolWrap"></div>
+          <button class="mgr-btn" onclick="sessAddHoliday()" style="font-size:10px;padding:4px 12px;margin-top:8px;">+ Tatil Ekle</button>
+        </div>
+      </div>
+
       <!-- TD KÖPRÜ SEMBOLLERİ (canlı forex/emtia/endeks beslemesi) -->
       <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid #2a2a3a;border-radius:6px;background:#12121a;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
@@ -2242,6 +2269,7 @@ console.log('Firebase bağlandı ✓');
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MIN LOT</label><input class="mgr-input" id="ns_minlot" type="number" step="any" value="0.01" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KONTRAT BOYUTU</label><input class="mgr-input" id="ns_contractSize" type="number" step="any" value="1" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MARJ (%)</label><input class="mgr-input" id="ns_margin" type="number" step="any" value="1" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SEANS</label><select class="mgr-input" id="ns_session" style="width:100%;"><option value="">— Otomatik —</option></select></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ONDALİK</label><input class="mgr-input" id="ns_decimals" type="number" value="5" style="width:100%;"></div>
             <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">RENK</label><input class="mgr-input" id="ns_color" type="color" value="#f0b90b" style="width:100%;height:32px;padding:2px;"></div>
             <div style="grid-column:1/-1;">
@@ -4944,6 +4972,8 @@ function saveSymbolMgr() {
   var minLot       = parseFloat(document.getElementById('ns_minlot').value) || 0.01;
   var contractSize = parseFloat(document.getElementById('ns_contractSize').value) || 1;
   var margin       = parseFloat(document.getElementById('ns_margin').value) || 1;
+  var _sessEl      = document.getElementById('ns_session');
+  var sessionId    = _sessEl ? (_sessEl.value||'') : '';
   var decimals     = parseInt(document.getElementById('ns_decimals').value) || 5;
   var category     = document.getElementById('ns_category').value;
 
@@ -4954,7 +4984,7 @@ function saveSymbolMgr() {
   var priceFactor  = parseFloat((document.getElementById('ns_priceFactor')||{value:1}).value) || 1;
   var obj = {sym:sym, label:label, s:sh, spread:spread, spreadType:spreadType, spreadVariance:spreadVariance,
              swapBuy:swapBuy, swapSell:swapSell, color:color, minLot:minLot,
-             active:true, contractSize:contractSize, margin:margin, decimals:decimals, category:category,
+             active:true, contractSize:contractSize, margin:margin, sessionId:sessionId, decimals:decimals, category:category,
              priceSource:priceSource, priceOffset:priceOffset, priceFactor:priceFactor};
 
   if(editIdx >= 0) {
@@ -5118,6 +5148,7 @@ function editSymForm(i) {
   document.getElementById('ns_minlot').value       = s.minLot || 0.01;
   document.getElementById('ns_contractSize').value = s.contractSize || 1;
   document.getElementById('ns_margin').value       = s.margin || 1;
+  sessFillSelect(s.sessionId||'');
   document.getElementById('ns_decimals').value     = s.decimals || 5;
   document.getElementById('ns_category').value     = s.category || 'crypto';
   var _po = document.getElementById('ns_priceOffset'); if(_po) _po.value = s.priceOffset || 0;
@@ -9332,6 +9363,8 @@ function listBackups() {
 function loginSuccess(staff){
   _currentStaff=staff;
   try{localStorage.setItem('tx_admin_user',JSON.stringify(staff));}catch(e){}
+  // Seans ayarını izlemeye başla (panel + sembol formundaki SEANS listesi)
+  try{ if(typeof sessLoad==='function' && !window._sessWatching){ window._sessWatching=true; sessLoad(); } }catch(e){}
   // Atama/yetki güncel kalsın: Firebase'deki personel kaydını çekip _currentStaff'ı tazele
   setTimeout(function(){
     try{
@@ -10851,6 +10884,283 @@ function _txEffLev(symCfg, accLev) {
   var m = symCfg ? parseFloat(symCfg.margin) : 0;
   if (m > 1) lev = Math.min(lev, 100 / m);
   return lev > 0 ? lev : 100;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SEANS (PİYASA SAATLERİ) MOTORU — 2026-08-19
+// ──────────────────────────────────────────────────────────────────────
+// Trader / admin / köprü / Cloud Functions'ın HEPSİ bu mantığı kullanır.
+// Aralarında en ufak sapma olursa: müşteri kapalı sanırken sunucu açık sanar
+// (veya tersi) ve piyasa kapalıyken stop-out verilir. Değiştirirken DÖRDÜNÜ
+// birden güncelle.
+//
+// VERİ YAPISI — Firestore: broker/sessions
+// {
+//   templates: [
+//     { id:'crypto', name:'Kripto', tz:3, always:true },
+//     { id:'forex',  name:'Forex',  tz:3,
+//       days:{ 1:[['01:00','23:59']], 2:[['01:00','23:59']], ... } },   // 0=Pazar
+//     { id:'usidx',  name:'ABD Endeks', tz:3,
+//       days:{ 1:[['16:30','23:00']], ... } }
+//   ],
+//   holidays: [ {date:'2026-12-25', templates:['usidx']},   // templates boş = hepsi
+//               {date:'2026-10-29'} ],
+//   defaultTemplate: 'forex'
+// }
+// Sembol → şablon bağı symConfig'teki `sessionId` alanındadır.
+// sessionId yoksa: sembol USDT/USDC ile bitiyorsa 'crypto', değilse
+// defaultTemplate kullanılır (eski davranışla uyumlu).
+//
+// NOT: Saatler şablonun kendi zaman diliminde (tz, GMT ofseti) yorumlanır.
+// Bir aralığın bitişi başlangıcından küçükse GECE YARISINI AŞAN seans sayılır
+// (ör. 22:00–06:00).
+// ══════════════════════════════════════════════════════════════════════
+
+function _txSessNorm(cfg) {
+  cfg = cfg || {};
+  return {
+    templates: Array.isArray(cfg.templates) ? cfg.templates : [],
+    holidays: Array.isArray(cfg.holidays) ? cfg.holidays : [],
+    defaultTemplate: cfg.defaultTemplate || 'forex'
+  };
+}
+
+function _txSessPickId(sym, symCfg, cfg) {
+  if (symCfg && symCfg.sessionId) return symCfg.sessionId;
+  var s = String(sym || '').toUpperCase();
+  if (s.endsWith('USDT') || s.endsWith('USDC')) return 'crypto';
+  return _txSessNorm(cfg).defaultTemplate;
+}
+
+function _txSessFind(cfg, id) {
+  var c = _txSessNorm(cfg);
+  for (var i = 0; i < c.templates.length; i++) {
+    if (c.templates[i] && c.templates[i].id === id) return c.templates[i];
+  }
+  return null;
+}
+
+// 'HH:MM' → dakika. Geçersizse null.
+function _txSessMin(hhmm) {
+  var m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '').trim());
+  if (!m) return null;
+  var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+  if (h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+
+// Şablonun zaman dilimindeki "şimdi" — {day, min, ymd}
+function _txSessNow(tzOffsetHours, nowMs) {
+  var tz = (tzOffsetHours === undefined || tzOffsetHours === null) ? 3 : parseFloat(tzOffsetHours);
+  if (isNaN(tz)) tz = 3;
+  var d = new Date((nowMs || Date.now()) + tz * 3600000);
+  var mm = d.getUTCMonth() + 1, dd = d.getUTCDate();
+  return {
+    day: d.getUTCDay(),
+    min: d.getUTCHours() * 60 + d.getUTCMinutes(),
+    ymd: d.getUTCFullYear() + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd
+  };
+}
+
+function _txSessIsHoliday(cfg, tplId, nowInfo) {
+  var c = _txSessNorm(cfg);
+  for (var i = 0; i < c.holidays.length; i++) {
+    var h = c.holidays[i];
+    if (!h || h.date !== nowInfo.ymd) continue;
+    // templates boş/yoksa TÜM şablonlar için tatil
+    if (!h.templates || !h.templates.length) return true;
+    if (h.templates.indexOf(tplId) >= 0) return true;
+  }
+  return false;
+}
+
+// Asıl fonksiyon: sembol şu an işleme açık mı?
+// Dönüş: { open:bool, reason:'ok'|'holiday'|'closed'|'no-template', tpl:<id> }
+function txSessionState(sym, symCfg, cfg, nowMs) {
+  var c = _txSessNorm(cfg);
+  // Hiç şablon tanımlanmamışsa sistem eskisi gibi davransın (her şey açık)
+  if (!c.templates.length) return { open: true, reason: 'no-template', tpl: null };
+
+  var tplId = _txSessPickId(sym, symCfg, c);
+  var tpl = _txSessFind(c, tplId);
+  if (!tpl) return { open: true, reason: 'no-template', tpl: tplId };
+
+  var now = _txSessNow(tpl.tz, nowMs);
+
+  if (_txSessIsHoliday(c, tplId, now)) return { open: false, reason: 'holiday', tpl: tplId };
+  if (tpl.always) return { open: true, reason: 'ok', tpl: tplId };
+
+  var days = tpl.days || {};
+  var todays = days[now.day] || days[String(now.day)] || [];
+  for (var i = 0; i < todays.length; i++) {
+    var a = _txSessMin(todays[i][0]), b = _txSessMin(todays[i][1]);
+    if (a === null || b === null) continue;
+    if (a <= b) { if (now.min >= a && now.min <= b) return { open: true, reason: 'ok', tpl: tplId }; }
+    else { if (now.min >= a || now.min <= b) return { open: true, reason: 'ok', tpl: tplId }; } // gece yarısını aşan
+  }
+
+  // Dünkü gece yarısını aşan seans hâlâ sürüyor olabilir
+  var prevDay = (now.day + 6) % 7;
+  var yest = days[prevDay] || days[String(prevDay)] || [];
+  for (var j = 0; j < yest.length; j++) {
+    var a2 = _txSessMin(yest[j][0]), b2 = _txSessMin(yest[j][1]);
+    if (a2 === null || b2 === null) continue;
+    if (a2 > b2 && now.min <= b2) return { open: true, reason: 'ok', tpl: tplId };
+  }
+
+  return { open: false, reason: 'closed', tpl: tplId };
+}
+
+function txSessionIsOpen(sym, symCfg, cfg, nowMs) {
+  return txSessionState(sym, symCfg, cfg, nowMs).open;
+}
+
+// Varsayılan şablonlar — ayar hiç yoksa admin ilk açılışta bunları yazar
+var TX_SESSION_DEFAULTS = {
+  defaultTemplate: 'forex',
+  holidays: [],
+  templates: [
+    { id: 'crypto', name: 'Kripto (7/24)', tz: 3, always: true },
+    { id: 'forex', name: 'Forex / Emtia', tz: 3, days: {
+        1: [['00:00', '23:59']], 2: [['00:00', '23:59']], 3: [['00:00', '23:59']],
+        4: [['00:00', '23:59']], 5: [['00:00', '23:59']] } },
+    { id: 'usidx', name: 'ABD Endeks / Hisse', tz: 3, days: {
+        1: [['16:30', '23:00']], 2: [['16:30', '23:00']], 3: [['16:30', '23:00']],
+        4: [['16:30', '23:00']], 5: [['16:30', '23:00']] } },
+    { id: 'bist', name: 'BIST', tz: 3, days: {
+        1: [['10:00', '18:10']], 2: [['10:00', '18:10']], 3: [['10:00', '18:10']],
+        4: [['10:00', '18:10']], 5: [['10:00', '18:10']] } }
+  ]
+};
+
+// ══════════════════════════════════════════════════════════════
+// SEANS YÖNETİMİ (admin) — 2026-08-19
+// Firestore: broker/sessions. Trader, köprü ve Cloud Functions aynı
+// dokümanı okur; kaydetmek anında hepsini etkiler.
+// ══════════════════════════════════════════════════════════════
+var _sessCfg = { templates: [], holidays: [], defaultTemplate: 'forex' };
+var _SESS_DAYS = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+
+
+// Sembol formundaki SEANS listesini doldur
+function sessFillSelect(selected){
+  var el = document.getElementById('ns_session'); if(!el) return;
+  var c = _txSessNorm(_sessCfg);
+  var html = '<option value="">— Otomatik (kripto → 7/24, diğerleri → varsayılan) —</option>';
+  c.templates.forEach(function(t){
+    html += '<option value="'+t.id+'"'+(t.id===selected?' selected':'')+'>'+(t.name||t.id)+'</option>';
+  });
+  el.innerHTML = html;
+  el.value = selected || '';
+}
+
+function sessLoad(){
+  db.collection('broker').doc('sessions').onSnapshot(function(snap){
+    var d = snap.exists ? (snap.data()||{}) : {};
+    if(d.data){ try{ d = (typeof d.data==='string') ? JSON.parse(d.data) : d.data; }catch(e){} }
+    _sessCfg = _txSessNorm(d);
+    sessRender();
+  }, function(e){ console.warn('[seans] okunamadi:', e && e.message); });
+}
+
+function sessRender(){
+  var w = document.getElementById('sessTplWrap'); if(!w) return;
+  var c = _txSessNorm(_sessCfg);
+  document.getElementById('sessTplCount').textContent = c.templates.length;
+  document.getElementById('sessHolCount').textContent = c.holidays.length;
+
+  if(!c.templates.length){
+    w.innerHTML = '<div style="color:#888;font-size:11px;padding:10px 0;">Şablon yok — sistem tüm sembolleri açık kabul ediyor. “Varsayılan şablonlar” ile başlayabilirsin.</div>';
+  } else {
+    w.innerHTML = c.templates.map(function(t,ti){
+      var rows = _SESS_DAYS.map(function(dn,di){
+        var arr = (t.days && (t.days[di]||t.days[String(di)])) || [];
+        var val = arr.map(function(p){ return p[0]+'-'+p[1]; }).join(', ');
+        var dis = t.always ? 'disabled style="opacity:.4;"' : '';
+        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+          + '<span style="width:34px;font-family:var(--mono);font-size:10px;color:#a0a0a0;">'+dn+'</span>'
+          + '<input class="mgr-input" data-ti="'+ti+'" data-di="'+di+'" onchange="sessSetDay(this)" '
+          + 'value="'+val+'" placeholder="kapalı" '+dis+' style="flex:1;font-size:10px;padding:3px 6px;">'
+          + '</div>';
+      }).join('');
+      return '<div style="border:1px solid #263326;border-radius:5px;padding:10px;margin-bottom:8px;background:#0f150f;">'
+        + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
+          + '<input class="mgr-input" value="'+(t.id||'')+'" onchange="sessSetField('+ti+',\'id\',this.value)" placeholder="kod" style="width:90px;font-size:10px;padding:3px 6px;font-family:var(--mono);">'
+          + '<input class="mgr-input" value="'+(t.name||'')+'" onchange="sessSetField('+ti+',\'name\',this.value)" placeholder="ad" style="flex:1;min-width:120px;font-size:10px;padding:3px 6px;">'
+          + '<span style="font-size:10px;color:#a0a0a0;">GMT</span>'
+          + '<input class="mgr-input" type="number" step="0.5" value="'+(t.tz===undefined?3:t.tz)+'" onchange="sessSetField('+ti+',\'tz\',parseFloat(this.value))" style="width:60px;font-size:10px;padding:3px 6px;">'
+          + '<label style="font-size:10px;color:#a0a0a0;display:flex;align-items:center;gap:4px;">'
+            + '<input type="checkbox" '+(t.always?'checked':'')+' onchange="sessSetField('+ti+',\'always\',this.checked)"> 7/24</label>'
+          + '<button class="mgr-btn danger" onclick="sessDelTpl('+ti+')" style="font-size:10px;padding:2px 8px;margin-left:auto;">Sil</button>'
+        + '</div>' + (t.always ? '<div style="font-size:10px;color:#7ec8a9;">Her gün 24 saat açık.</div>' : rows)
+        + '</div>';
+    }).join('');
+  }
+
+  var hw = document.getElementById('sessHolWrap');
+  hw.innerHTML = c.holidays.length ? c.holidays.map(function(h,hi){
+    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">'
+      + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:10px;padding:3px 6px;">'
+      + '<input class="mgr-input" value="'+((h.templates||[]).join(','))+'" onchange="sessSetHol('+hi+',\'templates\',this.value)" placeholder="tüm şablonlar" style="flex:1;font-size:10px;padding:3px 6px;font-family:var(--mono);">'
+      + '<button class="mgr-btn danger" onclick="sessDelHol('+hi+')" style="font-size:10px;padding:2px 8px;">Sil</button>'
+      + '</div>';
+  }).join('') : '<div style="color:#888;font-size:11px;">Tatil tanımlı değil.</div>';
+}
+
+function sessSetField(ti, key, val){ _sessCfg.templates[ti][key] = val; sessRender(); }
+function sessSetDay(el){
+  var ti=+el.dataset.ti, di=+el.dataset.di;
+  var t=_sessCfg.templates[ti]; if(!t.days) t.days={};
+  var raw=(el.value||'').trim();
+  if(!raw){ delete t.days[di]; delete t.days[String(di)]; sessRender(); return; }
+  var arr=[];
+  raw.split(',').forEach(function(part){
+    var m=/^\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*$/.exec(part);
+    if(m) arr.push([m[1],m[2]]);
+  });
+  if(!arr.length){ showAdminToast('Hatalı format','Örnek: 10:00-18:10 (birden fazlaysa virgülle)','error'); sessRender(); return; }
+  t.days[di]=arr; delete t.days[String(di)];
+  sessRender();
+}
+function sessAddTpl(){
+  _sessCfg.templates.push({id:'yeni'+(_sessCfg.templates.length+1), name:'Yeni Şablon', tz:3, days:{}});
+  sessRender();
+}
+function sessDelTpl(ti){
+  var t=_sessCfg.templates[ti];
+  if(!confirm((t.name||t.id)+' şablonu silinsin mi? Bu şablona bağlı semboller varsayılana döner.')) return;
+  _sessCfg.templates.splice(ti,1); sessRender();
+}
+function sessAddHoliday(){ _sessCfg.holidays.push({date:'', templates:[]}); sessRender(); }
+function sessDelHol(hi){ _sessCfg.holidays.splice(hi,1); sessRender(); }
+function sessSetHol(hi,key,val){
+  if(key==='templates') _sessCfg.holidays[hi].templates = val.split(',').map(function(x){return x.trim();}).filter(Boolean);
+  else _sessCfg.holidays[hi][key]=val;
+  sessRender();
+}
+function sessResetDefaults(){
+  if(!confirm('Varsayılan şablonlar (Kripto / Forex / ABD Endeks / BIST) yüklensin mi? Mevcut şablonların üzerine yazılır.')) return;
+  _sessCfg = JSON.parse(JSON.stringify(TX_SESSION_DEFAULTS));
+  sessRender();
+  showAdminToast('Yüklendi','Kaydet\'e basmayı unutma','info');
+}
+function sessSave(){
+  var ids={}, bad=null;
+  _sessCfg.templates.forEach(function(t){
+    if(!t.id) bad='Şablon kodu boş olamaz';
+    else if(ids[t.id]) bad='Aynı koddan iki şablon var: '+t.id;
+    ids[t.id]=true;
+  });
+  _sessCfg.holidays.forEach(function(h){ if(!h.date) bad='Tatil tarihi boş olamaz'; });
+  if(bad){ showAdminToast('Kaydedilmedi', bad, 'error'); return; }
+  db.collection('broker').doc('sessions').set({
+    templates:_sessCfg.templates, holidays:_sessCfg.holidays,
+    defaultTemplate:_sessCfg.defaultTemplate||'forex',
+    updatedAt:new Date().toISOString()
+  }).then(function(){
+    showAdminToast('Kaydedildi','Seans ayarları güncellendi','success');
+    if(typeof adAudit==='function') adAudit('sessions.update','broker/sessions',null,{templates:_sessCfg.templates.length},'Seans ayarları');
+  }).catch(function(e){ showAdminToast('Hata', e.message, 'error'); });
 }
 
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
