@@ -4504,16 +4504,44 @@ var MARKET_GROUPS = [
     items:[
       {sym:'XAUUSD',  name:'XAU/USD',   full:'Altın / Dolar',  icon:'🥇', spread:0.30,   decimals:2, mockPrice:2318.50},
       {sym:'XAGUSD',  name:'XAG/USD',   full:'Gümüş / Dolar',  icon:'🥈', spread:0.015,  decimals:3, mockPrice:27.41},
+      // ⚠️ 2026-08-19: Admin'in kataloğu trader'ınkinden eksikti (yalnız 2 emtia).
+      // "Eksikleri içe aktar" bu listeden çalıştığı için Platin/Petrol/Brent/
+      // Doğal Gaz/Paladyum yeni bir platforma hiç eklenemiyordu. Trader ile eşitlendi.
+      {sym:'XPTUSD',  name:'XPT/USD',   full:'Platin / Dolar',   icon:'⬡',  spread:0.50,   decimals:2},
+      {sym:'XPDUSD',  name:'XPD/USD',   full:'Paladyum / Dolar', icon:'⬢',  spread:1.50,   decimals:2},
+      {sym:'USOIL',   name:'WTI/USD',   full:'Ham Petrol (WTI)', icon:'🛢', spread:0.03,   decimals:2},
+      {sym:'BRTUSD',  name:'BRENT',     full:'Brent Petrol',     icon:'⛽', spread:0.03,   decimals:2},
+      {sym:'NGAS',    name:'NAT GAS',   full:'Doğal Gaz',        icon:'🔥', spread:0.005,  decimals:3},
     ]
   },
   {
-    id:'indices', label:'ENDEKSLer', open:false,
+    id:'indices', label:'ENDEKSLER', open:false,
+    // ⚠️ 2026-08-19: Bu grup da BOŞTU — trader'daki listeyle eşitlendi, yoksa
+    // yeni bir platformda endeksler "Eksikleri içe aktar" ile eklenemiyordu.
     items:[
+      {sym:'SPX500X',  name:'S&P 500',  full:'S&P 500 Endeksi', icon:'📈', spread:0.50,   decimals:2},
+      {sym:'NAS100X',  name:'NASDAQ',   full:'NASDAQ 100',      icon:'📊', spread:0.80,   decimals:2},
+      {sym:'DJ30X',    name:'DOW 30',   full:'Dow Jones 30',    icon:'🏛', spread:1.00,   decimals:2},
+      {sym:'FTSE100X', name:'FTSE 100', full:'FTSE 100 UK',     icon:'🇬🇧',spread:0.50,   decimals:2},
+      {sym:'DAX40X',   name:'DAX 40',   full:'DAX Almanya',     icon:'🇩🇪',spread:0.80,   decimals:2},
+      {sym:'DXY',      name:'DXY',      full:'Dolar Endeksi',   icon:'💵', spread:0.030,  decimals:3},
+      {sym:'XU100X',   name:'BIST 100', full:'Borsa İstanbul',  icon:'🇹🇷',spread:2.00,   decimals:2},
     ]
   },
   {
     id:'stocks', label:'HİSSELER', open:false,
-    items:[]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
+    // ⚠️ 2026-08-19: Boştu — köprü bu 8 hisseyi besliyor ama katalogda
+    // tanımlı olmadıkları için içe aktarılamıyorlardı.
+    items:[
+      {sym:'AAPL',  name:'AAPL',  full:'Apple Inc.',        icon:'', spread:0.05, decimals:2},
+      {sym:'TSLA',  name:'TSLA',  full:'Tesla Inc.',        icon:'', spread:0.08, decimals:2},
+      {sym:'AMZN',  name:'AMZN',  full:'Amazon.com Inc.',   icon:'', spread:0.06, decimals:2},
+      {sym:'GOOGL', name:'GOOGL', full:'Alphabet Inc. (A)', icon:'', spread:0.06, decimals:2},
+      {sym:'NVDA',  name:'NVDA',  full:'NVIDIA Corp.',      icon:'', spread:0.06, decimals:2},
+      {sym:'NFLX',  name:'NFLX',  full:'Netflix Inc.',      icon:'', spread:0.12, decimals:2},
+      {sym:'WMT',   name:'WMT',   full:'Walmart Inc.',      icon:'', spread:0.05, decimals:2},
+      {sym:'BA',    name:'BA',    full:'Boeing Co.',        icon:'', spread:0.08, decimals:2},
+    ]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
   },
   {
     id:'bist', label:'BİST', open:false,
