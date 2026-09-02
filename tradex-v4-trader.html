@@ -2980,8 +2980,12 @@ function _txCatLabel(g) {
   var map = {bist:_L.catBist, forex:_L.catForex, commodity:_L.catCommodity, indices:_L.catIndices, crypto:_L.catCrypto, stocks:_L.catStocks};
   return map[g.id] || g.label;
 }
+// ⚠️ 2026-08-20: NGAS eklendi. Grafik geçmişi için ÜÇÜNCÜ bir liste burasıdır:
+// bu listede olmayan semboller TwelveData'ya sorulur, NGAS orada tanımlı
+// olmadığı için fiyat akmasına rağmen GRAFİK BOŞ geliyordu. Köprüde NG=F
+// karşılığı var (INDEX_MAP), dolayısıyla /klines proxy'si geçmişi verebiliyor.
 var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY',
-  'BRTUSD','XPDUSD','XPTUSD','AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
+  'BRTUSD','XPDUSD','XPTUSD','NGAS','AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
 // BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
 var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
   'ISCTR','KCHOL','KOZAL','KRDMD','MGROS','PETKM','SAHOL','SASA','SISE','TAVHL',
