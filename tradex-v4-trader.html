@@ -2786,6 +2786,11 @@ function _txEffLev(symCfg, accLev) {
   return lev > 0 ? lev : 100;
 }
 
+
+// Sıçrama filtresi eşikleri — köprüdeki MAX_JUMP_PCT / CONFIRM_TICKS ile aynı
+var TX_MAX_JUMP_PCT  = 12;
+var TX_CONFIRM_TICKS = 3;
+
 var indActive = {ma:true, ema:true, bb:false, vol:false, macd:false, rsi:false};
 var indCfg    = {ma:20, ema:9, bb:20, bb_std:2, rsi:14, macd_fast:12, macd_slow:26, macd_sig:9};
 
@@ -7028,6 +7033,29 @@ function txApplyPrice(sym, rawMid, _synthetic) {
     window._txBase[sym] = rawMid;
     return;
   }
+  // ⚠️ 2026-09-02 SIÇRAMA FİLTRESİ (ikinci savunma hattı)
+  // Köprüde de aynı filtre var (priceSane). Burada tekrar bakıyoruz çünkü
+  // sağlayıcı arızasında (gözlemlenen: WTI 1.00, NASDAQ ~25000) hatalı fiyat
+  // SL/TP tetikleyip ekranda da yanlış K/Z gösteriyordu. Tek seferlik sapma
+  // elenir; arka arkaya doğrulanan gerçek hareket geçer.
+  if(!_synthetic && prices[sym] && prices[sym].price > 0) {
+    var _lastP = prices[sym].price;
+    var _devPct = Math.abs(rawMid - _lastP) / _lastP * 100;
+    if(_devPct > TX_MAX_JUMP_PCT) {
+      if(!window._txJumpPend) window._txJumpPend = {};
+      var _pd = window._txJumpPend[sym];
+      if(_pd && Math.abs(rawMid - _pd.val)/_pd.val*100 <= TX_MAX_JUMP_PCT) {
+        _pd.n++; _pd.val = rawMid;
+        if(_pd.n < TX_CONFIRM_TICKS) return;          // henüz doğrulanmadı
+        delete window._txJumpPend[sym];               // doğrulandı → kabul
+      } else {
+        window._txJumpPend[sym] = {val:rawMid, n:1};
+        console.warn('[fiyat] '+sym+' sıçraması reddedildi: '+_lastP+' → '+rawMid+' (%'+_devPct.toFixed(1)+')');
+        return;
+      }
+    } else if(window._txJumpPend) { delete window._txJumpPend[sym]; }
+  }
+
   // ⚠️ 2026-08-19 FİYAT DONDURMA
   // Sembolün seansı kapalıysa gelen tick'i İŞLEME. prices[sym] olduğu gibi
   // kalır → son fiyat donar, grafik ilerlemez, K/Z değişmez. Sunucudaki risk
