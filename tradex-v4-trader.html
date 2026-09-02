@@ -5619,10 +5619,15 @@ var MARKET_GROUPS = [
 //  - Eski/çift kodlar: WTIUSD, SPXUSD, NASUSD, DJUSD, DAXUSD (USOIL/SPX500X/... ile değişti)
 //  - Talep üzerine kaldırılanlar: US OIL, BRENT, NAT GAS, S&P500, NASDAQ, DOW30, FTSE100, BIST
 //  (DAX40X ve metaller XAU/XAG/XPT KALIR.) Geri getirmek için ilgili kodu bu listeden çıkar.
+// ⚠️ 2026-08-20: NGAS, USOIL, BRTUSD ve XPTUSD listeden ÇIKARILDI — köprüde
+// fiyat kaynakları var (NG=F, TD WTI/USD, BZ=F, PL=F) ve admin tarafındaki
+// AD_HIDDEN'dan da çıkarıldılar. İki listeden biri bile açılmazsa sembol
+// görünmez; ikisi birlikte güncellenmeli.
+// FTSE100X ve XU100X gizli KALIYOR: hâlâ fiyat kaynakları yok.
 var TX_HIDDEN = [
   'WTIUSD','SPXUSD','NASUSD','DJUSD','DAXUSD',
-  'USOIL','BRTUSD','NGAS','FTSE100X','XU100X',
-  'XPTUSD','XBRUSD','XBR'
+  'FTSE100X','XU100X',
+  'XBRUSD','XBR'
 ];
 MARKET_GROUPS.forEach(function(g){
   if(g && g.items) g.items = g.items.filter(function(it){ return TX_HIDDEN.indexOf(it.sym)===-1; });
