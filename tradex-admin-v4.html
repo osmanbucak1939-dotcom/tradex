@@ -4792,8 +4792,17 @@ function mgrTab(id, el) {
 //   WTI(USOIL), BRENT(BRTUSD), NATGAS(NGAS), SP500(SPX500X), NASDAQ(NAS100X),
 //   DOW30(DJ30X), FTSE100(FTSE100X), DAX40(DAX40X), BIST100(XU100X)
 // Geri getirmek için ilgili kodu bu listeden çıkar.
+// ⚠️ 2026-08-20: Bu liste iki farklı şeyi karıştırıyordu.
+//  • Gerçekten eskimiş kopyalar: NASUSD/DJUSD/SPXUSD/DAXUSD/WTIUSD — yerlerini
+//    SPX500X, NAS100X, DJ30X, DAX40X, USOIL aldı. Gizli KALMALI (ayrıca aşağıda
+//    symConfig temizliğinde de bu liste kullanılıyor).
+//  • Köprüde artık fiyat kaynağı OLAN semboller: USOIL (TD: WTI/USD),
+//    BRTUSD (BZ=F), XPTUSD (PL=F), NGAS (NG=F). Bunlar gizli kaldığı için
+//    "Eksikleri içe aktar" onları hiç eklemiyordu — doğal gazın sembol
+//    listesinde çıkmamasının sebebi buydu. Listeden çıkarıldılar.
+//  • FTSE100X ve XU100X'in hâlâ fiyat kaynağı YOK, gizli bırakıldı.
 var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
-  'USOIL','BRTUSD','NGAS','FTSE100X','XU100X','XPTUSD'];
+  'FTSE100X','XU100X'];
 
 // Kullanıcının SİLDİĞİ semboller (tombstone). Tohumlama (_defaults) bunları geri
 // EKLEMEZ → silinen sembol bir süre sonra geri gelmez. localStorage + Firebase'de tutulur.
