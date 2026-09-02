@@ -1823,7 +1823,7 @@ console.log('Firebase bağlandı ✓');
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Trading Grupları</button>
     <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view">📈 Semboller</button>
-    <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="feed.edit">💹 Kotasyon</button>
+    <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="quotes.edit|feed.edit">💹 Kotasyon</button>
     <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
@@ -8793,7 +8793,15 @@ function pcRefresh() {
   }
 }
 
+// Kotasyon müdahalesi izni. 'quotes.edit' yeni; 'feed.edit' geriye dönük
+// uyumluluk için kabul edilir (mevcut personelin yetkisi bir anda kaybolmasın).
+function canEditQuotes(){
+  if(typeof hasPerm!=='function') return true;
+  return hasPerm('quotes.edit') || hasPerm('feed.edit');
+}
+
 function pcSetPrice() {
+  if(!canEditQuotes()){ showAdminToast('Yetersiz Yetki','Kotasyon müdahale yetkiniz yok','error'); return; }
   var sel = document.getElementById('pc_sym');
   var inp = document.getElementById('pc_price');
   if(!sel || !inp) return;
@@ -9167,9 +9175,15 @@ var PERM_DEFS = [
     {key:'spreadgroups.view',label:'Trading Grupları Görüntüle'},
     {key:'spreadgroups.edit',label:'Trading Grubu Düzenle'},
   ]},
+  {group:'Kotasyon & Feed', perms:[
+    // ⚠️ 2026-08-20: Kotasyon ekranı zaten 'feed.edit' iznini kullanıyordu ama
+    // yetki listesinde adı "Feed Yönet" olduğu için kotasyonla ilgisi
+    // anlaşılmıyordu. Etiketler netleştirildi ve kotasyona kendi izni verildi.
+    {key:'feed.view',        label:'Kotasyon / Feed Görüntüle'},
+    {key:'feed.edit',        label:'Feed Yönet (fiyat kaynağı)'},
+    {key:'quotes.edit',      label:'Kotasyon — Fiyat Müdahalesi'},
+  ]},
   {group:'Sistem', perms:[
-    {key:'feed.view',        label:'Feed Görüntüle'},
-    {key:'feed.edit',        label:'Feed Yönet'},
     {key:'settings.view',    label:'Ayarları Görüntüle'},
     {key:'settings.edit',    label:'Ayarları Düzenle'},
     {key:'reports.view',     label:'Raporları Görüntüle'},
@@ -9184,7 +9198,7 @@ var ROLE_DEFAULT_PERMS = {
           'finance.view','finance.deposit','finance.withdraw','finance.bonus',
           'trades.view','trades.close','trades.open','trades.edit','trades.pending',
           'symbols.view','symbols.edit','spreadgroups.view','spreadgroups.edit',
-          'feed.view','feed.edit','settings.view','settings.edit','reports.view','staff.view'],
+          'feed.view','feed.edit','quotes.edit','settings.view','settings.edit','reports.view','staff.view'],
   manager: ['accounts.view','accounts.edit','accounts.create','accounts.password',
              'finance.view','finance.deposit','finance.withdraw','finance.bonus',
              'trades.view','trades.close','trades.open','trades.edit','trades.pending',
@@ -9210,7 +9224,12 @@ function hasPerm(p) {
 }
 function applyRoleUI(){
   document.querySelectorAll('[data-perm]').forEach(function(el){
-    el.style.display=hasPerm(el.getAttribute('data-perm'))?'':'none';
+    // ⚠️ 2026-08-20: '|' ile ayrılmış BİRDEN FAZLA izin desteklenir; herhangi
+    // biri yeterlidir. Kotasyon menüsü hem yeni 'quotes.edit' hem de eski
+    // 'feed.edit' iznini kabul etsin diye eklendi (geriye dönük uyumluluk).
+    var _need = (el.getAttribute('data-perm')||'').split('|');
+    var _ok = _need.some(function(p){ return p && hasPerm(p.trim()); });
+    el.style.display = _ok ? '' : 'none';
   });
   // Hesap detayı butonları
   var _btns = {
@@ -10819,6 +10838,7 @@ function pcLoadSym() {
 
 
 function pcReset() {
+  if(!canEditQuotes()){ showAdminToast('Yetersiz Yetki','Kotasyon müdahale yetkiniz yok','error'); return; }
   var sel = document.getElementById('pc_sym');
   if(!sel) return;
   var sym = sel.value;
