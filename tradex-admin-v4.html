@@ -1612,7 +1612,7 @@ function parseFinlogDate(input) {
       if(callback)callback(newBal);
     }
 
-console.log('Firebase bağlandı ✓');
+console.log('Firebase bağlandı');
     // broker/accounts onSnapshot — auth sonrası startAdminSnapshots() ile başlatılır
     window._adminSnapshotsStarted = false;
     window.startAdminSnapshots = function() {
@@ -1818,27 +1818,27 @@ console.log('Firebase bağlandı ✓');
     </div>
   </div>
   <div style="background:#181818;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 12px;height:40px;flex-shrink:0;gap:2px;overflow-x:auto;">
-    <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view">👥 Hesaplar</button>
-    <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view">📑 Raporlar</button>
+    <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view"><span class="_ai-users"></span> Hesaplar</button>
+    <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view"><span class="_ai-note"></span> Raporlar</button>
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view">⚙ Trading Grupları</button>
-    <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view">📈 Semboller</button>
-    <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="quotes.edit|feed.edit">💹 Kotasyon</button>
-    <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view">📡 Feed</button>
+    <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view"><span class="_ai-gear"></span> Trading Grupları</button>
+    <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view"><span class="_ai-chart"></span> Semboller</button>
+    <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="quotes.edit|feed.edit"><span class="_ai-quotes"></span> Kotasyon</button>
+    <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view"><span class="_ai-feed"></span> Feed</button>
     <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
-    <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view">👤 Personel</button>
-    <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit">🏢 Broker Bilgileri</button>
-    <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit">🛡 Backup</button>
-    <button class="nav-btn" onclick="adminNav('auditlog',this)" data-perm="settings.edit">📝 Audit Log</button>
-    <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
-    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:var(--sell);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
+    <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view"><span class="_ai-users"></span> Personel</button>
+    <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit"><span class="_ai-shield"></span> Broker Bilgileri</button>
+    <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit"><span class="_ai-shield"></span> Backup</button>
+    <button class="nav-btn" onclick="adminNav('auditlog',this)" data-perm="settings.edit"><span class="_ai-note"></span> Audit Log</button>
+    <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit"><span class="_ai-card"></span> Ödeme Yöntemleri</button>
+    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view"><span class="_ai-clipboard"></span> Talepler <span id="pendingBadge" style="display:none;background:var(--sell);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
 
   <div style="flex:1;display:flex;overflow:hidden;">
   <!-- MARKET WATCH SIDEBAR -->
   <div id="mw-sidebar" style="width:300px;min-width:300px;background:#0d0d0d;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;height:100%;">
     <div style="padding:8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
-      <input class="mgr-input" id="mwSearch" placeholder="🔍 Sembol ara..." oninput="mwFilter(this.value)"
+      <input class="mgr-input" id="mwSearch" placeholder="Sembol ara..." oninput="mwFilter(this.value)"
         style="width:100%;box-sizing:border-box;font-size:11px;padding:5px 8px;">
     </div>
     <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:0;padding:4px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
@@ -1868,7 +1868,7 @@ console.log('Firebase bağlandı ✓');
   <div id="admin-main" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
     <div style="flex:1;padding:16px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;min-height:0;overflow-y:auto;">
     <div id="sec-accounts" class="admin-section" style="flex:1;display:flex;flex-direction:column;min-height:0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;"><span style="font-family:var(--mono);font-size:13px;font-weight:700;">HESAPLAR</span><div style="display:flex;gap:8px;"><button class="mgr-btn" onclick="adminNav('newaccount',null)" style="font-size:11px;">+ Yeni</button><button class="mgr-btn" onclick="exportAccounts()" style="font-size:11px;">↓ Export</button></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;"><span style="font-family:var(--mono);font-size:13px;font-weight:700;">HESAPLAR</span><div style="display:flex;gap:8px;"><button class="mgr-btn" onclick="adminNav('newaccount',null)" style="font-size:11px;">+ Yeni</button><button class="mgr-btn" onclick="exportAccounts()" style="font-size:11px;"><span class="_ai-download"></span> Export</button></div></div>
       <div id="accTableContainer" style="flex:1;min-height:0;display:flex;flex-direction:column;"></div>
       <div id="accFooterCount" style="flex-shrink:0;padding:8px 4px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;border-top:1px solid var(--border);"></div>
     </div>
@@ -1891,7 +1891,7 @@ console.log('Firebase bağlandı ✓');
       <div style="font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.5px;">RAPORLAR</div>
       <div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono);">Genel Bakış & İstatistikler</div>
     </div>
-    <button onclick="updateReports()" style="background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;">↺ Yenile</button>
+    <button onclick="updateReports()" style="background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;"><span class="_ai-refresh"></span> Yenile</button>
   </div>
 
   <!-- KPI Kartlar - 4+4 grid -->
@@ -2013,7 +2013,7 @@ console.log('Firebase bağlandı ✓');
       </div>
     </div>
     <div id="sec-spreadgroups" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">⚙ SPREAD GRUPLARI</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;"><span class="_ai-gear"></span> SPREAD GRUPLARI</div>
 
       <!-- Grup sekmeleri + Ekle/Sil -->
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
@@ -2022,7 +2022,7 @@ console.log('Firebase bağlandı ✓');
         <div style="margin-left:auto;display:flex;gap:8px;">
           <input class="mgr-input" id="sg_new_name" placeholder="Yeni grup adı..." style="width:150px;padding:5px 10px;">
           <button class="mgr-btn" onclick="sgAddGroup()" style="padding:5px 14px;">+ Ekle</button>
-          <button class="mgr-btn danger" id="sgDeleteBtn" onclick="sgDeleteGroup()" style="padding:5px 12px;display:none;">🗑 Sil</button>
+          <button class="mgr-btn danger" id="sgDeleteBtn" onclick="sgDeleteGroup()" style="padding:5px 12px;display:none;"><span class="_ai-trash"></span> Sil</button>
         </div>
       </div>
 
@@ -2087,7 +2087,7 @@ console.log('Firebase bağlandı ✓');
           </div>
         </div>
         <div style="margin-top:10px;">
-          <button class="mgr-btn success" onclick="sgSaveGeneral()" style="padding:6px 18px;">💾 Genel Ayarları Kaydet</button>
+          <button class="mgr-btn success" onclick="sgSaveGeneral()" style="padding:6px 18px;"><span class="_ai-save"></span> Genel Ayarları Kaydet</button>
         </div>
       </div>
 
@@ -2107,7 +2107,7 @@ console.log('Firebase bağlandı ✓');
           <div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Grup seçin...</div>
         </div>
         <div style="margin-top:10px;">
-          <button class="mgr-btn success" onclick="sgSaveWhitelist()" style="padding:6px 18px;">💾 Sembol İzinlerini Kaydet</button>
+          <button class="mgr-btn success" onclick="sgSaveWhitelist()" style="padding:6px 18px;"><span class="_ai-save"></span> Sembol İzinlerini Kaydet</button>
         </div>
       </div>
 
@@ -2127,21 +2127,21 @@ console.log('Firebase bağlandı ✓');
           </table>
         </div>
         <div style="margin-top:12px;">
-          <button class="mgr-btn success" onclick="sgSaveSpreads()" style="padding:7px 20px;">💾 Spread &amp; Swap Kaydet</button>
+          <button class="mgr-btn success" onclick="sgSaveSpreads()" style="padding:7px 20px;"><span class="_ai-save"></span> Spread &amp; Swap Kaydet</button>
         </div>
       </div>
     </div>
     <div id="sec-symbols" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">📈 SEMBOLLER</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;"><span class="_ai-chart"></span> SEMBOLLER</div>
 
       <!-- Filtre butonları -->
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
         <button class="mgr-btn" id="scf-all"       onclick="filterSymCat('all')"       style="font-size:10px;padding:4px 12px;">Tümü</button>
-        <button class="mgr-btn" id="scf-crypto"    onclick="filterSymCat('crypto')"    style="font-size:10px;padding:4px 12px;">🪙 Kripto</button>
-        <button class="mgr-btn" id="scf-forex"     onclick="filterSymCat('forex')"     style="font-size:10px;padding:4px 12px;">💱 Forex</button>
-        <button class="mgr-btn" id="scf-commodity" onclick="filterSymCat('commodity')" style="font-size:10px;padding:4px 12px;">🏅 Emtia</button>
-        <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;">📊 Endeks</button>
-        <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;">📈 Hisse</button>
+        <button class="mgr-btn" id="scf-crypto"    onclick="filterSymCat('crypto')"    style="font-size:10px;padding:4px 12px;"><span class="_ai-coin"></span> Kripto</button>
+        <button class="mgr-btn" id="scf-forex"     onclick="filterSymCat('forex')"     style="font-size:10px;padding:4px 12px;"><span class="_ai-currency"></span> Forex</button>
+        <button class="mgr-btn" id="scf-commodity" onclick="filterSymCat('commodity')" style="font-size:10px;padding:4px 12px;"><span class="_ai-medal"></span> Emtia</button>
+        <button class="mgr-btn" id="scf-index"     onclick="filterSymCat('index')"     style="font-size:10px;padding:4px 12px;"><span class="_ai-bars"></span> Endeks</button>
+        <button class="mgr-btn" id="scf-stock"     onclick="filterSymCat('stock')"     style="font-size:10px;padding:4px 12px;"><span class="_ai-chart"></span> Hisse</button>
         <button class="mgr-btn" id="scf-bist"      onclick="filterSymCat('bist')"      style="font-size:10px;padding:4px 12px;">🇹🇷 BİST</button>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <button class="mgr-btn" onclick="txImportMarketGroups()" style="font-size:11px;padding:5px 14px;" title="Trader'da olup admin'de görünmeyen sabit sembolleri (BRENT, NAT GAS, endeksler vb.) symConfig'e ekler">⬇ Eksikleri içe aktar</button>
@@ -2153,10 +2153,10 @@ console.log('Firebase bağlandı ✓');
       <!-- ── SEANSLAR / PİYASA SAATLERİ (2026-08-19) ─────────────────── -->
       <div class="ad-sect" id="sessPanel" style="margin-bottom:14px;padding:12px;border:1px solid #2a3a2a;border-radius:6px;background:#121a14;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-family:var(--mono);font-size:12px;font-weight:700;">🕒 SEANSLAR (PİYASA SAATLERİ)</span>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;"><span class="_ai-clock"></span> SEANSLAR (PİYASA SAATLERİ)</span>
           <span style="font-size:10px;color:#7ec8a9;font-family:var(--mono);">(<span id="sessTplCount">0</span> şablon · <span id="sessHolCount">0</span> tatil)</span>
-          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="sessResetDefaults()">↺ Varsayılan şablonlar</button>
-          <button class="mgr-btn success" style="font-size:10px;padding:4px 10px;" onclick="sessSave()">💾 Kaydet</button>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="sessResetDefaults()"><span class="_ai-refresh"></span> Varsayılan şablonlar</button>
+          <button class="mgr-btn success" style="font-size:10px;padding:4px 10px;" onclick="sessSave()"><span class="_ai-save"></span> Kaydet</button>
         </div>
         <div style="font-size:10px;color:#b0b0b0;margin-bottom:10px;line-height:1.55;">
           Her sembol bir <b>seans şablonuna</b> bağlanır (sembol düzenleme ekranındaki “SEANS” kutusu).
@@ -2169,7 +2169,7 @@ console.log('Firebase bağlandı ✓');
           <button class="mgr-btn" onclick="sessAddTpl()" style="font-size:10px;padding:4px 12px;">+ Şablon Ekle</button>
         </div>
         <div style="margin-top:14px;border-top:1px solid #263326;padding-top:10px;">
-          <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:6px;">🎌 TATİL GÜNLERİ</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:6px;"><span class="_ai-calendar"></span> TATİL GÜNLERİ</div>
           <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">Tarihi seçin, sonra o gün <b>kapalı olacak şablonları</b> işaretleyin (örn. sadece ABD Endeks). Hiçbirini işaretlemezseniz o gün <b>tüm</b> piyasalar kapalıdır.</div>
           <div id="sessHolWrap"></div>
           <button class="mgr-btn" onclick="sessAddHoliday()" style="font-size:10px;padding:4px 12px;margin-top:8px;">+ Tatil Ekle</button>
@@ -2179,9 +2179,9 @@ console.log('Firebase bağlandı ✓');
       <!-- TD KÖPRÜ SEMBOLLERİ (canlı forex/emtia/endeks beslemesi) -->
       <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid #2a2a3a;border-radius:6px;background:#12121a;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-family:var(--mono);font-size:12px;font-weight:700;">🌉 TD KÖPRÜ SEMBOLLERİ</span>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;"><span class="_ai-feed"></span> TD KÖPRÜ SEMBOLLERİ</span>
           <span style="font-size:10px;color:#8888ff;font-family:var(--mono);">(<span id="tdBridgeCount">0</span> canlı · köprü ~20sn'de alır)</span>
-          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="txTdResetDefault()">↺ Varsayılana dön</button>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:10px;padding:4px 10px;" onclick="txTdResetDefault()"><span class="_ai-refresh"></span> Varsayılana dön</button>
         </div>
         <div style="font-size:10px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">
           Forex/emtia/endeks <b>canlı fiyat</b> beslemesi. Sol kutuya TradeX sembol kodu (örn. <code>EURGBP</code>), sağ kutuya Twelve Data karşılığı (örn. <code>EUR/GBP</code>) yaz. Eklediğin sembolün <b>TD planında açık</b> olması gerekir; değilse köprü "subscribe fail" verir ve fiyat akmaz.
@@ -2294,7 +2294,7 @@ console.log('Firebase bağlandı ✓');
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
             <button class="mgr-btn" onclick="closeAddSymModal()">İptal</button>
-            <button class="mgr-btn success" onclick="saveSymbolMgr()" style="padding:7px 20px;">💾 Kaydet</button>
+            <button class="mgr-btn success" onclick="saveSymbolMgr()" style="padding:7px 20px;"><span class="_ai-save"></span> Kaydet</button>
           </div>
         </div>
       </div>
@@ -2306,7 +2306,7 @@ console.log('Firebase bağlandı ✓');
 
     <!-- KOTASYON YÖNETİMİ -->
     <div id="sec-pricecontrol" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:4px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">💹 KOTASYON YÖNETİMİ</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;"><span class="_ai-quotes"></span> KOTASYON YÖNETİMİ</div>
       <p style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:16px;">
         Seçilen sembolün fiyatını manuel olarak ayarlayın. Gerçek feed üzerine yazılır.
       </p>
@@ -2358,7 +2358,7 @@ console.log('Firebase bağlandı ✓');
 
     <!-- FEED YÖNETİMİ -->
     <div id="sec-feed" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;">📡 VERİ FEED YÖNETİMİ</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;"><span class="_ai-feed"></span> VERİ FEED YÖNETİMİ</div>
 
       <div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:16px;margin-bottom:20px;">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">BAĞLANTI DURUMU</div>
@@ -2393,13 +2393,13 @@ console.log('Firebase bağlandı ✓');
     <!-- BROKER BİLGİLERİ -->
       <!-- BACKUP YÖNETİMİ -->
       <div id="sec-backup" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px;">
-        <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;color:var(--accent);">🛡 VERİ BACKUP YÖNETİMİ</div>
+        <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;color:var(--accent);"><span class="_ai-shield"></span> VERİ BACKUP YÖNETİMİ</div>
         <div style="max-width:680px;display:flex;flex-direction:column;gap:14px;">
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Manuel Backup</div>
             <button onclick="_txFullBackup();_txLocalBackup();showAdminToast('Backup','Tüm veriler yedeklendi','success');"
               style="background:var(--buy);border:none;border-radius:4px;padding:9px 20px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;margin-right:8px;">
-              💾 Şimdi Backup Al
+              <span class="_ai-save"></span> Şimdi Backup Al
             </button>
             <span style="font-family:var(--mono);font-size:10px;color:#a8a8a8;">Otomatik: 1 saatte bir Firebase, 5 dakikada bir localStorage</span>
           </div>
@@ -2415,7 +2415,7 @@ console.log('Firebase bağlandı ✓');
               </button>
               <button onclick="listBackups()"
                 style="background:#333;border:1px solid #555;border-radius:4px;padding:9px 14px;color:#ddd;font-family:var(--mono);font-size:12px;cursor:pointer;">
-                📋 Mevcut Backup'ları Listele
+                <span class="_ai-clipboard"></span> Mevcut Backup'ları Listele
               </button>
             </div>
             <div id="backup_list" style="margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--muted);"></div>
@@ -2423,10 +2423,10 @@ console.log('Firebase bağlandı ✓');
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;color:#aaa;">
-              <div>✅ Hesaplar</div><div>✅ Trading Grupları</div>
-              <div>✅ Semboller</div><div>✅ Ödeme Yöntemleri</div>
-              <div>✅ Yatırım/Çekim</div><div>✅ Personel (staff)</div>
-              <div>✅ Kullanıcı pozisyonları</div><div>✅ Ayarlar</div>
+              <div>Hesaplar</div><div>Trading Grupları</div>
+              <div>Semboller</div><div>Ödeme Yöntemleri</div>
+              <div>Yatırım/Çekim</div><div>Personel (staff)</div>
+              <div>Kullanıcı pozisyonları</div><div>Ayarlar</div>
             </div>
           </div>
         </div>
@@ -2490,8 +2490,8 @@ console.log('Firebase bağlandı ✓');
           <textarea class="mgr-input" id="bi_disclaimer" rows="3" style="width:100%;resize:vertical" placeholder="CFD'ler karmaşık araçlardır ve kaldıraç nedeniyle para kaybetme riski yüksektir..."></textarea>
         </div>
         <div style="display:flex;gap:10px;margin-top:16px">
-          <button class="mgr-btn primary" onclick="saveBrokerInfo()" style="padding:9px 24px">💾 Kaydet</button>
-          <button class="mgr-btn secondary" onclick="loadBrokerInfo()" style="padding:9px 16px">↺ Yenile</button>
+          <button class="mgr-btn primary" onclick="saveBrokerInfo()" style="padding:9px 24px"><span class="_ai-save"></span> Kaydet</button>
+          <button class="mgr-btn secondary" onclick="loadBrokerInfo()" style="padding:9px 16px"><span class="_ai-refresh"></span> Yenile</button>
         </div>
         <div id="bi_toast" style="display:none;margin-top:10px;padding:8px 14px;background:#0a2a1a;border:1px solid var(--buy);border-radius:4px;font-family:var(--mono);font-size:11px;color:#26a69a"></div>
       </div>
@@ -2499,9 +2499,9 @@ console.log('Firebase bağlandı ✓');
 
     <div class="admin-section" id="sec-auditlog" style="display:none;flex:1;overflow-y:auto;padding:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-        <div style="font-family:var(--mono);font-size:13px;font-weight:700;">📝 AUDIT LOG — Yönetici İşlem Geçmişi</div>
+        <div style="font-family:var(--mono);font-size:13px;font-weight:700;"><span class="_ai-note"></span> AUDIT LOG — Yönetici İşlem Geçmişi</div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="alFilter" class="mgr-input" style="width:220px;" placeholder="🔍 Manager / action / target..." oninput="alRender()">
+          <input id="alFilter" class="mgr-input" style="width:220px;" placeholder="Manager / action / target..." oninput="alRender()">
           <select id="alActionFilter" class="mgr-input" style="width:180px;" onchange="alRender()">
             <option value="">Tüm Eylemler</option>
             <option value="finance">Finans</option>
@@ -2511,7 +2511,7 @@ console.log('Firebase bağlandı ✓');
             <option value="price">Fiyat Override</option>
             <option value="spreadGroup">Spread Grup</option>
           </select>
-          <button class="mgr-btn" onclick="alLoad()">🔄 Yenile</button>
+          <button class="mgr-btn" onclick="alLoad()"><span class="_ai-refresh"></span> Yenile</button>
         </div>
       </div>
       <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:4px;overflow:hidden;">
@@ -2532,14 +2532,14 @@ console.log('Firebase bağlandı ✓');
     </div>
 
     <div class="admin-section" id="sec-walletsettings" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">💳 ÖDEME YÖNTEMLERİ</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;"><span class="_ai-card"></span> ÖDEME YÖNTEMLERİ</div>
       <div class="ad-sect" style="margin-bottom:16px;">
         <div class="ad-sect-title">YENİ YÖNTEM EKLE</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px;align-items:end;">
           <div>
             <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">TÜR</label>
             <select id="pm_type" class="mgr-input" style="width:100%;" onchange="pmTypeChange()">
-              <option value="bank">🏦 Banka</option>
+              <option value="bank">Banka</option>
               <option value="crypto">₮ Kripto</option>
             </select>
           </div>
@@ -2549,7 +2549,7 @@ console.log('Firebase bağlandı ✓');
           </div>
           <div>
             <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">İKON (emoji)</label>
-            <input id="pm_icon" class="mgr-input" placeholder="🏦" style="width:100%;">
+            <input id="pm_icon" class="mgr-input" placeholder="Banka" style="width:100%;">
           </div>
           <div>
             <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">PARA BİRİMİ</label>
@@ -2605,7 +2605,7 @@ console.log('Firebase bağlandı ✓');
           </div>
         </div>
         <div style="margin-top:14px;">
-          <button class="mgr-btn success" onclick="addPayMethod()" style="padding:7px 22px;">➕ Yöntem Ekle</button>
+          <button class="mgr-btn success" onclick="addPayMethod()" style="padding:7px 22px;"><span class="_ai-plus"></span> Yöntem Ekle</button>
         </div>
       </div>
       <div class="ad-sect">
@@ -2616,7 +2616,7 @@ console.log('Firebase bağlandı ✓');
 
     <!-- ÇEKİM / YATIRIM TALEPLERİ -->
     <div class="admin-section" id="sec-withdrawreqs" style="display:none;flex:1;overflow-y:auto;padding:16px;">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">📋 YATIRIM / ÇEKİM TALEPLERİ</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;"><span class="_ai-clipboard"></span> YATIRIM / ÇEKİM TALEPLERİ</div>
 
       <!-- Filtreler -->
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
@@ -2636,8 +2636,8 @@ console.log('Firebase bağlandı ✓');
           <option value="trader">Trader</option>
           <option value="manager">Manuel</option>
         </select>
-        <input id="reqSearch" class="mgr-input" style="width:180px;" placeholder="🔍 ID / Hesap / Yöntem..." oninput="renderWithdrawReqs()">
-        <button class="mgr-btn" onclick="fbLoadRequests(function(){renderWithdrawReqs();updatePendingBadge();})">🔄 Yenile</button>
+        <input id="reqSearch" class="mgr-input" style="width:180px;" placeholder="ID / Hesap / Yöntem..." oninput="renderWithdrawReqs()">
+        <button class="mgr-btn" onclick="fbLoadRequests(function(){renderWithdrawReqs();updatePendingBadge();})"><span class="_ai-refresh"></span> Yenile</button>
         <button class="mgr-btn danger" style="font-size:10px;" onclick="clearReqFilters()">✕ Sıfırla</button>
         <span style="font-family:var(--mono);font-size:11px;color:#b0b0b0;" id="reqResultCount"></span>
         <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:#f5c518;" id="pendingCount"></span>
@@ -2694,7 +2694,7 @@ console.log('Firebase bağlandı ✓');
       <button class="ad-tab" data-tab="info"     onclick="adTab('info',this)"     style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">BİLGİLER</button>
       <button class="ad-tab" data-tab="settings" onclick="adTab('settings',this)" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;">AYARLAR</button>
     </div>
-    <div id="adReadOnlyBanner" style="display:none;flex-shrink:0;background:#f5c518;color:#1a1a1a;text-align:center;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;">🔒 İZLEYİCİ MODU — Bu hesap salt okunur, müşteri işlem açıp kapatamaz</div>
+    <div id="adReadOnlyBanner" style="display:none;flex-shrink:0;background:#f5c518;color:#1a1a1a;text-align:center;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;">İZLEYİCİ MODU — Bu hesap salt okunur, müşteri işlem açıp kapatamaz</div>
     <div style="flex:1;min-height:0;overflow-y:auto;padding:20px;" id="adContent"></div>
     <div id="adOpenFooter" style="display:none;flex-shrink:0;padding:10px 20px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;border-top:1px solid #2a2a2a;background:#181818;"></div>
   </div>
@@ -5442,7 +5442,7 @@ function _adRenderTab_inner(tab) {
         '<div style="background:#181818;border:1px solid #262626;border-left:3px solid '+((_opnl>0)?'#26a69a':(_opnl<0)?'#ef5350':'#555')+';border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Açık K/Z</div>' +
           '<div id="adBadgeOpnl" style="font-family:var(--mono);color:'+_opnlColor+';font-weight:700;font-size:14px;">'+_opnlTxt+'</div></div>' +
-        '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" class="ad-btn ad-btn-secondary" style="align-self:center;font-size:10px;padding:6px 12px;">🔍 Teşhis</button>' +
+        '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" class="ad-btn ad-btn-secondary" style="align-self:center;font-size:10px;padding:6px 12px;"><span class="_ai-search"></span> Teşhis</button>' +
       '</div>' +
 
       // ── Sekme butonları — pill tasarım ──
@@ -5605,20 +5605,20 @@ function _adRenderTab_inner(tab) {
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div><label class="ad-label">Yeni Şifre</label><input class="ad-input" id="ad_pw1" type="password" placeholder="Yeni şifre..."></div>' +
             '<div><label class="ad-label">Şifre Tekrar</label><input class="ad-input" id="ad_pw2" type="password" placeholder="Tekrar girin..."></div>' +
-            '<button class="ad-btn ad-btn-primary" onclick="adChangePassword()">🔑 Şifreyi Güncelle</button>' +
+            '<button class="ad-btn ad-btn-primary" onclick="adChangePassword()"><span class="_ai-key"></span> Şifreyi Güncelle</button>' +
           '</div>' : '';
     var _secViewer = _hp('accounts.edit') ?
           '<div class="ad-section-title" style="margin-top:20px;">İzleyici Şifresi</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<div style="font-family:var(--mono);font-size:10px;color:#c0c0c0;margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
             '<div><label class="ad-label">İzleyici Şifresi</label><input class="ad-input" id="ad_vpw" type="text" placeholder="Örn: izle1234" value="'+(a.viewerPassword||'')+'"></div>' +
-            '<button class="ad-btn ad-btn-secondary" onclick="adSaveViewerPassword()">👁 İzleyici Şifresini Kaydet</button>' +
+            '<button class="ad-btn ad-btn-secondary" onclick="adSaveViewerPassword()"><span class="_ai-lock"></span> İzleyici Şifresini Kaydet</button>' +
           '</div>' : '';
     var _secStatus = _hp('accounts.edit') ?
           '<div class="ad-section-title">Hesap Durumu</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
             '<button class="ad-btn '+(a.active?'ad-btn-danger':'ad-btn-success')+'" onclick="adToggleStatus()">'+(a.active?'⏸ Hesabı Durdur':'▶ Hesabı Aktif Et')+'</button>' +
-            '<button class="ad-btn" style="'+(a._readOnly?'background:#2a2200;color:#f5c518;border-color:#f5c518;':'background:#1a1a1a;color:#aaa;border-color:#333;')+'" onclick="adToggleReadOnly()">'+(a._readOnly?'🔓 İzleyici Modunu Kaldır':'🔒 İzleyici Moduna Al (Salt Okunur)')+'</button>' +
+            '<button class="ad-btn" style="'+(a._readOnly?'background:#2a2200;color:#f5c518;border-color:#f5c518;':'background:#1a1a1a;color:#aaa;border-color:#333;')+'" onclick="adToggleReadOnly()">'+(a._readOnly?'İzleyici Modunu Kaldır':'İzleyici Moduna Al (Salt Okunur)')+'</button>' +
             '<div style="font-family:var(--mono);font-size:10px;color:#888;">İzleyici modunda müşteri işlem açamaz/kapatamaz, sadece hesabı görüntüler. Siz (admin) manuel işlem ve finans işlemlerine devam edebilirsiniz.</div>' +
           '</div>' : '';
     var _secDanger = _hp('accounts.delete') ?
@@ -5631,7 +5631,7 @@ function _adRenderTab_inner(tab) {
             '<div id="ad_del_hint" style="font-family:var(--mono);font-size:10px;color:var(--accent);"></div>' +
             '<div style="display:flex;gap:8px;">' +
             '<button class="ad-btn ad-btn-secondary" onclick="adGenDelCode()">Kod Oluştur</button>' +
-            '<button class="ad-btn ad-btn-danger" onclick="adDeleteAcc()">🗑 Hesabı Kalıcı Sil</button>' +
+            '<button class="ad-btn ad-btn-danger" onclick="adDeleteAcc()"><span class="_ai-trash"></span> Hesabı Kalıcı Sil</button>' +
             '</div></div>' +
           '</div>' : '';
     var _leftCol = _secSg + _secName + _secPass + _secViewer;
@@ -6480,7 +6480,7 @@ function adToggleReadOnly() {
       });
     }).catch(function(e){ console.warn('[adToggleReadOnly] blob transaction:', e.message); });
     db.collection('users').doc(String(a.id)).set({_readOnly:_newRO}, {merge:true}).catch(function(){});
-    showAdminToast(_newRO ? '🔒 İzleyici moduna alındı' : '🔓 İzleyici modu kaldırıldı', a.name+(a.surname?' '+a.surname:''), _newRO?'warning':'success');
+    showAdminToast(_newRO ? 'İzleyici moduna alındı' : 'İzleyici modu kaldırıldı', a.name+(a.surname?' '+a.surname:''), _newRO?'warning':'success');
   }
 }
 
@@ -6532,6 +6532,63 @@ function renderAccCards() { renderAccTable(); }
 // değerini ve imleç konumunu saklayıp geri yüklüyoruz. Böylece yenilemenin
 // hangi sebeple tetiklendiği önemli değil — kullanıcı yazmaya devam eder.
 // ══════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// ARAYÜZ İKONLARI (2026-09-19) — emoji yerine SVG
+// Emoji her işletim sisteminde farklı boyut/stilde çizilir ve hizası kayar.
+// Not: <option> içine ve placeholder gibi ÖZNİTELİKLERE SVG konamaz; oralarda
+// emoji tamamen kaldırılıp sade metin bırakıldı.
+// ══════════════════════════════════════════════════════════════
+function _adUi(name, size, color) {
+  var z = size || 14, c = color || 'currentColor';
+  var d = {
+    save:      '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
+    check:     '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    gear:      '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
+    chart:     '<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/>',
+    search:    '<circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5L16 16"/>',
+    refresh:   '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4h-4"/>',
+    lock:      '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/>',
+    pencil:    '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    clipboard: '<rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V3.8h6V5"/><path d="M9 11h6M9 15h4"/>',
+    download:  '<path d="M12 4v11M8 11l4 4 4-4M5 20h14"/>',
+    key:       '<circle cx="8" cy="12" r="3.2"/><path d="M11.2 12H21M18 12v3M15 12v2"/>',
+    quotes:    '<path d="M4 19V5M4 19h16"/><path d="M7 16l3-5 3 3 4-7"/><circle cx="17" cy="7" r="1.4"/>',
+    feed:      '<path d="M5 12a7 7 0 0 1 7-7M5 12a7 7 0 0 0 7 7"/><path d="M8.5 12a3.5 3.5 0 0 1 3.5-3.5"/><circle cx="12" cy="12" r="1.4"/><path d="M19 12a7 7 0 0 0-7-7"/>',
+    shield:    '<path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/>',
+    note:      '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
+    card:      '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M6.5 14.5h3"/>',
+    trash:     '<path d="M5 7h14M10 7V5h4v2M7 7l.8 13h8.4L17 7"/>',
+    coin:      '<circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.8 10h3.4M9.8 14h3.4"/>',
+    currency:  '<path d="M4 9h13l-3-3M20 15H7l3 3"/>',
+    medal:     '<circle cx="12" cy="14.5" r="5"/><path d="M9 3l2 6M15 3l-2 6"/>',
+    bars:      '<path d="M5 20V12M12 20V5M19 20v-6"/>',
+    clock:     '<circle cx="12" cy="12" r="8"/><path d="M12 8v4.4l3 1.8"/>',
+    calendar:  '<rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/>',
+    plus:      '<path d="M12 5v14M5 12h14"/>',
+    globe:     '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.4 2.2 2.4 13.6 0 16M12 4c-2.4 2.2-2.4 13.6 0 16"/>',
+    users:     '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.2 6-5.2s6 1.8 6 5.2"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.5 19.5c0-2.2-.7-3.7-2-4.7"/>'
+  }[name] || '<circle cx="12" cy="12" r="7"/>';
+  return '<svg width="' + z + '" height="' + z + '" viewBox="0 0 24 24" fill="none" stroke="' + c +
+         '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
+         'style="flex-shrink:0;display:inline-block;vertical-align:-2px" aria-hidden="true">' + d + '</svg>';
+}
+
+function _adFillUiIcons(root){
+  var map={'_ai-save':'save','_ai-check':'check','_ai-gear':'gear','_ai-chart':'chart',
+    '_ai-search':'search','_ai-refresh':'refresh','_ai-lock':'lock','_ai-pencil':'pencil',
+    '_ai-clipboard':'clipboard','_ai-download':'download','_ai-key':'key','_ai-quotes':'quotes',
+    '_ai-feed':'feed','_ai-shield':'shield','_ai-note':'note','_ai-card':'card','_ai-trash':'trash',
+    '_ai-coin':'coin','_ai-currency':'currency','_ai-medal':'medal','_ai-bars':'bars','_ai-users':'users','_ai-clock':'clock','_ai-calendar':'calendar','_ai-plus':'plus','_ai-globe':'globe'};
+  Object.keys(map).forEach(function(cls){
+    (root||document).querySelectorAll('.'+cls).forEach(function(el){
+      if(el.querySelector('svg')) return;
+      el.innerHTML=_adUi(map[cls], 14);
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', function(){ try{_adFillUiIcons();}catch(e){} });
+
 function _adPreserveInput(render) {
   var el = document.activeElement;
   var tag = el && (el.tagName || '').toLowerCase();
@@ -6695,7 +6752,7 @@ function _renderAccTable_inner(){
 
   // ── Filtre bar ──
   var bar='<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;flex-shrink:0;">'
-    +'<input id="acc_search" class="mgr-input" placeholder="🔍 Ara..." style="min-width:140px;flex:2;width:auto;" oninput="renderAccTable()" value="'+(search||'')+'">'
+    +'<input id="acc_search" class="mgr-input" placeholder="Ara..." style="min-width:140px;flex:2;width:auto;" oninput="renderAccTable()" value="'+(search||'')+'">'
     +'<select id="acc_ftype" class="mgr-input" style="flex:1;min-width:70px;width:auto;" onchange="renderAccTable()">'
       +'<option value="">Tip</option>'
       +'<option value="real"'+(fType==='real'?' selected':'')+'>Real</option>'
@@ -6714,12 +6771,12 @@ function _renderAccTable_inner(){
       +'</select>'
     +'<select id="acc_fonline" class="mgr-input" style="flex:1;min-width:90px;width:auto;" onchange="renderAccTable()">'
       +'<option value="">Tümü</option>'
-      +'<option value="online"'+(fOnline==='online'?' selected':'')+'>🟢 Online</option>'
-      +'<option value="offline"'+(fOnline==='offline'?' selected':'')+'>⚫ Offline</option></select>'
+      +'<option value="online"'+(fOnline==='online'?' selected':'')+'>Online</option>'
+      +'<option value="offline"'+(fOnline==='offline'?' selected':'')+'>Offline</option></select>'
     +'<span style="font-size:11px;color:#c0c0c0;white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
     +'<button class="mgr-btn" id="accColBtn" onclick="_accColPickerToggle(event)" '
       +'style="flex-shrink:0;padding:5px 12px;font-size:12px;white-space:nowrap;'
-      +'background:#222;border:1px solid #444;border-radius:4px;color:#ddd;cursor:pointer;">⚙ Kolonlar</button>'
+      +'background:#222;border:1px solid #444;border-radius:4px;color:#ddd;cursor:pointer;"><span class="_ai-gear"></span> Kolonlar</button>'
     +'</div>'
     +picker;
 
@@ -6770,7 +6827,7 @@ function _renderAccTable_inner(){
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
-        if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?'<span title="İzleyici modu (salt okunur)" style="margin-right:4px;">🔒</span>':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
+        if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?'<span title="İzleyici modu (salt okunur)" style="margin-right:4px;" class="_ai-lock"></span>':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
           :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
@@ -7175,7 +7232,7 @@ function renderPayMethodList() {
         '<td>'+m.currency+'</td>' +
         '<td style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+(m.type==='bank'?(m.bankName?'<span style="color:var(--text)">'+m.bankName+'</span><br>':'')+((m.iban||'—').slice(0,20)+'...'):(m.network?'<span style="color:var(--text)">'+m.network+'</span><br>':'')+((m.wallet||'—').slice(0,16)+'...'))+'</td>' +
         '<td style="white-space:nowrap">' +
-          '<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px;margin-right:3px" onclick="editPayMethod('+i+')">✎</button>' +
+          '<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px;margin-right:3px" onclick="editPayMethod('+i+')"><span class="_ai-pencil"></span></button>' +
           '<button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="delPayMethod('+i+')">✕</button>' +
         '</td>' +
       '</tr>';
@@ -7210,7 +7267,7 @@ function editPayMethod(idx) {
     window._editPayMethodIdx = idx;
     var el = document.getElementById('pm_type');
     if(el) el.closest('div') && el.scrollIntoView({behavior:'smooth', block:'center'});
-    if(typeof showToast === 'function') showToast('Düzenleniyor ✎', m.name + ' forma yüklendi');
+    if(typeof showToast === 'function') showToast('Düzenleniyor', m.name + ' forma yüklendi');
   }, 100);
 }
 
@@ -7221,7 +7278,7 @@ function delPayMethod(i) { payMethods.splice(i,1); savePayMethods(); renderPayMe
 function addPayMethod() {
   const type = document.getElementById('pm_type').value;
   const name = document.getElementById('pm_name').value.trim();
-  const icon = document.getElementById('pm_icon').value.trim() || (type==='bank'?'🏦':'₮');
+  const icon = document.getElementById('pm_icon').value.trim() || (type==='bank'?'B':'₮');
   const currency = document.getElementById('pm_currency').value;
   const note = document.getElementById('pm_note').value.trim();
   const min = parseFloat(type==='bank'?document.getElementById('pm_min').value:document.getElementById('pm_crypto_min').value)||0;
@@ -7773,7 +7830,7 @@ settings = JSON.parse(localStorage.getItem('tx_settings') || '{"startBalance":10
 payMethods = JSON.parse(localStorage.getItem('tx_paymethods') || 'null');
 if (!payMethods) {
   payMethods = [
-    { id:'pm1', type:'bank', name:'Ziraat Bankası', icon:'🏦', currency:'TRY', bankName:'Ziraat Bankası A.Ş.', holder:'Commerz Terminal Yatırım Ltd.', iban:'TR33 0001 0017 4508 0018 2639 45', min:500, ref:'', note:'Açıklama kısmına hesap numaranızı yazınız.', active:true },
+    { id:'pm1', type:'bank', name:'Ziraat Bankası', icon:'', currency:'TRY', bankName:'Ziraat Bankası A.Ş.', holder:'Commerz Terminal Yatırım Ltd.', iban:'TR33 0001 0017 4508 0018 2639 45', min:500, ref:'', note:'Açıklama kısmına hesap numaranızı yazınız.', active:true },
     { id:'pm2', type:'bank', name:'Garanti BBVA', icon:'🏦', currency:'TRY', bankName:'Garanti BBVA', holder:'Commerz Terminal Yatırım Ltd.', iban:'TR06 0006 2000 1470 0006 2993 12', min:500, ref:'', note:'EFT/Havale ile 7/24 yatırım yapabilirsiniz.', active:true },
     { id:'pm3', type:'crypto', name:'USDT TRC20', icon:'₮', currency:'USDT', network:'TRC20', wallet:'TRx8bLQK9mNvJzGfHRp2WXkYqASD45mnZp', min:50, note:'Sadece TRC20 ağından gönderiniz. Farklı ağdan gelen transferler kaybolur.', active:true },
     { id:'pm4', type:'crypto', name:'Bitcoin', icon:'₿', currency:'BTC', network:'BTC', wallet:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', min:0.001, note:'Onay süresi yaklaşık 30-60 dakikadır.', active:true },
@@ -8379,7 +8436,7 @@ function sgRenderInner() {
     return;
   }
 
-  var cats = {crypto:'🪙 Kripto', forex:'💱 Forex', commodity:'🏅 Emtia', index:'📈 Endeks'};
+  var cats = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks'};
   var html = '';
   for(var si=0; si<_syms.length; si++) {
     var s = _syms[si];
@@ -9124,7 +9181,7 @@ function adSaveViewerPassword(){
   _adHashPass(vp, vsalt).then(function(vhash){
     a.viewerPassword = vhash; a.viewerPasswordSalt = vsalt;
     saveAccounts();
-    showAdminToast('Kaydedildi', '👁 İzleyici şifresi güncellendi (hash\'lendi)','success');
+    showAdminToast('Kaydedildi', 'İzleyici şifresi güncellendi (hash\'lendi)','success');
   });
 }
 
@@ -9455,7 +9512,7 @@ function listBackups() {
     if(!backups.length) { if(el) el.innerHTML = '<div style="color:#888">Backup bulunamadı</div>'; return; }
     var html = '<div style="display:grid;grid-template-columns:1fr auto;gap:4px;">';
     backups.slice(0,20).forEach(function(b){
-      var label = b.id.replace('backup_daily_','📅 ').replace('backup_weekly_','📆 ').replace('backup_hourly_','🕐 ');
+      var label = b.id.replace('backup_daily_','Günlük · ').replace('backup_weekly_','Haftalık · ').replace('backup_hourly_','Saatlik · ');
       var cleanId = b.id.replace('backup_daily_','').replace('backup_weekly_','').replace('backup_hourly_','');
       html += '<div style="color:#ddd;">'+label+'</div>'
         + '<button data-bid="'+cleanId+'" onclick="restoreFromBackup(this.dataset.bid)" '
@@ -10372,10 +10429,10 @@ function renderStaffTable(){
   _staffList.forEach(function(s){
     var cnt=(s.assignedAccounts||[]).length;
     var customCnt = (s.customPerms||[]).length;
-    var permBadge = customCnt ? '<span style="font-size:9px;color:var(--accent);margin-left:4px;">⚙ Özel ('+customCnt+')</span>' : '';
+    var permBadge = customCnt ? '<span style="font-size:9px;color:var(--accent);margin-left:4px;"><span class="_ai-gear"></span> Özel ('+customCnt+')</span>' : '';
     var isAdminRole = (s.role === 'admin' || s.role === 'superadmin');
     var assignedCell = isAdminRole
-      ? '<span style="color:var(--buy);font-size:10px;font-weight:600;">🌐 Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
+      ? '<span style="color:var(--buy);font-size:10px;font-weight:600;"><span class="_ai-globe"></span> Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
       : cnt;
     var ataLabel = isAdminRole ? 'Ata <span style="color:#555;font-size:9px;">(opsiyonel)</span>' : 'Ata';
     html+='<tr style="border-bottom:1px solid #1a1a1a;">'
@@ -10396,10 +10453,10 @@ function renderStaffTable(){
             return '<button class="mgr-btn secondary" data-id="'+s.id+'" '
               + (_ok ? 'onclick="openPermModal(this.dataset.id)"' : 'disabled')
               + ' title="'+_ttl+'" style="font-size:10px;padding:2px 8px;'
-              + (_ok ? '' : 'opacity:.35;cursor:not-allowed;') + '">⚙ Yetki</button> ';
+              + (_ok ? '' : 'opacity:.35;cursor:not-allowed;') + '"><span class="_ai-gear"></span> Yetki</button> ';
           })()
         +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
-        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">🔑 Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
+        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;"><span class="_ai-key"></span> Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
       +'</td></tr>';
   });
   html+='</tbody></table>';wrap.innerHTML=html;
@@ -10471,7 +10528,7 @@ function openPermModal(id) {
   
   var html = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
     +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
-      +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">⚙ YETKİ DÜZENLEMESİ — '+s.name+'</div>'
+      +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;"><span class="_ai-gear"></span> YETKİ DÜZENLEMESİ — '+s.name+'</div>'
       +'<button onclick="closePermModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
     +'<div style="font-family:var(--mono);font-size:10px;color:#b0b0b0;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
@@ -10497,7 +10554,7 @@ function openPermModal(id) {
   });
   
   html += '<div style="display:flex;gap:8px;margin-top:16px;">'
-    +'<button class="mgr-btn success" onclick="savePermModal(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;">💾 Kaydet</button>'
+    +'<button class="mgr-btn success" onclick="savePermModal(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;"><span class="_ai-save"></span> Kaydet</button>'
     +'<button class="mgr-btn" onclick="closePermModal()" style="flex:1;padding:9px;">İptal</button>'
     +'</div></div>';
   
@@ -10565,7 +10622,7 @@ function openChangePassModal(id) {
   if(!s) return;
   var m = document.getElementById('changePassModal');
   if(!m){ m=document.createElement('div'); m.id='changePassModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;'; document.body.appendChild(m); }
-  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">🔑 ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
+  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;"><span class="_ai-key"></span> ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
   m.style.display='flex';
   setTimeout(function(){ var el=document.getElementById('cp_pass'); if(el) el.focus(); }, 100);
 }
@@ -11565,7 +11622,7 @@ function adRenderOpenTable(){
       +'<td style="padding:5px 8px;font-family:var(--mono);font-weight:700;color:'+pc+';" data-pnl="'+pos.id+'">'
         +(pnl>=0?'+':'-')+'$'+adFp(Math.abs(pnl))+'</td>'
       +'<td style="padding:5px 8px;white-space:nowrap;">'
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="margin-right:4px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="margin-right:4px;"><span class="_ai-pencil"></span></button>':'')
         +(hasPerm&&hasPerm('trades.close')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-id="'+pos.id+'" onclick="adClosePos(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
@@ -11641,7 +11698,7 @@ function adRenderHistoryTable(){
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
         +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="margin-right:4px;">⟳</button>':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="margin-right:4px;">✎</button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="margin-right:4px;"><span class="_ai-pencil"></span></button>':'')
         +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
