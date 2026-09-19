@@ -8510,6 +8510,15 @@ function symUnpin(sym){
     overflow: hidden;
   }
   .m-pan.on { display: flex !important; }
+  /* ⚠️ 2026-09-19 — mobil işlem paneli başlığı */
+  .m-symchip { display:inline-flex; align-items:center; gap:7px;
+    padding:5px 11px 5px 9px; border:1px solid var(--border2); border-radius:8px;
+    background:var(--panel2); font-family:var(--mono); font-size:14px;
+    font-weight:700; letter-spacing:.02em; color:var(--text); line-height:1; }
+  .m-symchip svg, .m-symchip > span { flex-shrink:0; }
+  .m-sprchip { font-family:var(--mono); font-size:10px; font-weight:600;
+    color:var(--muted); letter-spacing:.02em; padding:4px 8px;
+    border-radius:6px; background:var(--panel2); white-space:nowrap; }
   .m-phead {
     display: flex;
     align-items: center;
@@ -8828,9 +8837,13 @@ function symUnpin(sym){
 </div>
 
 <div id="mPanTrade" class="m-pan">
-  <div class="m-phead" style="justify-content:space-between">
-    <span id="mTSym">—</span>
-    <span style="color:var(--panel);font-size:10px" id="mTSpr">—</span>
+  <!-- ⚠️ 2026-09-19: Spread yazısı color:var(--panel) kullanıyordu — koyu temada
+       neredeyse siyah, açık temada bembeyaz; iki temada da zeminle aynı renk
+       olduğu için görünmüyordu. --muted'a alındı.
+       Sembol de düz yazıydı; artık ikonuyla birlikte çerçeveli bir rozet. -->
+  <div class="m-phead" style="justify-content:space-between;letter-spacing:normal">
+    <span id="mTSym" class="m-symchip">—</span>
+    <span class="m-sprchip" id="mTSpr">—</span>
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
     <input id="mOtSymSearch" type="text" placeholder="Sembol ara..." data-lang-ph="searchSymbol"
@@ -9379,8 +9392,15 @@ function symUnpin(sym){
     var p=(typeof prices!=='undefined'&&prices[sym])?prices[sym]:null;
     var mid=p?p.price:0;
     var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
-    set('mTSym',sym||'—');
-    set('mTSpr',sp?'Spread: '+sp:'');
+    // Rozet: sembolün ikonu + kodu. textContent SVG basamaz, innerHTML gerek.
+    var _symEl=document.getElementById('mTSym');
+    if(_symEl){
+      var _gid=(sc&&(sc.gid||sc.category))||'';
+      var _col=(sc&&sc.color)||'#f0b90b';
+      var _icoHtml=(typeof _txSymIcon==='function')?_txSymIcon(_gid,_col,15,sym,sc&&sc.icon):'';
+      _symEl.innerHTML=_icoHtml+'<span>'+(sym||'—')+'</span>';
+    }
+    set('mTSpr',sp?'Spread '+sp:'');
     set('mBid',mid?(mid-sp/2).toFixed(dec):'—');
     set('mAsk',mid?(mid+sp/2).toFixed(dec):'—');
     var minL=sc?parseFloat(sc.minLot)||0.01:0.01;
