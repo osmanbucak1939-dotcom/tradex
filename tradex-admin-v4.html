@@ -27,9 +27,9 @@
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 select, select option { background:#1a1a1a !important; color:#d4d4d4 !important; }
-select:focus { outline:none; border-color:var(--accent,#f0b90b); }
+select:focus { outline:none; border-color:var(--accent,var(--accent)); }
 html { height:100%; overflow:hidden; }
-body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; }
+body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; }
 body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
 /* ── USER DROPDOWN ── */
@@ -136,7 +136,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .tb-conn { padding:0 14px; font-family:var(--mono); font-size:11px; display:flex; align-items:center; gap:6px; border-left:1px solid var(--border); height:100%; }
 .dot { width:6px; height:6px; border-radius:50%; }
-.dot.green { background:#26a69a; animation:blink 2s infinite; }
+.dot.green { background:var(--buy); animation:blink 2s infinite; }
 .dot.yellow { background:var(--accent); animation:blink 1s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 .tb-nav { display:flex; height:100%; }
@@ -356,7 +356,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* MANAGER FORM ELEMENTS */
 .mgr-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
 .mgr-table th { font-family:var(--mono); font-size:10px; color:#aaa; text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); font-weight:600; letter-spacing:.5px; }
-.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid #1e1e1e; color:#ddd; }
+.mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--panel); color:#ddd; }
 .mgr-table tr:last-child td { border-bottom:none; }
 .mgr-table tr:hover td { background:rgba(255,255,255,.02); }
 
@@ -918,7 +918,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   width:7px; height:7px; border-radius:50%;
   background:#999999; flex-shrink:0; transition:background .3s;
 }
-.tb-api-dot.live { background:#26a69a; box-shadow:0 0 6px #26a69a; }
+.tb-api-dot.live { background:var(--buy); box-shadow:0 0 6px var(--buy); }
 .tb-api-dot.err  { background:var(--sell); }
 
 /* ══════════════════════════════════
@@ -1040,7 +1040,7 @@ select { color-scheme: dark; }
 .acc-row-even { background:#141414; border-bottom:1px solid #222; }
 .acc-row-odd  { background:#1c1c1c; border-bottom:1px solid #222; }
 .acc-row-even td, .acc-row-odd td { }
-.acc-row-even:hover, .acc-row-odd:hover { background:#252525; cursor:pointer; }
+.acc-row-even:hover, .acc-row-odd:hover { background:var(--panel2); cursor:pointer; }
 .ad-label { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:.5px; }
 .ad-card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
 .ad-stat-val { font-size:16px; font-weight:700; font-family:var(--mono); }
@@ -1060,11 +1060,11 @@ select { color-scheme: dark; }
 .ad-btn-primary  { background:var(--accent); color:#000; border:none; box-shadow:0 2px 8px rgba(245,197,24,.25); }
 .ad-btn-primary:hover { filter:brightness(1.08); box-shadow:0 4px 14px rgba(245,197,24,.35); }
 .ad-btn-secondary{ background:#242424; color:var(--text); border:1px solid #444; }
-.ad-btn-secondary:hover { background:#2e2e2e; border-color:#555; }
-.ad-btn-danger   { background:rgba(239,83,80,.08); color:#ef5350; border:1px solid rgba(239,83,80,.4); }
-.ad-btn-danger:hover { background:rgba(239,83,80,.16); border-color:#ef5350; box-shadow:0 3px 10px rgba(239,83,80,.2); }
-.ad-btn-success  { background:rgba(38,166,154,.08); color:#26a69a; border:1px solid rgba(38,166,154,.4); }
-.ad-btn-success:hover { background:rgba(38,166,154,.16); border-color:#26a69a; box-shadow:0 3px 10px rgba(38,166,154,.2); }
+.ad-btn-secondary:hover { background:var(--border); border-color:#555; }
+.ad-btn-danger   { background:rgba(239,83,80,.08); color:var(--sell); border:1px solid rgba(239,83,80,.4); }
+.ad-btn-danger:hover { background:rgba(239,83,80,.16); border-color:var(--sell); box-shadow:0 3px 10px rgba(239,83,80,.2); }
+.ad-btn-success  { background:rgba(38,166,154,.08); color:var(--buy); border:1px solid rgba(38,166,154,.4); }
+.ad-btn-success:hover { background:rgba(38,166,154,.16); border-color:var(--buy); box-shadow:0 3px 10px rgba(38,166,154,.2); }
 .ad-icon-btn { width:26px; height:26px; padding:0 !important; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px !important; }
 .ad-pill-tab { padding:6px 16px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-family:var(--mono); transition:background .15s ease, color .15s ease; }
 .ad-pill-tab.on { background:var(--accent); color:#000; font-weight:700; }
@@ -1765,7 +1765,7 @@ console.log('Firebase bağlandı ✓');
             var onlineCell = document.querySelector('tr[data-id="'+acc2.id+'"] td[data-online-id="'+acc2.id+'"]');
             if(onlineCell) {
               onlineCell.innerHTML = isOn2
-                ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
+                ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
                 : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>';
             }
           });
@@ -1797,13 +1797,13 @@ console.log('Firebase bağlandı ✓');
     <div style="margin-bottom:14px;"><label style="display:block;font-size:10px;color:#c0c0c0;margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <div style="margin-bottom:20px;"><label style="display:block;font-size:10px;color:#c0c0c0;margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <button onclick="adminLogin()" class="mgr-btn success" style="width:100%;padding:10px;font-size:13px;">Giriş Yap</button>
-    <div id="al_error" style="color:#ef5350;font-size:11px;margin-top:8px;text-align:center;display:none;">Geçersiz e-posta veya şifre</div>
+    <div id="al_error" style="color:var(--sell);font-size:11px;margin-top:8px;text-align:center;display:none;">Geçersiz e-posta veya şifre</div>
   </div>
 </div>
 <div id="adminApp" style="display:none;flex-direction:column;height:100vh;min-width:0;background:var(--bg);">
   <div style="background:#181818;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
     <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">COMMERZ TERMINAL</span>
-    <span style="color:#e2e2e2;margin:0 10px;">|</span>
+    <span style="color:var(--text);margin:0 10px;">|</span>
     <span style="font-size:11px;color:#b0b0b0;">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;">
       <!-- Feed sağlık göstergesi: kripto / forex / firebase -->
@@ -1812,7 +1812,7 @@ console.log('Firebase bağlandı ✓');
         <span style="display:flex;align-items:center;gap:4px;"><span id="fhForex"  style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>FX</span>
         <span style="display:flex;align-items:center;gap:4px;"><span id="fhFB"     style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>DB</span>
       </div>
-      <span style="color:#a0a0a0;" id="topbar-user">—</span>
+      <span style="color:var(--muted);" id="topbar-user">—</span>
       <span style="color:#b0b0b0;" id="topbar-role"></span>
       <button onclick="adminLogout()" class="mgr-btn" style="font-size:10px;padding:3px 10px;">Çıkış</button>
     </div>
@@ -1831,7 +1831,7 @@ console.log('Firebase bağlandı ✓');
     <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit">🛡 Backup</button>
     <button class="nav-btn" onclick="adminNav('auditlog',this)" data-perm="settings.edit">📝 Audit Log</button>
     <button class="nav-btn" onclick="adminNav('walletsettings',this)" data-perm="settings.edit">💳 Ödeme Yöntemleri</button>
-    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:#ef5350;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
+    <button class="nav-btn" id="navWithdrawReqs" onclick="adminNav('withdrawreqs',this)" data-perm="finance.view">📋 Talepler <span id="pendingBadge" style="display:none;background:var(--sell);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;vertical-align:middle;">0</span></button>
   </div>
 
   <div style="flex:1;display:flex;overflow:hidden;">
@@ -1843,24 +1843,24 @@ console.log('Firebase bağlandı ✓');
     </div>
     <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:0;padding:4px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
       <div style="font-size:9px;color:#b0b0b0;font-family:var(--mono);padding-left:2px;">SEMBOL</div>
-      <div style="font-size:9px;color:#ef5350;font-family:var(--mono);text-align:right;">SATIŞ</div>
-      <div style="font-size:9px;color:#26a69a;font-family:var(--mono);text-align:right;">ALIŞ</div>
+      <div style="font-size:9px;color:var(--sell);font-family:var(--mono);text-align:right;">SATIŞ</div>
+      <div style="font-size:9px;color:var(--buy);font-family:var(--mono);text-align:right;">ALIŞ</div>
     </div>
     <div id="mwBody" style="flex:1;min-height:0;max-height:calc(100vh - 400px);overflow-y:auto;" onclick="var t=event.target;while(t&&t.id!=='mwBody'){if(t.dataset&&t.dataset.sym){mwSelect(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
 
     <!-- MARGIN CALL PANEL -->
     <div style="flex-shrink:0;border-top:1px solid #1a1a1a;">
       <div style="display:flex;align-items:center;padding:7px 10px;background:#150a0a;border-top:1px solid #2a1a1a;">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#ef5350;flex:1;">⚠ MARGIN CALL</div>
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--sell);flex:1;">⚠ MARGIN CALL</div>
         <span id="mcCount" style="font-size:9px;color:#b0b0b0;font-family:var(--mono);">0</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#181818;">
-        <div style="font-size:8px;color:#e2e2e2;font-family:var(--mono);">HESAP</div>
-        <div style="font-size:8px;color:#e2e2e2;font-family:var(--mono);text-align:right;">TEM.SEV.</div>
-        <div style="font-size:8px;color:#e2e2e2;font-family:var(--mono);text-align:right;">VARLIK</div>
+        <div style="font-size:8px;color:var(--text);font-family:var(--mono);">HESAP</div>
+        <div style="font-size:8px;color:var(--text);font-family:var(--mono);text-align:right;">TEM.SEV.</div>
+        <div style="font-size:8px;color:var(--text);font-family:var(--mono);text-align:right;">VARLIK</div>
       </div>
       <div id="mcBody" style="height:200px;overflow-y:auto;background:#151515;">
-        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#e2e2e2;">Yükleniyor...</div>
+        <div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text);">Yükleniyor...</div>
       </div>
     </div>
   </div>
@@ -1876,8 +1876,8 @@ console.log('Firebase bağlandı ✓');
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">FİNANS</div>
       <div class="ad-sect"><div class="ad-sect-title">YATIRIM / ÇEKİM</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">HESAP</label><select class="mgr-input" id="fin_acc" style="width:240px;"></select></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MİKTAR ($)</label><input class="mgr-input" type="number" id="fin_amt" placeholder="0.00" style="width:120px;"></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">HESAP</label><select class="mgr-input" id="fin_acc" style="width:240px;"></select></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">MİKTAR ($)</label><input class="mgr-input" type="number" id="fin_amt" placeholder="0.00" style="width:120px;"></div>
           <div style="display:flex;gap:6px;padding-bottom:1px;"><button class="mgr-btn success" onclick="finDeposit()" style="padding:7px 16px;">+ Yatır</button><button class="mgr-btn danger" onclick="finWithdraw()" style="padding:7px 16px;">- Çek</button></div>
         </div>
         <div id="fin_result" style="margin-top:10px;font-size:12px;"></div>
@@ -1889,44 +1889,44 @@ console.log('Firebase bağlandı ✓');
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
       <div style="font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.5px;">RAPORLAR</div>
-      <div style="font-size:11px;color:#a0a0a0;margin-top:2px;font-family:var(--mono);">Genel Bakış & İstatistikler</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono);">Genel Bakış & İstatistikler</div>
     </div>
-    <button onclick="updateReports()" style="background:#181818;border:1px solid #2a2a2a;color:#a0a0a0;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;">↺ Yenile</button>
+    <button onclick="updateReports()" style="background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;">↺ Yenile</button>
   </div>
 
   <!-- KPI Kartlar - 4+4 grid -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
 
     <!-- Toplam Hesap -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f0b90b;border-radius:10px 0 0 10px;"></div>
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
-      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#f0b90b;padding-left:8px;" id="rep-totalAccs">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent);padding-left:8px;" id="rep-totalAccs">—</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
     </div>
 
     <!-- Toplam Bakiye -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalBal">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-totalBal">—</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
     </div>
 
     <!-- Toplam Yatırım -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-totalDeposit">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-totalDeposit">—</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
 
     <!-- Toplam Çekim -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#ef5350;border-radius:10px 0 0 10px;"></div>
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--sell);border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#ef5350;padding-left:8px;" id="rep-totalWithdraw">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--sell);padding-left:8px;" id="rep-totalWithdraw">—</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
 
   </div>
@@ -1935,35 +1935,35 @@ console.log('Firebase bağlandı ✓');
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
 
     <!-- Aktif Hesap -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#26a69a;border-radius:10px 0 0 10px;"></div>
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
-      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#26a69a;padding-left:8px;" id="rep-activeAccs">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-activeAccs">—</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
     </div>
 
     <!-- Toplam Bonus -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f5c518;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f5c518;padding-left:8px;" id="rep-totalBonus">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Açık Pozisyon -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#9c27b0;border-radius:10px 0 0 10px;"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#ce93d8;padding-left:8px;" id="rep-openPos">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;">tüm hesaplar</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Net K/Z -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#888;border-radius:10px 0 0 10px;" id="rep-netPoz-bar"></div>
       <div style="font-size:9px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;padding-left:8px;" id="rep-netPoz">—</div>
-      <div style="font-size:9px;color:#a0a0a0;margin-top:4px;padding-left:8px;">anlık hesaplama</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;padding-left:8px;">anlık hesaplama</div>
     </div>
 
   </div>
@@ -1972,25 +1972,25 @@ console.log('Firebase bağlandı ✓');
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
     <!-- Son Talepler -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:#a0a0a0;flex:1;">SON YATIRIM / ÇEKİM TALEPLERİ</div>
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);flex:1;">SON YATIRIM / ÇEKİM TALEPLERİ</div>
         <span style="font-size:9px;color:#b0b0b0;" id="rep-reqs-count"></span>
       </div>
       <div id="rep-recentReqs">
-        <div style="padding:24px;text-align:center;color:#a0a0a0;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
     <!-- Açık / Kapalı Pozisyonlar -->
-    <div style="background:#181818;border:1px solid #1e1e1e;border-radius:10px;overflow:hidden;">
+    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;gap:0;">
         <button id="rep-tab-open" onclick="repSwitchTab('open')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:var(--accent);cursor:pointer;border-bottom:2px solid var(--accent);">AÇIK</button>
         <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:#b0b0b0;cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
         <span style="font-size:9px;color:#b0b0b0;margin-left:auto;" id="rep-pos-count"></span>
       </div>
       <div id="rep-posTable" style="overflow-y:auto;max-height:380px;">
-        <div style="padding:24px;text-align:center;color:#a0a0a0;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;">Yükleniyor...</div>
       </div>
     </div>
 
@@ -2000,13 +2000,13 @@ console.log('Firebase bağlandı ✓');
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">HESAP OLUŞTUR</div>
       <div class="ad-sect" style="max-width:580px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">AD</label><input class="mgr-input" id="na_name" style="width:100%;"></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SOYAD</label><input class="mgr-input" id="na_surname" style="width:100%;"></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">E-POSTA</label><input class="mgr-input" type="email" id="na_email" style="width:100%;"></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ŞİFRE</label><input class="mgr-input" id="na_pass" style="width:100%;"></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">TİP</label><select class="mgr-input" id="na_type" style="width:100%;"><option value="real">Real</option><option value="demo">Demo</option></select></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KALDIRAC</label><select class="mgr-input" id="na_lev" style="width:100%;"><option value="100">1:100</option><option value="200">1:200</option><option value="300">1:300</option><option value="400">1:400</option><option value="500">1:500</option></select></div>
-          <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SPREAD GRUBU</label><select class="mgr-input" id="na_sg" style="width:100%;"><option value="standard">Standard</option><option value="ecn">ECN</option><option value="vip">VIP</option><option value="zero">Zero</option></select></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">AD</label><input class="mgr-input" id="na_name" style="width:100%;"></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SOYAD</label><input class="mgr-input" id="na_surname" style="width:100%;"></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">E-POSTA</label><input class="mgr-input" type="email" id="na_email" style="width:100%;"></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">ŞİFRE</label><input class="mgr-input" id="na_pass" style="width:100%;"></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">TİP</label><select class="mgr-input" id="na_type" style="width:100%;"><option value="real">Real</option><option value="demo">Demo</option></select></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">KALDIRAC</label><select class="mgr-input" id="na_lev" style="width:100%;"><option value="100">1:100</option><option value="200">1:200</option><option value="300">1:300</option><option value="400">1:400</option><option value="500">1:500</option></select></div>
+          <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SPREAD GRUBU</label><select class="mgr-input" id="na_sg" style="width:100%;"><option value="standard">Standard</option><option value="ecn">ECN</option><option value="vip">VIP</option><option value="zero">Zero</option></select></div>
         </div>
         <button class="mgr-btn success" onclick="createAccount()" style="margin-top:14px;padding:8px 20px;">Hesap Oluştur</button>
         <div id="na_msg" style="margin-top:8px;font-size:12px;"></div>
@@ -2031,15 +2031,15 @@ console.log('Firebase bağlandı ✓');
         <div class="ad-sect-title" style="margin-bottom:10px;">GRUP AYARLARI</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Call (%)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Margin Call (%)</label>
             <input class="mgr-input" id="sg_mc" type="number" step="1" min="0" placeholder="80" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Stop Out (%)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Stop Out (%)</label>
             <input class="mgr-input" id="sg_so" type="number" step="1" min="0" placeholder="50" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Max Kaldıraç</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Max Kaldıraç</label>
             <select class="mgr-input" id="sg_maxlev" style="width:100%;">
               <option value="50">1:50</option>
               <option value="100">1:100</option>
@@ -2053,7 +2053,7 @@ console.log('Firebase bağlandı ✓');
             </select>
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Default Kaldıraç</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Default Kaldıraç</label>
             <select class="mgr-input" id="sg_defaultLev" style="width:100%;">
               <option value="50">1:50</option>
               <option value="100">1:100</option>
@@ -2067,22 +2067,22 @@ console.log('Firebase bağlandı ✓');
             </select>
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Komisyon (lot/USD)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Komisyon (lot/USD)</label>
             <input class="mgr-input" id="sg_commission" type="number" step="any" min="0" placeholder="0" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Min. Yatırım (USD)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Min. Yatırım (USD)</label>
             <input class="mgr-input" id="sg_minDeposit" type="number" step="any" min="0" placeholder="0" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Margin Modu</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Margin Modu</label>
             <select class="mgr-input" id="sg_marginMode" style="width:100%;" title="TradeX tüm hesaplarda hedging modunda çalışır. Netting seçeneği pasifleştirildi.">
               <option value="hedging">Hedging</option>
               <option value="netting" disabled>Netting (pasif)</option>
             </select>
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">Açıklama</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">Açıklama</label>
             <input class="mgr-input" id="sg_desc" placeholder="Grup açıklaması..." style="width:100%;">
           </div>
         </div>
@@ -2101,7 +2101,7 @@ console.log('Firebase bağlandı ✓');
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
           <button class="mgr-btn" onclick="sgWhitelistToggleAll(true)"  style="font-size:10px;padding:4px 10px;">Tümünü Seç</button>
           <button class="mgr-btn" onclick="sgWhitelistToggleAll(false)" style="font-size:10px;padding:4px 10px;">Temizle</button>
-          <span id="sg_wl_count" style="font-size:10px;color:#a0a0a0;font-family:var(--mono);align-self:center;margin-left:auto;"></span>
+          <span id="sg_wl_count" style="font-size:10px;color:var(--muted);font-family:var(--mono);align-self:center;margin-left:auto;"></span>
         </div>
         <div id="sgWhitelistBox" style="max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px;padding:6px;border:1px solid #2a2a2a;border-radius:3px;background:rgba(255,255,255,0.02);">
           <div style="color:#888;font-family:var(--mono);font-size:11px;padding:10px;">Grup seçin...</div>
@@ -2232,14 +2232,14 @@ console.log('Firebase bağlandı ✓');
         <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:24px;width:480px;max-height:90vh;overflow-y:auto;">
           <div style="font-family:var(--mono);font-weight:700;font-size:13px;margin-bottom:16px;">
             <span id="symModalTitle">SEMBOL EKLE</span>
-            <button onclick="closeAddSymModal()" style="float:right;background:none;border:none;color:#a0a0a0;cursor:pointer;font-size:16px;">✕</button>
+            <button onclick="closeAddSymModal()" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
           </div>
           <input type="hidden" id="ns_editIdx" value="-1">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SEMBOL *</label><input class="mgr-input" id="ns_sym" placeholder="BTCUSDT" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ETİKET *</label><input class="mgr-input" id="ns_label" placeholder="Bitcoin" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KISA AD *</label><input class="mgr-input" id="ns_short" placeholder="BTC" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KATEGORİ</label>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SEMBOL *</label><input class="mgr-input" id="ns_sym" placeholder="BTCUSDT" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">ETİKET *</label><input class="mgr-input" id="ns_label" placeholder="Bitcoin" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">KISA AD *</label><input class="mgr-input" id="ns_short" placeholder="BTC" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">KATEGORİ</label>
               <select class="mgr-input" id="ns_category" style="width:100%;" onchange="_adSuggestContractSize(this.value)">
                 <option value="crypto">Kripto</option>
                 <option value="forex">Forex</option>
@@ -2250,30 +2250,30 @@ console.log('Firebase bağlandı ✓');
               </select>
             </div>
             <div>
-              <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SPREAD</label>
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SPREAD</label>
               <input class="mgr-input" id="ns_spread" type="number" step="any" value="0.0002" style="width:100%;">
             </div>
             <div>
-              <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SPREAD TİPİ</label>
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SPREAD TİPİ</label>
               <select class="mgr-input" id="ns_spreadType" style="width:100%;" onchange="document.getElementById('ns_spreadVarianceRow').style.display=this.value==='dynamic'?'block':'none'">
                 <option value="fixed">Sabit</option>
                 <option value="dynamic">Değişken</option>
               </select>
             </div>
             <div id="ns_spreadVarianceRow" style="display:none">
-              <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">VARYANS % (max ±%)</label>
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">VARYANS % (max ±%)</label>
               <input class="mgr-input" id="ns_spreadVariance" type="number" step="1" min="1" max="50" value="20" style="width:100%;">
             </div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SWAP AL</label><input class="mgr-input" id="ns_swapBuy" type="number" step="any" value="0" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SWAP SAT</label><input class="mgr-input" id="ns_swapSell" type="number" step="any" value="0" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MIN LOT</label><input class="mgr-input" id="ns_minlot" type="number" step="any" value="0.01" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">KONTRAT BOYUTU</label><input class="mgr-input" id="ns_contractSize" type="number" step="any" value="1" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MARJ (%)</label><input class="mgr-input" id="ns_margin" type="number" step="any" value="1" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">SEANS</label><select class="mgr-input" id="ns_session" style="width:100%;"><option value="">— Otomatik —</option></select></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">ONDALİK</label><input class="mgr-input" id="ns_decimals" type="number" value="5" style="width:100%;"></div>
-            <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">RENK</label><input class="mgr-input" id="ns_color" type="color" value="#f0b90b" style="width:100%;height:32px;padding:2px;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SWAP AL</label><input class="mgr-input" id="ns_swapBuy" type="number" step="any" value="0" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SWAP SAT</label><input class="mgr-input" id="ns_swapSell" type="number" step="any" value="0" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">MIN LOT</label><input class="mgr-input" id="ns_minlot" type="number" step="any" value="0.01" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">KONTRAT BOYUTU</label><input class="mgr-input" id="ns_contractSize" type="number" step="any" value="1" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">MARJ (%)</label><input class="mgr-input" id="ns_margin" type="number" step="any" value="1" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">SEANS</label><select class="mgr-input" id="ns_session" style="width:100%;"><option value="">— Otomatik —</option></select></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">ONDALİK</label><input class="mgr-input" id="ns_decimals" type="number" value="5" style="width:100%;"></div>
+            <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">RENK</label><input class="mgr-input" id="ns_color" type="color" value="#f0b90b" style="width:100%;height:32px;padding:2px;"></div>
             <div style="grid-column:1/-1;">
-              <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">FIYAT KAYNA&#286;I</label>
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">FIYAT KAYNA&#286;I</label>
               <select class="mgr-input" id="ns_priceSource" style="width:100%;cursor:pointer;">
                 <option value="">&#8212; Kendi fiyat&#305; &#8212;</option>
               </select>
@@ -2281,12 +2281,12 @@ console.log('Firebase bağlandı ✓');
             </div>
             <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <div>
-                <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">FİYAT OFSETI (+/-)</label>
+                <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">FİYAT OFSETI (+/-)</label>
                 <input class="mgr-input" id="ns_priceOffset" type="number" step="any" value="0" style="width:100%;" placeholder="örn: -57000">
                 <span style="font-family:var(--mono);font-size:9px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına eklenecek sabit değer</span>
               </div>
               <div>
-                <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">FİYAT FAKTÖRÜ (×)</label>
+                <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">FİYAT FAKTÖRÜ (×)</label>
                 <input class="mgr-input" id="ns_priceFactor" type="number" step="any" value="1" style="width:100%;" placeholder="örn: 0.001">
                 <span style="font-family:var(--mono);font-size:9px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına uygulanacak çarpan</span>
               </div>
@@ -2307,50 +2307,50 @@ console.log('Firebase bağlandı ✓');
     <!-- KOTASYON YÖNETİMİ -->
     <div id="sec-pricecontrol" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:4px;">
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">💹 KOTASYON YÖNETİMİ</div>
-      <p style="font-family:var(--mono);font-size:10px;color:#e2e2e2;margin-bottom:16px;">
+      <p style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:16px;">
         Seçilen sembolün fiyatını manuel olarak ayarlayın. Gerçek feed üzerine yazılır.
       </p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
         <div>
-          <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:4px;">SEMBOL</label>
+          <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">SEMBOL</label>
           <select class="ad-input" id="pc_sym" onchange="pcLoadSym()" style="cursor:pointer;"></select>
         </div>
         <div>
-          <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:4px;">MEVCUT FİYAT</label>
-          <div id="pc_current" style="font-family:var(--mono);font-size:20px;font-weight:700;color:#f0b90b;padding:7px 0;">—</div>
+          <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">MEVCUT FİYAT</label>
+          <div id="pc_current" style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);padding:7px 0;">—</div>
         </div>
         <div>
-          <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:4px;">OVERRIDE FİYAT</label>
+          <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">OVERRIDE FİYAT</label>
           <input class="ad-input" id="pc_price" type="number" step="any" placeholder="Yeni fiyat...">
         </div>
         <div style="padding-top:18px;">
-          <button class="mgr-btn primary" onclick="pcSetPrice()" style="width:100%;padding:9px;background:#f0b90b;color:#000;border:none;border-radius:3px;font-weight:700;cursor:pointer;">⟳ Fiyatı Uygula</button>
+          <button class="mgr-btn primary" onclick="pcSetPrice()" style="width:100%;padding:9px;background:var(--accent);color:#000;border:none;border-radius:3px;font-weight:700;cursor:pointer;">⟳ Fiyatı Uygula</button>
         </div>
       </div>
 
-      <div style="font-size:10px;color:#a0a0a0;font-weight:700;letter-spacing:1px;margin-bottom:8px;">HIZLI KAYDIRMA</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:8px;">HIZLI KAYDIRMA</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
-        <button class="mgr-btn" onclick="pcMove(-5)"  style="background:#3d1a1a;color:#ef5350;border:1px solid #ef535044;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−5%</button>
-        <button class="mgr-btn" onclick="pcMove(-2)"  style="background:#3d1a1a;color:#ef5350;border:1px solid #ef535044;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−2%</button>
-        <button class="mgr-btn" onclick="pcMove(-1)"  style="background:#3d1a1a;color:#ef5350;border:1px solid #ef535044;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−1%</button>
-        <button class="mgr-btn" onclick="pcMove(-0.5)" style="background:#3d1a1a;color:#ef5350;border:1px solid #ef535044;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−0.5%</button>
-        <button class="mgr-btn" onclick="pcReset()"   style="background:#1a1a1a;color:#a0a0a0;border:1px solid #333;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">Sıfırla</button>
-        <button class="mgr-btn" onclick="pcMove(0.5)" style="background:#1a3d1a;color:#26a69a;border:1px solid #26a69a44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+0.5%</button>
-        <button class="mgr-btn" onclick="pcMove(1)"   style="background:#1a3d1a;color:#26a69a;border:1px solid #26a69a44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+1%</button>
-        <button class="mgr-btn" onclick="pcMove(2)"   style="background:#1a3d1a;color:#26a69a;border:1px solid #26a69a44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+2%</button>
-        <button class="mgr-btn" onclick="pcMove(5)"   style="background:#1a3d1a;color:#26a69a;border:1px solid #26a69a44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+5%</button>
+        <button class="mgr-btn" onclick="pcMove(-5)"  style="background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−5%</button>
+        <button class="mgr-btn" onclick="pcMove(-2)"  style="background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−2%</button>
+        <button class="mgr-btn" onclick="pcMove(-1)"  style="background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−1%</button>
+        <button class="mgr-btn" onclick="pcMove(-0.5)" style="background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">−0.5%</button>
+        <button class="mgr-btn" onclick="pcReset()"   style="background:#1a1a1a;color:var(--muted);border:1px solid #333;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">Sıfırla</button>
+        <button class="mgr-btn" onclick="pcMove(0.5)" style="background:#1a3d1a;color:var(--buy);border:1px solid var(--buy)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+0.5%</button>
+        <button class="mgr-btn" onclick="pcMove(1)"   style="background:#1a3d1a;color:var(--buy);border:1px solid var(--buy)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+1%</button>
+        <button class="mgr-btn" onclick="pcMove(2)"   style="background:#1a3d1a;color:var(--buy);border:1px solid var(--buy)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+2%</button>
+        <button class="mgr-btn" onclick="pcMove(5)"   style="background:#1a3d1a;color:var(--buy);border:1px solid var(--buy)44;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">+5%</button>
       </div>
 
-      <div style="font-size:10px;color:#a0a0a0;font-weight:700;letter-spacing:1px;margin-bottom:8px;">KADEMELİ HAREKET</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:8px;">KADEMELİ HAREKET</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
-        <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:4px;">HEDEF FİYAT</label><input class="ad-input" id="pc_target" type="number" step="any" placeholder="85000"></div>
-        <div><label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:4px;">SÜRE (saniye)</label><input class="ad-input" id="pc_duration" type="number" value="10" min="1" max="300"></div>
-        <div style="padding-top:18px;"><button onclick="pcGradual()" id="pc_grad_btn" style="width:100%;padding:9px;background:#1a3040;color:#26a69a;border:1px solid #26a69a44;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;">▶ Kademeli Hareket</button></div>
-        <div style="padding-top:18px;"><button onclick="pcStopGradual()" style="width:100%;padding:9px;background:#3d1a1a;color:#ef5350;border:1px solid #ef535044;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;">⏹ Durdur</button></div>
+        <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">HEDEF FİYAT</label><input class="ad-input" id="pc_target" type="number" step="any" placeholder="85000"></div>
+        <div><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;">SÜRE (saniye)</label><input class="ad-input" id="pc_duration" type="number" value="10" min="1" max="300"></div>
+        <div style="padding-top:18px;"><button onclick="pcGradual()" id="pc_grad_btn" style="width:100%;padding:9px;background:#1a3040;color:var(--buy);border:1px solid var(--buy)44;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;">▶ Kademeli Hareket</button></div>
+        <div style="padding-top:18px;"><button onclick="pcStopGradual()" style="width:100%;padding:9px;background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;">⏹ Durdur</button></div>
       </div>
 
-      <div style="font-size:10px;color:#a0a0a0;font-weight:700;letter-spacing:1px;margin-bottom:8px;">AKTİF OVERRİDE'LAR</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:8px;">AKTİF OVERRİDE'LAR</div>
       <div id="pc_override_list" style="font-family:var(--mono);font-size:11px;color:#b0b0b0;">Henüz override yok</div>
     </div>
 
@@ -2363,28 +2363,28 @@ console.log('Firebase bağlandı ✓');
       <div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:16px;margin-bottom:20px;">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">BAĞLANTI DURUMU</div>
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
-          <div id="adFeedDotTD" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
+          <div id="adFeedDotTD" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
               <div style="color:#aaa;font-size:10px;margin-bottom:2px;">KÖPRÜ (Bridge)</div>
               <span id="adFeedLblTD" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
-          <div id="adFeedDotBN" style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:12px;">
+          <div id="adFeedDotBN" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;">
             <span style="color:#f5c518;font-size:16px;">●</span>
             <div>
               <div style="color:#aaa;font-size:10px;margin-bottom:2px;">BİNANCE (Kripto)</div>
               <span id="adFeedLblBN" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
-          <button onclick="adFeedCheckConnections()" style="margin-left:auto;padding:6px 14px;background:#1a2a1a;color:#26a69a;border:1px solid #26a69a44;border-radius:3px;font-family:monospace;font-size:11px;cursor:pointer;">↺ Yeniden Test Et</button>
+          <button onclick="adFeedCheckConnections()" style="margin-left:auto;padding:6px 14px;background:#1a2a1a;color:var(--buy);border:1px solid var(--buy)44;border-radius:3px;font-family:var(--mono);font-size:11px;cursor:pointer;">↺ Yeniden Test Et</button>
         </div>
       </div>
 
       <div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:16px;">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">SEMBOL VERİ KAYNAKLARI</div>
         <div id="adFeedSymTable" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
-          <div style="color:#e2e2e2;font-size:10px;font-family:monospace;">Feed sekmesi açılınca yüklenir...</div>
+          <div style="color:var(--text);font-size:10px;font-family:var(--mono);">Feed sekmesi açılınca yüklenir...</div>
         </div>
       </div>
     </div>
@@ -2396,7 +2396,7 @@ console.log('Firebase bağlandı ✓');
         <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;color:var(--accent);">🛡 VERİ BACKUP YÖNETİMİ</div>
         <div style="max-width:680px;display:flex;flex-direction:column;gap:14px;">
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
-            <div style="font-family:var(--mono);font-size:10px;color:#a0a0a0;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Manuel Backup</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Manuel Backup</div>
             <button onclick="_txFullBackup();_txLocalBackup();showAdminToast('Backup','Tüm veriler yedeklendi','success');"
               style="background:var(--buy);border:none;border-radius:4px;padding:9px 20px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;margin-right:8px;">
               💾 Şimdi Backup Al
@@ -2404,13 +2404,13 @@ console.log('Firebase bağlandı ✓');
             <span style="font-family:var(--mono);font-size:10px;color:#a8a8a8;">Otomatik: 1 saatte bir Firebase, 5 dakikada bir localStorage</span>
           </div>
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
-            <div style="font-family:var(--mono);font-size:10px;color:#a0a0a0;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup'tan Geri Yükle</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup'tan Geri Yükle</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <input id="backup_date_input" type="date"
                 style="background:#181818;border:1px solid #444;border-radius:4px;padding:7px 10px;color:#ddd;font-family:var(--mono);font-size:12px;"
                 onfocus="if(!this.value)this.value=new Date().toISOString().slice(0,10)">
               <button onclick="restoreFromBackup(document.getElementById('backup_date_input').value||null)"
-                style="background:#ef5350;border:none;border-radius:4px;padding:9px 16px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;">
+                style="background:var(--sell);border:none;border-radius:4px;padding:9px 16px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;">
                 ⚠ Seçili Günden Geri Yükle
               </button>
               <button onclick="listBackups()"
@@ -2418,10 +2418,10 @@ console.log('Firebase bağlandı ✓');
                 📋 Mevcut Backup'ları Listele
               </button>
             </div>
-            <div id="backup_list" style="margin-top:14px;font-family:var(--mono);font-size:11px;color:#a0a0a0;"></div>
+            <div id="backup_list" style="margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--muted);"></div>
           </div>
           <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
-            <div style="font-family:var(--mono);font-size:10px;color:#a0a0a0;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;color:#aaa;">
               <div>✅ Hesaplar</div><div>✅ Trading Grupları</div>
               <div>✅ Semboller</div><div>✅ Ödeme Yöntemleri</div>
@@ -2493,7 +2493,7 @@ console.log('Firebase bağlandı ✓');
           <button class="mgr-btn primary" onclick="saveBrokerInfo()" style="padding:9px 24px">💾 Kaydet</button>
           <button class="mgr-btn secondary" onclick="loadBrokerInfo()" style="padding:9px 16px">↺ Yenile</button>
         </div>
-        <div id="bi_toast" style="display:none;margin-top:10px;padding:8px 14px;background:#0a2a1a;border:1px solid #26a69a;border-radius:4px;font-family:var(--mono);font-size:11px;color:#26a69a"></div>
+        <div id="bi_toast" style="display:none;margin-top:10px;padding:8px 14px;background:#0a2a1a;border:1px solid var(--buy);border-radius:4px;font-family:var(--mono);font-size:11px;color:#26a69a"></div>
       </div>
     </div>
 
@@ -2537,22 +2537,22 @@ console.log('Firebase bağlandı ✓');
         <div class="ad-sect-title">YENİ YÖNTEM EKLE</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px;align-items:end;">
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">TÜR</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">TÜR</label>
             <select id="pm_type" class="mgr-input" style="width:100%;" onchange="pmTypeChange()">
               <option value="bank">🏦 Banka</option>
               <option value="crypto">₮ Kripto</option>
             </select>
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">YÖNTEMİN ADI</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">YÖNTEMİN ADI</label>
             <input id="pm_name" class="mgr-input" placeholder="örn: Ziraat Bankası" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">İKON (emoji)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">İKON (emoji)</label>
             <input id="pm_icon" class="mgr-input" placeholder="🏦" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">PARA BİRİMİ</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">PARA BİRİMİ</label>
             <select id="pm_currency" class="mgr-input" style="width:100%;">
               <option value="TRY">TRY</option>
               <option value="USD">USD</option>
@@ -2562,45 +2562,45 @@ console.log('Firebase bağlandı ✓');
             </select>
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">NOT</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">NOT</label>
             <input id="pm_note" class="mgr-input" placeholder="Açıklama..." style="width:100%;">
           </div>
         </div>
         <!-- Banka alanları -->
         <div id="pm_bank_fields" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px;">
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">BANKA ADI</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">BANKA ADI</label>
             <input id="pm_bank_name" class="mgr-input" placeholder="Ziraat" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">HESAP SAHİBİ</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">HESAP SAHİBİ</label>
             <input id="pm_holder" class="mgr-input" placeholder="Ad Soyad" style="width:100%;">
           </div>
           <div style="grid-column:span 2;">
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">IBAN</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">IBAN</label>
             <input id="pm_iban" class="mgr-input" placeholder="TR00 0000 0000..." style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">REFERANS</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">REFERANS</label>
             <input id="pm_ref" class="mgr-input" placeholder="İsteğe bağlı" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MİN. YATIRIM</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">MİN. YATIRIM</label>
             <input id="pm_min" class="mgr-input" type="number" value="100" placeholder="100" style="width:100%;">
           </div>
         </div>
         <!-- Kripto alanları -->
         <div id="pm_crypto_fields" style="display:none;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px;">
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">AĞ (Network)</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">AĞ (Network)</label>
             <input id="pm_network" class="mgr-input" placeholder="TRC20, ERC20..." style="width:100%;">
           </div>
           <div style="grid-column:span 2;">
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">CÜZDAN ADRESİ</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">CÜZDAN ADRESİ</label>
             <input id="pm_wallet" class="mgr-input" placeholder="Cüzdan adresi" style="width:100%;">
           </div>
           <div>
-            <label style="font-size:10px;color:#a0a0a0;display:block;margin-bottom:3px;">MİN. YATIRIM</label>
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px;">MİN. YATIRIM</label>
             <input id="pm_crypto_min" class="mgr-input" type="number" value="50" placeholder="50" style="width:100%;">
           </div>
         </div>
@@ -2650,7 +2650,7 @@ console.log('Firebase bağlandı ✓');
             <thead><tr>
               <th onclick="sortReqs('id')" style="cursor:pointer;user-select:none;white-space:nowrap;">ID <span id="rsort-id" style="color:#b0b0b0;font-size:9px;">⇅</span></th>
               <th onclick="sortReqs('type')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tür <span id="rsort-type" style="color:#b0b0b0;font-size:9px;">⇅</span></th>
-              <th onclick="sortReqs('date')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tarih <span id="rsort-date" style="color:#26a69a;font-size:9px;">↓</span></th>
+              <th onclick="sortReqs('date')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tarih <span id="rsort-date" style="color:var(--buy);font-size:9px;">↓</span></th>
               <th onclick="sortReqs('account')" style="cursor:pointer;user-select:none;white-space:nowrap;">Hesap <span id="rsort-account" style="color:#b0b0b0;font-size:9px;">⇅</span></th>
               <th>Yöntem / Kaynak</th>
               <th>Adres / Not</th>
@@ -2672,7 +2672,7 @@ console.log('Firebase bağlandı ✓');
 </div>
 <div id="assignModal" style="display:none;position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;">
   <div style="background:#181818;border:1px solid #333;border-radius:8px;width:500px;max-height:80vh;display:flex;flex-direction:column;">
-    <div style="padding:14px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;"><span style="font-family:var(--mono);font-size:12px;font-weight:700;">MÜŞTERİ ATAMA</span><span onclick="document.getElementById('assignModal').style.display='none'" style="cursor:pointer;color:#a0a0a0;font-size:18px;">x</span></div>
+    <div style="padding:14px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;"><span style="font-family:var(--mono);font-size:12px;font-weight:700;">MÜŞTERİ ATAMA</span><span onclick="document.getElementById('assignModal').style.display='none'" style="cursor:pointer;color:var(--muted);font-size:18px;">x</span></div>
     <div id="assignBody" style="padding:16px;overflow-y:auto;flex:1;"></div>
     <div style="padding:12px 16px;border-top:1px solid #2a2a2a;"><button class="mgr-btn success" onclick="document.getElementById('assignModal').style.display='none'">Tamam</button></div>
   </div>
@@ -2696,7 +2696,7 @@ console.log('Firebase bağlandı ✓');
     </div>
     <div id="adReadOnlyBanner" style="display:none;flex-shrink:0;background:#f5c518;color:#1a1a1a;text-align:center;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;">🔒 İZLEYİCİ MODU — Bu hesap salt okunur, müşteri işlem açıp kapatamaz</div>
     <div style="flex:1;min-height:0;overflow-y:auto;padding:20px;" id="adContent"></div>
-    <div id="adOpenFooter" style="display:none;flex-shrink:0;padding:10px 20px;font-family:var(--mono);font-size:11px;color:#a0a0a0;text-align:right;border-top:1px solid #2a2a2a;background:#181818;"></div>
+    <div id="adOpenFooter" style="display:none;flex-shrink:0;padding:10px 20px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;border-top:1px solid #2a2a2a;background:#181818;"></div>
   </div>
 </div>
 <script>
@@ -3951,7 +3951,7 @@ function adDebugAccountBalance(){
   // Uzun metin için modal/alert yerine yeni pencere-stili kutu
   var w = window.open('', '_blank', 'width=700,height=800');
   if(w) {
-    w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;padding:16px;background:#0a0a0a;color:#e0e0e0;">'+msg.replace(/</g,'&lt;')+'</pre>');
+    w.document.write('<pre style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;padding:16px;background:#0a0a0a;color:#e0e0e0;">'+msg.replace(/</g,'&lt;')+'</pre>');
   } else {
     alert(msg);
   }
@@ -5238,7 +5238,7 @@ function createAccount() {
   if(lev > _maxLev) lev = _maxLev;
   var msgEl   = document.getElementById('na_msg');
   if(!name||!email||!pass){
-    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Ad, e-posta ve sifre zorunlu</span>';
+    if(msgEl) msgEl.innerHTML='<span style="color:var(--sell);">Ad, e-posta ve sifre zorunlu</span>';
     return;
   }
 
@@ -5248,7 +5248,7 @@ function createAccount() {
   // Çözüm: trader'daki fbAddAccount() ile AYNI desen — Firestore transaction içinde
   // MAX(mevcut login/id)+1 hesapla, e-posta tekilliğini de aynı transaction'da kontrol et.
   if(typeof db === 'undefined' || !db) {
-    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">Veritabanı bağlantısı yok</span>';
+    if(msgEl) msgEl.innerHTML='<span style="color:var(--sell);">Veritabanı bağlantısı yok</span>';
     return;
   }
   var ref = db.collection('broker').doc('accounts');
@@ -5300,14 +5300,14 @@ function createAccount() {
       _balanceSource: 'system', updatedAt: new Date().toISOString()
     }).catch(function(e){ console.warn('createAccount users write:', e); });
 
-    if(msgEl) msgEl.innerHTML='<span style="color:#26a69a;">Hesap olusturuldu: #'+newAcc.login+'</span>';
+    if(msgEl) msgEl.innerHTML='<span style="color:var(--buy);">Hesap olusturuldu: #'+newAcc.login+'</span>';
     showAdminToast('Olusturuldu','Hesap #'+newAcc.login+' hazir','success');
     ['na_name','na_surname','na_email','na_pass','na_balance'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
   }).catch(function(e){
     var msg = (e.message==='EMAIL_EXISTS') ? 'Bu e-posta zaten kayitli' : ('Hata: '+e.message);
-    if(msgEl) msgEl.innerHTML='<span style="color:#ef5350;">'+msg+'</span>';
+    if(msgEl) msgEl.innerHTML='<span style="color:var(--sell);">'+msg+'</span>';
     showAdminToast('Hata', msg, 'danger');
   });
 }
@@ -5341,7 +5341,8 @@ function adTab(tab, el) {
   adRenderTab(tab);
 }
 
-function adRenderTab(tab) {
+function adRenderTab(tab){ _adPreserveInput(function(){ _adRenderTab_inner(tab); }); }
+function _adRenderTab_inner(tab) {
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
   var cnt = document.getElementById('adContent');
@@ -5356,15 +5357,15 @@ function adRenderTab(tab) {
     var _soPct = _infoSg ? (_infoSg.stopOut||20) : 20;
     cnt.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccDispBal(a.id).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:#26a69a;">$'+getAccEquity(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:var(--buy);">$'+getAccDispBal(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:var(--buy);">$'+getAccEquity(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+getAccBonus(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT</div><div class="ad-stat-val">$'+(a.margin||0).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(function(){var _st=adCalcStats(a,getAccPos(a.id));return _st.freeMargin.toFixed(2);})() +'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?(((getAccEquity(a.id))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:#f5c518;">%'+_mcPct+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:#ef5350;">%'+_soPct+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:#26a69a;">Aktif</span>':'<span style="color:#b0b0b0;">Pasif</span>')+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:var(--sell);">%'+_soPct+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:var(--buy);">Aktif</span>':'<span style="color:#b0b0b0;">Pasif</span>')+'</div></div>' +
       '</div>' +
       '<div class="ad-grid2">' +
         '<div>' +
@@ -5420,12 +5421,12 @@ function adRenderTab(tab) {
     cnt.innerHTML =
       // ── Mini finansal özet — stat kartları ──
       '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 16px;border-bottom:1px solid #222;margin-bottom:14px;">' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #26a69a;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bakiye</div>' +
-          '<div id="adBadgeBal" style="font-family:var(--mono);color:#26a69a;font-weight:700;font-size:14px;">$'+bal+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #26a69a;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div id="adBadgeBal" style="font-family:var(--mono);color:var(--buy);font-weight:700;font-size:14px;">$'+bal+'</div></div>' +
+        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Varlık</div>' +
-          '<div id="adBadgeEq" style="font-family:var(--mono);color:#26a69a;font-weight:700;font-size:14px;">$'+eq+'</div></div>' +
+          '<div id="adBadgeEq" style="font-family:var(--mono);color:var(--buy);font-weight:700;font-size:14px;">$'+eq+'</div></div>' +
         '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #f5c518;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bonus</div>' +
           '<div id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;font-size:14px;">$'+bon+'</div></div>' +
@@ -5463,7 +5464,7 @@ function adRenderTab(tab) {
           '<div><label class="ad-label">SEMBOL</label><select class="ad-input" id="ad_tsym" onchange="adMTFUpdatePrice()">'+symopts+'</select></div>' +
           '<div><label class="ad-label">YÖN</label><select class="ad-input" id="ad_tside"><option value="buy">▲ AL</option><option value="sell">▼ SAT</option></select></div>' +
           '<div><label class="ad-label">LOT</label><input class="ad-input" id="ad_tlot" type="number" value="0.01" step="0.01"></div>' +
-          '<div><label class="ad-label">FİYAT <span id="ad_tprice_hint" style="color:#26a69a;font-size:9px;font-family:var(--mono);"></span></label><input class="ad-input" id="ad_tprice" type="number" step="any" placeholder="Anlık (boş=canlı)"></div>' +
+          '<div><label class="ad-label">FİYAT <span id="ad_tprice_hint" style="color:var(--buy);font-size:9px;font-family:var(--mono);"></span></label><input class="ad-input" id="ad_tprice" type="number" step="any" placeholder="Anlık (boş=canlı)"></div>' +
           '<div><label class="ad-label">STOP LOSS</label><input class="ad-input" id="ad_tsl" type="number" step="any" placeholder="—"></div>' +
           '<div><label class="ad-label">TAKE PROFIT</label><input class="ad-input" id="ad_ttp" type="number" step="any" placeholder="—"></div>' +
           '<div><label class="ad-label">TARİH</label><input class="ad-input" id="ad_tdate" type="date" value="'+defDate+'"></div>' +
@@ -5487,20 +5488,20 @@ function adRenderTab(tab) {
               '<col style="width:75px"><col style="width:70px"><col style="width:70px"><col style="width:90px"><col style="width:75px">' +
             '</colgroup>' +
             '<thead><tr style="background:#181818;" id="adOpenThead">' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">#</th>' +
-              '<th onclick="adSortOpen(\'sym\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">Sembol <span id="adSortO_sym"></span></th>' +
-              '<th onclick="adSortOpen(\'side\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">Yön <span id="adSortO_side"></span></th>' +
-              '<th onclick="adSortOpen(\'qty\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">Lot <span id="adSortO_qty"></span></th>' +
-              '<th onclick="adSortOpen(\'time\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">Açılış Saati <span id="adSortO_time"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Cihaz</th>' +
-              '<th onclick="adSortOpen(\'openPrice\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">Açılış Fiyatı <span id="adSortO_openPrice"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Anlık</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">SL</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">TP</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Swap</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Komisyon</th>' +
-              '<th onclick="adSortOpen(\'pnl\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;" title="Sırala">K/Z <span id="adSortO_pnl"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">İşlem</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">#</th>' +
+              '<th onclick="adSortOpen(\'sym\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">Sembol <span id="adSortO_sym"></span></th>' +
+              '<th onclick="adSortOpen(\'side\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">Yön <span id="adSortO_side"></span></th>' +
+              '<th onclick="adSortOpen(\'qty\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">Lot <span id="adSortO_qty"></span></th>' +
+              '<th onclick="adSortOpen(\'time\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">Açılış Saati <span id="adSortO_time"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Cihaz</th>' +
+              '<th onclick="adSortOpen(\'openPrice\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">Açılış Fiyatı <span id="adSortO_openPrice"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Anlık</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">SL</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">TP</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Swap</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Komisyon</th>' +
+              '<th onclick="adSortOpen(\'pnl\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;" title="Sırala">K/Z <span id="adSortO_pnl"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">İşlem</th>' +
             '</tr></thead>' +
             '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:16px;">Yükleniyor...</td></tr></tbody>' +
           '</table>' +
@@ -5518,21 +5519,21 @@ function adRenderTab(tab) {
               '<col style="width:65px"><col style="width:75px"><col style="width:80px"><col style="width:65px">' +
             '</colgroup>' +
             '<thead><tr style="background:#181818;">' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">#</th>' +
-              '<th onclick="adSortHist(\'sym\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Sembol <span id="adSortH_sym"></span></th>' +
-              '<th onclick="adSortHist(\'side\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Yon <span id="adSortH_side"></span></th>' +
-              '<th onclick="adSortHist(\'qty\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Lot <span id="adSortH_qty"></span></th>' +
-              '<th onclick="adSortHist(\'time\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Acilis Saati <span id="adSortH_time"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Cihaz (Acilis)</th>' +
-              '<th onclick="adSortHist(\'openPrice\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Acilis Fiyati <span id="adSortH_openPrice"></span></th>' +
-              '<th onclick="adSortHist(\'closePrice\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Kapanis Fiyati <span id="adSortH_closePrice"></span></th>' +
-              '<th onclick="adSortHist(\'closeTime\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">Kapanis Saati <span id="adSortH_closeTime"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Sebep</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Cihaz (Kapanis)</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Swap</th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Komisyon</th>' +
-              '<th onclick="adSortHist(\'pnl\')" style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;cursor:pointer;">K/Z <span id="adSortH_pnl"></span></th>' +
-              '<th style="padding:6px 6px;text-align:left;color:#a0a0a0;font-size:10px;">Islem</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">#</th>' +
+              '<th onclick="adSortHist(\'sym\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Sembol <span id="adSortH_sym"></span></th>' +
+              '<th onclick="adSortHist(\'side\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Yon <span id="adSortH_side"></span></th>' +
+              '<th onclick="adSortHist(\'qty\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Lot <span id="adSortH_qty"></span></th>' +
+              '<th onclick="adSortHist(\'time\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Acilis Saati <span id="adSortH_time"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Cihaz (Acilis)</th>' +
+              '<th onclick="adSortHist(\'openPrice\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Acilis Fiyati <span id="adSortH_openPrice"></span></th>' +
+              '<th onclick="adSortHist(\'closePrice\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Kapanis Fiyati <span id="adSortH_closePrice"></span></th>' +
+              '<th onclick="adSortHist(\'closeTime\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">Kapanis Saati <span id="adSortH_closeTime"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Sebep</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Cihaz (Kapanis)</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Swap</th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Komisyon</th>' +
+              '<th onclick="adSortHist(\'pnl\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;cursor:pointer;">K/Z <span id="adSortH_pnl"></span></th>' +
+              '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:10px;">Islem</th>' +
             '</tr></thead>' +
             '<tbody id="adHistBody"><tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:16px;">Yukleniyor...</td></tr></tbody>' +
           '</table>' +
@@ -5621,13 +5622,13 @@ function adRenderTab(tab) {
             '<div style="font-family:var(--mono);font-size:10px;color:#888;">İzleyici modunda müşteri işlem açamaz/kapatamaz, sadece hesabı görüntüler. Siz (admin) manuel işlem ve finans işlemlerine devam edebilirsiniz.</div>' +
           '</div>' : '';
     var _secDanger = _hp('accounts.delete') ?
-          '<div class="ad-section-title" style="margin-top:20px;color:#ef5350;">Tehlikeli Alan</div>' +
+          '<div class="ad-section-title" style="margin-top:20px;color:var(--sell);">Tehlikeli Alan</div>' +
           '<div style="background:rgba(239,83,80,0.05);border:1px solid rgba(239,83,80,0.2);border-radius:6px;padding:14px;">' +
             '<p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;">Bu hesabı silmek geri alınamaz.</p>' +
             '<div style="display:flex;flex-direction:column;gap:8px;">' +
             '<div><label class="ad-label">Doğrulama Kodu (4 karakter)</label>' +
             '<input class="ad-input" id="ad_del_code" type="text" maxlength="4" placeholder="Örn: AB3X" style="letter-spacing:4px;font-size:14px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>' +
-            '<div id="ad_del_hint" style="font-family:monospace;font-size:10px;color:#f0b90b;"></div>' +
+            '<div id="ad_del_hint" style="font-family:var(--mono);font-size:10px;color:var(--accent);"></div>' +
             '<div style="display:flex;gap:8px;">' +
             '<button class="ad-btn ad-btn-secondary" onclick="adGenDelCode()">Kod Oluştur</button>' +
             '<button class="ad-btn ad-btn-danger" onclick="adDeleteAcc()">🗑 Hesabı Kalıcı Sil</button>' +
@@ -5636,7 +5637,7 @@ function adRenderTab(tab) {
     var _leftCol = _secSg + _secName + _secPass + _secViewer;
     var _rightCol = _secStatus + _secDanger;
     if(!_leftCol && !_rightCol){
-      cnt.innerHTML = '<div style="padding:24px;text-align:center;color:#ef5350;font-family:var(--mono);font-size:12px;">Bu bölümde kullanabileceğiniz bir ayar yetkisi yok</div>';
+      cnt.innerHTML = '<div style="padding:24px;text-align:center;color:var(--sell);font-family:var(--mono);font-size:12px;">Bu bölümde kullanabileceğiniz bir ayar yetkisi yok</div>';
       return;
     }
     cnt.innerHTML =
@@ -5699,7 +5700,7 @@ function adAuditBalance(accId){
   var okTol    = Math.abs(diff) < 0.01;
 
   var row = function(l,v,c){
-    return '<tr><td style="padding:4px 10px 4px 0;color:#a0a0a0;">'+l+'</td>'
+    return '<tr><td style="padding:4px 10px 4px 0;color:var(--muted);">'+l+'</td>'
       + '<td style="padding:4px 0;text-align:right;font-family:var(--mono);'
       + (c?'color:'+c+';':'') + '">'+v+'</td></tr>';
   };
@@ -5719,9 +5720,9 @@ function adAuditBalance(accId){
     + '</table>';
 
   if(okTol){
-    html += '<div style="margin-top:10px;color:#26a69a;">✓ Bakiye kayıtlarla tutarlı.</div>';
+    html += '<div style="margin-top:10px;color:var(--buy);">✓ Bakiye kayıtlarla tutarlı.</div>';
   } else {
-    html += '<div style="margin-top:10px;color:#ef5350;line-height:1.6;">'
+    html += '<div style="margin-top:10px;color:var(--sell);line-height:1.6;">'
       + '⚠ ' + money(Math.abs(diff)) + ' fark var (kayıtlı bakiye beklenenden '
       + (diff>0?'FAZLA':'EKSİK') + ').</div>';
 
@@ -5732,17 +5733,17 @@ function adAuditBalance(accId){
     if(diff > 0 && (costCnt>0 || soCnt>0)){
       html += '<div style="margin-top:8px;padding:8px 10px;background:#1d1a12;'
         + 'border:1px solid #4a3f1a;border-radius:6px;font-size:11px;line-height:1.6;">'
-        + '<b style="color:#f0b90b;">Teminat iadesi testi</b><br>'
+        + '<b style="color:var(--accent);">Teminat iadesi testi</b><br>'
         + 'Tüm kapanışların teminat toplamı ('+costCnt+' işlem): <b>'+money(allCost)+'</b><br>'
         + (soCnt ? 'Bunun stop-out olanları ('+soCnt+' işlem): <b>'+money(soCost)+'</b><br>' : '')
         + 'İşlem başına ortalama fazlalık: <b>'+money(n?diff/n:0)+'</b><br>'
         + (_yakin(allCost)
-            ? '<span style="color:#ef5350;">→ Fazlalık, TÜM kapanışların teminat toplamıyla '
+            ? '<span style="color:var(--sell);">→ Fazlalık, TÜM kapanışların teminat toplamıyla '
               + 'örtüşüyor. Kapanışta teminat bakiyeye geri ekleniyor(du).</span>'
             : _yakin(soCost)
-              ? '<span style="color:#ef5350;">→ Fazlalık, stop-out teminatlarıyla örtüşüyor '
+              ? '<span style="color:var(--sell);">→ Fazlalık, stop-out teminatlarıyla örtüşüyor '
                 + '(6 Ağustos 2026 öncesi risk motoru hatası).</span>'
-              : '<span style="color:#a0a0a0;">→ Fazlalık hiçbir teminat toplamıyla '
+              : '<span style="color:var(--muted);">→ Fazlalık hiçbir teminat toplamıyla '
                 + 'örtüşmüyor; sebep başka.</span>')
         + '</div>';
     }
@@ -5756,7 +5757,7 @@ function adAuditBalance(accId){
         + 'olduğundan DÜŞÜK çıkar ve farkın bir kısmı gerçek kârdır.</div>';
     }
 
-    html += '<div style="margin-top:8px;color:#a0a0a0;font-size:11px;line-height:1.6;">'
+    html += '<div style="margin-top:8px;color:var(--muted);font-size:11px;line-height:1.6;">'
       + 'Diğer olası sebepler: elle yapılmış bakiye düzeltmesi, finlog\'a yazılmamış '
       + 'bir işlem, veya geçmiş listesinin kırpılmış olması (son 50–100 kayıt tutuluyor). '
       + 'Swap toplamı: ' + money(swap) + ' — K/Z rakamına dahildir.</div>';
@@ -5777,7 +5778,7 @@ function _adAuditModal(inner){
   ov.innerHTML = '<div style="background:#181818;border:1px solid #2a2a2a;border-radius:10px;'
     + 'padding:20px 22px;min-width:340px;max-width:460px;color:#ddd;font-family:var(--mono);">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">'
-    + '<span style="font-size:12px;letter-spacing:1px;color:#f0b90b;">BAKİYE DENETİMİ</span>'
+    + '<span style="font-size:12px;letter-spacing:1px;color:var(--accent);">BAKİYE DENETİMİ</span>'
     + '<button onclick="document.getElementById(\'adAuditOverlay\').remove()" '
     + 'style="background:none;border:none;color:#888;font-size:16px;cursor:pointer;">✕</button>'
     + '</div>' + inner + '</div>';
@@ -5827,8 +5828,8 @@ function adRepCellHtml(accId){
     assigned.forEach(function(s){
       var roleLbl = (typeof ROLES!=='undefined' && ROLES[s.role]) ? ROLES[s.role].label : (s.role||'');
       html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#1d2b26;'
-        + 'border:1px solid #26a69a55;border-radius:12px;padding:2px 4px 2px 10px;'
-        + 'font-family:var(--mono);font-size:11px;color:#26a69a;font-weight:600;">'
+        + 'border:1px solid var(--buy)55;border-radius:12px;padding:2px 4px 2px 10px;'
+        + 'font-family:var(--mono);font-size:11px;color:var(--buy);font-weight:600;">'
         + '<span>'+s.name+'</span>'
         + '<span style="color:#5b7b73;font-weight:400;font-size:10px;">'+roleLbl+'</span>'
         + (canEdit
@@ -5853,7 +5854,7 @@ function adRepCellHtml(accId){
       });
     }
     html += '<select data-acc="'+accId+'" onchange="adRepAssign(this)" '
-      + 'style="background:#141414;border:1px solid #2e2e2e;border-radius:5px;color:#ddd;'
+      + 'style="background:#141414;border:1px solid var(--border);border-radius:5px;color:#ddd;'
       + 'font-family:var(--mono);font-size:11px;padding:4px 6px;max-width:230px;font-weight:400;">'
       + opts + '</select>';
   }
@@ -5936,12 +5937,12 @@ function adKycSectionHtml(a) {
     var status = entry ? entry.status : null;
     var badge, actions = '';
     if(status==='approved') {
-      badge = '<span style="color:#26a69a;font-weight:700;">✓ Onaylandı</span>';
+      badge = '<span style="color:var(--buy);font-weight:700;">✓ Onaylandı</span>';
     } else if(status==='rejected') {
-      badge = '<span style="color:#ef5350;font-weight:700;">✕ Reddedildi</span>';
+      badge = '<span style="color:var(--sell);font-weight:700;">✕ Reddedildi</span>';
     } else if(status==='review') {
       badge = '<span style="color:#f5c518;font-weight:700;">⏳ İnceleniyor</span>';
-      actions = '<button class="ad-btn" style="background:#1a3a2e;color:#26a69a;border-color:#26a69a;margin-right:6px;" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'approved\')">Onayla</button>'
+      actions = '<button class="ad-btn" style="background:#1a3a2e;color:var(--buy);border-color:var(--buy);margin-right:6px;" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'approved\')">Onayla</button>'
               + '<button class="ad-btn ad-btn-danger" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'rejected\')">Reddet</button>';
     } else {
       badge = '<span style="color:#888;">— Yüklenmedi</span>';
@@ -6089,7 +6090,7 @@ function adRenderFinlog() {
   var panel = document.getElementById('adPanelFinlog');
   if(!panel) return;
   if(typeof hasPerm==='function' && !hasPerm('finance.view')){
-    panel.innerHTML='<div style="padding:24px;text-align:center;color:#ef5350;font-family:var(--mono);font-size:12px;">Finans görüntüleme yetkiniz yok</div>';
+    panel.innerHTML='<div style="padding:24px;text-align:center;color:var(--sell);font-family:var(--mono);font-size:12px;">Finans görüntüleme yetkiniz yok</div>';
     var _footElNoPerm = document.getElementById('adOpenFooter');
     if(_footElNoPerm) _footElNoPerm.style.display='none';
     return;
@@ -6116,12 +6117,12 @@ function adRenderFinlog() {
         rows += '<tr style="border-bottom:1px solid #1a1a1a;background:'+(_fri%2===0?'transparent':'rgba(255,255,255,0.02)')+';">' 
           + '<td style="padding:7px 8px;font-size:11px;color:'+color+';font-weight:600;white-space:nowrap;">'+label+'</td>'
           + '<td style="padding:7px 8px;font-size:11px;font-family:var(--mono);color:'+color+';white-space:nowrap;">'+sign+'$'+parseFloat(log.amount||0).toFixed(2)+'</td>'
-          + '<td style="padding:7px 8px;font-size:11px;color:#a0a0a0;white-space:nowrap;">'+(log.date?fmtDate(log.date):'—')+'</td>'
+          + '<td style="padding:7px 8px;font-size:11px;color:var(--muted);white-space:nowrap;">'+(log.date?fmtDate(log.date):'—')+'</td>'
           + '<td style="padding:7px 8px;font-size:11px;color:#c0c0c0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
           + '<td style="padding:7px 8px;white-space:nowrap;">'
             + ((typeof hasPerm!=='function'||hasPerm('finance.deposit')||hasPerm('finance.withdraw')||hasPerm('finance.bonus'))
               ? '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:#1a1a1a;border:1px solid #333;color:#aaa;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;margin-right:4px;">&#9998;</button>'
-                + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid #ef5350;color:#ef5350;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;">&#10005;</button>'
+                + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid var(--sell);color:var(--sell);border-radius:3px;padding:2px 8px;cursor:pointer;font-size:10px;">&#10005;</button>'
               : '')
           + '</td>'
           + '</tr>';
@@ -6141,11 +6142,11 @@ function adRenderFinlog() {
       + '<div class="ad-table-card" style="overflow-x:auto;">'
       + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
       + '<thead><tr style="background:#181818;">'
-      + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tip</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Miktar</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tarih</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Açıklama</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:#a0a0a0;font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;"></th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tip</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Miktar</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tarih</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Açıklama</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:10px;border-bottom:1px solid #2a2a2a;white-space:nowrap;"></th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -6489,7 +6490,7 @@ function adGenDelCode() {
   _adDelCode = '';
   for(var i=0;i<4;i++) _adDelCode += chars[Math.floor(Math.random()*chars.length)];
   var hint = document.getElementById('ad_del_hint');
-  if(hint) hint.innerHTML = 'Doğrulama kodu: <span style="color:#ef5350;font-weight:700;font-size:13px;letter-spacing:3px;">'+_adDelCode+'</span> — yukarıya girin';
+  if(hint) hint.innerHTML = 'Doğrulama kodu: <span style="color:var(--sell);font-weight:700;font-size:13px;letter-spacing:3px;">'+_adDelCode+'</span> — yukarıya girin';
   var inp = document.getElementById('ad_del_code');
   if(inp) { inp.value=''; inp.focus(); }
 }
@@ -6518,7 +6519,43 @@ document.addEventListener('click', function(e){
 });
 
 function renderAccCards() { renderAccTable(); }
-function renderAccTable(){
+
+// ══════════════════════════════════════════════════════════════════════
+// YAZARKEN KAYBOLMA KORUMASI (2026-09-19)
+// ──────────────────────────────────────────────────────────────────────
+// SORUN: Hesap tablosu 5 saniyede bir Firebase'den tazelenip komple yeniden
+// çiziliyor; ayrıca users snapshot'ı her geldiğinde açık hesap sekmesi de
+// yeniden çiziliyor. Kullanıcı o sırada bir alana (ör. para yatırma tutarı
+// ad_dep_amt) yazıyorsa, alan yok edilip yeniden yaratıldığı için YAZDIĞI
+// SİLİNİYORDU.
+// ÇÖZÜM: Yeniden çizimi engellemek yerine, çizim etrafında odaktaki alanın
+// değerini ve imleç konumunu saklayıp geri yüklüyoruz. Böylece yenilemenin
+// hangi sebeple tetiklendiği önemli değil — kullanıcı yazmaya devam eder.
+// ══════════════════════════════════════════════════════════════════════
+function _adPreserveInput(render) {
+  var el = document.activeElement;
+  var tag = el && (el.tagName || '').toLowerCase();
+  var editable = el && (tag === 'input' || tag === 'textarea' || tag === 'select');
+  if (!editable || !el.id) { render(); return; }
+
+  var snap = { id: el.id, value: el.value };
+  try { snap.start = el.selectionStart; snap.end = el.selectionEnd; } catch (e) {}
+
+  render();
+
+  var back = document.getElementById(snap.id);
+  if (!back) return;
+  // Kullanıcının yazdığı, çizimden gelen değerin ÖNÜNDE gelir
+  if (back.value !== snap.value) back.value = snap.value;
+  try {
+    back.focus({ preventScroll: true });
+    if (snap.start != null && back.setSelectionRange) back.setSelectionRange(snap.start, snap.end);
+  } catch (e) { try { back.focus(); } catch (e2) {} }
+}
+
+function renderAccTable(){ _adPreserveInput(_renderAccTable_inner); }
+
+function _renderAccTable_inner(){
   var container=document.getElementById('accTableContainer');
   if(!container)return;
   if(typeof accounts==='undefined'||!Array.isArray(accounts)) return;
@@ -6651,7 +6688,7 @@ function renderAccTable(){
   var picker='<div id="accColPicker" style="display:none;position:fixed;z-index:99999;'
     +'background:#1a1a1a;border:1px solid #444;border-radius:8px;padding:12px;'
     +'min-width:200px;box-shadow:0 16px 48px rgba(0,0,0,0.95);">'
-    +'<div style="font-size:10px;color:#a0a0a0;margin-bottom:8px;font-family:var(--mono);'
+    +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);'
       +'letter-spacing:1px;padding-bottom:6px;border-bottom:1px solid #333;">KOLONLAR</div>'
     +pickerItems
     +'</div>';
@@ -6735,7 +6772,7 @@ function renderAccTable(){
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?'<span title="İzleyici modu (salt okunur)" style="margin-right:4px;">🔒</span>':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
-          ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;vertical-align:middle;"></span>'
+          ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
           :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
         else if(cid==='balance') tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;">$'+bal+'</td>';
         else if(cid==='equity')  tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:'+eqColor+';" data-eq="'+a.id+'">'+eq+'</td>';
@@ -6747,8 +6784,8 @@ function renderAccTable(){
           var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
         }
-        else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>';
-        else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:#a0a0a0;">'+(a.type==='demo'?'Demo':'Real')+'</td>';
+        else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:var(--buy);">● Aktif</span>':'<span style="color:var(--sell);">○ Pasif</span>')+'</td>';
+        else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:var(--muted);">'+(a.type==='demo'?'Demo':'Real')+'</td>';
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</td>';
         else if(cid==='email')   tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;'+ellipsis+'">'+( a.email||'—')+'</td>';
         else if(cid==='reg')     tbodyHtml+='<td style="'+TDC+tdW+'color:#aaa;">'+regDate+'</td>';
@@ -7286,7 +7323,7 @@ function renderWithdrawReqs() {
   if(!list.length) {
     tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#b0b0b0;padding:24px;">'
       + '<div style="font-size:13px;">Kayıt bulunamadı</div>'
-      + (search ? '<div style="font-size:11px;margin-top:6px;color:#e2e2e2;">Arama: <b style=\'color:#a0a0a0;\'>' + search + '</b></div>' : '')
+      + (search ? '<div style="font-size:11px;margin-top:6px;color:var(--text);">Arama: <b style=\'color:var(--muted);\'>' + search + '</b></div>' : '')
       + '</td></tr>';
     return;
   }
@@ -7294,8 +7331,8 @@ function renderWithdrawReqs() {
   list.forEach(function(r) {
     var isW = r._type === 'withdraw';
     var typeLabel = isW
-      ? '<span style="color:#ef5350;font-size:10px;">&#8679; CEK</span>'
-      : '<span style="color:#26a69a;font-size:10px;">&#8681; YAT</span>';
+      ? '<span style="color:var(--sell);font-size:10px;">&#8679; CEK</span>'
+      : '<span style="color:var(--buy);font-size:10px;">&#8681; YAT</span>';
     var sc = r.status==='approved'?'#26a69a':r.status==='rejected'?'#ef5350':'#f5c518';
     var sl = r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandi':'Reddedildi';
     var rid = String(r.id||'').replace(/'/g,'').replace(/"/g,'');
@@ -7313,16 +7350,16 @@ function renderWithdrawReqs() {
       acts = '<span style="color:#b0b0b0;font-size:10px;">&#8212;</span>';
     }
     var mgrBadge = r.source==='manager'
-      ? '<span style="background:#0d2a1a;color:#26a69a;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>'
-      : '<span style="background:#1a1a2e;color:#a0a0a0;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">TRADER</span>';
+      ? '<span style="background:#0d2a1a;color:var(--buy);font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>'
+      : '<span style="background:#1a1a2e;color:var(--muted);font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">TRADER</span>';
     var mgrName = r.manager ? '<div style="color:#c0c0c0;font-size:9px;margin-top:1px;">' + r.manager + '</div>' : '';
     rows += '<tr>'
       + '<td style="font-family:var(--mono);font-size:10px;color:#c0c0c0;">' + (r.id||'&#8212;') + '</td>'
       + '<td>' + typeLabel + '</td>'
-      + '<td style="font-family:var(--mono);font-size:10px;color:#a0a0a0;">' + ((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'&#8212;') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:10px;color:var(--muted);">' + ((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'&#8212;') + '</td>'
       + '<td style="font-size:11px;">' + (r.accountName||r.account||('#'+(r.accountId||'?'))) + '</td>'
       + '<td style="font-size:11px;">' + (r.method||'&#8212;') + mgrBadge + mgrName + '</td>'
-      + '<td style="font-family:var(--mono);font-size:10px;color:#a0a0a0;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.address||r.iban||'&#8212;') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:10px;color:var(--muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.address||r.iban||'&#8212;') + '</td>'
       + '<td style="font-weight:700;font-family:var(--mono);">'
         + (function(){
             var _a=parseFloat(r.amount||0), _c=r.currency||'USD';
@@ -7493,8 +7530,8 @@ function renderMarketWatch(filter) {
         var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
         html += '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + g.id + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
         html += '<div style="min-width:0;padding-right:4px;"><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:#e0e0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + it2.name + '</div></div>';
-        html += '<div class="mw-bid" style="font-family:var(--mono);font-size:11px;text-align:right;color:#ef5350;white-space:nowrap;">' + bid + '</div>';
-        html += '<div class="mw-ask" style="font-family:var(--mono);font-size:11px;text-align:right;color:#26a69a;white-space:nowrap;">' + ask + '</div>';
+        html += '<div class="mw-bid" style="font-family:var(--mono);font-size:11px;text-align:right;color:var(--sell);white-space:nowrap;">' + bid + '</div>';
+        html += '<div class="mw-ask" style="font-family:var(--mono);font-size:11px;text-align:right;color:var(--buy);white-space:nowrap;">' + ask + '</div>';
         html += '</div>'; // row kapat
       }
     }
@@ -8270,7 +8307,7 @@ function sgRenderInner() {
         var btn = document.createElement('button');
         btn.textContent = g.name;
         var act = g.id === _activeSgId;
-        btn.style.cssText = 'padding:4px 14px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
+        btn.style.cssText = 'padding:4px 14px;font-family:var(--mono);font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;border:1px solid '+(act?'#f0b90b':'#333')+';background:'+(act?'rgba(240,185,11,0.15)':'transparent')+';color:'+(act?'#f0b90b':'#888');
         btn.onclick = function(){ _activeSgId = g.id; sgRender(); };
         bar.appendChild(btn);
       })(tradingGroups[gi]);
@@ -8315,7 +8352,7 @@ function sgRenderInner() {
       for(var wi=0; wi<_activeOnly.length; wi++) {
         var _ws = _activeOnly[wi];
         var _chk = _wl.indexOf(_ws.sym) !== -1 ? ' checked' : '';
-        wlHtml += '<label style="display:flex;align-items:center;gap:6px;padding:3px 6px;font-family:monospace;font-size:11px;cursor:pointer;border-radius:2px;" onmouseover="this.style.background=\'rgba(240,185,11,0.08)\'" onmouseout="this.style.background=\'\'">'
+        wlHtml += '<label style="display:flex;align-items:center;gap:6px;padding:3px 6px;font-family:var(--mono);font-size:11px;cursor:pointer;border-radius:2px;" onmouseover="this.style.background=\'rgba(240,185,11,0.08)\'" onmouseout="this.style.background=\'\'">'
                +   '<input type="checkbox" id="sgwl_'+_ws.sym+'" data-sym="'+_ws.sym+'"'+_chk+' style="cursor:pointer;">'
                +   '<span>'+_ws.sym+'</span>'
                + '</label>';
@@ -8337,7 +8374,7 @@ function sgRenderInner() {
   if(!_syms.length && typeof symConfig !== 'undefined' && symConfig) { _syms = symConfig; }
 
   if(!_syms.length) {
-    tb.innerHTML = '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Yükleniyor...</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px;font-family:var(--mono);font-size:11px;">Yükleniyor...</td></tr>';
     setTimeout(sgRender, 300);
     return;
   }
@@ -8353,15 +8390,15 @@ function sgRenderInner() {
     var sws = (g.swaps && g.swaps[s.sym] && g.swaps[s.sym].sell!==undefined) ? g.swaps[s.sym].sell : '';
     var star = gs!=='' || swb!=='' || sws!=='';
     html += '<tr style="'+(star?'background:rgba(240,185,11,0.04)':'')+'">'
-      +'<td style="font-family:monospace;font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
+      +'<td style="font-family:var(--mono);font-weight:700;">'+(star?'<span style="color:#f0b90b">★</span> ':'')+s.sym+'</td>'
       +'<td style="font-size:11px;color:#aaa;">'+(cats[s.category||'crypto']||s.category||'')+'</td>'
-      +'<td style="font-family:monospace;color:#ddd;">'+ds+'</td>'
+      +'<td style="font-family:var(--mono);color:#ddd;">'+ds+'</td>'
       +'<td><input class="mgr-input" id="sgs_'+s.sym+'" type="number" step="any" value="'+gs+'" placeholder="'+ds+'" style="width:120px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgb_'+s.sym+'" type="number" step="any" value="'+swb+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'<td><input class="mgr-input" id="sgsl_'+s.sym+'" type="number" step="any" value="'+sws+'" placeholder="0" style="width:100px;padding:3px 7px;"></td>'
       +'</tr>';
   }
-  tb.innerHTML = html || '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;font-family:monospace;font-size:11px;">Aktif sembol yok</td></tr>';
+  tb.innerHTML = html || '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px;font-family:var(--mono);font-size:11px;">Aktif sembol yok</td></tr>';
 }
 
 
@@ -8656,7 +8693,7 @@ function adFeedRenderSymTable() {
     MARKET_GROUPS.forEach(function(g){ g.items && g.items.forEach(function(it){ allSyms.push(it); }); });
   }
   if(!allSyms.length) {
-    if(el) el.innerHTML='<div style="color:#e2e2e2;font-size:10px;font-family:monospace;">Market grubu yok</div>';
+    if(el) el.innerHTML='<div style="color:var(--text);font-size:10px;font-family:var(--mono);">Market grubu yok</div>';
     return;
   }
 
@@ -8673,15 +8710,15 @@ function adFeedRenderSymTable() {
       var items = groups[grpName];
       if(!items.length) return;
       var col = grpName==='Binance'?'#26a69a':grpName==='Twelve Data'?'#8888ff':'#f0b90b';
-      html += '<div style="grid-column:1/-1;font-family:monospace;font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
+      html += '<div style="grid-column:1/-1;font-family:var(--mono);font-size:10px;color:'+col+';font-weight:700;margin-top:8px;letter-spacing:.5px;">'+
               '● '+grpName.toUpperCase()+' ('+items.length+' sembol)</div>';
       items.forEach(function(it){
         var price = adGetPrice(it.sym)||0;
         var dec = it.decimals||2;
         html += '<div style="display:flex;align-items:center;gap:6px;background:#181818;border:1px solid #2a2a2a;border-radius:4px;padding:5px 8px;">'+
                 '<span style="color:'+col+';font-size:10px;">●</span>'+
-                '<span style="font-family:monospace;font-size:10px;color:#ddd;">'+it.name+'</span>'+
-                '<span style="font-family:monospace;font-size:10px;color:var(--accent);margin-left:auto;">'+(price?price.toFixed(dec):'—')+'</span>'+
+                '<span style="font-family:var(--mono);font-size:10px;color:#ddd;">'+it.name+'</span>'+
+                '<span style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-left:auto;">'+(price?price.toFixed(dec):'—')+'</span>'+
                 '</div>';
       });
     });
@@ -8699,7 +8736,7 @@ function adFeedRenderSymTable() {
     var srcLabel = grpName==='Binance'?'BN':grpName==='Twelve Data'?'TD':'SİM';
     var srcDesc  = grpName==='Binance'?'Binance Kripto WS':grpName==='Twelve Data'?'Twelve Data WS':'Simülasyon';
     html2 += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:4px;">'+
-             '<span style="font-family:monospace;font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
+             '<span style="font-family:var(--mono);font-size:10px;color:'+col+';font-weight:700;">● '+srcDesc.toUpperCase()+' ('+items.length+')</span>'+
              '</div>';
     items.forEach(function(it){
       var price = adGetPrice(it.sym)||0;
@@ -8709,29 +8746,29 @@ function adFeedRenderSymTable() {
         '<div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:12px;">'+
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
             '<span style="color:'+col+';font-size:12px;">●</span>'+
-            '<span style="font-family:monospace;font-size:12px;font-weight:700;color:#fff;">'+it.name+'</span>'+
-            '<span style="font-family:monospace;font-size:9px;color:#e2e2e2;margin-left:4px;">'+it.sym+'</span>'+
-            '<span style="margin-left:auto;background:'+col+'22;color:'+col+';font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;">'+srcLabel+'</span>'+
-            (grpName==='Simülasyon'?'<span style="background:#2a2000;color:#f0b90b;font-family:monospace;font-size:9px;padding:2px 6px;border-radius:3px;margin-left:4px;">SİM</span>':'')+
+            '<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;">'+it.name+'</span>'+
+            '<span style="font-family:var(--mono);font-size:9px;color:var(--text);margin-left:4px;">'+it.sym+'</span>'+
+            '<span style="margin-left:auto;background:'+col+'22;color:'+col+';font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;">'+srcLabel+'</span>'+
+            (grpName==='Simülasyon'?'<span style="background:#2a2000;color:var(--accent);font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;margin-left:4px;">SİM</span>':'')+
           '</div>'+
-          '<div style="font-family:monospace;font-size:11px;color:var(--accent);margin-bottom:10px;">'+(price?price.toFixed(dec):'—')+'</div>'+
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:10px;">'+(price?price.toFixed(dec):'—')+'</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
             '<div>'+
               '<div style="font-size:9px;color:#c0c0c0;margin-bottom:3px;">SPREAD</div>'+
               '<input id="fse_sp_'+it.sym+'" type="number" step="any" value="'+(sgData.spread||it.spread||0)+'" '+
-                'style="width:100%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 8px;color:#e0e0e0;font-family:monospace;font-size:11px;box-sizing:border-box;">'+
+                'style="width:100%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 8px;color:#e0e0e0;font-family:var(--mono);font-size:11px;box-sizing:border-box;">'+
             '</div>'+
             '<div>'+
               '<div style="font-size:9px;color:#c0c0c0;margin-bottom:3px;">SWAP AL / SAT</div>'+
               '<div style="display:flex;gap:4px;">'+
                 '<input id="fse_sb_'+it.sym+'" type="number" step="any" placeholder="AL" value="'+(sgData.swapBuy||0)+'" '+
-                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 6px;color:#e0e0e0;font-family:monospace;font-size:11px;box-sizing:border-box;">'+
+                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 6px;color:#e0e0e0;font-family:var(--mono);font-size:11px;box-sizing:border-box;">'+
                 '<input id="fse_ss_'+it.sym+'" type="number" step="any" placeholder="SAT" value="'+(sgData.swapSell||0)+'" '+
-                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 6px;color:#e0e0e0;font-family:monospace;font-size:11px;box-sizing:border-box;">'+
+                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:3px;padding:5px 6px;color:#e0e0e0;font-family:var(--mono);font-size:11px;box-sizing:border-box;">'+
               '</div>'+
             '</div>'+
           '</div>'+
-          '<button onclick="adFeedSaveSym(&quot;'+it.sym+'&quot;)" style="width:100%;margin-top:8px;padding:6px;background:#1a2a1a;color:#26a69a;border:1px solid #26a69a44;border-radius:3px;cursor:pointer;font-family:monospace;font-size:11px;">Kaydet</button>'+
+          '<button onclick="adFeedSaveSym(&quot;'+it.sym+'&quot;)" style="width:100%;margin-top:8px;padding:6px;background:#1a2a1a;color:var(--buy);border:1px solid var(--buy)44;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;">Kaydet</button>'+
         '</div>';
     });
   });
@@ -9004,8 +9041,8 @@ function pcRenderOverrides() {
       : _pcOverrides[sym];
     html += '<div style="background:#181818;border:1px solid '+(isOffset?'#26a69a55':'#f0b90b55')+';border-radius:4px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;">'
       +'<span style="color:'+(isOffset?'#26a69a':'#f0b90b')+';font-weight:700;">'+sym+'</span>'
-      +'<span style="color:#e2e2e2;">'+p+'</span>'
-      +'<button onclick="pcClearOverride(this.dataset.sym)" data-sym="'+sym+'" style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:14px;line-height:1;padding:0;" title="Sıfırla">×</button>'
+      +'<span style="color:var(--text);">'+p+'</span>'
+      +'<button onclick="pcClearOverride(this.dataset.sym)" data-sym="'+sym+'" style="background:none;border:none;color:var(--sell);cursor:pointer;font-size:14px;line-height:1;padding:0;" title="Sıfırla">×</button>'
       +'</div>';
   });
   html += '</div>';
@@ -9422,7 +9459,7 @@ function listBackups() {
       var cleanId = b.id.replace('backup_daily_','').replace('backup_weekly_','').replace('backup_hourly_','');
       html += '<div style="color:#ddd;">'+label+'</div>'
         + '<button data-bid="'+cleanId+'" onclick="restoreFromBackup(this.dataset.bid)" '
-        + 'style="background:#333;border:1px solid #555;border-radius:3px;padding:2px 10px;color:#f0b90b;font-family:var(--mono);font-size:10px;cursor:pointer;">Geri Yükle</button>';
+        + 'style="background:#333;border:1px solid #555;border-radius:3px;padding:2px 10px;color:var(--accent);font-family:var(--mono);font-size:10px;cursor:pointer;">Geri Yükle</button>';
     });
     html += '</div>';
     if(el) el.innerHTML = html;
@@ -9626,7 +9663,7 @@ function alLoad() {
   var status = document.getElementById('alStatus');
   if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#777;">Yükleniyor...</td></tr>';
   if(typeof db==='undefined' || !db) {
-    if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef5350;">Firebase bağlantısı yok</td></tr>';
+    if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--sell);">Firebase bağlantısı yok</td></tr>';
     return;
   }
   db.collection('broker').doc('auditLog').collection('entries')
@@ -9638,7 +9675,7 @@ function alLoad() {
       alRender();
     })
     .catch(function(e){
-      if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef5350;">Hata: '+(e&&e.message||e)+'</td></tr>';
+      if(body) body.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--sell);">Hata: '+(e&&e.message||e)+'</td></tr>';
     });
 }
 
@@ -9679,7 +9716,7 @@ function alRender() {
     var ac = ACTION_COLORS[e.action] || '#c0c0c0';
     var changeStr = _alDiffStr(e.before, e.after);
     return '<tr style="border-bottom:1px solid #1a1a1a;">'
-      + '<td style="padding:6px 12px;color:#a0a0a0;white-space:nowrap;">' + ts + '</td>'
+      + '<td style="padding:6px 12px;color:var(--muted);white-space:nowrap;">' + ts + '</td>'
       + '<td style="padding:6px 12px;color:#ddd;">' + (e.managerName||'—') + '<div style="font-size:9px;color:#666;">' + (e.managerId||'') + '</div></td>'
       + '<td style="padding:6px 12px;"><span style="color:'+ac+';font-weight:700;">' + (e.action||'') + '</span>' + (e.reason?'<div style="font-size:9px;color:#888;">'+e.reason+'</div>':'') + '</td>'
       + '<td style="padding:6px 12px;color:#b0b0b0;font-size:10px;">' + (e.target||'—') + '</td>'
@@ -9772,7 +9809,7 @@ function updateMarginCallPanel() {
   if(mcCount) mcCount.textContent = mcList.length || '0';
 
   if(!mcList.length) {
-    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:#e2e2e2;">Margin call yok</div>';
+    mcBody.innerHTML = '<div style="padding:12px 10px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text);">Margin call yok</div>';
     return;
   }
 
@@ -9788,7 +9825,7 @@ function updateMarginCallPanel() {
         +'<div style="font-family:var(--mono);font-size:9px;color:#b0b0b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.name+'</div>'
       +'</div>'
       +'<div style="text-align:right;font-family:var(--mono);font-size:11px;font-weight:700;color:'+color+';align-self:center;">'+lvl.toFixed(2)+'%</div>'
-      +'<div style="text-align:right;font-family:var(--mono);font-size:10px;color:#a0a0a0;align-self:center;">$'+m.equity.toFixed(0)+'</div>'
+      +'<div style="text-align:right;font-family:var(--mono);font-size:10px;color:var(--muted);align-self:center;">$'+m.equity.toFixed(0)+'</div>'
       +'</div>';
   });
   mcBody.innerHTML = html;
@@ -9813,7 +9850,7 @@ function loadAllPositionsAndUpdate() {
   if(!c2.length) { updateReports(); return; }
 
   var ptEl = document.getElementById('rep-posTable');
-  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:#a0a0a0;font-family:var(--mono);font-size:11px;">Yukleniyor...</div>';
+  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;">Yukleniyor...</div>';
 
   if(typeof db === 'undefined' || !db) { updateReports(); return; }
 
@@ -9994,10 +10031,10 @@ function updateReports(){
   // Demo / gerçek
   var dEl=document.getElementById('rep-demo');
   if(dEl) dEl.innerHTML='<div style="font-family:var(--mono);font-size:13px;color:var(--accent);">'+demo.length+' hesap</div>'
-    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(demo.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
+    +'<div style="color:var(--muted);font-size:11px;margin-top:4px;">Bakiye: '+fp2(demo.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
   var rEl=document.getElementById('rep-real');
   if(rEl) rEl.innerHTML='<div style="font-family:var(--mono);font-size:13px;color:var(--accent);">'+real.length+' hesap</div>'
-    +'<div style="color:#a0a0a0;font-size:11px;margin-top:4px;">Bakiye: '+fp2(real.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
+    +'<div style="color:var(--muted);font-size:11px;margin-top:4px;">Bakiye: '+fp2(real.reduce(function(s,a){return s+getAccBal(a.id);},0))+'</div>';
 
   // Son talepler (bekleyen önce, max 8)
   var rrEl=document.getElementById('rep-recentReqs');
@@ -10023,14 +10060,14 @@ function updateReports(){
         var sc=r.status==='approved'?'#26a69a':r.status==='rejected'?'#ef5350':'#f5c518';
         var sl=r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandı':'Reddedildi';
         var mgrLabel = r.manager ? '<span style="color:#c0c0c0;font-size:10px;margin-left:4px;">['+r.manager+']</span>' : '';
-        var srcBadge = r.source==='manager' ? '<span style="background:#1a3a2a;color:#26a69a;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>' : '';
+        var srcBadge = r.source==='manager' ? '<span style="background:#1a3a2a;color:var(--buy);font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;">MGR</span>' : '';
         var rowBg = rIdx%2===0 ? '' : 'background:#0d0d0d;'; rIdx++;
         html+='<div style="display:flex;gap:10px;padding:8px 16px;border-bottom:1px solid #161616;align-items:center;'+rowBg+'">'
           +'<div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:'+(isW?'rgba(239,83,80,.1)':'rgba(38,166,154,.1)')+';flex-shrink:0;">'
           +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-family:var(--mono);font-size:11px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
-          +'<div style="font-size:9px;color:#e2e2e2;margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
+          +'<div style="font-size:9px;color:var(--text);margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
           +'<div style="text-align:right;flex-shrink:0;">';
         var _rAmt=parseFloat(r.amount||0), _rCur=r.currency||'USD';
         var _symMap={TRY:'₺',EUR:'€',GBP:'£',USD:'$'};
@@ -10188,7 +10225,7 @@ function repSwitchTab(tab) {
   }
   // Pozisyon tablosunu yenile
   var ptEl = document.getElementById('rep-posTable');
-  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:#a0a0a0;font-family:var(--mono);font-size:11px;">Yükleniyor...</div>';
+  if(ptEl) ptEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;">Yükleniyor...</div>';
   loadAllPositionsAndUpdate();
 }
 // ─────────────────────────────────────────────────────────────
@@ -10206,7 +10243,7 @@ function finDeposit(){
   if(!accId||amt<=0){showAdminToast('Hata','Hesap ve miktar seçin','error');return;}
   _reqUpdateBalance(accId,+amt,'deposit',note,function(newBal){
     var res=document.getElementById('fin_result');
-    if(res)res.innerHTML='<span style="color:#26a69a;">✓ $'+amt.toFixed(2)+' yatırıldı | Bakiye: $'+parseFloat(newBal).toFixed(2)+'</span>';
+    if(res)res.innerHTML='<span style="color:var(--buy);">✓ $'+amt.toFixed(2)+' yatırıldı | Bakiye: $'+parseFloat(newBal).toFixed(2)+'</span>';
     showAdminToast('Yatırıldı','$'+amt.toFixed(2),'success');
   });
 }
@@ -10220,7 +10257,7 @@ function finWithdraw(){
   if(amt>getAccBal(a.id)){showAdminToast('Hata','Yetersiz bakiye','error');return;}
   _reqUpdateBalance(accId,-amt,'withdraw',note,function(newBal){
     var res=document.getElementById('fin_result');
-    if(res)res.innerHTML='<span style="color:#ef5350;">✓ $'+amt.toFixed(2)+' çekildi | Bakiye: $'+parseFloat(newBal).toFixed(2)+'</span>';
+    if(res)res.innerHTML='<span style="color:var(--sell);">✓ $'+amt.toFixed(2)+' çekildi | Bakiye: $'+parseFloat(newBal).toFixed(2)+'</span>';
     showAdminToast('Çekildi','$'+amt.toFixed(2),'success');
   });
 }
@@ -10252,7 +10289,7 @@ function renderSymSection(){
   var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '<div class="ad-sect"><div class="ad-sect-title">SEMBOL LİSTESİ ('+allSyms.length+')</div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">'+
-    '<thead><tr style="background:#181818;color:#a0a0a0;">'+
+    '<thead><tr style="background:#181818;color:var(--muted);">'+
     '<th style="padding:7px 10px;text-align:left;">SEMBOL</th>'+
     '<th style="padding:7px 10px;text-align:left;">ETiKET</th>'+
     '<th style="padding:7px 10px;text-align:left;">KATEGORi</th>'+
@@ -10268,9 +10305,9 @@ function renderSymSection(){
     var activeColor = s.active !== false ? '#26a69a' : '#ef5350';
     var activeText  = s.active !== false ? '✔' : '✖';
     html += '<tr style="border-bottom:1px solid #1a1a1a;'+(_fri%2===0?'background:rgba(255,255,255,0.025)':'')+'">'+
-      '<td style="padding:6px 10px;font-family:var(--mono);font-weight:700;color:#f0b90b;">'+s.sym+'</td>'+
+      '<td style="padding:6px 10px;font-family:var(--mono);font-weight:700;color:var(--accent);">'+s.sym+'</td>'+
       '<td style="padding:6px 10px;color:#ddd;">'+( s.label||'-')+'</td>'+
-      '<td style="padding:6px 10px;color:#a0a0a0;font-size:10px;">'+cat+'</td>'+
+      '<td style="padding:6px 10px;color:var(--muted);font-size:10px;">'+cat+'</td>'+
       '<td style="padding:6px 10px;font-family:var(--mono);color:var(--accent);text-align:right;">'+(price ? price.toFixed(dec) : '—')+'</td>'+
       '<td style="padding:6px 10px;font-family:var(--mono);text-align:right;color:#c0c0c0;">'+s.spread+'</td>'+
       '<td style="padding:6px 10px;text-align:center;color:'+activeColor+';font-weight:700;">'+activeText+'</td>'+
@@ -10331,21 +10368,21 @@ function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
   if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:#b0b0b0;text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
   var rl={superadmin:'Süper Admin',admin:'Admin',manager:'Manager',employee:'Çalışan'};
-  var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#181818;"><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">Ad</th><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">E-posta</th><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">Rol</th><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">Durum</th><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">Atanan</th><th style="padding:8px 10px;text-align:left;color:#a0a0a0;">İşlem</th></tr></thead><tbody>';
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#181818;"><th style="padding:8px 10px;text-align:left;color:var(--muted);">Ad</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">E-posta</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Rol</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Durum</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Atanan</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">İşlem</th></tr></thead><tbody>';
   _staffList.forEach(function(s){
     var cnt=(s.assignedAccounts||[]).length;
     var customCnt = (s.customPerms||[]).length;
-    var permBadge = customCnt ? '<span style="font-size:9px;color:#f0b90b;margin-left:4px;">⚙ Özel ('+customCnt+')</span>' : '';
+    var permBadge = customCnt ? '<span style="font-size:9px;color:var(--accent);margin-left:4px;">⚙ Özel ('+customCnt+')</span>' : '';
     var isAdminRole = (s.role === 'admin' || s.role === 'superadmin');
     var assignedCell = isAdminRole
-      ? '<span style="color:#26a69a;font-size:10px;font-weight:600;">🌐 Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
+      ? '<span style="color:var(--buy);font-size:10px;font-weight:600;">🌐 Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
       : cnt;
     var ataLabel = isAdminRole ? 'Ata <span style="color:#555;font-size:9px;">(opsiyonel)</span>' : 'Ata';
     html+='<tr style="border-bottom:1px solid #1a1a1a;">'
       +'<td style="padding:7px 10px;font-weight:600;">'+s.name+'</td>'
-      +'<td style="padding:7px 10px;color:#a0a0a0;font-size:11px;">'+s.email+'</td>'
+      +'<td style="padding:7px 10px;color:var(--muted);font-size:11px;">'+s.email+'</td>'
       +'<td style="padding:7px 10px;font-size:11px;color:var(--accent);">'+(rl[s.role]||s.role)+permBadge+'</td>'
-      +'<td style="padding:7px 10px;">'+(s.active?'<span style="color:#26a69a;">● Aktif</span>':'<span style="color:#ef5350;">○ Pasif</span>')+'</td>'
+      +'<td style="padding:7px 10px;">'+(s.active?'<span style="color:var(--buy);">● Aktif</span>':'<span style="color:var(--sell);">○ Pasif</span>')+'</td>'
       +'<td style="padding:7px 10px;font-size:11px;">'+assignedCell+'</td>'
       +'<td style="padding:7px 10px;white-space:nowrap;">'
         +'<button class="mgr-btn" data-id="'+s.id+'" onclick="staffAction(this,1)" style="font-size:10px;padding:2px 8px;">'+ataLabel+'</button> '
@@ -10373,10 +10410,10 @@ function addStaff(){
   m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:380px;">'
     +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;">+ PERSONEL EKLE</div>'
     +'<div style="display:flex;flex-direction:column;gap:10px;">'
-    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">Ad Soyad</label><input class="mgr-input" id="ns_name" style="width:100%;" placeholder="Ad Soyad"></div>'
-    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">E-posta</label><input class="mgr-input" id="ns_email" style="width:100%;" placeholder="email@domain.com"></div>'
-    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">Şifre</label><input class="mgr-input" id="ns_pass" style="width:100%;" placeholder="Şifre"></div>'
-    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">Rol</label><select class="mgr-input" id="ns_role" style="width:100%;"><option value="employee">Çalışan</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Ad Soyad</label><input class="mgr-input" id="ns_name" style="width:100%;" placeholder="Ad Soyad"></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">E-posta</label><input class="mgr-input" id="ns_email" style="width:100%;" placeholder="email@domain.com"></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre</label><input class="mgr-input" id="ns_pass" style="width:100%;" placeholder="Şifre"></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Rol</label><select class="mgr-input" id="ns_role" style="width:100%;"><option value="employee">Çalışan</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>'
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:16px;">'
     +'<button class="mgr-btn success" onclick="saveNewStaff()" style="flex:1;">Kaydet</button>'
@@ -10435,7 +10472,7 @@ function openPermModal(id) {
   var html = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
     +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
       +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">⚙ YETKİ DÜZENLEMESİ — '+s.name+'</div>'
-      +'<button onclick="closePermModal()" style="background:none;border:none;color:#a0a0a0;font-size:18px;cursor:pointer;">✕</button>'
+      +'<button onclick="closePermModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
     +'<div style="font-family:var(--mono);font-size:10px;color:#b0b0b0;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
   
@@ -10448,7 +10485,7 @@ function openPermModal(id) {
   
   PERM_DEFS.forEach(function(group){
     html += '<div style="margin-bottom:14px;">'
-      +'<div style="font-family:var(--mono);font-size:10px;color:#f0b90b;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #2a2a2a;">'+group.group.toUpperCase()+'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #2a2a2a;">'+group.group.toUpperCase()+'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
     group.perms.forEach(function(p){
       var checked = currentPerms.indexOf('all')>=0 || currentPerms.indexOf(p.key)>=0;
@@ -10528,7 +10565,7 @@ function openChangePassModal(id) {
   if(!s) return;
   var m = document.getElementById('changePassModal');
   if(!m){ m=document.createElement('div'); m.id='changePassModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;'; document.body.appendChild(m); }
-  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">🔑 ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:#a0a0a0;display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:#ef5350;font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
+  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">🔑 ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
   m.style.display='flex';
   setTimeout(function(){ var el=document.getElementById('cp_pass'); if(el) el.focus(); }, 100);
 }
@@ -10573,12 +10610,12 @@ function renderAssignList(){
   var assigned=staff.assignedAccounts||[];
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var adminBanner = (staff.role==='admin'||staff.role==='superadmin')
-    ? '<div style="background:#0d2b1a;border:1px solid #26a69a44;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">'
+    ? '<div style="background:#0d2b1a;border:1px solid var(--buy)44;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">'
       +'<span style="font-size:16px;line-height:1;">🌐</span>'
-      +'<div><div style="font-size:11px;color:#26a69a;font-weight:600;margin-bottom:2px;">Admin rolü — tüm hesaplara otomatik erişim</div>'
-      +'<div style="font-size:11px;color:#a0a0a0;">Bu personel <strong style="color:#e0e0e0;">Admin</strong> rolünde olduğu için atama yapmadan tüm hesapları görebilir ve yönetebilir. Aşağıdan ek özel atama yapabilirsiniz (isteğe bağlı).</div></div></div>'
+      +'<div><div style="font-size:11px;color:var(--buy);font-weight:600;margin-bottom:2px;">Admin rolü — tüm hesaplara otomatik erişim</div>'
+      +'<div style="font-size:11px;color:var(--muted);">Bu personel <strong style="color:#e0e0e0;">Admin</strong> rolünde olduğu için atama yapmadan tüm hesapları görebilir ve yönetebilir. Aşağıdan ek özel atama yapabilirsiniz (isteğe bağlı).</div></div></div>'
     : '';
-  body.innerHTML=adminBanner+'<div style="font-size:11px;color:#a0a0a0;margin-bottom:10px;"><strong>'+staff.name+'</strong> için hesap atama:</div>'
+  body.innerHTML=adminBanner+'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;"><strong>'+staff.name+'</strong> için hesap atama:</div>'
     +list.map(function(a){var checked=assigned.indexOf(a.id)>=0;return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;"><input type="checkbox" '+(checked?'checked':'')+' data-id="'+a.id+'" onchange="toggleAssign(this)"><span style="color:var(--accent);font-family:var(--mono);">#'+(a.login||a.id)+'</span> — '+a.name+(a.surname?' '+a.surname:'')+'</label>';}).join('');
 }
 
@@ -11151,7 +11188,7 @@ function sessRender(){
         var val = arr.map(function(p){ return p[0]+'-'+p[1]; }).join(', ');
         var dis = t.always ? 'disabled style="opacity:.4;"' : '';
         return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
-          + '<span style="width:34px;font-family:var(--mono);font-size:10px;color:#a0a0a0;">'+dn+'</span>'
+          + '<span style="width:34px;font-family:var(--mono);font-size:10px;color:var(--muted);">'+dn+'</span>'
           + '<input class="mgr-input" data-ti="'+ti+'" data-di="'+di+'" onchange="sessSetDay(this)" '
           + 'value="'+val+'" placeholder="kapalı" '+dis+' style="flex:1;font-size:10px;padding:3px 6px;">'
           + '</div>';
@@ -11160,9 +11197,9 @@ function sessRender(){
         + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
           + '<input class="mgr-input" value="'+(t.id||'')+'" onchange="sessSetField('+ti+',\'id\',this.value)" placeholder="kod" style="width:90px;font-size:10px;padding:3px 6px;font-family:var(--mono);">'
           + '<input class="mgr-input" value="'+(t.name||'')+'" onchange="sessSetField('+ti+',\'name\',this.value)" placeholder="ad" style="flex:1;min-width:120px;font-size:10px;padding:3px 6px;">'
-          + '<span style="font-size:10px;color:#a0a0a0;">GMT</span>'
+          + '<span style="font-size:10px;color:var(--muted);">GMT</span>'
           + '<input class="mgr-input" type="number" step="0.5" value="'+(t.tz===undefined?3:t.tz)+'" onchange="sessSetField('+ti+',\'tz\',parseFloat(this.value))" style="width:60px;font-size:10px;padding:3px 6px;">'
-          + '<label style="font-size:10px;color:#a0a0a0;display:flex;align-items:center;gap:4px;">'
+          + '<label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;">'
             + '<input type="checkbox" '+(t.always?'checked':'')+' onchange="sessSetField('+ti+',\'always\',this.checked)"> 7/24</label>'
           + '<button class="mgr-btn danger" onclick="sessDelTpl('+ti+')" style="font-size:10px;padding:2px 8px;margin-left:auto;">Sil</button>'
         + '</div>' + (t.always ? '<div style="font-size:10px;color:#7ec8a9;">Her gün 24 saat açık.</div>' : rows)
@@ -11185,7 +11222,7 @@ function sessRender(){
     }).join('');
     var note = sel.length
       ? '<span style="font-size:10px;color:#7ec8a9;">Yalnız seçili şablonlar kapalı</span>'
-      : '<span style="font-size:10px;color:#f0b90b;">Hiçbiri seçili değil → <b>TÜM piyasalar kapalı</b></span>';
+      : '<span style="font-size:10px;color:var(--accent);">Hiçbiri seçili değil → <b>TÜM piyasalar kapalı</b></span>';
     return '<div style="border:1px solid #263326;border-radius:5px;padding:8px;margin-bottom:6px;background:#0f150f;">'
       + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
         + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:10px;padding:3px 6px;">'
@@ -11519,7 +11556,7 @@ function adRenderOpenTable(){
       +'<td style="padding:5px 8px;">'+adDeviceIcon(pos.device||pos.openDevice)+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);">'+adFpSym(pos.openPrice,pos.sym)+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);" data-cur="'+pos.id+'">'+(cur?adFpSym(cur,pos.sym):'—')+'</td>'
-      +'<td style="padding:5px 8px;font-family:var(--mono);color:#f0b90b;">'+(pos.sl?adFpSym(pos.sl,pos.sym):'—')+'</td>'
+      +'<td style="padding:5px 8px;font-family:var(--mono);color:var(--accent);">'+(pos.sl?adFpSym(pos.sl,pos.sym):'—')+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);color:#64b5f6;">'+(pos.tp?adFpSym(pos.tp,pos.sym):'—')+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--mono);color:#aaa;">'
         +((parseFloat(pos.swapTotal)||0)!==0?(parseFloat(pos.swapTotal)>=0?'+':'')+adFp(pos.swapTotal):'—')+'</td>'
@@ -11856,7 +11893,7 @@ function adEditPos(btn){
   // değiştirmeden, açılış saatini saat dilimi farkı kadar kaydırıyordu.
   var openVal = _adToLocalDT(pos.openDate||pos.time);
   modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
-    +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:#f0b90b;">POZİSYON DÜZENLE #'+String(id).slice(-6)+'</div>'
+    +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:var(--accent);">POZİSYON DÜZENLE #'+String(id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
     +'<div><label class="ad-label">SEMBOL</label><input class="ad-input" value="'+pos.sym+'" disabled></div>'
     +'<div><label class="ad-label">YÖN</label><select class="ad-input" id="em_side"><option value="buy"'+(pos.side==='buy'?' selected':'')+'>AL</option><option value="sell"'+(pos.side==='sell'?' selected':'')+'>SAT</option></select></div>'
@@ -11869,7 +11906,7 @@ function adEditPos(btn){
     +'<div style="grid-column:1/-1"><label class="ad-label">AÇILIŞ ZAMANI</label><input class="ad-input" id="em_opentime" type="datetime-local" value="'+openVal+'"></div>'
     +'<div><label class="ad-label">CİHAZ</label><select class="ad-input" id="em_device"><option value="web"'+((!pos.openDevice||pos.openDevice==='web')?' selected':'')+'>Web</option><option value="mobile"'+(pos.openDevice==='mobile'?' selected':'')+'>Mobil</option><option value="Manager"'+(pos.openDevice==='Manager'?' selected':'')+'>Manager</option></select></div>'
     +'<div style="display:flex;align-items:flex-end;gap:6px;">'
-      +'<span style="font-size:11px;color:#a0a0a0;">K/Z: </span>'
+      +'<span style="font-size:11px;color:var(--muted);">K/Z: </span>'
       +'<span style="font-family:var(--mono);font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+adFp(pnl)+'</span>'
     +'</div>'
     +'</div>'
@@ -12092,7 +12129,7 @@ function adEditHistory(btn){
   var openVal  = _adToLocalDT(h.openDate||h.time);
   var closeVal = _adToLocalDT(h.closeDate||h.closeTime);
   modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
-    +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:#f0b90b;">GEÇMİŞ DÜZENLE #'+String(h.id).slice(-6)+'</div>'
+    +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:16px;color:var(--accent);">GEÇMİŞ DÜZENLE #'+String(h.id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
     +'<div><label class="ad-label">SEMBOL</label><input class="ad-input" value="'+h.sym+'" disabled></div>'
     +'<div><label class="ad-label">YÖN</label><input class="ad-input" value="'+(h.side==='buy'?'AL':'SAT')+'" disabled></div>'
@@ -12394,7 +12431,7 @@ function _checkMarketStatus() {
           if(!row.querySelector('.market-closed-badge')) {
             var badge = document.createElement('span');
             badge.className = 'market-closed-badge';
-            badge.style.cssText = 'font-size:9px;background:#ef5350;color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:monospace;';
+            badge.style.cssText = 'font-size:9px;background:var(--sell);color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:var(--mono);';
             badge.textContent = 'KAPALI';
             row.appendChild(badge);
           }
