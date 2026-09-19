@@ -5341,7 +5341,8 @@ function adTab(tab, el) {
   adRenderTab(tab);
 }
 
-function adRenderTab(tab){ _adPreserveInput(function(){ _adRenderTab_inner(tab); }); }
+function adRenderTab(tab){ _adPreserveInput(function(){ _adRenderTab_inner(tab);
+  try{ if(typeof _adFillUiIcons==='function') _adFillUiIcons(); }catch(e){} }); }
 function _adRenderTab_inner(tab) {
   var a = accounts.find(function(x){ return String(x.id)===String(_adAccId); });
   if(!a) return;
@@ -6610,7 +6611,9 @@ function _adPreserveInput(render) {
   } catch (e) { try { back.focus(); } catch (e2) {} }
 }
 
-function renderAccTable(){ _adPreserveInput(_renderAccTable_inner); }
+function renderAccTable(){ _adPreserveInput(function(){ _renderAccTable_inner();
+  // sonradan eklenen statik parçalardaki ikonları da doldur
+  try{ if(typeof _adFillUiIcons==='function') _adFillUiIcons(); }catch(e){} }); }
 
 function _renderAccTable_inner(){
   var container=document.getElementById('accTableContainer');
@@ -6776,7 +6779,7 @@ function _renderAccTable_inner(){
     +'<span style="font-size:11px;color:#c0c0c0;white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
     +'<button class="mgr-btn" id="accColBtn" onclick="_accColPickerToggle(event)" '
       +'style="flex-shrink:0;padding:5px 12px;font-size:12px;white-space:nowrap;'
-      +'background:#222;border:1px solid #444;border-radius:4px;color:#ddd;cursor:pointer;"><span class="_ai-gear"></span> Kolonlar</button>'
+      +'background:#222;border:1px solid #444;border-radius:4px;color:#ddd;cursor:pointer;">'+_adUi('gear',12)+' Kolonlar</button>'
     +'</div>'
     +picker;
 
@@ -6827,7 +6830,7 @@ function _renderAccTable_inner(){
       COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
         var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
-        if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?'<span title="İzleyici modu (salt okunur)" style="margin-right:4px;" class="_ai-lock"></span>':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
+        if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?''+_adUi('lock',12)+'':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
           :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
@@ -7232,7 +7235,7 @@ function renderPayMethodList() {
         '<td>'+m.currency+'</td>' +
         '<td style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+(m.type==='bank'?(m.bankName?'<span style="color:var(--text)">'+m.bankName+'</span><br>':'')+((m.iban||'—').slice(0,20)+'...'):(m.network?'<span style="color:var(--text)">'+m.network+'</span><br>':'')+((m.wallet||'—').slice(0,16)+'...'))+'</td>' +
         '<td style="white-space:nowrap">' +
-          '<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px;margin-right:3px" onclick="editPayMethod('+i+')"><span class="_ai-pencil"></span></button>' +
+          '<button class="mgr-btn secondary" style="font-size:10px;padding:2px 8px;margin-right:3px" onclick="editPayMethod('+i+')">'+_adUi('pencil',12)+'</button>' +
           '<button class="mgr-btn danger" style="font-size:10px;padding:2px 8px" onclick="delPayMethod('+i+')">✕</button>' +
         '</td>' +
       '</tr>';
@@ -10429,7 +10432,7 @@ function renderStaffTable(){
   _staffList.forEach(function(s){
     var cnt=(s.assignedAccounts||[]).length;
     var customCnt = (s.customPerms||[]).length;
-    var permBadge = customCnt ? '<span style="font-size:9px;color:var(--accent);margin-left:4px;"><span class="_ai-gear"></span> Özel ('+customCnt+')</span>' : '';
+    var permBadge = customCnt ? '<span style="font-size:9px;color:var(--accent);margin-left:4px;">'+_adUi('gear',12)+' Özel ('+customCnt+')</span>' : '';
     var isAdminRole = (s.role === 'admin' || s.role === 'superadmin');
     var assignedCell = isAdminRole
       ? '<span style="color:var(--buy);font-size:10px;font-weight:600;"><span class="_ai-globe"></span> Tümü</span><span style="color:#555;font-size:9px;margin-left:4px;">(Otomatik)</span>'
@@ -10456,7 +10459,7 @@ function renderStaffTable(){
               + (_ok ? '' : 'opacity:.35;cursor:not-allowed;') + '"><span class="_ai-gear"></span> Yetki</button> ';
           })()
         +'<button class="mgr-btn '+(s.active?'danger':'success')+'" data-id="'+s.id+'" onclick="staffAction(this,2)" style="font-size:10px;padding:2px 8px;">'+(s.active?'Kapat':'Aç')+'</button> '
-        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;"><span class="_ai-key"></span> Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
+        +'<button class="mgr-btn secondary" data-id="'+s.id+'" onclick="openChangePassModal(this.dataset.id)" style="font-size:10px;padding:2px 8px;">'+_adUi('key',12)+' Şifre</button> '        +'<button class="mgr-btn danger" data-id="'+s.id+'" onclick="staffAction(this,3)" style="font-size:10px;padding:2px 8px;">Sil</button>'
       +'</td></tr>';
   });
   html+='</tbody></table>';wrap.innerHTML=html;
@@ -10528,7 +10531,7 @@ function openPermModal(id) {
   
   var html = '<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
     +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
-      +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;"><span class="_ai-gear"></span> YETKİ DÜZENLEMESİ — '+s.name+'</div>'
+      +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">'+_adUi('gear',12)+' YETKİ DÜZENLEMESİ — '+s.name+'</div>'
       +'<button onclick="closePermModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
     +'<div style="font-family:var(--mono);font-size:10px;color:#b0b0b0;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
@@ -10554,7 +10557,7 @@ function openPermModal(id) {
   });
   
   html += '<div style="display:flex;gap:8px;margin-top:16px;">'
-    +'<button class="mgr-btn success" onclick="savePermModal(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;"><span class="_ai-save"></span> Kaydet</button>'
+    +'<button class="mgr-btn success" onclick="savePermModal(this.dataset.id)" data-id="'+id+'" style="flex:1;padding:9px;">'+_adUi('save',12)+' Kaydet</button>'
     +'<button class="mgr-btn" onclick="closePermModal()" style="flex:1;padding:9px;">İptal</button>'
     +'</div></div>';
   
@@ -10622,7 +10625,7 @@ function openChangePassModal(id) {
   if(!s) return;
   var m = document.getElementById('changePassModal');
   if(!m){ m=document.createElement('div'); m.id='changePassModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;'; document.body.appendChild(m); }
-  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;"><span class="_ai-key"></span> ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
+  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:8px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">'+_adUi('key',12)+' ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:11px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:11px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
   m.style.display='flex';
   setTimeout(function(){ var el=document.getElementById('cp_pass'); if(el) el.focus(); }, 100);
 }
@@ -11622,7 +11625,7 @@ function adRenderOpenTable(){
       +'<td style="padding:5px 8px;font-family:var(--mono);font-weight:700;color:'+pc+';" data-pnl="'+pos.id+'">'
         +(pnl>=0?'+':'-')+'$'+adFp(Math.abs(pnl))+'</td>'
       +'<td style="padding:5px 8px;white-space:nowrap;">'
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="margin-right:4px;"><span class="_ai-pencil"></span></button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-id="'+pos.id+'" onclick="adEditPos(this)" style="margin-right:4px;">'+_adUi('pencil',12)+'</button>':'')
         +(hasPerm&&hasPerm('trades.close')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-id="'+pos.id+'" onclick="adClosePos(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
@@ -11698,7 +11701,7 @@ function adRenderHistoryTable(){
         +((h.pnl||0)>=0?'+':'-')+'$'+adFp(Math.abs(h.pnl||0))+'</td>'
       +'<td style="padding:5px 6px;white-space:nowrap;">'
         +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adReopenHistory(this)" title="Yeniden aç (pozisyonu tekrar aktif et)" style="margin-right:4px;">⟳</button>':'')
-        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="margin-right:4px;"><span class="_ai-pencil"></span></button>':'')
+        +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adEditHistory(this)" style="margin-right:4px;">'+_adUi('pencil',12)+'</button>':'')
         +(hasPerm&&hasPerm('trades.edit')?'<button class="ad-btn ad-btn-danger ad-icon-btn" data-hid="'+h.id+'" data-hidx="'+idx+'" onclick="adDeleteHistory(this)">✕</button>':'')
       +'</td>'
     +'</tr>';
