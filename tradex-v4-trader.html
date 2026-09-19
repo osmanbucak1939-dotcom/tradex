@@ -46,13 +46,16 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-be
   --mwask-bg:     rgba(41,121,255,.45);
   --mwask-text:   #82b1ff;
   --mwask-border: rgba(41,121,255,.9);
-  --buy:      #2979ff;
+  --buy:      var(--buy);
   --buy-dim:  #0d1f3c;
-  --sell:     #ef5350;
+  --sell:     var(--sell);
   --sell-dim: #3d1a1a;
-  --accent:   #f0b90b;
+  --accent:   var(--accent);
   --mono:     'IBM Plex Mono', monospace;
   --sans:     'IBM Plex Sans', sans-serif;
+
+  /* 2026-09-19: rakamlar her yerde aynı genişlikte — fiyat sütunları
+     artık kayıyor gibi durmuyor. */
 }
 html[data-theme="light"] {
   --bg:       #f4f4f4;
@@ -82,7 +85,7 @@ html[data-theme="light"] .kyc-modal,
 html[data-theme="light"] .pw-modal { background: rgba(0,0,0,.4); }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { height:100%; overflow:hidden; }
-body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; position:fixed; width:100%; }
+body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--sans); font-variant-numeric: tabular-nums; font-feature-settings:'tnum' 1; font-size:13px; position:fixed; width:100%; }
 body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; height:100vh; width:100vw; display:flex; flex-direction:column; overflow:hidden; position:fixed; top:0; left:0; overscroll-behavior:none; }
 
 /* ── USER DROPDOWN ── */
@@ -111,7 +114,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .user-dd-item {
   display:flex; align-items:center; gap:10px;
   padding:10px 14px; cursor:pointer;
-  font-family:var(--mono); font-size:11px; color:var(--text);
+  font-family:var(--sans); font-size:11px; color:var(--text);
   transition:background .12s; border:none; background:none; width:100%; text-align:left;
 }
 .user-dd-item:hover { background:var(--panel2); }
@@ -128,7 +131,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--panel); border:1px solid var(--border2);
   border-radius:6px; padding:24px; width:380px; max-width:95vw;
 }
-.kyc-title { font-family:var(--mono); font-weight:700; font-size:13px; margin-bottom:16px; color:var(--accent); }
+.kyc-title { font-family:var(--sans); font-weight:700; font-size:13px; margin-bottom:16px; color:var(--accent); }
 .kyc-step {
   display:flex; align-items:center; gap:12px;
   padding:12px; border:1px solid var(--border); border-radius:4px;
@@ -139,7 +142,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .kyc-step-info { flex:1; }
 .kyc-step-title { font-size:12px; font-weight:600; }
 .kyc-step-desc { font-size:10px; color:var(--muted); margin-top:2px; }
-.kyc-step-status { font-size:10px; font-family:var(--mono); }
+.kyc-step-status { font-size:10px; font-family:var(--sans); }
 .kyc-step-status.done { color:var(--buy); }
 .kyc-step-status.pending { color:var(--accent); }
 .kyc-step-status.todo { color:var(--muted); }
@@ -179,13 +182,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--panel); border-bottom:1px solid var(--border);
   height:36px; flex-shrink:0;
 }
-.tb-logo { padding:0 16px; font-family:var(--mono); font-weight:700; font-size:13px; color:var(--accent); letter-spacing:1px; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; }
+.tb-logo { padding:0 16px; font-family:var(--sans); font-weight:700; font-size:13px; color:var(--accent); letter-spacing:1px; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; }
 .tb-sym-list { display:flex; height:100%; overflow-x:auto; overflow-y:hidden; flex:1; min-width:0; scrollbar-width:none; }
 .tb-sym-list::-webkit-scrollbar{display:none;}
 .tb-sym {
   display:flex; align-items:center; gap:8px; padding:0 14px;
   border-right:1px solid var(--border); cursor:pointer;
-  font-family:var(--mono); font-size:12px; white-space:nowrap;
+  font-family:var(--sans); font-size:12px; white-space:nowrap;
   transition:background .15s;
 }
 .tb-sym:hover { background:var(--panel2); }
@@ -195,11 +198,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-sym .s-chg { font-size:11px; }
 .tb-right { margin-left:auto; display:flex; align-items:center; gap:0; height:100%;   flex-shrink:0;
 }
-.tb-conn { padding:0 14px; font-family:var(--mono); font-size:11px; display:flex; align-items:center; gap:6px; border-left:1px solid var(--border); height:100%; }
+.tb-conn { padding:0 14px; font-family:var(--sans); font-size:11px; display:flex; align-items:center; gap:6px; border-left:1px solid var(--border); height:100%; }
 .dot { width:6px; height:6px; border-radius:50%; }
-.dot.green  { background:#2979ff; animation:blink 2s infinite; }
+.dot.green  { background:var(--buy); animation:blink 2s infinite; }
 .dot.yellow { background:var(--accent); animation:blink 1s infinite; }
-.dot.red    { background:#ef5350; animation:blink 1s infinite; }
+.dot.red    { background:var(--sell); animation:blink 1s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 .tb-nav { display:flex; height:100%; }
 .tb-nav-item { padding:0 14px; font-size:12px; font-weight:500; cursor:pointer; border-left:1px solid var(--border); display:flex; align-items:center; color:var(--muted); transition:all .15s; }
@@ -212,7 +215,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   height:24px; overflow:hidden; flex-shrink:0;
 }
 .ticker-inner { display:flex; gap:32px; animation:ticker 35s linear infinite; white-space:nowrap; width:max-content; height:100%; align-items:center; padding:0 16px; }
-.t-item { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; }
+.t-item { display:flex; align-items:center; gap:6px; font-family:var(--sans); font-size:11px; }
 .t-sym { color:var(--muted); }
 .t-price { color:var(--text); }
 .up { color:var(--buy); }
@@ -238,12 +241,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--panel); border-bottom:1px solid var(--border);
   height:32px; flex-shrink:0;
 }
-.ct-label { padding:0 12px; font-family:var(--mono); font-size:11px; color:var(--muted); border-right:1px solid var(--border); height:100%; display:flex; align-items:center; }
+.ct-label { padding:0 12px; font-family:var(--sans); font-size:11px; color:var(--muted); border-right:1px solid var(--border); height:100%; display:flex; align-items:center; }
 .ct-intervals { display:flex; height:100%; }
-.ct-btn { padding:0 10px; font-family:var(--mono); font-size:11px; cursor:pointer; color:var(--muted); background:none; border:none; border-right:1px solid var(--border); transition:all .15s; height:100%; }
+.ct-btn { padding:0 10px; font-family:var(--sans); font-size:11px; cursor:pointer; color:var(--muted); background:none; border:none; border-right:1px solid var(--border); transition:all .15s; height:100%; }
 .ct-btn:hover { background:var(--panel2); color:var(--text); }
 .ct-btn.active { background:var(--panel2); color:var(--accent); }
-.ct-price-info { display:flex; align-items:center; gap:16px; padding:0 16px; margin-left:auto; font-family:var(--mono); font-size:11px; }
+.ct-price-info { display:flex; align-items:center; gap:16px; padding:0 16px; margin-left:auto; font-family:var(--sans); font-size:11px; }
 .ct-price-info .lbl { color:var(--muted); }
 .ct-price-info .val { color:var(--text); }
 #chartWrap {
@@ -268,7 +271,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .bp-section { display:none; padding:8px 0; }
 .bp-section.active { display:block; }
 .orders-table { width:100%; border-collapse:collapse; table-layout:fixed; }
-.orders-table th { font-family:var(--mono); font-size:10px; font-weight:600; color:var(--muted); text-align:left; padding:4px 8px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); overflow:hidden; white-space:nowrap; }
+.orders-table th { font-family:var(--sans); font-size:10px; font-weight:600; color:var(--muted); text-align:left; padding:4px 8px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); overflow:hidden; white-space:nowrap; }
 .orders-table td { font-family:var(--mono); font-size:11px; padding:5px 8px; border-bottom:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .orders-table tr:hover td { background:var(--panel2); }
 .orders-table tr:last-child td { border-bottom:none; }
@@ -287,9 +290,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .orders-table th:nth-child(12), .orders-table td:nth-child(12) { width:65px; } /* Kapat */
 .badge-buy { background:var(--buy-dim); color:var(--buy); padding:1px 6px; border-radius:2px; font-size:10px; font-weight:600; }
 .badge-sell { background:var(--sell-dim); color:var(--sell); padding:1px 6px; border-radius:2px; font-size:10px; font-weight:600; }
-.close-ord { background:none; border:1px solid var(--border2); color:var(--muted); padding:1px 8px; border-radius:2px; font-size:10px; cursor:pointer; transition:all .15s; font-family:var(--mono); }
+.close-ord { background:none; border:1px solid var(--border2); color:var(--muted); padding:1px 8px; border-radius:2px; font-size:10px; cursor:pointer; transition:all .15s; font-family:var(--sans); }
 .close-ord:hover { border-color:var(--sell); color:var(--sell); }
-.empty-msg { font-family:var(--mono); font-size:11px; color:var(--muted); padding:24px 16px; }
+.empty-msg { font-family:var(--sans); font-size:11px; color:var(--muted); padding:24px 16px; }
 
 /* ── LEFT PANEL (order ticket) ── */
 .right-panel {
@@ -300,8 +303,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* ORDER TICKET */
 .order-ticket { padding:10px 12px; border-bottom:1px solid var(--border); }
-.ot-header { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
-.ot-sym { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.ot-header { font-family:var(--sans); font-size:11px; font-weight:600; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
+.ot-sym { font-family:var(--sans); font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
 .ot-price-row { display:flex; justify-content:space-between; margin-bottom:10px; }
 .ot-bid { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--sell); }
 .ot-ask { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--buy); }
@@ -309,35 +312,35 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ot-side { width:50%; text-align:center; }
 .ot-spread { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; padding:2px 0 8px; }
 .ot-row { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
-.ot-label { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.ot-label { font-family:var(--sans); font-size:10px; color:var(--muted); }
 .ot-input { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:5px 8px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; width:100%; transition:border-color .15s; }
 .ot-input:focus { border-color:var(--accent); }
 .ot-input-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
 .ot-type-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:10px; }
-.ot-type-btn { background:var(--bg); border:1px solid var(--border); border-radius:2px; padding:4px; font-family:var(--mono); font-size:10px; color:var(--muted); cursor:pointer; text-align:center; transition:all .15s; }
+.ot-type-btn { background:var(--bg); border:1px solid var(--border); border-radius:2px; padding:4px; font-family:var(--sans); font-size:10px; color:var(--muted); cursor:pointer; text-align:center; transition:all .15s; }
 .ot-type-btn:hover { border-color:var(--border2); color:var(--text); }
 .ot-type-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(240,185,11,.07); }
 .ot-btns { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.btn-buy { background:var(--buy); border:none; border-radius:2px; padding:9px; color:#fff; font-family:var(--mono); font-size:12px; font-weight:700; cursor:pointer; transition:filter .15s; letter-spacing:.5px; }
+.btn-buy { background:var(--buy); border:none; border-radius:2px; padding:9px; color:#fff; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; transition:filter .15s; letter-spacing:.5px; }
 .btn-buy:hover { filter:brightness(1.15); }
-.btn-sell { background:var(--sell); border:none; border-radius:2px; padding:9px; color:#fff; font-family:var(--mono); font-size:12px; font-weight:700; cursor:pointer; transition:filter .15s; letter-spacing:.5px; }
+.btn-sell { background:var(--sell); border:none; border-radius:2px; padding:9px; color:#fff; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; transition:filter .15s; letter-spacing:.5px; }
 .btn-sell:hover { filter:brightness(1.15); }
 
 /* ACCOUNT SUMMARY */
 .account-box { padding:10px 12px; border-bottom:1px solid var(--border); }
-.acc-title { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
+.acc-title { font-family:var(--sans); font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
 .acc-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #282828; }
 .acc-row:last-child { border-bottom:none; }
-.acc-key { font-family:var(--mono); font-size:11px; color:var(--muted); }
+.acc-key { font-family:var(--sans); font-size:11px; color:var(--muted); }
 .acc-val { font-family:var(--mono); font-size:11px; color:var(--text); font-weight:600; }
 
 /* ALARM BOX */
 .alarm-box { padding:10px 12px; flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.alarm-title { font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; display:flex; justify-content:space-between; align-items:center; }
-.alarm-add-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:10px; padding:1px 8px; border-radius:2px; cursor:pointer; transition:all .15s; }
+.alarm-title { font-family:var(--sans); font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; display:flex; justify-content:space-between; align-items:center; }
+.alarm-add-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--sans); font-size:10px; padding:1px 8px; border-radius:2px; cursor:pointer; transition:all .15s; }
 .alarm-add-btn:hover { border-color:var(--accent); color:var(--accent); }
 .alarm-items { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
-.alarm-row { display:flex; align-items:center; gap:6px; padding:5px 7px; background:var(--bg); border:1px solid var(--border); border-radius:2px; font-family:var(--mono); font-size:11px; }
+.alarm-row { display:flex; align-items:center; gap:6px; padding:5px 7px; background:var(--bg); border:1px solid var(--border); border-radius:2px; font-family:var(--sans); font-size:11px; }
 .alarm-row .a-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .alarm-row .a-sym { font-weight:600; min-width:35px; }
 .alarm-row .a-cond { color:var(--muted); font-size:10px; flex:1; }
@@ -348,11 +351,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .alarm-form .oi-row { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
 .oi { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:4px 7px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; width:100%; }
 .oi:focus { border-color:var(--accent); }
-.btn-alarm-add { background:rgba(240,185,11,.12); border:1px solid rgba(240,185,11,.3); color:var(--accent); font-family:var(--mono); font-size:11px; padding:5px; border-radius:2px; cursor:pointer; transition:all .15s; }
+.btn-alarm-add { background:rgba(240,185,11,.12); border:1px solid rgba(240,185,11,.3); color:var(--accent); font-family:var(--sans); font-size:11px; padding:5px; border-radius:2px; cursor:pointer; transition:all .15s; }
 .btn-alarm-add:hover { background:var(--accent); color:#000; }
 
 /* TOAST */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--mono); font-size:12px; color:var(--text); z-index:9999; opacity:0; transition:all .25s; white-space:nowrap; pointer-events:none; }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--panel2); border:1px solid var(--border2); border-radius:3px; padding:10px 18px; font-family:var(--sans); font-size:12px; color:var(--text); z-index:9999; opacity:0; transition:all .25s; white-space:nowrap; pointer-events:none; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .toast .tt { font-weight:700; margin-bottom:2px; }
 
@@ -369,7 +372,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ── MANAGER BUTTON ── */
 .tb-mgr-btn {
   padding:0 16px; height:100%; display:flex; align-items:center;
-  font-family:var(--mono); font-size:11px; font-weight:700;
+  font-family:var(--sans); font-size:11px; font-weight:700;
   color:var(--accent); border-left:1px solid var(--border);
   cursor:pointer; letter-spacing:.5px; transition:background .15s;
 }
@@ -390,13 +393,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* MANAGER CONTENT */
 .mgr-content { flex:1; overflow-y:auto; padding:20px; }.mgr-section.active { display:block; }/* MANAGER FORM ELEMENTS */
 .mgr-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
-.mgr-table th { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:left; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; }
+.mgr-table th { font-family:var(--sans); font-size:10px; color:var(--muted); text-align:left; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; }
 .mgr-table td { font-family:var(--mono); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
 .mgr-table tr:last-child td { border-bottom:none; }
 .mgr-table tr:hover td { background:rgba(255,255,255,.02); }.mgr-row.cols2 { grid-template-columns:1fr 1fr; }
 .mgr-row.cols3 { grid-template-columns:1fr 1fr 1fr; }
 .mgr-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; }.mgr-btn {
-  padding:7px 16px; border-radius:2px; border:none; font-family:var(--mono);
+  padding:7px 16px; border-radius:2px; border:none; font-family:var(--sans);
   font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; letter-spacing:.3px;
 }
 .mgr-btn.primary { background:var(--accent); color:#000; }
@@ -419,15 +422,15 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   padding:16px; margin-bottom:12px;
 }
 .acc-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.acc-card-name { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--text); }
+.acc-card-name { font-family:var(--sans); font-size:13px; font-weight:700; color:var(--text); }
 .acc-card-id { font-family:var(--mono); font-size:10px; color:var(--muted); }
 .acc-card-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .acc-stat { display:flex; flex-direction:column; gap:2px; }
-.acc-stat-lbl { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.acc-stat-lbl { font-family:var(--sans); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
 .acc-stat-val { font-family:var(--mono); font-size:13px; font-weight:600; }
 
-.badge-active { background:rgba(38,166,154,.15); color:var(--buy); padding:2px 8px; border-radius:2px; font-size:10px; font-family:var(--mono); }
-.badge-inactive { background:rgba(239,83,80,.1); color:var(--sell); padding:2px 8px; border-radius:2px; font-size:10px; font-family:var(--mono); }
+.badge-active { background:rgba(38,166,154,.15); color:var(--buy); padding:2px 8px; border-radius:2px; font-size:10px; font-family:var(--sans); }
+.badge-inactive { background:rgba(239,83,80,.1); color:var(--sell); padding:2px 8px; border-radius:2px; font-size:10px; font-family:var(--sans); }
 
 /* ── İNDİKATÖR TOOLBAR ── */
 .ind-toolbar {
@@ -439,7 +442,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ind-sep { width:1px; background:var(--border); height:16px; flex-shrink:0; margin:0 2px; }
 .ind-btn {
   display:flex; align-items:center; gap:5px; padding:0 10px;
-  height:100%; font-family:var(--mono); font-size:10px; font-weight:600;
+  height:100%; font-family:var(--sans); font-size:10px; font-weight:600;
   color:var(--muted); background:none; border:none; border-right:1px solid var(--border);
   cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0;
 }
@@ -448,7 +451,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ind-btn .ind-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .ind-settings-btn {
   margin-left:auto; padding:0 10px; height:100%;
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   background:none; border:none; border-left:1px solid var(--border);
   cursor:pointer; transition:color .15s; flex-shrink:0;
 }
@@ -463,7 +466,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .sub-chart-panel.active { display:flex; }
 .sub-chart-label {
   position:absolute; top:4px; left:8px; z-index:10;
-  font-family:var(--mono); font-size:10px; font-weight:700;
+  font-family:var(--sans); font-size:10px; font-weight:700;
   color:var(--muted); pointer-events:none; letter-spacing:.5px;
 }
 .sub-chart-val {
@@ -481,9 +484,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:none;
 }
 .ind-popup.open { display:block; }
-.ind-popup-title { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--accent); margin-bottom:12px; letter-spacing:.5px; }
+.ind-popup-title { font-family:var(--sans); font-size:11px; font-weight:700; color:var(--accent); margin-bottom:12px; letter-spacing:.5px; }
 .ind-popup-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
-.ind-popup-label { font-family:var(--mono); font-size:11px; color:var(--muted); flex:1; }
+.ind-popup-label { font-family:var(--sans); font-size:11px; color:var(--muted); flex:1; }
 .ind-popup-input { background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:3px 7px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; width:70px; text-align:right; }
 .ind-popup-input:focus { border-color:var(--accent); }
 
@@ -511,11 +514,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:flex; align-items:center; padding:0 18px;
   height:42px; border-bottom:1px solid var(--border); flex-shrink:0;
 }
-.wallet-title { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent); letter-spacing:1px; }
-.wallet-close { margin-left:auto; background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:11px; padding:2px 10px; border-radius:2px; cursor:pointer; transition:all .15s; }
+.wallet-title { font-family:var(--sans); font-size:12px; font-weight:700; color:var(--accent); letter-spacing:1px; }
+.wallet-close { margin-left:auto; background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--sans); font-size:11px; padding:2px 10px; border-radius:2px; cursor:pointer; transition:all .15s; }
 .wallet-close:hover { border-color:var(--sell); color:var(--sell); }
 .wallet-tabs { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--border); flex-shrink:0; }
-.wallet-tab { padding:10px; text-align:center; font-family:var(--mono); font-size:11px; font-weight:700; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:all .2s; }
+.wallet-tab { padding:10px; text-align:center; font-family:var(--sans); font-size:11px; font-weight:700; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:all .2s; }
 .wallet-tab:hover { color:var(--text); }
 .wallet-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 .wallet-body { flex:1; overflow-y:auto; padding:18px; }
@@ -530,37 +533,37 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .wallet-method:hover { border-color:var(--accent); }
 .wallet-method.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
 .wallet-method-icon { font-size:22px; margin-bottom:6px; line-height:1; }
-.wallet-method-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); }
-.wallet-method-sub { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px; }
+.wallet-method-name { font-family:var(--sans); font-size:11px; font-weight:700; color:var(--text); }
+.wallet-method-sub { font-family:var(--sans); font-size:10px; color:var(--muted); margin-top:2px; }
 
 .wallet-info-box {
   background:var(--bg); border:1px solid var(--border); border-radius:3px;
-  padding:14px; margin:12px 0; font-family:var(--mono); font-size:11px;
+  padding:14px; margin:12px 0; font-family:var(--sans); font-size:11px;
 }
 .wallet-info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--border); gap:8px; }
 .wallet-info-row:last-child { border-bottom:none; }
 .wallet-info-key { color:var(--muted); flex-shrink:0; padding-top:1px; }
 .wallet-info-val { color:var(--text); font-weight:600; word-break:break-word; text-align:right; min-width:0; flex:1; }
-.wallet-copy-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:9px; padding:1px 6px; border-radius:2px; cursor:pointer; flex-shrink:0; transition:all .15s; margin-left:6px; }
+.wallet-copy-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--sans); font-size:9px; padding:1px 6px; border-radius:2px; cursor:pointer; flex-shrink:0; transition:all .15s; margin-left:6px; }
 .wallet-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
 
 .wallet-amount-row { display:flex; gap:8px; margin-bottom:10px; }
 .wallet-amount-input { flex:1; background:var(--bg); border:1px solid var(--border2); border-radius:2px; padding:8px 10px; color:var(--text); font-family:var(--mono); font-size:13px; outline:none; transition:border-color .15s; }
 .wallet-amount-input:focus { border-color:var(--accent); }
-.wallet-currency-badge { background:var(--panel2); border:1px solid var(--border); border-radius:2px; padding:8px 12px; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent); }
+.wallet-currency-badge { background:var(--panel2); border:1px solid var(--border); border-radius:2px; padding:8px 12px; font-family:var(--sans); font-size:12px; font-weight:700; color:var(--accent); }
 .wallet-quick-btns { display:flex; gap:6px; margin-bottom:14px; }
-.wallet-quick { background:var(--panel2); border:1px solid var(--border); border-radius:2px; padding:4px 10px; font-family:var(--mono); font-size:10px; color:var(--muted); cursor:pointer; transition:all .15s; }
+.wallet-quick { background:var(--panel2); border:1px solid var(--border); border-radius:2px; padding:4px 10px; font-family:var(--sans); font-size:10px; color:var(--muted); cursor:pointer; transition:all .15s; }
 .wallet-quick:hover { border-color:var(--accent); color:var(--accent); }
 
-.wallet-note { font-family:var(--mono); font-size:10px; color:var(--muted); background:rgba(240,185,11,.06); border:1px solid rgba(240,185,11,.15); border-radius:2px; padding:8px 10px; margin-bottom:14px; line-height:1.6; }
-.wallet-submit { width:100%; padding:11px; border:none; border-radius:2px; font-family:var(--mono); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; letter-spacing:.5px; }
+.wallet-note { font-family:var(--sans); font-size:10px; color:var(--muted); background:rgba(240,185,11,.06); border:1px solid rgba(240,185,11,.15); border-radius:2px; padding:8px 10px; margin-bottom:14px; line-height:1.6; }
+.wallet-submit { width:100%; padding:11px; border:none; border-radius:2px; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; letter-spacing:.5px; }
 .wallet-submit.deposit { background:var(--buy); color:#fff; }
 .wallet-submit.deposit:hover { filter:brightness(1.15); }
 .wallet-submit.withdraw { background:var(--sell); color:#fff; }
 .wallet-submit.withdraw:hover { filter:brightness(1.15); }
 
 /* Wallet button in topbar */
-.tb-wallet-btn { padding:0 14px; height:100%; display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--buy); border-left:1px solid var(--border); cursor:pointer; letter-spacing:.3px; transition:background .15s; }
+.tb-wallet-btn { padding:0 14px; height:100%; display:flex; align-items:center; gap:6px; font-family:var(--sans); font-size:11px; font-weight:700; color:var(--buy); border-left:1px solid var(--border); cursor:pointer; letter-spacing:.3px; transition:background .15s; }
 .tb-wallet-btn:hover { background:var(--panel2); }
 
 /* Manager withdrawal requests table */
@@ -575,7 +578,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   border-bottom:1px solid var(--border); flex-shrink:0;
 }
 .lp-tab {
-  padding:7px 0; text-align:center; font-family:var(--mono);
+  padding:7px 0; text-align:center; font-family:var(--sans);
   font-size:10px; font-weight:700; letter-spacing:.5px;
   color:var(--muted); cursor:pointer; border-bottom:2px solid transparent;
   transition:all .15s;
@@ -593,7 +596,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-search-input {
   width:100%; background:var(--bg); border:1px solid var(--border2);
   border-radius:2px; padding:4px 8px; color:var(--text);
-  font-family:var(--mono); font-size:11px; outline:none;
+  font-family:var(--sans); font-size:11px; outline:none;
 }
 .mw-search-input:focus { border-color:var(--accent); }
 
@@ -605,7 +608,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   border-bottom:1px solid var(--border);
   position:sticky; top:0; z-index:5; background:var(--panel);
 }
-.mw-group-title { font-family:var(--mono); font-size:9px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
+.mw-group-title { font-family:var(--sans); font-size:9px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
 .mw-group-arrow { color:var(--muted); transition:transform .2s; display:inline-flex; align-items:center; }
 .mw-group-arrow svg { transition:transform .2s; transform:rotate(0deg); }
 .mw-group-arrow.open svg { transform:rotate(90deg); }
@@ -632,7 +635,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mw-sym-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Desktop'ta chg badge gizle */
 #mwBody .mw-chg { display: none !important; }
-.mw-sym-full { font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mw-sym-full { font-family:var(--sans); font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .mw-bid { font-family:var(--mono); font-size:11px; color:var(--sell); text-align:right; font-weight:600; transition: color .3s; }
 .mw-ask { font-family:var(--mono); font-size:11px; color:var(--buy); text-align:right; font-weight:600; transition: color .3s; }
@@ -650,7 +653,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--panel2);
   flex-shrink:0;
 }
-.mw-col-hdr { font-family:var(--mono); font-size:9px; color:var(--muted); text-align:right; }
+.mw-col-hdr { font-family:var(--sans); font-size:9px; color:var(--muted); text-align:right; }
 .mw-col-hdr:nth-child(2) { text-align:left; }
 
 /* Flash animations on price update */
@@ -674,7 +677,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* SELL — sol */
 .qt-sell {
   flex:1; background:rgba(239,83,80,.12); border:none;
-  padding:6px 0; font-family:var(--mono);
+  padding:6px 0; font-family:var(--sans);
   font-size:11px; font-weight:700; color:var(--sell);
   cursor:pointer; letter-spacing:.5px;
   transition:background .15s;
@@ -689,14 +692,14 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   padding:4px 6px; gap:3px; min-width:74px;
 }
 .qt-lot-label {
-  font-family:var(--mono); font-size:8px; color:var(--muted);
+  font-family:var(--sans); font-size:8px; color:var(--muted);
   letter-spacing:.8px; text-align:center;
 }
 .qt-lot-row { display:flex; align-items:center; gap:2px; }
 .qt-lot-btn {
   background:var(--bg); border:1px solid var(--border);
   border-radius:3px; color:var(--muted);
-  font-size:15px; font-family:var(--mono); font-weight:700;
+  font-size:15px; font-family:var(--sans); font-weight:700;
   width:26px; height:26px; line-height:1;
   cursor:pointer; display:flex; align-items:center; justify-content:center;
   transition:all .12s; padding:0;
@@ -713,7 +716,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .qt-lot-val::-webkit-inner-spin-button { -webkit-appearance:none; }
 .qt-presets { display:flex; gap:2px; }
 .qt-preset {
-  font-family:var(--mono); font-size:8px; color:var(--muted);
+  font-family:var(--sans); font-size:8px; color:var(--muted);
   background:none; border:1px solid var(--border);
   border-radius:2px; padding:1px 4px; cursor:pointer;
   transition:all .12s; white-space:nowrap;
@@ -724,7 +727,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* BUY — sağ */
 .qt-buy {
   flex:1; background:rgba(38,166,154,.1); border:none;
-  padding:6px 0; font-family:var(--mono);
+  padding:6px 0; font-family:var(--sans);
   font-size:11px; font-weight:700; color:var(--buy);
   cursor:pointer; letter-spacing:.5px;
   transition:background .15s;
@@ -777,11 +780,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   text-align:center;
 }
 .auth-logo {
-  font-family:var(--mono); font-size:20px; font-weight:700;
+  font-family:var(--sans); font-size:20px; font-weight:700;
   color:var(--accent); letter-spacing:3px; margin-bottom:4px;
 }
 .auth-tagline {
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   letter-spacing:2px; margin-bottom:24px;
 }
 .auth-tabs {
@@ -791,7 +794,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .auth-tab {
   padding:10px 0; text-align:center;
-  font-family:var(--mono); font-size:11px; font-weight:700;
+  font-family:var(--sans); font-size:11px; font-weight:700;
   letter-spacing:.5px; color:var(--muted); cursor:pointer;
   border-bottom:2px solid transparent; transition:all .2s;
 }
@@ -804,7 +807,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 .auth-field { margin-bottom:14px; }
 .auth-label {
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   letter-spacing:.8px; margin-bottom:5px; display:block;
 }
 .auth-input {
@@ -819,7 +822,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 .auth-btn {
   width:100%; padding:12px; border:none; border-radius:2px;
-  font-family:var(--mono); font-size:12px; font-weight:700;
+  font-family:var(--sans); font-size:12px; font-weight:700;
   letter-spacing:1px; cursor:pointer; margin-top:6px;
   transition:all .2s;
 }
@@ -830,10 +833,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:flex; align-items:center; gap:12px; margin:16px 0;
 }
 .auth-divider-line { flex:1; height:1px; background:var(--panel2); }
-.auth-divider-text { font-family:var(--mono); font-size:10px; color:var(--faint); }
+.auth-divider-text { font-family:var(--sans); font-size:10px; color:var(--faint); }
 
 .auth-note {
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   text-align:center; margin-top:14px; line-height:1.7;
 }
 .auth-note span { color:var(--accent); cursor:pointer; }
@@ -842,13 +845,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .auth-error {
   background:rgba(239,83,80,.1); border:1px solid rgba(239,83,80,.3);
   border-radius:2px; padding:8px 12px; margin-bottom:12px;
-  font-family:var(--mono); font-size:11px; color:var(--sell);
+  font-family:var(--sans); font-size:11px; color:var(--sell);
   display:none;
 }
 .auth-success {
   background:rgba(38,166,154,.1); border:1px solid rgba(38,166,154,.3);
   border-radius:2px; padding:12px; margin-bottom:12px;
-  font-family:var(--mono); font-size:11px; color:var(--buy);
+  font-family:var(--sans); font-size:11px; color:var(--buy);
   text-align:center; line-height:1.8; display:none;
 }
 
@@ -856,7 +859,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-user-badge {
   display:flex; align-items:center; gap:8px; padding:0 14px;
   height:100%; border-left:1px solid var(--border);
-  font-family:var(--mono); font-size:11px; cursor:pointer;
+  font-family:var(--sans); font-size:11px; cursor:pointer;
   transition:background .15s;
 }
 .tb-user-badge:hover { background:var(--panel2); }
@@ -871,7 +874,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-login-btn {
   display:flex; align-items:center; gap:6px; padding:0 14px;
   height:100%; border-left:1px solid var(--border);
-  font-family:var(--mono); font-size:11px; font-weight:700;
+  font-family:var(--sans); font-size:11px; font-weight:700;
   color:var(--accent); cursor:pointer; transition:background .15s;
 }
 .tb-login-btn:hover { background:var(--panel2); }
@@ -886,8 +889,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .acc-type-opt:hover { border-color:var(--accent); }
 .acc-type-opt.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
 .acc-type-icon { font-size:18px; margin-bottom:4px; }
-.acc-type-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); }
-.acc-type-sub { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:2px; }
+.acc-type-name { font-family:var(--sans); font-size:11px; font-weight:700; color:var(--text); }
+.acc-type-sub { font-family:var(--sans); font-size:9px; color:var(--muted); margin-top:2px; }
 
 /* ── TWELVE DATA API KEY MODAL ── */
 .apikey-modal {
@@ -903,11 +906,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   box-shadow:0 24px 60px rgba(0,0,0,.8);
 }
 .apikey-title {
-  font-family:var(--mono); font-size:13px; font-weight:700;
+  font-family:var(--sans); font-size:13px; font-weight:700;
   color:var(--accent); letter-spacing:1px; margin-bottom:4px;
 }
 .apikey-sub {
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   margin-bottom:20px; line-height:1.7;
 }
 .apikey-input {
@@ -921,19 +924,19 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .apikey-btns { display:flex; gap:8px; margin-top:4px; }
 .apikey-btn {
   flex:1; padding:10px; border:none; border-radius:2px;
-  font-family:var(--mono); font-size:11px; font-weight:700;
+  font-family:var(--sans); font-size:11px; font-weight:700;
   letter-spacing:.5px; cursor:pointer; transition:all .2s;
 }
 .apikey-btn.primary { background:var(--accent); color:var(--panel); }
 .apikey-btn.primary:hover { filter:brightness(1.1); }
 .apikey-btn.secondary { background:var(--panel); border:1px solid var(--border2); color:var(--muted); }
 .apikey-link {
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   text-align:center; margin-top:12px; line-height:1.8;
 }
 .apikey-link a { color:var(--accent); text-decoration:none; }
 .apikey-status {
-  font-family:var(--mono); font-size:10px; margin-top:8px;
+  font-family:var(--sans); font-size:10px; margin-top:8px;
   padding:6px 10px; border-radius:2px; display:none;
 }
 .apikey-status.ok  { background:rgba(38,166,154,.1); color:var(--buy); border:1px solid rgba(38,166,154,.3); display:block; }
@@ -943,7 +946,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-api-btn {
   display:flex; align-items:center; gap:5px; padding:0 12px;
   height:100%; border-left:1px solid var(--border);
-  font-family:var(--mono); font-size:10px; color:var(--muted);
+  font-family:var(--sans); font-size:10px; color:var(--muted);
   cursor:pointer; transition:all .15s; white-space:nowrap;
 }
 .tb-api-btn:hover { color:var(--accent); }
@@ -951,7 +954,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   width:7px; height:7px; border-radius:50%;
   background:var(--muted); flex-shrink:0; transition:background .3s;
 }
-.tb-api-dot.live { background:#2979ff; box-shadow:0 0 6px #2979ff; }
+.tb-api-dot.live { background:var(--buy); box-shadow:0 0 6px var(--buy); }
 .tb-api-dot.err  { background:var(--sell); }
 
 /* ══════════════════════════════════
@@ -965,7 +968,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ct-type-btn.active { color:#fff; background:var(--panel2); }
 .ct-type-btn:hover { color:var(--muted); }
 .draw-tool-btn { background:transparent; border:none; color:var(--text); cursor:pointer; padding:3px 8px; font-size:13px; border-radius:3px; }
-.draw-tool-btn.active { color:#f0b90b; background:var(--panel2); }
+.draw-tool-btn.active { color:var(--accent); background:var(--panel2); }
 .draw-tool-btn:hover { color:var(--muted); }
 
 
@@ -2058,10 +2061,10 @@ function _txClearPasswordChangedSession() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></svg>
       </div>
       <div id="dLangMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:9999;min-width:130px;box-shadow:0 12px 32px rgba(0,0,0,.4)">
-        <div onclick="dSetLang('tr')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-family:monospace;font-size:12px;color:var(--muted)" id="dLangTR">
+        <div onclick="dSetLang('tr')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--muted)" id="dLangTR">
           <span style="font-size:15px">🇹🇷</span> Türkçe <span style="margin-left:auto;color:var(--accent);display:none" id="dLangTRCheck">✓</span>
         </div>
-        <div onclick="dSetLang('en')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-family:monospace;font-size:12px;color:var(--muted)" id="dLangEN">
+        <div onclick="dSetLang('en')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--muted)" id="dLangEN">
           <span style="font-size:15px">🇬🇧</span> English <span style="margin-left:auto;color:var(--accent);display:none" id="dLangENCheck">✓</span>
         </div>
       </div>
@@ -2184,7 +2187,7 @@ function _txClearPasswordChangedSession() {
           <button class="alarm-add-btn" onclick="toggleAlarmForm()">+ Ekle</button>
         </div>
         <div class="alarm-items" id="alarmItems">
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" data-lang="noAlarms">Alarm yok</span>
+          <span style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="noAlarms">Alarm yok</span>
         </div>
         <div class="alarm-form" id="alarmForm" style="display:none">
           <select class="oi" id="alSym">
@@ -2364,11 +2367,11 @@ function _txClearPasswordChangedSession() {
       <!-- ACCOUNT STATUS BAR -->
       <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--panel);overflow-x:auto">
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="balanceCaps">BAKİYE</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="balanceCaps">BAKİYE</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbBalance">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="equityCaps">VARLIK</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="equityCaps">VARLIK</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbEquity">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:90px">
@@ -2376,19 +2379,19 @@ function _txClearPasswordChangedSession() {
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#f5c518" id="sbBonus">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginCaps">TEMİNAT</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginCaps">TEMİNAT</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbMargin">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:130px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="freeMarginCaps">SERBEST TEMİNAT</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="freeMarginCaps">SERBEST TEMİNAT</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="sbFreeMargin">$10,000.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;min-width:110px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="openPnlShort">AÇIK K/Z</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="openPnlShort">AÇIK K/Z</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700" id="sbPL">$0.00</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;padding:3px 14px;white-space:nowrap;flex-shrink:0;min-width:120px">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginLvlCaps">TEMİNAT SEVİYESİ</span>
+          <span style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:.5px" data-lang="marginLvlCaps">TEMİNAT SEVİYESİ</span>
           <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--buy)" id="sbMarginLvl">—</span>
         </div>
       </div>
@@ -2398,7 +2401,7 @@ function _txClearPasswordChangedSession() {
         <div class="bp-section active" id="bp-pos">
           <table class="orders-table">
             <thead><tr>
-  <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:#2979ff;font-size:9px;">↓</span></th>
+  <th onclick="sortPos('id')" title="ID'ye göre sırala" style="cursor:pointer;user-select:none"># <span id="psort-id" style="color:var(--buy);font-size:9px;">↓</span></th>
   <th onclick="sortPos('sym')" title="Sembole göre sırala" style="cursor:pointer;user-select:none" data-lang="symbolLbl">Sembol <span id="psort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th data-lang="sideLbl">Yön</th>
   <th onclick="sortPos('qty')" title="Miktara göre sırala" style="cursor:pointer;user-select:none" data-lang="amountLbl">Miktar <span id="psort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
@@ -2415,7 +2418,7 @@ function _txClearPasswordChangedSession() {
         <div class="bp-section" id="bp-hist">
           <table class="orders-table">
             <thead><tr>
-  <th onclick="sortHist('time')" style="cursor:pointer;user-select:none" data-lang="dateTimeLbl2">Zaman <span id="hsort-time" style="color:#2979ff;font-size:9px;">↓</span></th>
+  <th onclick="sortHist('time')" style="cursor:pointer;user-select:none" data-lang="dateTimeLbl2">Zaman <span id="hsort-time" style="color:var(--buy);font-size:9px;">↓</span></th>
   <th onclick="sortHist('sym')" style="cursor:pointer;user-select:none" data-lang="symbolLbl">Sembol <span id="hsort-sym" style="color:var(--faint);font-size:9px;">⇅</span></th>
   <th data-lang="sideLbl">Yön</th>
   <th onclick="sortHist('qty')" style="cursor:pointer;user-select:none" data-lang="amountLbl">Miktar <span id="hsort-qty" style="color:var(--faint);font-size:9px;">⇅</span></th>
@@ -2457,87 +2460,87 @@ function _txClearPasswordChangedSession() {
   
   <!-- Tabs -->
   <div style="padding:24px 28px 0">
-    <div style="font-family:monospace;font-size:18px;font-weight:700;color:#f0b90b;letter-spacing:3px;text-align:center;margin-bottom:4px">Trade Academy</div>
-    <div style="font-family:monospace;font-size:10px;color:var(--text);text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
+    <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);letter-spacing:3px;text-align:center;margin-bottom:4px">Trade Academy</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text);text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
-      <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:#f0b90b;border-bottom:2px solid #f0b90b;cursor:pointer" data-lang="loginTab">GİRİŞ YAP</div>
-      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:monospace;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer" data-lang="registerTab">HESAP AÇ</div>
+      <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer" data-lang="loginTab">GİRİŞ YAP</div>
+      <div id="tab-register" onclick="_authShow('register')" style="padding:10px;text-align:center;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer" data-lang="registerTab">HESAP AÇ</div>
     </div>
   </div>
 
   <!-- Giriş -->
   <div id="sec-login" style="padding:20px 28px 24px">
-    <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
+    <div id="err-login" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:var(--sell);font-family:var(--mono);font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="loginNoLbl">LOGIN NO / E-POSTA</div>
-      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" data-lang-ph="loginPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="loginNoLbl">LOGIN NO / E-POSTA</div>
+      <input id="inp-email" type="text" placeholder="10000 veya ornek@mail.com" data-lang-ph="loginPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:8px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
-      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
+      <input id="inp-pass" type="password" onkeydown="if(event.key==='Enter')_doLogin()" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
-    <div style="text-align:right;margin-bottom:16px"><span id="go-forgot" onclick="_authShow('forgot')" style="font-family:monospace;font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline" data-lang="forgotPwLink">Şifremi unuttum</span></div>
-    <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px" data-lang="loginBtn">GİRİŞ YAP</button>
-    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:monospace;font-size:12px;cursor:pointer;margin-bottom:12px">🎮 <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span data-lang="noAccountQ">Hesabınız yok mu?</span> <span id="go-register" onclick="_authShow('register')" style="color:#f0b90b;cursor:pointer" data-lang="registerLink">Kayıt olun</span></div>
+    <div style="text-align:right;margin-bottom:16px"><span id="go-forgot" onclick="_authShow('forgot')" style="font-family:var(--sans);font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline" data-lang="forgotPwLink">Şifremi unuttum</span></div>
+    <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:2px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px" data-lang="loginBtn">GİRİŞ YAP</button>
+    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:var(--mono);font-size:12px;cursor:pointer;margin-bottom:12px">🎮 <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center"><span data-lang="noAccountQ">Hesabınız yok mu?</span> <span id="go-register" onclick="_authShow('register')" style="color:var(--accent);cursor:pointer" data-lang="registerLink">Kayıt olun</span></div>
   </div>
 
   <!-- Şifremi Unuttum -->
   <div id="sec-forgot" style="display:none;padding:20px 28px 24px">
-    <div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center" data-lang="forgotPwTitle">🔑 ŞİFRE SIFIRLAMA</div>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);margin-bottom:16px;text-align:center;line-height:1.5" data-lang="forgotPwDesc">Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.</div>
-    <div id="ok-forgot" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
+    <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center" data-lang="forgotPwTitle">🔑 ŞİFRE SIFIRLAMA</div>
+    <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:16px;text-align:center;line-height:1.5" data-lang="forgotPwDesc">Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.</div>
+    <div id="ok-forgot" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:var(--mono);font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:16px">
-      <input id="inp-forgot-email" type="email" placeholder="ornek@mail.com" data-lang-ph="forgotPwEmailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <input id="inp-forgot-email" type="email" placeholder="ornek@mail.com" data-lang-ph="forgotPwEmailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
-    <button id="btn-forgot" onclick="_doForgotPassword()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="forgotPwSubmit">SIFIRLAMA BAĞLANTISI GÖNDER</button>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span id="go-login-from-forgot" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer" data-lang="forgotPwBack">Girişe dön</span></div>
+    <button id="btn-forgot" onclick="_doForgotPassword()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:2px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="forgotPwSubmit">SIFIRLAMA BAĞLANTISI GÖNDER</button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center"><span id="go-login-from-forgot" onclick="_authShow('login')" style="color:var(--accent);cursor:pointer" data-lang="forgotPwBack">Girişe dön</span></div>
   </div>
 
   <!-- Kayıt -->
   <div id="sec-register" style="display:none;padding:20px 28px 24px">
-    <div id="err-register" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
-    <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#2979ff;font-family:monospace;font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
+    <div id="err-register" style="display:none;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:var(--sell);font-family:var(--mono);font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
+    <div id="ok-register" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:var(--buy);font-family:var(--mono);font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px;text-align:center"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="firstNameLbl">AD</div>
-        <input id="inp-name" placeholder="Adınız" data-lang-ph="firstNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="firstNameLbl">AD</div>
+        <input id="inp-name" placeholder="Adınız" data-lang-ph="firstNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="lastNameLbl">SOYAD</div>
-        <input id="inp-surname" placeholder="Soyadınız" data-lang-ph="lastNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="lastNameLbl">SOYAD</div>
+        <input id="inp-surname" placeholder="Soyadınız" data-lang-ph="lastNamePh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="phoneLbl2">TELEFON</div>
-      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="phoneLbl2">TELEFON</div>
+      <input id="inp-phone" type="tel" placeholder="+90 5__ ___ __ __" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px">E-POSTA</div>
-      <input id="inp-remail" type="email" placeholder="ornek@mail.com" data-lang-ph="emailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:4px">E-POSTA</div>
+      <input id="inp-remail" type="email" placeholder="ornek@mail.com" data-lang-ph="emailPh" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
-        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" data-lang-ph="min6Ph" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="passwordLbl">ŞİFRE</div>
+        <input id="inp-rpass" type="password" placeholder="Min 6 karakter" data-lang-ph="min6Ph" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-family:monospace;font-size:10px;color:var(--text);margin-bottom:4px" data-lang="repeatLbl">TEKRAR</div>
-        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:monospace;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="font-family:var(--sans);font-size:10px;color:var(--text);margin-bottom:4px" data-lang="repeatLbl">TEKRAR</div>
+        <input id="inp-rpass2" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid #f0b90b;background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg></div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700" data-lang="realAccCaps">GERÇEK</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted)" data-lang="liveAccDesc">Canlı hesap</div>
+      <div id="opt-live" onclick="authAccType('live')" style="border:1px solid var(--accent);background:rgba(240,185,11,.07);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
+        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></svg></div><div style="font-family:var(--sans);font-size:11px;color:var(--text);font-weight:700" data-lang="realAccCaps">GERÇEK</div>
+        <div style="font-family:var(--sans);font-size:9px;color:var(--muted)" data-lang="liveAccDesc">Canlı hesap</div>
       </div>
       <div id="opt-demo" onclick="authAccType('demo')" style="border:1px solid var(--border2);background:var(--bg);border-radius:2px;padding:10px;text-align:center;cursor:pointer">
-        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="7" y1="12" x2="11" y2="12"/><line x1="9" y1="10" x2="9" y2="14"/><circle cx="16" cy="10.5" r="1"/><circle cx="18" cy="13" r="1"/></svg></div><div style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700" data-lang="demoAccCaps">DEMO</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted)" data-lang="virtualAccDesc">$10,000 sanal</div>
+        <div style="display:flex;justify-content:center;margin-bottom:2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="7" y1="12" x2="11" y2="12"/><line x1="9" y1="10" x2="9" y2="14"/><circle cx="16" cy="10.5" r="1"/><circle cx="18" cy="13" r="1"/></svg></div><div style="font-family:var(--sans);font-size:11px;color:var(--text);font-weight:700" data-lang="demoAccCaps">DEMO</div>
+        <div style="font-family:var(--sans);font-size:9px;color:var(--muted)" data-lang="virtualAccDesc">$10,000 sanal</div>
       </div>
     </div>
-    <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:#f0b90b;color:var(--panel);border:none;border-radius:2px;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="registerBtn">HESAP OLUŞTUR</button>
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);text-align:center"><span data-lang="hasAccountQ">Hesabınız var mı?</span> <span id="go-login" onclick="_authShow('login')" style="color:#f0b90b;cursor:pointer" data-lang="loginLink">Giriş yapın</span></div>
+    <button id="btn-register" onclick="_doRegister()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:2px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px" data-lang="registerBtn">HESAP OLUŞTUR</button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center"><span data-lang="hasAccountQ">Hesabınız var mı?</span> <span id="go-login" onclick="_authShow('login')" style="color:var(--accent);cursor:pointer" data-lang="loginLink">Giriş yapın</span></div>
   </div>
 
 </div>
@@ -2570,13 +2573,13 @@ function _txClearPasswordChangedSession() {
 
     <!-- PARA YATIR -->
     <div class="wallet-section active" id="ws-deposit">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectDepositMethod">YATIRIM YÖNTEMİ SEÇİN</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectDepositMethod">YATIRIM YÖNTEMİ SEÇİN</div>
       <div class="wallet-method-grid" id="depositMethodGrid">
         <!-- Dinamik olarak doldurulacak -->
       </div>
       <div id="depositDetails" style="display:none">
         <div class="wallet-info-box" id="depositInfoBox"></div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
+        <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
         <div class="wallet-amount-row">
           <input class="wallet-amount-input" id="depositAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="depositCurrency">USD</div>
@@ -2594,12 +2597,12 @@ function _txClearPasswordChangedSession() {
 
     <!-- PARA ÇEK -->
     <div class="wallet-section" id="ws-withdraw">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectWithdrawMethod">ÇEKİM YÖNTEMİ SEÇİN</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px" data-lang="selectWithdrawMethod">ÇEKİM YÖNTEMİ SEÇİN</div>
       <div class="wallet-method-grid" id="withdrawMethodGrid"></div>
       <div id="withdrawDetails" style="display:none">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="recipientInfo">ALICI BİLGİSİ</div>
+        <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="recipientInfo">ALICI BİLGİSİ</div>
         <input class="wallet-amount-input" id="withdrawAddress" placeholder="IBAN / Cüzdan Adresi" data-lang-ph="ibanPlaceholder" style="width:100%;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
+        <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:6px" data-lang="amount">MİKTAR</div>
         <div class="wallet-amount-row">
           <input class="wallet-amount-input" id="withdrawAmount" type="number" placeholder="0.00" min="0" step="any">
           <div class="wallet-currency-badge" id="withdrawCurrency">USD</div>
@@ -2617,8 +2620,8 @@ function _txClearPasswordChangedSession() {
 
     <!-- İŞLEM GEÇMİŞİ -->
     <div class="wallet-section" id="ws-history" style="overflow-y:auto;max-height:400px;">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;" data-lang="history">FİNANS GEÇMİŞİ</div>
-      <div id="walletHistoryContent" style="font-family:var(--mono);font-size:11px;color:var(--muted);" data-lang="loadingTxt">Yükleniyor...</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;" data-lang="history">FİNANS GEÇMİŞİ</div>
+      <div id="walletHistoryContent" style="font-family:var(--sans);font-size:11px;color:var(--muted);" data-lang="loadingTxt">Yükleniyor...</div>
     </div>
 
   </div>
@@ -3556,7 +3559,7 @@ function renderPendingOrders() {
       '<td>'+po.price+'</td>'+
       '<td>'+(po.sl||'—')+'</td>'+
       '<td>'+(po.tp||'—')+'</td>'+
-      '<td><button class="close-ord" onclick="cancelPending('+i+')" style="background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.3);color:#ef5350;font-family:var(--mono);font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px">✕ İptal</button></td>'+
+      '<td><button class="close-ord" onclick="cancelPending('+i+')" style="background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.3);color:var(--sell);font-family:var(--mono);font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px">✕ İptal</button></td>'+
     '</tr>';
   }).join('');
 }
@@ -3958,7 +3961,7 @@ function otSymFilter(val, mode) {
   }) : syms;
   if(!filtered.length) { list.style.display='none'; return; }
   list.innerHTML = filtered.slice(0,20).map(function(s){
-    var ico = (s.icon&&s.icon.trim()&&s.icon.trim().length<=2) ? s.icon.trim() : '';
+    var ico = _txSymIcon(s.gid || s.category || '', s.color || '#f0b90b', 13);
     var dot = ico ? ico : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(s.color||'#f0b90b')+';flex-shrink:0"></span>';
     return '<div data-sym="'+s.sym+'" data-mode="'+(mode||'')+'" onclick="otSymPick(this.dataset.sym,this.dataset.mode)" style="padding:8px 12px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text);border-bottom:1px solid var(--panel2);display:flex;align-items:center;gap:8px;transition:background .1s" onmouseover="this.style.background=\'var(--panel2)\'" onmouseout="this.style.background=\'\'">'
       + dot
@@ -4524,8 +4527,8 @@ function renderPositions() {
       <td style="font-size:10px;color:${_posSortCol==='time'?'var(--muted)':'var(--muted)'};white-space:nowrap">${pos.time ? fmtDate(pos.time) : '—'}</td>
       <td>$${fp(pos.openPrice, pos.decimals||2)}</td>
       <td data-cur="${pos.id}">$${fp(cur, pos.decimals||2)}</td>
-      <td onclick="txEditField(${pos.id},'sl')" title="Düzenlemek için tıkla" style="font-size:10px;color:#ef5350;cursor:pointer">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed var(--faint2)">—</span>'}</td>
-      <td onclick="txEditField(${pos.id},'tp')" title="Düzenlemek için tıkla" style="font-size:10px;color:#2979ff;cursor:pointer">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed var(--faint2)">—</span>'}</td>
+      <td onclick="txEditField(${pos.id},'sl')" title="Düzenlemek için tıkla" style="font-size:10px;color:var(--sell);cursor:pointer">${pos.sl ? '$'+fp(pos.sl,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed var(--faint2)">—</span>'}</td>
+      <td onclick="txEditField(${pos.id},'tp')" title="Düzenlemek için tıkla" style="font-size:10px;color:var(--buy);cursor:pointer">${pos.tp ? '$'+fp(pos.tp,pos.decimals||2) : '<span style="color:var(--faint2);border-bottom:1px dashed var(--faint2)">—</span>'}</td>
       <td style="font-size:10px;color:${swapAcc<0?'#ef5350':swapAcc>0?'#2979ff':'var(--muted)'}">${swapAcc!==0?(swapAcc>0?'+':'')+swapAcc.toFixed(2):'—'}</td>
       <td data-pnl="${pos.id}" style="font-weight:700;color:${pnlColor};text-align:right">${pnlSign}$${fp(Math.abs(pnl))}</td>
       <td><button class="close-ord" onclick="txPartialClose(${pos.id})" title="Parçalı kapat" style="margin-right:4px">◐</button><button class="close-ord" onclick="closePosition(${pos.id})">Kapat</button></td>
@@ -4839,9 +4842,9 @@ function renderHistory() {
 
   var _reasonMap = {
     'manuel':   '<span style="color:var(--muted);font-size:10px">Manuel</span>',
-    'stop_out': '<span style="color:#ef5350;font-size:10px;font-weight:700">Stop Out</span>',
-    'sl':       '<span style="color:#ef5350;font-size:10px">Stop Loss</span>',
-    'tp':       '<span style="color:#2979ff;font-size:10px">Take Profit</span>',
+    'stop_out': '<span style="color:var(--sell);font-size:10px;font-weight:700">Stop Out</span>',
+    'sl':       '<span style="color:var(--sell);font-size:10px">Stop Loss</span>',
+    'tp':       '<span style="color:var(--buy);font-size:10px">Take Profit</span>',
     'margin':   '<span style="color:#ff9800;font-size:10px">Margin Call</span>'
   };
   var _reasonOrder = { 'tp':0, 'sl':1, 'manuel':2, 'margin':3, 'stop_out':4 };
@@ -5624,6 +5627,32 @@ var MARKET_GROUPS = [
   }
 ];
 
+
+// ══════════════════════════════════════════════════════════════
+// SEMBOL İKONLARI — SVG (2026-09-19)
+// ──────────────────────────────────────────────────────────────
+// Eskiden ikonlar emoji idi ve sembol verisinde ('icon' alanı) tutuluyordu.
+// İki sorun vardı: (1) Windows bayrak emojilerini ÇİZEMEZ — BIST satırlarında
+// müşteriler bayrak yerine "TR" harflerini görüyordu; (2) emoji her işletim
+// sisteminde farklı boyut ve stilde çıkıyor, arayüz dağınık duruyordu.
+// Artık ikon veriden değil, sembolün GRUBUNDAN türetiliyor: tek çizgi
+// kalınlığı, tek boyut, sembolün kendi rengiyle.
+// 'icon' alanı veride duruyor ama artık kullanılmıyor.
+function _txSymIcon(gid, color, size) {
+  var c = color || 'currentColor', z = size || 14;
+  var d = {
+    forex:     '<path d="M4 9h13l-3-3M20 15H7l3 3"/>',
+    crypto:    '<path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 8v8M9.5 10.5h5M9.5 13.5h5"/>',
+    commodity: '<path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9z"/>',
+    indices:   '<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/>',
+    stocks:    '<rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M9 7V4h6v3M9 12h2M13 12h2M9 16h2M13 16h2"/>',
+    bist:      '<path d="M4 20h16M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/>'
+  }[gid] || '<circle cx="12" cy="12" r="7"/>';
+  return '<svg width="' + z + '" height="' + z + '" viewBox="0 0 24 24" fill="none" stroke="' + c +
+         '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
+         'style="flex-shrink:0;display:block" aria-hidden="true">' + d + '</svg>';
+}
+
 // Trader'da GİZLENECEK semboller (hem sabit MARKET_GROUPS'tan hem symConfig'ten elenir).
 //  - Eski/çift kodlar: WTIUSD, SPXUSD, NASUSD, DJUSD, DAXUSD (USOIL/SPX500X/... ile değişti)
 //  - Talep üzerine kaldırılanlar: US OIL, BRENT, NAT GAS, S&P500, NASDAQ, DOW30, FTSE100, BIST
@@ -6015,7 +6044,7 @@ function renderDepositMethods() {
   const grid = document.getElementById('depositMethodGrid');
   grid.innerHTML = active.map(m => `
     <div class="wallet-method" id="dm-${m.id}" onclick="selectDepositMethod('${m.id}')">
-      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:#f0b90b;margin:0 auto 8px">${_walletMethodIcon(m)}</div>
+      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:var(--accent);margin:0 auto 8px">${_walletMethodIcon(m)}</div>
       <div class="wallet-method-name">${m.name}</div>
       <div class="wallet-method-sub">${m.type==='bank'?m.currency+' · Min '+m.currency+' '+(m.min||0):m.network+' · Min '+m.min+' '+m.currency}</div>
     </div>
@@ -6125,7 +6154,7 @@ function renderWithdrawMethods() {
   const grid = document.getElementById('withdrawMethodGrid');
   grid.innerHTML = active.map(m => `
     <div class="wallet-method" id="wm-${m.id}" onclick="selectWithdrawMethod('${m.id}')">
-      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:#f0b90b;margin:0 auto 8px">${_walletMethodIcon(m)}</div>
+      <div class="wallet-method-icon" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:rgba(240,185,11,.08);color:var(--accent);margin:0 auto 8px">${_walletMethodIcon(m)}</div>
       <div class="wallet-method-name">${m.name}</div>
       <div class="wallet-method-sub">${m.type==='bank'?m.currency:m.network+' · '+m.currency}</div>
     </div>
@@ -6421,8 +6450,8 @@ function _mwBuildRowHtml(it2, gid) {
   if(spd.endsWith('.0')) spd = spd.slice(0,-2);
   var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
   var html = '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + gid + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
-  var _ico = (it2.icon && it2.icon.trim() && Array.from(it2.icon.trim()).length <= 2) ? it2.icon.trim() : '';
   var _dot_color = it2.color || '#f0b90b';
+  var _ico = _txSymIcon(gid, _dot_color, 14);
   var _isFav = !!_txFavorites[it2.sym];
   var _favTitle = _isFav ? 'Favorilerden çıkar' : 'Favorilere ekle';
   var _favOnclick = "event.stopPropagation(); txToggleFavorite('" + it2.sym + "')";
@@ -7533,19 +7562,19 @@ function _txRenderBrokerInfo(d) {
     if(f.link===true) {
       var _u = String(val).trim();
       if(!/^https?:\/\//i.test(_u)) _u = 'https://' + _u.replace(/^\/+/, '');   // şema yoksa ekle → göreli yol/GitHub 404 olmasın
-      valHtml = '<a href="'+_u+'" target="_blank" rel="noopener noreferrer" style="color:#f0b90b;text-decoration:none;word-break:break-all">'+val+'</a>';
+      valHtml = '<a href="'+_u+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;word-break:break-all">'+val+'</a>';
     } else if(f.link) {
       var _hv = String(val).trim();
       if(f.link==='tel:') _hv = _hv.replace(/[^\d+]/g,'');   // tel: için boşluk/sembol temizle
-      valHtml = '<a href="'+f.link+_hv+'" style="color:#f0b90b;text-decoration:none">'+val+'</a>';
+      valHtml = '<a href="'+f.link+_hv+'" style="color:var(--accent);text-decoration:none">'+val+'</a>';
     } else if(f.small) {
       valHtml = '<span style="color:var(--muted);font-size:9px;line-height:1.4">'+val+'</span>';
     } else {
       valHtml = '<span style="color:var(--text)">'+val+'</span>';
     }
     return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--panel);gap:8px">'
-      +'<div style="font-family:monospace;font-size:10px;color:var(--muted);flex-shrink:0">'+f.label+'</div>'
-      +'<div style="font-family:monospace;font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;color:var(--muted);flex-shrink:0">'+f.label+'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;text-align:right;min-width:0;flex:1">'+valHtml+'</div>'
       +'</div>';
   }).join('');
   if(html) {
@@ -8152,7 +8181,7 @@ function symUnpin(sym){
       <div class="kyc-step-status todo" id="kyc-selfie-status" data-lang="kycTodo">— Bekliyor, yüklemek için tıklayın</div>
     </div>
     <input type="file" id="kycFileInput" accept="image/*,.pdf" style="display:none" onchange="_kycOnFileSelected(event)">
-    <div style="margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--mono)" data-lang="kycFooterNote">
+    <div style="margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--sans)" data-lang="kycFooterNote">
       KYC doğrulama işlemleri 1-3 iş günü içinde tamamlanır.
     </div>
   </div>
@@ -8166,19 +8195,19 @@ function symUnpin(sym){
       <button onclick="closePwModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwCurrentLbl">MEVCUT ŞİFRE</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwCurrentLbl">MEVCUT ŞİFRE</div>
       <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwNewLbl">YENİ ŞİFRE</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwNewLbl">YENİ ŞİFRE</div>
       <input id="pwNew" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:20px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwConfirmLbl">YENİ ŞİFRE (TEKRAR)</div>
+      <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:4px" data-lang="pwConfirmLbl">YENİ ŞİFRE (TEKRAR)</div>
       <input id="pwConfirm" type="password" placeholder="••••••••" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box">
     </div>
     <div id="pwError" style="display:none;color:var(--sell);font-size:11px;font-family:var(--mono);margin-bottom:10px"></div>
-    <button onclick="submitPwChange()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:3px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer" data-lang="pwSubmit">ŞİFREYİ GÜNCELLE</button>
+    <button onclick="submitPwChange()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:3px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer" data-lang="pwSubmit">ŞİFREYİ GÜNCELLE</button>
   </div>
 </div>
 
@@ -8287,7 +8316,7 @@ function symUnpin(sym){
     background: none; border: none;
     border-right: 1px solid var(--border);
     cursor: pointer;
-    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    font-family:var(--sans); font-size: 10px; font-weight: 700;
     color: var(--muted); white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -8312,18 +8341,18 @@ function symUnpin(sym){
   #mSymList .msl-item {
     padding: 9px 12px;
     border-bottom: 1px solid var(--panel);
-    font-family: monospace; font-size: 11px; font-weight: 700;
+    font-family:var(--mono); font-size: 11px; font-weight: 700;
     color: var(--text); cursor: pointer;
     display: flex; align-items: center; gap: 8px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
   #mSymList .msl-item:active { background: var(--panel); }
-  #mSymList .msl-item.active { color: #f0b90b; }
+  #mSymList .msl-item.active { color: var(--accent); }
   #mSymList .msl-item .msl-full { font-size: 10px; color: var(--faint2); font-weight: 400; }
   #mSymList .msl-close {
     padding: 10px 16px; text-align: center;
-    font-family: monospace; font-size: 11px; color: var(--faint2);
+    font-family:var(--sans); font-size: 11px; color: var(--faint2);
     border-top: 1px solid var(--panel2); cursor: pointer;
     touch-action: manipulation;
   }
@@ -8402,7 +8431,7 @@ function symUnpin(sym){
     background: none;
     border: none;
     color: var(--muted);
-    font-family: 'Courier New', monospace;
+    font-family:var(--sans);
     font-size: 9px;
     font-weight: 700;
     letter-spacing: .5px;
@@ -8420,13 +8449,13 @@ function symUnpin(sym){
     display: block;
     stroke: currentColor;
   }
-  .mn-btn.on  { color: #2979ff; }
+  .mn-btn.on  { color: var(--buy); }
   .mn-btn.on::after {
     content: '';
     position: absolute;
     top: 0; left: 15%; right: 15%;
     height: 2px;
-    background: #2979ff;
+    background: var(--buy);
     border-radius: 2px;
   }
 
@@ -8447,10 +8476,10 @@ function symUnpin(sym){
     padding: 0 16px;
     border-bottom: 1px solid var(--panel);
     flex-shrink: 0;
-    font-family: monospace;
+    font-family:var(--sans);
     font-size: 11px;
     font-weight: 700;
-    color: #2979ff;
+    color: var(--buy);
     letter-spacing: 1.5px;
   }
 
@@ -8473,7 +8502,7 @@ function symUnpin(sym){
     overflow: visible !important;
   }
   #mPanMarket .mw-row:active { background: var(--bg) !important; }
-  #mPanMarket .mw-row.active-sym { background: rgba(240,185,11,.06) !important; border-left: 3px solid #f0b90b !important; }
+  #mPanMarket .mw-row.active-sym { background: rgba(240,185,11,.06) !important; border-left: 3px solid var(--accent) !important; }
 
   /* İkon */
   #mPanMarket .mw-icon {
@@ -8511,7 +8540,7 @@ function symUnpin(sym){
     border-radius: 8px !important;
     font-size: 13px !important;
     font-weight: 700 !important;
-    font-family: monospace !important;
+    font-family:var(--mono) !important;
   }
   #mPanMarket .mw-bid {
     background: var(--mwbid-bg);
@@ -8537,7 +8566,7 @@ function symUnpin(sym){
     bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
-    font-family: monospace;
+    font-family:var(--sans);
     font-size: 8px;
     font-weight: 700;
     color: var(--muted);
@@ -8564,7 +8593,7 @@ function symUnpin(sym){
 
   /* Değişim yüzdesi badge */
   .mw-chg {
-    font-family: monospace;
+    font-family:var(--mono);
     font-size: 9px;
     font-weight: 700;
     padding: 1px 4px;
@@ -8572,8 +8601,8 @@ function symUnpin(sym){
     vertical-align: middle;
     margin-left: 4px;
   }
-  .mw-chg-u { color: #2979ff; background: rgba(38,166,154,.12); }
-  .mw-chg-d { color: #ef5350; background: rgba(239,83,80,.12); }
+  .mw-chg-u { color: var(--buy); background: rgba(38,166,154,.12); }
+  .mw-chg-d { color: var(--sell); background: rgba(239,83,80,.12); }
 
   /* Arama kutusu */
   #mSrch {
@@ -8604,10 +8633,10 @@ function symUnpin(sym){
     gap: 3px;
   }
   .m-side:active { background: var(--bg); }
-  .m-slbl { font-family: monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
-  .m-sprc { font-family: monospace; font-size: 28px; font-weight: 700; }
-  .m-side.sell .m-sprc { color: #ef5350; }
-  .m-side.buy  .m-sprc { color: #2979ff; }
+  .m-slbl { font-family:var(--sans); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .m-sprc { font-family:var(--mono); font-size: 28px; font-weight: 700; }
+  .m-side.sell .m-sprc { color: var(--sell); }
+  .m-side.buy  .m-sprc { color: var(--buy); }
   .m-tbody { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
   .m-lot {
     display: flex;
@@ -8629,7 +8658,7 @@ function symUnpin(sym){
   .m-li {
     flex: 1; text-align: center;
     background: transparent; border: none;
-    color: var(--text); font-family: monospace;
+    color: var(--text); font-family:var(--sans);
     font-size: 20px; font-weight: 700; height: 52px;
   }
   .m-li:focus { outline: none; }
@@ -8637,33 +8666,33 @@ function symUnpin(sym){
   .m-pr {
     padding: 5px 13px; border-radius: 20px;
     border: 1px solid var(--border); background: var(--bg);
-    color: var(--muted); font-family: monospace; font-size: 11px;
+    color: var(--muted); font-family:var(--sans); font-size: 11px;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-  .m-pr.on { border-color: #2979ff; color: #2979ff; background: var(--buy-dim); }
+  .m-pr.on { border-color: var(--buy); color: var(--buy); background: var(--buy-dim); }
   .m-sltp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-ig { display: flex; flex-direction: column; gap: 4px; }
-  .m-il { font-family: monospace; font-size: 9px; color: var(--muted); letter-spacing: .5px; }
+  .m-il { font-family:var(--sans); font-size: 9px; color: var(--muted); letter-spacing: .5px; }
   .m-in {
     background: var(--bg); border: 1px solid var(--border);
     border-radius: 6px; color: var(--text);
-    font-family: monospace; font-size: 14px;
+    font-family:var(--mono); font-size: 14px;
     padding: 10px 12px; width: 100%; box-sizing: border-box;
   }
-  .m-in:focus { outline: none; border-color: #2979ff44; }
+  .m-in:focus { outline: none; border-color: var(--buy)44; }
   .m-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .m-bs {
     padding: 16px; border-radius: 10px;
-    border: 2px solid #ef5350; background: var(--sell-dim);
-    color: #ef5350; font-family: monospace;
+    border: 2px solid var(--sell); background: var(--sell-dim);
+    color: var(--sell); font-family:var(--sans);
     font-size: 17px; font-weight: 700; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
   .m-bs:active { background: var(--sell-dim); filter:brightness(0.9); }
   .m-bb {
     padding: 16px; border-radius: 10px;
-    border: 2px solid #2979ff; background: var(--buy-dim);
-    color: #2979ff; font-family: monospace;
+    border: 2px solid var(--buy); background: var(--buy-dim);
+    color: var(--buy); font-family:var(--sans);
     font-size: 17px; font-weight: 700; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -8675,17 +8704,17 @@ function symUnpin(sym){
   }
   .m-tab {
     flex: 1; padding: 10px; text-align: center;
-    font-family: monospace; font-size: 11px; font-weight: 700;
+    font-family:var(--sans); font-size: 11px; font-weight: 700;
     color: var(--muted); background: none; border: none;
     border-bottom: 2px solid transparent; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .m-tab.on { color: #2979ff; border-bottom-color: #2979ff; }
+  .m-tab.on { color: var(--buy); border-bottom-color: var(--buy); }
   .m-plist { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .m-empty {
     display: flex; align-items: center; justify-content: center;
     height: 100px; color: var(--border);
-    font-family: monospace; font-size: 12px;
+    font-family:var(--sans); font-size: 12px;
   }
   .m-card {
     padding: 12px 14px; border-bottom: 1px solid var(--border);
@@ -8694,20 +8723,20 @@ function symUnpin(sym){
   .m-card:active { background: var(--bg); }
   .m-cl { flex: 1; }
   .m-csym {
-    font-family: monospace; font-size: 13px; font-weight: 700;
+    font-family:var(--mono); font-size: 13px; font-weight: 700;
     color: var(--text); display: flex; align-items: center; gap: 6px;
   }
   .m-bdg {
     font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
   }
-  .m-bdg.b { background: var(--buy-dim); color: #2979ff; }
-  .m-bdg.s { background: var(--sell-dim); color: #ef5350; }
-  .m-cmeta { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .m-bdg.b { background: var(--buy-dim); color: var(--buy); }
+  .m-bdg.s { background: var(--sell-dim); color: var(--sell); }
+  .m-cmeta { font-family:var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
   .m-cr { text-align: right; }
-  .m-cpnl { font-family: monospace; font-size: 14px; font-weight: 700; }
-  .m-cpnl.u { color: #2979ff; }
-  .m-cpnl.d { color: #ef5350; }
-  .m-ccur { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .m-cpnl { font-family:var(--mono); font-size: 14px; font-weight: 700; }
+  .m-cpnl.u { color: var(--buy); }
+  .m-cpnl.d { color: var(--sell); }
+  .m-ccur { font-family:var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
   .m-cx {
     width: 32px; height: 32px; flex-shrink: 0;
     background: var(--bg); border: 1px solid var(--panel);
@@ -8715,7 +8744,7 @@ function symUnpin(sym){
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
   }
-  .m-cx:active { background: var(--sell-dim); border-color: #ef5350; color: #ef5350; }
+  .m-cx:active { background: var(--sell-dim); border-color: var(--sell); color: var(--sell); }
 
   /* ── Hesap ── */
   #mPanAcc { overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -8725,13 +8754,13 @@ function symUnpin(sym){
     margin: 12px; border-radius: 10px; overflow: hidden;
   }
   .m-stat { background: var(--bg); padding: 14px 16px; }
-  .m-stl { font-family: monospace; font-size: 9px; color: var(--text); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-  .m-stv { font-family: monospace; font-size: 16px; font-weight: 700; color: var(--muted); }
+  .m-stl { font-family:var(--sans); font-size: 9px; color: var(--text); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .m-stv { font-family:var(--mono); font-size: 16px; font-weight: 700; color: var(--muted); }
   .m-acts { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
   .m-abt {
     padding: 14px 16px; border-radius: 10px;
     border: 1px solid var(--panel); background: var(--bg);
-    color: var(--muted); font-family: monospace; font-size: 13px; font-weight: 600;
+    color: var(--muted); font-family:var(--sans); font-size: 13px; font-weight: 600;
     text-align: left; cursor: pointer;
     display: flex; align-items: center; gap: 12px;
     -webkit-tap-highlight-color: transparent;
@@ -8746,13 +8775,13 @@ function symUnpin(sym){
 <!-- Paneller + Nav HTML -->
 <div id="mPanMarket" class="m-pan">
   <div style="padding:10px 12px;flex-shrink:0;position:relative">
-    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:var(--panel2);border:1px solid var(--panel);color:var(--text);box-sizing:border-box;font-family:monospace" placeholder="Sembol ara..." data-lang-ph="searchSymbol" oninput="mwFilter(this.value)">
+    <input id="mSrch" style="width:100%;padding:11px 16px 11px 40px;font-size:14px;border-radius:10px;background:var(--panel2);border:1px solid var(--panel);color:var(--text);box-sizing:border-box;font-family:var(--mono)" placeholder="Sembol ara..." data-lang-ph="searchSymbol" oninput="mwFilter(this.value)">
     <span style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center"><svg style="width:15px;height:15px;opacity:.5;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
   </div>
   <div style="display:flex;align-items:center;padding:6px 14px;flex-shrink:0;border-bottom:1px solid var(--panel);">
-    <div style="flex:1;font-family:monospace;font-size:9px;color:var(--faint2);letter-spacing:1px;text-transform:uppercase">Sembol</div>
-    <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#ef5350;letter-spacing:.5px">SAT</div>
-    <div style="width:72px;text-align:center;font-family:monospace;font-size:9px;color:#2979ff;letter-spacing:.5px;margin-left:6px">AL</div>
+    <div style="flex:1;font-family:var(--mono);font-size:9px;color:var(--faint2);letter-spacing:1px;text-transform:uppercase">Sembol</div>
+    <div style="width:72px;text-align:center;font-family:var(--mono);font-size:9px;color:var(--sell);letter-spacing:.5px">SAT</div>
+    <div style="width:72px;text-align:center;font-family:var(--mono);font-size:9px;color:var(--buy);letter-spacing:.5px;margin-left:6px">AL</div>
   </div>
   <div class="m-mwb" id="mMwBody" onclick="var t=event.target;while(t&&t.id!=='mMwBody'){if(t.dataset&&t.dataset.sym){mMwPick(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
 </div>
@@ -8764,7 +8793,7 @@ function symUnpin(sym){
   </div>
   <div style="padding:8px 14px 0;flex-shrink:0;position:relative">
     <input id="mOtSymSearch" type="text" placeholder="Sembol ara..." data-lang-ph="searchSymbol"
-      style="width:100%;padding:9px 14px;background:var(--panel2);border:1px solid var(--panel);border-radius:8px;color:var(--text);font-family:monospace;font-size:13px;outline:none;box-sizing:border-box"
+      style="width:100%;padding:9px 14px;background:var(--panel2);border:1px solid var(--panel);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;box-sizing:border-box"
       oninput="otSymFilter(this.value,'mob')" onfocus="otSymFilter(this.value,'mob')" autocomplete="off">
     <div id="mOtSymList" style="display:none;position:absolute;left:14px;right:14px;top:100%;background:var(--bg);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9600"></div>
   </div>
@@ -8781,7 +8810,7 @@ function symUnpin(sym){
   <div class="m-tbody">
     <!-- Emir tipi seçimi -->
     <div id="mOrdTypeRow">
-      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="orderType">EMİR TİPİ</div>
+      <div style="font-family:var(--sans);font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="orderType">EMİR TİPİ</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="m-pr on" data-type="market" onclick="setOrdType('market',null);mOrdTypeBtn(this)">Market</button>
         <button class="m-pr" data-type="buy_limit" onclick="setOrdType('buy_limit',null);mOrdTypeBtn(this)">Buy Limit</button>
@@ -8798,7 +8827,7 @@ function symUnpin(sym){
       </div>
     </div>
     <div>
-      <div style="font-family:monospace;font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="lotAmount">LOT MİKTARI</div>
+      <div style="font-family:var(--sans);font-size:9px;color:var(--text);letter-spacing:.5px;margin-bottom:6px" data-lang="lotAmount">LOT MİKTARI</div>
       <div class="m-lot">
         <button class="m-lb" onclick="mLA(-1)">−</button>
         <input class="m-li" id="mLI" type="number" value="0.01" step="0.01" min="0.01">
@@ -8815,7 +8844,7 @@ function symUnpin(sym){
       <button class="m-bb" onclick="mOrd('buy')">▲ <span data-lang="buy">AL</span></button>
     </div>
     <div id="mPendingBtn" style="display:none">
-      <button style="width:100%;padding:14px;border-radius:10px;border:2px solid #f0b90b;background:#1a1400;color:#f0b90b;font-family:monospace;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px" onclick="mPlacePending()"><svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> <span data-lang="placeOrder">EMİR VER</span></button>
+      <button style="width:100%;padding:14px;border-radius:10px;border:2px solid var(--accent);background:#1a1400;color:var(--accent);font-family:var(--mono);font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px" onclick="mPlacePending()"><svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> <span data-lang="placeOrder">EMİR VER</span></button>
     </div>
   </div>
 </div>
@@ -8835,7 +8864,7 @@ function symUnpin(sym){
 ">
   <button onclick="mQOrd('sell')" style="
     flex:1; background:rgba(239,83,80,.15); border:none;
-    color:#ef5350; font-family:monospace; font-size:13px; font-weight:700;
+    color:var(--sell); font-family:var(--mono); font-size:13px; font-weight:700;
     border-right:1px solid var(--panel); cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
@@ -8849,16 +8878,16 @@ function symUnpin(sym){
     gap:2px; background:var(--bg);
     border-left:1px solid var(--panel); border-right:1px solid var(--panel);
   ">
-    <div style="font-family:monospace;font-size:8px;color:var(--muted);letter-spacing:.5px" data-lang="lot">LOT</div>
+    <div style="font-family:var(--sans);font-size:8px;color:var(--muted);letter-spacing:.5px" data-lang="lot">LOT</div>
     <div style="display:flex;align-items:center;gap:6px">
       <button onclick="mQLA(-1)" style="width:26px;height:26px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">−</button>
-      <span id="mqLot" style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text);min-width:34px;text-align:center;display:inline-block">0.01</span>
+      <span id="mqLot" style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);min-width:34px;text-align:center;display:inline-block">0.01</span>
       <button onclick="mQLA(1)" style="width:26px;height:26px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0">+</button>
     </div>
   </div>
   <button onclick="mQOrd('buy')" style="
     flex:1; background:rgba(38,166,154,.15); border:none;
-    color:#2979ff; font-family:monospace; font-size:13px; font-weight:700;
+    color:var(--buy); font-family:var(--mono); font-size:13px; font-weight:700;
     border-left:1px solid var(--panel); cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:1px; -webkit-tap-highlight-color:transparent;
@@ -8871,35 +8900,35 @@ function symUnpin(sym){
 <div id="mPanPos" class="m-pan">
   <!-- Açık K/Z büyük -->
   <div style="padding:18px 16px 12px;border-bottom:1px solid var(--panel);flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
-    <div id="mPSPnl" style="font-family:monospace;font-size:28px;font-weight:700;color:#2979ff">—</div>
+    <div style="font-family:var(--sans);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div id="mPSPnl" style="font-family:var(--mono);font-size:28px;font-weight:700;color:#2979ff">—</div>
   </div>
 
   <!-- Hesap listesi -->
   <div style="border-bottom:1px solid var(--panel);flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="balance">Bakiye</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSBal">—</div>
+      <div style="font-family:var(--sans);font-size:12px;color:var(--muted)" data-lang="balance">Bakiye</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mPSBal">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="equity">Varlık</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSEq">—</div>
+      <div style="font-family:var(--sans);font-size:12px;color:var(--muted)" data-lang="equity">Varlık</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mPSEq">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)" id="mPosBonusRow">
-      <div style="font-family:monospace;font-size:12px;color:var(--muted)" data-lang="bonus">Bonus</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
+      <div style="font-family:var(--sans);font-size:12px;color:var(--muted)" data-lang="bonus">Bonus</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#f5c518" id="mPSBon">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSMar">—</div>
+      <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mPSMar">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--bg)">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPSFr">—</div>
+      <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mPSFr">—</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px">
-      <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
-      <div style="font-family:monospace;font-size:12px;font-weight:700;color:#2979ff" id="mPSML">—</div>
+      <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#2979ff" id="mPSML">—</div>
     </div>
   </div>
 
@@ -8915,14 +8944,14 @@ function symUnpin(sym){
 <div id="mPanAcc" class="m-pan">
   <!-- Üst: Hesap başlığı + login -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--panel);flex-shrink:0">
-    <div style="font-family:monospace;font-size:11px;font-weight:700;color:#2979ff;letter-spacing:1px" data-lang="myAccount">HESABIM</div>
-    <div style="font-family:monospace;font-size:10px;color:var(--faint)" id="mALg">—</div>
+    <div style="font-family:var(--sans);font-size:11px;font-weight:700;color:var(--buy);letter-spacing:1px" data-lang="myAccount">HESABIM</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--faint)" id="mALg">—</div>
   </div>
 
   <!-- Açık K/Z - büyük göster -->
   <div style="padding:10px 16px 8px;border-bottom:1px solid var(--panel);flex-shrink:0;text-align:center">
-    <div style="font-family:monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
-    <div id="mSPnl" style="font-family:monospace;font-size:22px;font-weight:700;color:#2979ff">—</div>
+    <div style="font-family:var(--sans);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px" data-lang="openPnl">AÇIK KAR / ZARAR</div>
+    <div id="mSPnl" style="font-family:var(--mono);font-size:22px;font-weight:700;color:#2979ff">—</div>
   </div>
 
   <!-- Liste: hesap detayları -->
@@ -8930,33 +8959,33 @@ function symUnpin(sym){
     <div style="padding:0 0 8px">
       <!-- Bakiye -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="balance">Bakiye</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSBal">—</div>
+        <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="balance">Bakiye</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mSBal">—</div>
       </div>
       <!-- Varlık -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="equity">Varlık</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSEq">—</div>
+        <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="equity">Varlık</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mSEq">—</div>
       </div>
       <!-- Bonus -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)" id="mAccBonusRow">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)">Bonus</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#f5c518" id="mSBon">—</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Bonus</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#f5c518" id="mSBon">—</div>
       </div>
       <!-- Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSMar">—</div>
+        <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="margin">Teminat</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mSMar">—</div>
       </div>
       <!-- Serbest Teminat -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mSFr">—</div>
+        <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="freeMargin">Serbest Teminat</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mSFr">—</div>
       </div>
       <!-- Teminat Seviyesi -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--bg)">
-        <div style="font-family:monospace;font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:#2979ff" id="mSML">—</div>
+        <div style="font-family:var(--sans);font-size:11px;color:var(--muted)" data-lang="marginLvl">Teminat Seviyesi</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#2979ff" id="mSML">—</div>
       </div>
     </div>
 
@@ -8999,13 +9028,13 @@ function symUnpin(sym){
 
       <!-- Dil seçim paneli -->
       <div id="mLangPanel" style="display:none;background:var(--bg);border:1px solid var(--panel);border-radius:10px;overflow:hidden">
-        <div onclick="mSetLang('tr')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--panel);cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangTR">
+        <div onclick="mSetLang('tr')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--panel);cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangTR">
           <span style="font-size:18px">🇹🇷</span> Türkçe
-          <span style="margin-left:auto;color:#2979ff;display:none" id="mLangTRCheck">✓</span>
+          <span style="margin-left:auto;color:var(--buy);display:none" id="mLangTRCheck">✓</span>
         </div>
-        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:monospace;font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangEN">
+        <div onclick="mSetLang('en')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--muted);-webkit-tap-highlight-color:transparent" id="mLangEN">
           <span style="font-size:18px">🇬🇧</span> English
-          <span style="margin-left:auto;color:#2979ff;display:none" id="mLangENCheck">✓</span>
+          <span style="margin-left:auto;color:var(--buy);display:none" id="mLangENCheck">✓</span>
         </div>
       </div>
 
@@ -9188,8 +9217,8 @@ function symUnpin(sym){
     var chgUp=chgVal>=0;
     var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
     var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
-    var ico=(it2.icon&&it2.icon.trim()&&Array.from(it2.icon.trim()).length<=2)?it2.icon.trim():'';
     var dotColor=it2.color||'#f0b90b';
+    var ico=_txSymIcon(gid, dotColor, 15);
     var _favOnclick="event.stopPropagation(); txToggleFavorite('"+it2.sym+"')";
     var icoHtml;
     if (gid === 'bist') {
@@ -9421,7 +9450,7 @@ function symUnpin(sym){
             +(po.sl?'<div class="m-cmeta">SL: '+po.sl+(po.tp?' · TP: '+po.tp:'')+'</div>':'')
           +'</div>'
           +'<div class="m-cr">'
-            +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:'+sideColor+'">@ '+po.price+'</div>'
+            +'<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:'+sideColor+'">@ '+po.price+'</div>'
           +'</div>'
           +'<button class="m-cx" onclick="mCancelPending('+i+');event.stopPropagation()" title="İptal">✕</button>'
         +'</div>';
@@ -10100,12 +10129,12 @@ function symUnpin(sym){
     <!-- Header kompakt -->
     <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--panel);flex-shrink:0">
       <div style="flex:1">
-        <div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text)" id="mPMSym">—</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--text);margin-top:1px" id="mPMType">—</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)" id="mPMSym">—</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text);margin-top:1px" id="mPMType">—</div>
       </div>
       <div style="text-align:right;margin-right:12px">
-        <div style="font-family:monospace;font-size:16px;font-weight:700" id="mPMPnl">—</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted)" id="mPMCur">—</div>
+        <div style="font-family:var(--mono);font-size:16px;font-weight:700" id="mPMPnl">—</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted)" id="mPMCur">—</div>
       </div>
       <button onclick="mPosModalClose()" style="background:var(--panel2);border:none;color:var(--text);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;touch-action:manipulation">✕</button>
     </div>
@@ -10113,51 +10142,51 @@ function symUnpin(sym){
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--panel2);margin:8px;border-radius:6px;overflow:hidden">
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="openPriceLbl">Açılış</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMOpen">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="openPriceLbl">Açılış</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="mPMOpen">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCurPrice">—</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:2px" id="mPMCurLabel">Mevcut</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="mPMCurPrice">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="lot">Lot</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMLot">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="lot">Lot</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="mPMLot">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="swap">Swap</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMSwap">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="swap">Swap</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="mPMSwap">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:2px" data-lang="stopLoss">Stop Loss</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#ef5350" id="mPMSL">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--sell);margin-bottom:2px" data-lang="stopLoss">Stop Loss</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#ef5350" id="mPMSL">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:#2979ff;margin-bottom:2px" data-lang="takeProfit">Take Profit</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:#2979ff" id="mPMTP">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--buy);margin-bottom:2px" data-lang="takeProfit">Take Profit</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#2979ff" id="mPMTP">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="margin">Teminat</div>
-          <div style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text)" id="mPMCost">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="margin">Teminat</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)" id="mPMCost">—</div>
         </div>
         <div style="background:var(--bg);padding:7px 10px">
-          <div style="font-family:monospace;font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="timeLbl">Saat</div>
-          <div style="font-family:monospace;font-size:9px;font-weight:700;color:var(--text)" id="mPMTime">—</div>
+          <div style="font-family:var(--sans);font-size:8px;color:var(--muted);margin-bottom:2px" data-lang="timeLbl">Saat</div>
+          <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text)" id="mPMTime">—</div>
         </div>
       </div>
       <!-- SL/TP Güncelle kompakt -->
       <div style="margin:0 8px 8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:end">
         <div>
-          <div style="font-family:monospace;font-size:8px;color:#ef5350;margin-bottom:3px">SL</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--sell);margin-bottom:3px">SL</div>
           <input id="mPMSLInput" type="number" placeholder="—" step="any" inputmode="decimal"
-            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:#ef5350;font-family:monospace;font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--sell);font-family:var(--mono);font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <div style="font-family:monospace;font-size:8px;color:#2979ff;margin-bottom:3px">TP</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--buy);margin-bottom:3px">TP</div>
           <input id="mPMTPInput" type="number" placeholder="—" step="any" inputmode="decimal"
-            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:#2979ff;font-family:monospace;font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--buy);font-family:var(--mono);font-size:12px;padding:7px 8px;outline:none;box-sizing:border-box">
         </div>
-        <button onclick="mPosUpdate()" style="padding:8px 4px;background:#1a1400;border:1px solid #f0b90b;border-radius:5px;color:#f0b90b;font-family:monospace;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+        <button onclick="mPosUpdate()" style="padding:8px 4px;background:#1a1400;border:1px solid var(--accent);border-radius:5px;color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
           ✓ <span data-lang="update">Güncelle</span>
         </button>
       </div>
@@ -10166,14 +10195,14 @@ function symUnpin(sym){
     <div style="padding:8px;flex-shrink:0;border-top:1px solid var(--panel)">
       <div id="mPMPartialRow" style="display:flex;gap:6px;margin-bottom:6px">
         <input id="mPMPartialQty" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Lot (örn 0.03)"
-          style="flex:1;padding:10px;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:#e8e8e8;font-family:monospace;font-size:13px">
+          style="flex:1;padding:10px;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:#e8e8e8;font-family:var(--mono);font-size:13px">
         <button onclick="mPosPartial()"
-          style="padding:10px 14px;background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.35);border-radius:8px;color:#f0b90b;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+          style="padding:10px 14px;background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.35);border-radius:8px;color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
           ◐ <span data-lang="partialClose">Parçalı Kapat</span>
         </button>
       </div>
       <button onclick="mPosClose()" id="mPMCloseBtn"
-        style="width:100%;padding:11px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;color:#ef5350;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">
+        style="width:100%;padding:11px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;color:var(--sell);font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">
         ✕ <span data-lang="closePos">Pozisyonu Kapat</span>
       </button>
     </div>
@@ -10436,7 +10465,7 @@ function _checkMarketStatus() {
           if(!row.querySelector('.market-closed-badge')) {
             var badge = document.createElement('span');
             badge.className = 'market-closed-badge';
-            badge.style.cssText = 'font-size:9px;background:#ef5350;color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:monospace;';
+            badge.style.cssText = 'font-size:9px;background:var(--sell);color:#fff;padding:1px 4px;border-radius:2px;margin-left:4px;font-family:var(--mono);';
             badge.textContent = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr).closedStatus : 'KAPALI';
             row.appendChild(badge);
           }
