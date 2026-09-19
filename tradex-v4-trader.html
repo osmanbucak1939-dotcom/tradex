@@ -32,25 +32,30 @@ body { touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-be
   --bg:       #141414;
   --panel:    #1e1e1e;
   --panel2:   #252525;
-  --border:   #2e2e2e;
-  --border2:  #3a3a3a;
-  --text:     #e2e2e2;
-  --muted:    #a0a0a0;
-  --faint:    #888888;
+  --border:   #333a42;
+  --border2:  #424a54;
+  --text:     #edf0f4;
+  --muted:    #aeb6c0;
+  --faint:    #8f97a1;
   --faint2:   #555555;
   --overlay:  rgba(22,22,22,.95);
   --overlay2: rgba(15,15,15,.9);
-  --mwbid-bg:     rgba(200,0,0,.6);
-  --mwbid-text:   #ff2222;
-  --mwbid-border: rgba(220,0,0,.9);
-  --mwask-bg:     rgba(41,121,255,.45);
-  --mwask-text:   #82b1ff;
-  --mwask-border: rgba(41,121,255,.9);
-  --buy:      var(--buy);
+  /* ⚠️ 2026-09-19 FİYAT KUTULARI YENİDEN
+     Eskiden %60 opaklıkta doygun kırmızı/mavi ZEMİN üstüne aynı tonda parlak
+     yazı vardı: hem okunaksız (yazı ile zemin aynı renk ailesinden) hem de
+     ucuz duruyordu. Artık zemin çok hafif bir tint, kenar ince, YAZI ise
+     yüksek kontrastlı — yön bilgisini zeminin tonu taşıyor, okunaklılığı yazı. */
+  --mwbid-bg:     rgba(239,83,80,.10);
+  --mwbid-text:   #ff9b95;
+  --mwbid-border: rgba(239,83,80,.30);
+  --mwask-bg:     rgba(41,121,255,.10);
+  --mwask-text:   #93bbff;
+  --mwask-border: rgba(41,121,255,.32);
+  --buy:      #2979ff  /* ⚠️ 2026-09-19: bu tanım kendine referans veriyordu (var(--buy)), değişken geçersiz kalıyor ve butonlar varsayılan gri/siyaha düşüyordu */;
   --buy-dim:  #0d1f3c;
-  --sell:     var(--sell);
+  --sell:     #ef5350  /* ⚠️ 2026-09-19: bu tanım kendine referans veriyordu (var(--sell)), değişken geçersiz kalıyor ve butonlar varsayılan gri/siyaha düşüyordu */;
   --sell-dim: #3d1a1a;
-  --accent:   var(--accent);
+  --accent:   #f0b90b  /* ⚠️ 2026-09-19: bu tanım kendine referans veriyordu (var(--accent)), değişken geçersiz kalıyor ve butonlar varsayılan gri/siyaha düşüyordu */;
   --mono:     'IBM Plex Mono', monospace;
   --sans:     'IBM Plex Sans', sans-serif;
 
@@ -220,6 +225,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .t-price { color:var(--text); }
 .up { color:var(--buy); }
 .down { color:var(--sell); }
+    /* ⚠️ 2026-09-19: Kâr/zarar rengi bazı tablolarda hücrenin kendi color'ı
+       tarafından eziliyor ve ikisi de düz beyaz görünüyordu. Sınıf taşıyan
+       her öğede yön rengi kazansın diye seçicileri güçlendirdik. */
+    .orders-table td.up, .orders-table td .up, .mgr-table td.up, td.up, span.up { color:var(--buy); }
+    .orders-table td.down, .orders-table td .down, .mgr-table td.down, td.down, span.down { color:var(--sell); }
+
 @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 
 /* ── MAIN LAYOUT ── */
@@ -3961,7 +3972,7 @@ function otSymFilter(val, mode) {
   }) : syms;
   if(!filtered.length) { list.style.display='none'; return; }
   list.innerHTML = filtered.slice(0,20).map(function(s){
-    var ico = _txSymIcon(s.gid || s.category || '', s.color || '#f0b90b', 13);
+    var ico = _txSymIcon(s.gid || s.category || '', s.color || '#f0b90b', 13, s.sym, s.icon);
     var dot = ico ? ico : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(s.color||'#f0b90b')+';flex-shrink:0"></span>';
     return '<div data-sym="'+s.sym+'" data-mode="'+(mode||'')+'" onclick="otSymPick(this.dataset.sym,this.dataset.mode)" style="padding:8px 12px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text);border-bottom:1px solid var(--panel2);display:flex;align-items:center;gap:8px;transition:background .1s" onmouseover="this.style.background=\'var(--panel2)\'" onmouseout="this.style.background=\'\'">'
       + dot
@@ -5638,20 +5649,50 @@ var MARKET_GROUPS = [
 // Artık ikon veriden değil, sembolün GRUBUNDAN türetiliyor: tek çizgi
 // kalınlığı, tek boyut, sembolün kendi rengiyle.
 // 'icon' alanı veride duruyor ama artık kullanılmıyor.
-function _txSymIcon(gid, color, size) {
+function _txSymIcon(gid, color, size, sym, rawIcon) {
   var c = color || 'currentColor', z = size || 14;
+  function wrap(d, sw) {
+    return '<svg width="' + z + '" height="' + z + '" viewBox="0 0 24 24" fill="none" stroke="' + c +
+           '" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round" ' +
+           'style="flex-shrink:0;display:block" aria-hidden="true">' + d + '</svg>';
+  }
+
+  // Emtia sembole özel: külçe / damla / alev — hepsi damla olmasın
+  var S = String(sym || '').toUpperCase();
+  if (S === 'XAUUSD' || S === 'XAGUSD' || S === 'XPTUSD' || S === 'XPDUSD') {
+    // istiflenmiş külçe
+    return wrap('<path d="M6 19h12M4.5 19l1.6-4h11.8l1.6 4"/><path d="M8 15l1.3-4h5.4L16 15"/><path d="M10.4 11l.8-3h1.6l.8 3"/>');
+  }
+  if (S === 'USOIL' || S === 'BRTUSD' || S === 'WTIUSD') {
+    return wrap('<path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9z"/>');   // damla
+  }
+  if (S === 'NGAS') {
+    return wrap('<path d="M12 21a5 5 0 0 0 5-5c0-3.5-3.2-5-3.2-8.5C11 9 12 11 10 12c-1.2.6-1.8-.6-1.8-2C7 11.4 7 13.8 7 16a5 5 0 0 0 5 5z"/>'); // alev
+  }
+
+  // Kripto: ₿ Ξ ◎ ◈ gibi para birimi GLİFLERİ zaten iyi duruyordu ve her coin'e
+  // özel. Emoji DEĞİLLER, o yüzden korunur — yalnızca emoji olanlar SVG'ye döner.
+  if (rawIcon) {
+    var ic = String(rawIcon).trim();
+    var isEmoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{1F1E6}-\u{1F1FF}]/u.test(ic);
+    if (ic && !isEmoji && Array.from(ic).length <= 2) {
+      return '<span style="display:inline-flex;align-items:center;justify-content:center;width:' + z +
+             'px;height:' + z + 'px;font-size:' + Math.round(z * 0.95) + 'px;line-height:1;color:' + c +
+             ';flex-shrink:0" aria-hidden="true">' + ic + '</span>';
+    }
+  }
+
   var d = {
     forex:     '<path d="M4 9h13l-3-3M20 15H7l3 3"/>',
     crypto:    '<path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 8v8M9.5 10.5h5M9.5 13.5h5"/>',
-    commodity: '<path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9z"/>',
+    commodity: '<path d="M4 20h16M7 20v-7l5-4 5 4v7"/>',
     indices:   '<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/>',
     stocks:    '<rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M9 7V4h6v3M9 12h2M13 12h2M9 16h2M13 16h2"/>',
     bist:      '<path d="M4 20h16M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/>'
   }[gid] || '<circle cx="12" cy="12" r="7"/>';
-  return '<svg width="' + z + '" height="' + z + '" viewBox="0 0 24 24" fill="none" stroke="' + c +
-         '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
-         'style="flex-shrink:0;display:block" aria-hidden="true">' + d + '</svg>';
+  return wrap(d);
 }
+
 
 // Trader'da GİZLENECEK semboller (hem sabit MARKET_GROUPS'tan hem symConfig'ten elenir).
 //  - Eski/çift kodlar: WTIUSD, SPXUSD, NASUSD, DJUSD, DAXUSD (USOIL/SPX500X/... ile değişti)
@@ -6451,7 +6492,7 @@ function _mwBuildRowHtml(it2, gid) {
   var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
   var html = '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + gid + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
   var _dot_color = it2.color || '#f0b90b';
-  var _ico = _txSymIcon(gid, _dot_color, 14);
+  var _ico = _txSymIcon(gid, _dot_color, 14, it2.sym, it2.icon);
   var _isFav = !!_txFavorites[it2.sym];
   var _favTitle = _isFav ? 'Favorilerden çıkar' : 'Favorilere ekle';
   var _favOnclick = "event.stopPropagation(); txToggleFavorite('" + it2.sym + "')";
@@ -9218,7 +9259,7 @@ function symUnpin(sym){
     var chgHtml='<span class="mw-chg '+(chgUp?'mw-chg-u':'mw-chg-d')+'" id="mmwc-'+it2.sym+'">'+(chgUp?'▲':'▼')+' '+chgAbs+'%</span>';
     var rowCls=(typeof curSym!=='undefined'&&it2.sym===curSym)?'mw-row active-sym':'mw-row';
     var dotColor=it2.color||'#f0b90b';
-    var ico=_txSymIcon(gid, dotColor, 15);
+    var ico=_txSymIcon(gid, dotColor, 15, it2.sym, it2.icon);
     var _favOnclick="event.stopPropagation(); txToggleFavorite('"+it2.sym+"')";
     var icoHtml;
     if (gid === 'bist') {
