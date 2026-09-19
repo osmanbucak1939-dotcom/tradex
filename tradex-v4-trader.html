@@ -66,8 +66,8 @@ html[data-theme="light"] {
   --bg:       #f4f4f4;
   --panel:    #ffffff;
   --panel2:   #f0f0f0;
-  --border:   #e0e0e0;
-  --border2:  #cfcfcf;
+  --border:   #d4d8dd;
+  --border2:  #bcc2c9;
   --text:     #1a1a1a;
   --muted:    #6e6e6e;
   --faint:    #9a9a9a;
@@ -85,7 +85,9 @@ html[data-theme="light"] {
   --sell:     #d32f2f;
   --sell-dim: #fbe4e4;
   --accent:   #b8860b;
-}
+
+  /* ⚠️ 2026-09-19: açık temada ayırıcı çizgiler zemine çok yakındı (#e0e0e0
+     üzerine #f4f4f4) ve tablolar dağınık görünüyordu; bir tık koyulaştırıldı. */}
 html[data-theme="light"] .kyc-modal,
 html[data-theme="light"] .pw-modal { background: rgba(0,0,0,.4); }
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -630,7 +632,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   grid-template-columns:24px 1fr 58px 58px 36px;
   align-items:center;
   padding:5px 8px;
-  border-bottom:1px solid #252525;
+  border-bottom:1px solid var(--border);
   cursor:pointer;
   transition:background .12s;
   gap:2px;
@@ -1283,7 +1285,7 @@ function _authSuccess(user) {
   window._readOnly = !!user._readOnly;
   _applyReadOnlyUI(window._readOnly);
   try { if(user.balance && typeof balance!=='undefined'){ balance=parseFloat(user.balance); /* ⚠️ 2026-07-16 KRİTİK DÜZELTME: _txBalLoaded burada TRUE yapılmıyor — bu, önbellekten (localStorage/broker meta) gelen olası BAYAT veri. Gerçek onay sadece Firestore canlı snapshot'ından gelmeli (bkz. fbListenUserData, _txBalLoaded=true satırları). Asıl güvenlik kilidi artık _checkStopOut() içinde (_txBalLoaded kontrolü) — updateAccount() burada UI'ı hemen göstermek için yine çağrılıyor ama stop-out tetiklenemez. */ if(typeof updateAccount==='function') updateAccount(); } } catch(e){}
-  try { if(typeof showToast==='function') { var _wL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_wL?_wL.welcomeTitle:'Hoş Geldiniz ✓', user.name+' '+(user.surname||'')); } } catch(e){}
+  try { if(typeof showToast==='function') { var _wL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_wL?_wL.welcomeTitle:'Hoş Geldiniz', user.name+' '+(user.surname||'')); } } catch(e){}
   // Gece yarısı swap zamanla
   scheduleSwap();
 
@@ -1613,7 +1615,7 @@ function _doRegister() {
       accounts = JSON.parse(localStorage.getItem('tx_accounts')||'[]');
       // renderAccCards/renderAccListSmall çağrıları kaldırıldı (2026-04-20) — manager panel trader'dan silindi.
       var ok=document.getElementById('ok-register');
-      if(ok){ var _L2=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); ok.textContent=(_L2?_L2.accCreatedMsg1:'✓ Hesap oluşturuldu! (#')+finalAcc.login+(_L2?_L2.accCreatedMsg2:') Giriş yapılıyor...');ok.style.display='block';}
+      if(ok){ var _L2=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); ok.textContent=(_L2?_L2.accCreatedMsg1:'Hesap oluşturuldu! (#')+finalAcc.login+(_L2?_L2.accCreatedMsg2:') Giriş yapılıyor...');ok.style.display='block';}
       setTimeout(function(){_authSuccess(finalAcc);},1200);
     });
     }).catch(function(hashErr){
@@ -2098,10 +2100,10 @@ function _txClearPasswordChangedSession() {
           <div id="ddLogin" style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-top:3px;letter-spacing:.5px"></div>
         </div>
         <button class="user-dd-item" onclick="openPwModal();closeUserDropdown()">
-          <span class="dd-icon">🔑</span> <span data-lang="changePw">Şifre Güncelle</span>
+          <span class="dd-icon _ui-key"></span> <span data-lang="changePw">Şifre Güncelle</span>
         </button>
         <button class="user-dd-item" onclick="openKycModal();closeUserDropdown()">
-          <span class="dd-icon">🪪</span> <span data-lang="kyc">KYC Doğrulama</span>
+          <span class="dd-icon _ui-idcard"></span> <span data-lang="kyc">KYC Doğrulama</span>
         </button>
         <div class="user-dd-divider"></div>
         <button class="user-dd-item danger" onclick="logoutUser();closeUserDropdown()">
@@ -2118,7 +2120,7 @@ function _txClearPasswordChangedSession() {
 
 <!-- İZLEYİCİ MODU BANDI — MOBİL (masaüstünde .bottom-panel içindeki readOnlyBand kullanılır) -->
 <div id="mReadOnlyBand" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2a1f00;border-bottom:1px solid #f5c518;padding:6px 10px;font-family:var(--mono);font-size:10px;color:#f5c518;letter-spacing:.5px;flex-shrink:0;text-align:center;">
-  <span>👁</span>
+  <span class="_ui-eye"></span>
   <span>İZLEYİCİ MODU — İşlem açma/kapama devre dışı</span>
 </div>
 
@@ -2254,14 +2256,14 @@ function _txClearPasswordChangedSession() {
         <button class="ct-btn" onclick="setInt('1d',this)">D1</button>
       </div>
       <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid var(--border)">
-        <button class="ct-type-btn active" data-type="candlestick" onclick="setChartType('candlestick')" title="Mum">🕯</button>
+        <button class="ct-type-btn active" data-type="candlestick" onclick="setChartType('candlestick')" title="Mum"><span class="_ui-candle"></span></button>
         <button class="ct-type-btn" data-type="bar" onclick="setChartType('bar')" title="Bar">▐</button>
         <button class="ct-type-btn" data-type="line" onclick="setChartType('line')" title="Çizgi">╱</button>
       </div>
       <div style="display:flex;gap:2px;padding:0 6px;border-left:1px solid var(--border)">
         <button class="draw-tool-btn" data-tool="trendline" onclick="setDrawTool('trendline')" title="Trend Çizgisi">╱</button>
         <button class="draw-tool-btn" data-tool="fibonacci" onclick="setDrawTool('fibonacci')" title="Fibonacci">ϕ</button>
-        <button class="ct-btn" onclick="clearDrawings()" title="Çizimleri Temizle" style="color:#ef5350">✕</button>
+        <button class="ct-btn" onclick="clearDrawings()" title="Çizimleri Temizle" style="color:#ef5350"><span class="_ui-close"></span></button>
       </div>
       <div class="ct-price-info">
         <span class="lbl">A:</span><span class="val" id="ctO">—</span>
@@ -2294,7 +2296,7 @@ function _txClearPasswordChangedSession() {
       <div class="ind-sep"></div>
       <span style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 8px" id="indValueDisplay"></span>
       <div style="position:relative;margin-left:auto">
-        <button class="ind-settings-btn" onclick="toggleIndPopup()">⚙ <span data-lang="settingsBtn">Ayarlar</span></button>
+        <button class="ind-settings-btn" onclick="toggleIndPopup()"><span class="_ui-gear"></span> <span data-lang="settingsBtn">Ayarlar</span></button>
         <div class="ind-popup" id="indPopup">
           <div class="ind-popup-title">İNDİKATÖR AYARLARI</div>
           <div class="ind-popup-row"><span class="ind-popup-label">MA Periyot</span><input class="ind-popup-input" id="cfg_ma" type="number" value="20" min="2"></div>
@@ -2371,7 +2373,7 @@ function _txClearPasswordChangedSession() {
 
       <!-- İZLEYİCİ MODU BANDI -->
       <div id="readOnlyBand" style="display:none;align-items:center;justify-content:center;gap:8px;background:#2a1f00;border-bottom:1px solid #f5c518;padding:5px 14px;font-family:var(--mono);font-size:11px;color:#f5c518;letter-spacing:1px;flex-shrink:0;">
-        <span>👁</span>
+        <span class="_ui-eye"></span>
         <span>İZLEYİCİ MODU — Bu hesapta yalnızca görüntüleme yapabilirsiniz. İşlem açma/kapama ve para işlemleri devre dışı.</span>
       </div>
 
@@ -2492,13 +2494,13 @@ function _txClearPasswordChangedSession() {
     </div>
     <div style="text-align:right;margin-bottom:16px"><span id="go-forgot" onclick="_authShow('forgot')" style="font-family:var(--sans);font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline" data-lang="forgotPwLink">Şifremi unuttum</span></div>
     <button id="btn-login" onclick="_doLogin()" style="width:100%;padding:11px;background:var(--accent);color:var(--panel);border:none;border-radius:2px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px" data-lang="loginBtn">GİRİŞ YAP</button>
-    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:var(--mono);font-size:12px;cursor:pointer;margin-bottom:12px">🎮 <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
+    <button id="btn-demo" onclick="_doDemo()" style="width:100%;padding:11px;background:var(--panel);color:var(--muted);border:1px solid var(--border2);border-radius:2px;font-family:var(--mono);font-size:12px;cursor:pointer;margin-bottom:12px"><span class="_ui-demo"></span> <span data-lang="demoBtn">DEMO HESAP İLE DEVAM ET</span></button>
     <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center"><span data-lang="noAccountQ">Hesabınız yok mu?</span> <span id="go-register" onclick="_authShow('register')" style="color:var(--accent);cursor:pointer" data-lang="registerLink">Kayıt olun</span></div>
   </div>
 
   <!-- Şifremi Unuttum -->
   <div id="sec-forgot" style="display:none;padding:20px 28px 24px">
-    <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center" data-lang="forgotPwTitle">🔑 ŞİFRE SIFIRLAMA</div>
+    <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center" data-lang="forgotPwTitle">ŞİFRE SIFIRLAMA</div>
     <div style="font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:16px;text-align:center;line-height:1.5" data-lang="forgotPwDesc">Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.</div>
     <div id="ok-forgot" style="display:none;background:rgba(38,166,154,.1);border:1px solid rgba(38,166,154,.3);color:#26a69a;font-family:var(--mono);font-size:11px;padding:8px;margin-bottom:12px;border-radius:2px"></div>
     <div style="margin-bottom:16px">
@@ -2564,8 +2566,8 @@ function _txClearPasswordChangedSession() {
 <div class="wallet-panel" onclick="event.stopPropagation()">
 
   <div class="wallet-header">
-    <div class="wallet-title" id="walletTitle" data-lang="walletTitle">⬆⬇ PARA İŞLEMLERİ</div>
-    <button class="wallet-close" onclick="closeWallet()">✕</button>
+    <div class="wallet-title" id="walletTitle" data-lang="walletTitle">PARA İŞLEMLERİ</div>
+    <button class="wallet-close" onclick="closeWallet()"><span class="_ui-close"></span></button>
   </div>
 
   <div class="wallet-tabs">
@@ -4774,7 +4776,7 @@ function txEditField(id, field){
 
   txPrompt({
     title:(isSL?'Stop Loss':'Take Profit')+' — #'+id,
-    icon:isSL?'🛑':'🎯',
+    icon:isSL?_txUi('stop',15):_txUi('target',15),
     okClass:isSL?'danger':'primary',
     sub:(pos.label||pos.sym)+' · '+(pos.side==='buy'?'AL':'SAT')+
         (_cur?'<br>Güncel fiyat: <b>'+fp(_cur,dec)+'</b>':''),
@@ -5004,7 +5006,7 @@ function _checkStopOut(equity, marginUsed, marginLvl) {
   var _cuData = (typeof _cu!=='undefined'&&_cu) ? _cu : null;
   if(!_cuData) { try{ _cuData=JSON.parse(localStorage.getItem('tx_current_user')||'null'); }catch(e){} }
   var _soAccName = _cuData ? '#'+((_cuData.login||_cuData.id)||'?')+' '+(_cuData.name||'') : '';
-  { var _soL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast('⚠ STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · '+(_soL?_soL.marginAbbr:'Tem')+': %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger'); }
+  { var _soL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast('STOP OUT', (_soAccName?_soAccName+' — ':'')+toClose.sym+' · '+(_soL?_soL.marginAbbr:'Tem')+': %'+(marginLvl?marginLvl.toFixed(1):'0'), 'danger'); }
 
   // Kilit garantili serbest bırakma
   var _releaseLock = function(){
@@ -5058,7 +5060,7 @@ function addAlarm() {
   saveAlarms(); renderAlarms();
   var _g49e24e=document.getElementById('alPrice'); if(_g49e24e) _g49e24e.value = '';
   var _st_alarmForm=document.getElementById('alarmForm'); if(_st_alarmForm) _st_alarmForm.style.display = 'none';
-  showToast('Alarm Kuruldu 🔔', `${sym} $${t} ${dir==='above'?'üzeri':'altı'}`);
+  showToast('Alarm Kuruldu', `${sym} $${t} ${dir==='above'?'üzeri':'altı'}`);
   if (Notification.permission==='default') Notification.requestPermission();
 }
 
@@ -5072,7 +5074,7 @@ function checkAlarms(sym, price) {
     const hit = a.dir==='above' ? price>=a.target : price<=a.target;
     if (hit) {
       triggered.add(a.id); a.active=false; saveAlarms(); renderAlarms();
-      showToast(`🔔 ${s} ALARM!`, `$${fp(price)} → hedef $${a.target}`);
+      showToast(`${s} ALARM!`, `$${fp(price)} → hedef $${a.target}`);
       if (Notification.permission==='granted') new Notification(`Trade Academy: ${s}`,{body:`$${fp(price)}`});
     }
   });
@@ -5576,26 +5578,26 @@ var MARKET_GROUPS = [
   {
     id:'commodity', label:'EMTİALAR', open:true,
     items:[
-      {sym:'XAUUSD',  name:'XAU/USD',  full:'Altın / Dolar',          icon:'🥇', spread:0.30,   decimals:2},
-      {sym:'XAGUSD',  name:'XAG/USD',  full:'Gümüş / Dolar',          icon:'🥈', spread:0.015,  decimals:3},
-      {sym:'XPTUSD',  name:'XPT/USD',  full:'Platin / Dolar',         icon:'⬡',  spread:0.50,   decimals:2},
-      {sym:'USOIL',   name:'WTI/USD',  full:'Ham Petrol (WTI)',        icon:'🛢', spread:0.03,   decimals:2},
-      {sym:'BRTUSD',  name:'BRENT',    full:'Brent Petrol',            icon:'⛽', spread:0.03,   decimals:2},
-      {sym:'NGAS',    name:'NAT GAS',  full:'Doğal Gaz',               icon:'🔥', spread:0.005,  decimals:3},
+      {sym:'XAUUSD',  name:'XAU/USD',  full:'Altın / Dolar',          icon:'', spread:0.30,   decimals:2},
+      {sym:'XAGUSD',  name:'XAG/USD',  full:'Gümüş / Dolar',          icon:'', spread:0.015,  decimals:3},
+      {sym:'XPTUSD',  name:'XPT/USD',  full:'Platin / Dolar',         icon:'',  spread:0.50,   decimals:2},
+      {sym:'USOIL',   name:'WTI/USD',  full:'Ham Petrol (WTI)',        icon:'', spread:0.03,   decimals:2},
+      {sym:'BRTUSD',  name:'BRENT',    full:'Brent Petrol',            icon:'', spread:0.03,   decimals:2},
+      {sym:'NGAS',    name:'NAT GAS',  full:'Doğal Gaz',               icon:'', spread:0.005,  decimals:3},
       // ⚠️ 2026-08-19: Paladyum köprüde (YMAP: PA=F) besleniyordu ama katalogda
       // yoktu — bu yüzden "Eksikleri içe aktar" ile de eklenemiyordu.
-      {sym:'XPDUSD',  name:'XPD/USD',  full:'Paladyum / Dolar',        icon:'⬢',  spread:1.50,   decimals:2},
+      {sym:'XPDUSD',  name:'XPD/USD',  full:'Paladyum / Dolar',        icon:'',  spread:1.50,   decimals:2},
     ]
   },
   {
     id:'indices', label:'ENDEKSLER', open:true,
     items:[
-      {sym:'SPX500X',  name:'S&P 500',  full:'S&P 500 Endeksi',       icon:'📈', spread:0.50,   decimals:2},
-      {sym:'NAS100X',  name:'NASDAQ',   full:'NASDAQ 100',             icon:'📊', spread:0.80,   decimals:2},
-      {sym:'DJ30X',    name:'DOW 30',   full:'Dow Jones 30',           icon:'🏛', spread:1.00,   decimals:2},
+      {sym:'SPX500X',  name:'S&P 500',  full:'S&P 500 Endeksi',       icon:'', spread:0.50,   decimals:2},
+      {sym:'NAS100X',  name:'NASDAQ',   full:'NASDAQ 100',             icon:'', spread:0.80,   decimals:2},
+      {sym:'DJ30X',    name:'DOW 30',   full:'Dow Jones 30',           icon:'', spread:1.00,   decimals:2},
       {sym:'FTSE100X', name:'FTSE 100', full:'FTSE 100 UK',            icon:'🇬🇧',spread:0.50,   decimals:2},
       {sym:'DAX40X',   name:'DAX 40',   full:'DAX Almanya',            icon:'🇩🇪',spread:0.80,   decimals:2},
-      {sym:'DXY',      name:'DXY',      full:'Dolar Endeksi',          icon:'💵', spread:0.030,  decimals:3},
+      {sym:'DXY',      name:'DXY',      full:'Dolar Endeksi',          icon:'', spread:0.030,  decimals:3},
       {sym:'XU100X',   name:'BIST 100', full:'Borsa İstanbul',         icon:'🇹🇷',spread:2.00,   decimals:2},
     ]
   },
@@ -5606,17 +5608,17 @@ var MARKET_GROUPS = [
       {sym:'ETHUSDT',  name:'ETH/USDT',  full:'Ethereum',       icon:'Ξ',  spread:0.05,   decimals:2},
       {sym:'SOLUSDT',  name:'SOL/USDT',  full:'Solana',         icon:'◎',  spread:0.01,   decimals:2},
       {sym:'BNBUSDT',  name:'BNB/USDT',  full:'BNB Chain',      icon:'◈',  spread:0.02,   decimals:2},
-      {sym:'XRPUSDT',  name:'XRP/USDT',  full:'Ripple',         icon:'✕',  spread:0.0001, decimals:4},
-      {sym:'ADAUSDT',  name:'ADA/USDT',  full:'Cardano',        icon:'♠',  spread:0.0001, decimals:4},
+      {sym:'XRPUSDT',  name:'XRP/USDT',  full:'Ripple',         icon:'',  spread:0.0001, decimals:4},
+      {sym:'ADAUSDT',  name:'ADA/USDT',  full:'Cardano',        icon:'',  spread:0.0001, decimals:4},
       {sym:'DOGEUSDT', name:'DOGE/USDT', full:'Dogecoin',       icon:'Ð',  spread:0.0001, decimals:4},
       {sym:'AVAXUSDT', name:'AVAX/USDT', full:'Avalanche',      icon:'△',  spread:0.005,  decimals:3},
       {sym:'DOTUSDT',  name:'DOT/USDT',  full:'Polkadot',       icon:'●',  spread:0.003,  decimals:3},
-      {sym:'LINKUSDT', name:'LINK/USDT', full:'Chainlink',      icon:'⬡',  spread:0.005,  decimals:3},
-      {sym:'CAKEUSDT', name:'CAKE/USDT', full:'PancakeSwap',    icon:'🥞', spread:0.001,  decimals:4},
-      {sym:'CELOUSDT', name:'CELO/USDT', full:'Celo',           icon:'🌱', spread:0.0005, decimals:4},
-      {sym:'CHZUSDT',  name:'CHZ/USDT',  full:'Chiliz',         icon:'⚽', spread:0.0001, decimals:5},
-      {sym:'COMPUSDT', name:'COMP/USDT', full:'Compound',       icon:'🏦', spread:0.01,   decimals:3},
-      {sym:'CROUSDT',  name:'CRO/USDT',  full:'Cronos',         icon:'🔷', spread:0.0001, decimals:5},
+      {sym:'LINKUSDT', name:'LINK/USDT', full:'Chainlink',      icon:'',  spread:0.005,  decimals:3},
+      {sym:'CAKEUSDT', name:'CAKE/USDT', full:'PancakeSwap',    icon:'', spread:0.001,  decimals:4},
+      {sym:'CELOUSDT', name:'CELO/USDT', full:'Celo',           icon:'', spread:0.0005, decimals:4},
+      {sym:'CHZUSDT',  name:'CHZ/USDT',  full:'Chiliz',         icon:'', spread:0.0001, decimals:5},
+      {sym:'COMPUSDT', name:'COMP/USDT', full:'Compound',       icon:'', spread:0.01,   decimals:3},
+      {sym:'CROUSDT',  name:'CRO/USDT',  full:'Cronos',         icon:'', spread:0.0001, decimals:5},
     ]
   },
   {
@@ -5639,6 +5641,36 @@ var MARKET_GROUPS = [
 ];
 
 
+
+// ══════════════════════════════════════════════════════════════
+// ARAYÜZ İKONLARI (2026-09-19) — emoji yerine SVG
+// Emoji her işletim sisteminde farklı boyut/stilde çizilir, hizası kayar ve
+// amatör durur. Bunlar tek çizgi kalınlığında, metinle aynı renkte.
+// ══════════════════════════════════════════════════════════════
+function _txUi(name, size, color) {
+  var z = size || 14, c = color || 'currentColor';
+  var d = {
+    star:    '<path d="M12 4l2.4 5 5.6.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.6-.8z"/>',
+    play:    '<rect x="3" y="5" width="18" height="13" rx="2"/><path d="M10 9.5l4.5 2.5-4.5 2.5z"/>',
+    key:     '<circle cx="8" cy="12" r="3.2"/><path d="M11.2 12H21M18 12v3M15 12v2"/>',
+    idcard:  '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="11.5" r="2"/><path d="M5.8 15.6c.6-1.3 1.8-2 3.2-2s2.6.7 3.2 2M15 10h4M15 13.5h4"/>',
+    eye:     '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/>',
+    pencil:  '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    gear:    '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
+    candle:  '<path d="M7 4v3M7 17v3M17 3v4M17 16v5"/><rect x="4.5" y="7" width="5" height="10" rx="1"/><rect x="14.5" y="7" width="5" height="9" rx="1"/>',
+    updown:  '<path d="M7 20V5M7 5L4 8M7 5l3 3M17 4v15M17 19l-3-3M17 19l3-3"/>',
+    close:   '<path d="M6 6l12 12M18 6L6 18"/>',
+    target:  '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/>',
+    stop:    '<circle cx="12" cy="12" r="8"/><path d="M9 12h6"/>',
+    mail:    '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+    home:    '<path d="M4 20h16M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/>',
+    selfie:  '<rect x="6" y="3" width="12" height="18" rx="2.5"/><circle cx="12" cy="10" r="2.4"/><path d="M8.6 16.2c.7-1.4 2-2.1 3.4-2.1s2.7.7 3.4 2.1"/>'
+  }[name] || '<circle cx="12" cy="12" r="7"/>';
+  return '<svg width="' + z + '" height="' + z + '" viewBox="0 0 24 24" fill="none" stroke="' + c +
+         '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
+         'style="flex-shrink:0;display:inline-block;vertical-align:-2px" aria-hidden="true">' + d + '</svg>';
+}
+
 // ══════════════════════════════════════════════════════════════
 // SEMBOL İKONLARI — SVG (2026-09-19)
 // ──────────────────────────────────────────────────────────────
@@ -5649,6 +5681,22 @@ var MARKET_GROUPS = [
 // Artık ikon veriden değil, sembolün GRUBUNDAN türetiliyor: tek çizgi
 // kalınlığı, tek boyut, sembolün kendi rengiyle.
 // 'icon' alanı veride duruyor ama artık kullanılmıyor.
+
+// _ui-* sınıflı yer tutucuları SVG ile doldur (DOM hazır olduğunda)
+function _txFillUiIcons(root){
+  var map={'_ui-demo':'play','_ui-key':'key','_ui-idcard':'idcard','_ui-eye':'eye',
+           '_ui-updown':'updown','_ui-gear':'gear','_ui-candle':'candle','_ui-close':'close','_ui-mail':'mail','_ui-home':'home','_ui-selfie':'selfie'};
+  Object.keys(map).forEach(function(cls){
+    (root||document).querySelectorAll('.'+cls).forEach(function(el){
+      if(el.querySelector('svg')) return;
+      el.innerHTML=_txUi(map[cls], 14);
+    });
+  });
+  var mi=document.getElementById('txModalIcon');
+  if(mi && !mi.querySelector('svg') && !mi.textContent.trim()) mi.innerHTML=_txUi('pencil',15);
+}
+document.addEventListener('DOMContentLoaded', function(){ try{_txFillUiIcons();}catch(e){} });
+
 function _txSymIcon(gid, color, size, sym, rawIcon) {
   var c = color || 'currentColor', z = size || 14;
   function wrap(d, sw) {
@@ -6075,7 +6123,7 @@ function _walletMethodIcon(m) {
   if(t === 'crypto') return svgCrypto;
   if(t === 'card') return svgCard;
   // Emoji'den tahmin et
-  if(ico==='💳'||ico==='🃏') return svgCard;
+  if(ico===''||ico==='🃏') return svgCard;
   if(ico==='₮'||ico==='₿'||ico==='Ξ') return svgCrypto;
   return svgWallet;
 }
@@ -6140,7 +6188,7 @@ function selectDepositMethod(id) {
     `;
   }
   var _ih_depositInfoBox=document.getElementById('depositInfoBox'); if(_ih_depositInfoBox) _ih_depositInfoBox.innerHTML = infoHtml;
-  var _el_depositNote=document.getElementById('depositNote'); if(_el_depositNote) _el_depositNote.textContent = '⚠ ' + (m.note || '');
+  var _el_depositNote=document.getElementById('depositNote'); if(_el_depositNote) _el_depositNote.textContent = '' + (m.note || '');
 }
 
 function setDepositAmt(v) { var _g910dbb=document.getElementById('depositAmount'); if(_g910dbb) _g910dbb.value = v; }
@@ -6227,8 +6275,8 @@ function selectWithdrawMethod(id) {
   }
   var _gbe2de5=document.getElementById('withdrawAddress'); if(_gbe2de5) _gbe2de5.placeholder = m.type==='bank'?'IBAN numaranızı girin':'Cüzdan adresinizi girin';
   var _el_withdrawNote=document.getElementById('withdrawNote'); if(_el_withdrawNote) _el_withdrawNote.textContent = m.type==='bank'
-    ? '⚠ Lütfen size ait IBAN numarasını girin. Başkasına ait hesaba işlem yapılmaz.'
-    : '⚠ Lütfen '+m.network+' ağına ait cüzdan adresinizi girin. Hatalı adrese yapılan transferler geri alınamaz.';
+    ? 'Lütfen size ait IBAN numarasını girin. Başkasına ait hesaba işlem yapılmaz.'
+    : 'Lütfen '+m.network+' ağına ait cüzdan adresinizi girin. Hatalı adrese yapılan transferler geri alınamaz.';
 }
 
 function setWithdrawAmt(v) {
@@ -6569,7 +6617,7 @@ function renderMarketWatch(filter) {
   if(favItems.length) {
     var favOpen = mwGroupState['favorites'] !== false;
     html += '<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">';
-    html += '<span class="mw-group-title">⭐ '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">(' + favItems.length + ')</span></span>';
+    html += '<span class="mw-group-title">'+_txUi('star',11)+' '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">(' + favItems.length + ')</span></span>';
     html += '<span class="mw-group-arrow" style="display:flex;align-items:center">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;transition:transform .2s;transform:' + (favOpen ? 'rotate(90deg)' : 'rotate(0deg)') + '"><path d=\"M9 18l6-6-6-6\"/></svg></span></div>';
     if(favOpen) {
       for(var fi=0; fi<favItems.length; fi++) {
@@ -7687,7 +7735,7 @@ function toggleUserDropdown(e) {
     var dl = document.getElementById('ddLogin');
     if(dn) dn.textContent = (_cu.name||'') + (_cu.surname?' '+_cu.surname:'');
     if(de) de.textContent = _cu.email || '';
-    if(dl) dl.textContent = (_cu.login||_cu.id) ? '🔑 Login #'+(_cu.login||_cu.id) : '';
+    if(dl) dl.textContent = (_cu.login||_cu.id) ? 'Login #'+(_cu.login||_cu.id) : '';
   }
   dd.classList.toggle('open');
 }
@@ -7719,10 +7767,10 @@ var _kycTypes = {
 function _kycStatusHtml(state, type) {
   // state: 'todo' | 'uploading' | 'review' | 'approved' | 'rejected'
   var L = (typeof _LANGS !== 'undefined' && typeof _curLang !== 'undefined') ? (_LANGS[_curLang]||_LANGS.tr) : null;
-  if(state==='approved')  return {cls:'done',    html: L ? L.kycApproved : '✓ Onaylandı'};
+  if(state==='approved')  return {cls:'done',    html: L ? L.kycApproved : 'Onaylandı'};
   if(state==='review')    return {cls:'pending', html:(L?L.kycReview:'⏳ İnceleniyor')+' <span onclick="kycCancelUpload(\''+type+'\',event)" style="color:var(--sell);text-decoration:underline;cursor:pointer;margin-left:6px;">'+(L?L.kycCancelLink:'İptal Et')+'</span>'};
   if(state==='uploading') return {cls:'pending', html: L ? L.kycUploading : '↑ Yükleniyor...'};
-  if(state==='rejected')  return {cls:'rejected',html: L ? L.kycRejected : '✕ Reddedildi — Tekrar Yükle'};
+  if(state==='rejected')  return {cls:'rejected',html: L ? L.kycRejected : 'Reddedildi — Tekrar Yükle'};
   return {cls:'todo', html: L ? L.kycTodo : '— Bekliyor, yüklemek için tıklayın'};
 }
 
@@ -7815,7 +7863,7 @@ function _kycOnFileSelected(e) {
     },
     function error(err) {
       console.warn('KYC upload error:', err);
-      if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Yükleme başarısız — tekrar deneyin'; }
+      if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = 'Yükleme başarısız — tekrar deneyin'; }
       showToast('Yükleme başarısız', err.message || 'Bilinmeyen hata');
     },
     function complete() {
@@ -7824,7 +7872,7 @@ function _kycOnFileSelected(e) {
         var patch = { kyc: {} }; patch.kyc[type] = kycEntry;
         if(!db || !_cu || !_cu.id) {
           console.error('KYC Firestore yazım hatası: db veya _cu.id yok', {db:!!db, cu:_cu});
-          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Kayıt hatası — tekrar deneyin'; }
+          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = 'Kayıt hatası — tekrar deneyin'; }
           showToast('Kayıt hatası', 'Oturum bilgisi bulunamadı, sayfayı yenileyip tekrar deneyin');
           return;
         }
@@ -7836,7 +7884,7 @@ function _kycOnFileSelected(e) {
           showToast('Belge yüklendi ✓', info.label + ' incelemeye alındı');
         }).catch(function(err){
           console.error('KYC Firestore yazım hatası:', err);
-          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = '✕ Kayıt hatası — tekrar deneyin'; }
+          if(statusEl) { statusEl.className = 'kyc-step-status rejected'; statusEl.innerHTML = 'Kayıt hatası — tekrar deneyin'; }
           showToast('Belge kaydedilemedi', err.message || 'Firestore yazım hatası');
         });
       });
@@ -8186,11 +8234,11 @@ function symUnpin(sym){
 <div class="kyc-modal" id="kycModal">
   <div class="kyc-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="kyc-title" data-lang="kycTitle">🪪 KYC DOĞRULAMA</div>
+      <div class="kyc-title" data-lang="kycTitle">KYC DOĞRULAMA</div>
       <button onclick="closeKycModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div class="kyc-step">
-      <div class="kyc-step-icon">📧</div>
+      <div class="kyc-step-icon _ui-mail"></div>
       <div class="kyc-step-info">
         <div class="kyc-step-title" data-lang="kycEmailTitle">E-posta Doğrulama</div>
         <div class="kyc-step-desc" data-lang="kycEmailDesc">E-posta adresinizi doğrulayın</div>
@@ -8198,7 +8246,7 @@ function symUnpin(sym){
       <div class="kyc-step-status done" id="kyc-email-status" data-lang="kycDone">✓ Tamamlandı</div>
     </div>
     <div class="kyc-step" id="kyc-id-step" onclick="kycUploadClick('id')">
-      <div class="kyc-step-icon">🪪</div>
+      <div class="kyc-step-icon _ui-idcard"></div>
       <div class="kyc-step-info">
         <div class="kyc-step-title" data-lang="kycIdTitle">Kimlik Doğrulama</div>
         <div class="kyc-step-desc" data-lang="kycIdDesc">TC Kimlik veya Pasaport</div>
@@ -8206,7 +8254,7 @@ function symUnpin(sym){
       <div class="kyc-step-status pending" id="kyc-id-status" data-lang="kycPending">⏳ Beklemede</div>
     </div>
     <div class="kyc-step" id="kyc-addr-step" onclick="kycUploadClick('addr')">
-      <div class="kyc-step-icon">🏠</div>
+      <div class="kyc-step-icon _ui-home"></div>
       <div class="kyc-step-info">
         <div class="kyc-step-title" data-lang="kycAddrTitle">Adres Doğrulama</div>
         <div class="kyc-step-desc" data-lang="kycAddrDesc">Fatura veya banka ekstresi</div>
@@ -8214,7 +8262,7 @@ function symUnpin(sym){
       <div class="kyc-step-status todo" id="kyc-addr-status" data-lang="kycTodo">— Bekliyor, yüklemek için tıklayın</div>
     </div>
     <div class="kyc-step" id="kyc-selfie-step" onclick="kycUploadClick('selfie')">
-      <div class="kyc-step-icon">🤳</div>
+      <div class="kyc-step-icon _ui-selfie"></div>
       <div class="kyc-step-info">
         <div class="kyc-step-title" data-lang="kycSelfieTitle">Selfie Doğrulama</div>
         <div class="kyc-step-desc" data-lang="kycSelfieDesc">Kimlikle birlikte fotoğraf</div>
@@ -8232,7 +8280,7 @@ function symUnpin(sym){
 <div class="pw-modal" id="pwModal">
   <div class="pw-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div class="kyc-title" data-lang="pwTitle">🔑 ŞİFRE GÜNCELLE</div>
+      <div class="kyc-title" data-lang="pwTitle">ŞİFRE GÜNCELLE</div>
       <button onclick="closePwModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div style="margin-bottom:12px">
@@ -9340,7 +9388,7 @@ function symUnpin(sym){
     if(favItems.length){
       var favOpen=mwGroupState['favorites']!==false;
       html+='<div class="mw-group-header mw-group-fav" data-gid="favorites" onclick="toggleMwGroup(this.dataset.gid)">'
-        +'<span class="mw-group-title">⭐ '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">('+favItems.length+')</span></span>'
+        +'<span class="mw-group-title">'+_txUi('star',11)+' '+(((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null))?((typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null)).catFav:'FAVORİLER')+' <span style="opacity:.5">('+favItems.length+')</span></span>'
         +'<span class="mw-group-arrow'+(favOpen?' open':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg></span></div>';
       if(favOpen){
         for(var fi=0;fi<favItems.length;fi++){
@@ -9554,29 +9602,29 @@ function symUnpin(sym){
       myAccount:'HESABIM', brokerInfo:'Broker Bilgileri', dir:'rtl-no',
       searchSymbol:'Sembol ara...', orderPrice:'Emir Fiyatı', placeOrder:'EMİR VER', priceLbl:'Fiyat',
       openPriceLbl:'Açılış', swap:'Swap', timeLbl:'Saat',
-      walletTitle:'⬆⬇ PARA İŞLEMLERİ', histTab2:'Geçmiş', selectDepositMethod:'YATIRIM YÖNTEMİ SEÇİN',
+      walletTitle:'PARA İŞLEMLERİ', histTab2:'Geçmiş', selectDepositMethod:'YATIRIM YÖNTEMİ SEÇİN',
       amount:'MİKTAR', submitDeposit:'PARA YATIRMA TALEBİ GÖNDER', selectWithdrawMethod:'ÇEKİM YÖNTEMİ SEÇİN',
       recipientInfo:'ALICI BİLGİSİ', ibanPlaceholder:'IBAN / Cüzdan Adresi', allAmount:'Tümü',
       submitWithdraw:'ÇEKİM TALEBİ GÖNDER', loadingTxt:'Yükleniyor...',
       brokerLbl:'Broker', companyLbl:'Şirket', websiteLbl:'Web Sitesi', emailLbl:'E-posta', phoneLbl:'Telefon',
       licenseLbl:'Lisans', regulatorLbl:'Düzenleyici', addressLbl:'Adres', supportLbl:'Destek', disclaimerLbl:'Yasal Uyarı',
-      kycTitle:'🪪 KYC DOĞRULAMA',
+      kycTitle:'KYC DOĞRULAMA',
       kycEmailTitle:'E-posta Doğrulama', kycEmailDesc:'E-posta adresinizi doğrulayın',
       kycIdTitle:'Kimlik Doğrulama', kycIdDesc:'TC Kimlik veya Pasaport',
       kycAddrTitle:'Adres Doğrulama', kycAddrDesc:'Fatura veya banka ekstresi',
       kycSelfieTitle:'Selfie Doğrulama', kycSelfieDesc:'Kimlikle birlikte fotoğraf',
       kycFooterNote:'KYC doğrulama işlemleri 1-3 iş günü içinde tamamlanır.',
-      kycDone:'✓ Tamamlandı', kycPending:'⏳ Beklemede', kycTodo:'— Bekliyor, yüklemek için tıklayın',
-      kycApproved:'✓ Onaylandı', kycReview:'⏳ İnceleniyor', kycCancelLink:'İptal Et',
-      kycUploading:'↑ Yükleniyor...', kycRejected:'✕ Reddedildi — Tekrar Yükle',
+      kycDone:'Tamamlandı', kycPending:'⏳ Beklemede', kycTodo:'— Bekliyor, yüklemek için tıklayın',
+      kycApproved:'Onaylandı', kycReview:'⏳ İnceleniyor', kycCancelLink:'İptal Et',
+      kycUploading:'↑ Yükleniyor...', kycRejected:'Reddedildi — Tekrar Yükle',
       kycCancelConfirm:'Yüklediğin belgeyi iptal etmek istediğine emin misin? Tekrar yükleyebileceksin.',
       kycCancelledTitle:'İptal edildi', kycCancelledMsg:' tekrar yüklenebilir', kycCancelFailTitle:'İptal edilemedi',
-      pwTitle:'🔑 ŞİFRE GÜNCELLE', pwCurrentLbl:'MEVCUT ŞİFRE', pwNewLbl:'YENİ ŞİFRE', pwConfirmLbl:'YENİ ŞİFRE (TEKRAR)', pwSubmit:'ŞİFREYİ GÜNCELLE',
+      pwTitle:'ŞİFRE GÜNCELLE', pwCurrentLbl:'MEVCUT ŞİFRE', pwNewLbl:'YENİ ŞİFRE', pwConfirmLbl:'YENİ ŞİFRE (TEKRAR)', pwSubmit:'ŞİFREYİ GÜNCELLE',
       pwErrFill:'Tüm alanları doldurun.', pwErrLength:'Şifre en az 6 karakter olmalı.', pwErrMismatch:'Yeni şifreler eşleşmiyor.', pwErrWrong:'Mevcut şifre yanlış.',
       pwSuccessTitle:'Şifre Güncellendi ✓', pwSuccessMsg:'Şifreniz başarıyla değiştirildi.',
       txDeposit:'Para Yatırım', txWithdraw:'Para Çekim', txBonusIn:'Bonus Eklendi', txBonusOut:'Bonus Çıkarıldı',
       noTxYet:'Henüz işlem yok', dateLbl:'TARİH', typeLbl:'TİP', noteLbl:'NOT',
-      welcomeTitle:'Hoş Geldiniz ✓', readOnlySetTitle:'İzleyici Moduna Alındı', readOnlySetMsg:'Hesabınız artık salt okunur — yeni işlem açılamaz.',
+      welcomeTitle:'Hoş Geldiniz', readOnlySetTitle:'İzleyici Moduna Alındı', readOnlySetMsg:'Hesabınız artık salt okunur — yeni işlem açılamaz.',
       readOnlyTitle:'İzleyici Modu', readOnlyCancelPending:'Bu modda bekleyen emir iptal edemezsiniz.',
       readOnlyNoTrade:'Bu modda işlem açamazsınız.', readOnlyNoFinance:'Bu modda para işlemi yapamazsınız.',
       marketClosedTitle:'Piyasa Kapalı', marketClosedMsg:'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.',
@@ -9606,8 +9654,8 @@ function symUnpin(sym){
       demoAccCaps:'DEMO', virtualAccDesc:'$10,000 sanal',
       loginPh:'10000 veya ornek@mail.com', firstNameLbl:'AD', lastNameLbl:'SOYAD', phoneLbl2:'TELEFON',
       emailPh:'ornek@mail.com', min6Ph:'Min 6 karakter', repeatLbl:'TEKRAR',
-      accCreatedMsg1:'✓ Hesap oluşturuldu! (#', accCreatedMsg2:') Giriş yapılıyor...',
-      forgotPwLink:'Şifremi unuttum', forgotPwTitle:'🔑 ŞİFRE SIFIRLAMA', forgotPwDesc:'Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.',
+      accCreatedMsg1:'Hesap oluşturuldu! (#', accCreatedMsg2:') Giriş yapılıyor...',
+      forgotPwLink:'Şifremi unuttum', forgotPwTitle:'ŞİFRE SIFIRLAMA', forgotPwDesc:'Kayıtlı e-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.',
       forgotPwEmailPh:'ornek@mail.com', forgotPwSubmit:'SIFIRLAMA BAĞLANTISI GÖNDER', forgotPwBack:'Girişe dön',
       loginNoLbl:'LOGIN NO / E-POSTA', forgotPwSentMsg:'E-posta adresiniz kayıtlıysa, birazdan sıfırlama talimatlarını içeren bir mesaj alacaksınız.',
       hasAccountQ:'Hesabınız var mı?', loginLink:'Giriş yapın'
@@ -9629,24 +9677,24 @@ function symUnpin(sym){
       myAccount:'MY ACCOUNT', brokerInfo:'Broker Info', dir:'rtl-no',
       searchSymbol:'Search symbol...', orderPrice:'Order Price', placeOrder:'PLACE ORDER', priceLbl:'Price',
       openPriceLbl:'Open', swap:'Swap', timeLbl:'Time',
-      walletTitle:'⬆⬇ FUNDS', histTab2:'History', selectDepositMethod:'SELECT DEPOSIT METHOD',
+      walletTitle:'FUNDS', histTab2:'History', selectDepositMethod:'SELECT DEPOSIT METHOD',
       amount:'AMOUNT', submitDeposit:'SUBMIT DEPOSIT REQUEST', selectWithdrawMethod:'SELECT WITHDRAWAL METHOD',
       recipientInfo:'RECIPIENT INFO', ibanPlaceholder:'IBAN / Wallet Address', allAmount:'All',
       submitWithdraw:'SUBMIT WITHDRAWAL REQUEST', loadingTxt:'Loading...',
       brokerLbl:'Broker', companyLbl:'Company', websiteLbl:'Website', emailLbl:'Email', phoneLbl:'Phone',
       licenseLbl:'License', regulatorLbl:'Regulator', addressLbl:'Address', supportLbl:'Support', disclaimerLbl:'Disclaimer',
-      kycTitle:'🪪 KYC VERIFICATION',
+      kycTitle:'KYC VERIFICATION',
       kycEmailTitle:'Email Verification', kycEmailDesc:'Verify your email address',
       kycIdTitle:'ID Verification', kycIdDesc:'National ID or Passport',
       kycAddrTitle:'Address Verification', kycAddrDesc:'Utility bill or bank statement',
       kycSelfieTitle:'Selfie Verification', kycSelfieDesc:'Photo holding your ID',
       kycFooterNote:'KYC verification is completed within 1-3 business days.',
-      kycDone:'✓ Completed', kycPending:'⏳ Pending', kycTodo:'— Waiting, tap to upload',
-      kycApproved:'✓ Approved', kycReview:'⏳ Under review', kycCancelLink:'Cancel',
-      kycUploading:'↑ Uploading...', kycRejected:'✕ Rejected — Upload again',
+      kycDone:'Completed', kycPending:'⏳ Pending', kycTodo:'— Waiting, tap to upload',
+      kycApproved:'Approved', kycReview:'⏳ Under review', kycCancelLink:'Cancel',
+      kycUploading:'↑ Uploading...', kycRejected:'Rejected — Upload again',
       kycCancelConfirm:'Are you sure you want to cancel this uploaded document? You can upload it again.',
       kycCancelledTitle:'Cancelled', kycCancelledMsg:' can be uploaded again', kycCancelFailTitle:'Could not cancel',
-      pwTitle:'🔑 UPDATE PASSWORD', pwCurrentLbl:'CURRENT PASSWORD', pwNewLbl:'NEW PASSWORD', pwConfirmLbl:'NEW PASSWORD (CONFIRM)', pwSubmit:'UPDATE PASSWORD',
+      pwTitle:'UPDATE PASSWORD', pwCurrentLbl:'CURRENT PASSWORD', pwNewLbl:'NEW PASSWORD', pwConfirmLbl:'NEW PASSWORD (CONFIRM)', pwSubmit:'UPDATE PASSWORD',
       pwErrFill:'Please fill in all fields.', pwErrLength:'Password must be at least 6 characters.', pwErrMismatch:'New passwords do not match.', pwErrWrong:'Current password is wrong.',
       pwSuccessTitle:'Password Updated ✓', pwSuccessMsg:'Your password has been changed successfully.',
       txDeposit:'Deposit', txWithdraw:'Withdrawal', txBonusIn:'Bonus Added', txBonusOut:'Bonus Removed',
@@ -9681,8 +9729,8 @@ function symUnpin(sym){
       demoAccCaps:'DEMO', virtualAccDesc:'$10,000 virtual',
       loginPh:'10000 or email@example.com', firstNameLbl:'FIRST NAME', lastNameLbl:'LAST NAME', phoneLbl2:'PHONE',
       emailPh:'email@example.com', min6Ph:'Min 6 characters', repeatLbl:'CONFIRM',
-      accCreatedMsg1:'✓ Account created! (#', accCreatedMsg2:') Signing in...',
-      forgotPwLink:'Forgot password', forgotPwTitle:'🔑 RESET PASSWORD', forgotPwDesc:"Enter your registered email address and we'll send you a reset link.",
+      accCreatedMsg1:'Account created! (#', accCreatedMsg2:') Signing in...',
+      forgotPwLink:'Forgot password', forgotPwTitle:'RESET PASSWORD', forgotPwDesc:"Enter your registered email address and we'll send you a reset link.",
       forgotPwEmailPh:'email@example.com', forgotPwSubmit:'SEND RESET LINK', forgotPwBack:'Back to login',
       loginNoLbl:'LOGIN NO / EMAIL', forgotPwSentMsg:"If your email is registered, you'll receive reset instructions shortly.",
       hasAccountQ:'Already have an account?', loginLink:'Sign in'
@@ -10544,7 +10592,7 @@ function _checkMarketStatus() {
 <div id="txModalOv" onclick="if(event.target===this)txPromptCancel()">
   <div class="tx-modal" role="dialog" aria-modal="true">
     <div class="tx-modal-head">
-      <span class="tx-modal-icon" id="txModalIcon">✎</span>
+      <span class="tx-modal-icon" id="txModalIcon"></span>
       <h4 id="txModalTitle">Düzenle</h4>
       <span class="tx-modal-x" onclick="txPromptCancel()">✕</span>
     </div>
@@ -10599,7 +10647,7 @@ function txPrompt(opts){
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
     set('txModalTitle', opts.title||'Düzenle');
     set('txModalLabel', opts.label||'Değer');
-    document.getElementById('txModalIcon').textContent = opts.icon||'✎';
+    document.getElementById('txModalIcon').textContent = opts.icon||'';
     var sub=document.getElementById('txModalSub');
     if(opts.sub){ sub.innerHTML=opts.sub; sub.style.display=''; } else { sub.style.display='none'; }
     var hint=document.getElementById('txModalHint');
