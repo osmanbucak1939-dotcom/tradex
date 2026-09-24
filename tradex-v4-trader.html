@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Trade Academy">
   <meta name="application-name" content="Trade Academy">
-  <meta name="theme-color" content="#141414">
+  <meta name="theme-color" content="#101317">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAEkUlEQVR4nO3UUZLbIBQF0Xw7+19MdpUlpFIzCZYsy4AQzYM+pQWYd3vmxw9JkiRJkiRJktTBoxz9kwWpaMWqlnZrMfY0LbCbV/QxlIfuJAt9JL2gk6hEn01h03lGn3BV9O6N0edcBj307egDz4tetiv62HOh18TQh58CPSKMPn9k9HYDoaeIht5rUPQsQdAzDY0eZ2z0OmHQQw2JHiUYeq7B0HOERI82BnqF8OgBUfTxJ0HPCKHPPhV6zO7og0+InrQX+s6To+e9GX3eJdAj34Y+7ELoqW/w7qm/f/30u/It0dDJ3wo+QPRv/v9D5/9s8QGif+fnpce/7Px5BnR3QOEbMiADqvfxbQbUIaCoDeU8zID6BBSvocxXGVC3gCI1lP8kA+oZUJiGDMiA6hW9x4A6BzR6Q6WPMaD+AY3bUMVLDAgJaNCGDMiA6tU9w4CogMZqqPoNBgQGNFBDBmRA9a48wIDYgIZoyIAMCKvHgPCAyIau//SHAQ0Q0INqqMlPxweI/jVZIWo9DwMaI6BH/4Za/W58gOhfqyFC1vMwoGECevRsqOGPxgeI/jXcwoBW/BpuEa+e/mIt2p8BfWBA56znAwP6yIDOGNBH1nPGgHIY0FsGlMOA3jKgHNbzlgFlMqBjBpTJgI4ZUCYDOmZAmaznmAHlM6ADBpTPgA4YUD7rOWBARQxoz4CKGNCeARUxoD0DKmJAewZUxHr2DKiUAW0YUCkD2jCgUga0YUClDGjDgEoZ0IYBlTKgDQMqZT0bBlTBgBIDqmBAiQFVMKDEgCoYUGJAFQwoMaAKBpQYUAUDSgyoggElBlTBgBIDqmBAiQFVMKDEgCoYUGJAFQwoMaAKBpQYUAUDSgyoggElBlShPqD5GjKgUpfqMSADMqANAyplQBsGVMqANgyolAFtGFApA9owoFJXA5qsIQMq0qAeAzIgA0oMqIgB7RlQEQPaM6AibQKaqSEDytesHgMyIAP6ZkD5WgY0TUMGlKlxPQZkQAb0lwFlMqBjBpSpfUBzNGRAOW6px4AMyIAMKMtdAU3QkAF9dGM9BmRAqzdkQOdur8eADGjphgzoRKd6DMiADMiADvQLKG5DBvRO13oMyIAWbciADgH1GJABrdiQAb3C6onYkAHtwPUYkAE1QB+hgAE9o8P5h75DAQN6RofzhD5FLgP6j07mBX2QLAb0hY7lCH2TLAb0hY7lDfosnxnQY9h6vtDH+cCA6EAy0Cc6s3hAdBp56CudMaAY6EO9tXJAdBSF6HMdWzYgOocq9NEOrBkQHcIF9On2FgyITuAa+np7BhQPfcCN1QKix2+EPmOyVED07E3Rx/y2TkD04DegT7oQeurb0IddAj3yzejzTo6etxf6zhOiJ+2OPvhU6DEh9NknQc+Ioo8fHj3gGOgVQqJHGww9RzD0XEOiRwmDHmps9DpDo8cJgp5pUPQs0dB7DYSeIjJ6Oxh9/inQI2Low8+FXrMr+tjzope9HX3gZdBDN0afc1X07g3QJ1TYjOiz6QWdRBb6SMpDd7JBH0MX2I1ashi1ZyuSJEmSJEmSdJM/pyVHHWNfrJcAAAAASUVORK5CYII=">
   <link rel="manifest" href="/manifest.json">
@@ -44,9 +44,9 @@ body { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); box-siz
 }
 
 :root {
-  --bg:       #141414;
-  --panel:    #1e1e1e;
-  --panel2:   #252525;
+  --bg:       #101317;
+  --panel:    #171b21;
+  --panel2:   #1e242b;
   --border:   #333a42;
   --border2:  #424a54;
   --text:     #edf0f4;
@@ -2904,7 +2904,13 @@ function initChart() {
       fontFamily: 'monospace',
     },
     grid: {
-      vertLines: {color:_lwc.grid, style:0},
+      // ⚠️ 2026-09-22: Dahili dikey ızgara KAPALI. Lightweight Charts dikey
+      // çizgileri kendi seçtiği zaman etiketlerine koyuyor ve aralığı dışarıdan
+      // verilemiyor — 4 saatlik grafikte aylık bölünüyor, 20 yatay çizgiye
+      // karşılık 1-2 dikey çizgi kalıyordu. Kendi ızgaramızı _lwDrawVGrid ile
+      // çiziyoruz: görünen aralığa göre saat/gün/hafta/ay sınırına oturan,
+      // hep 8-12 çizgi. Yatay ızgara kütüphaneninki olarak kalıyor.
+      vertLines: {visible:false},
       horzLines: {color:_lwc.grid, style:0},
     },
     crosshair: {
@@ -2955,6 +2961,10 @@ function initChart() {
   // Kullanıcı scroll/zoom yapınca auto-scroll durdur
   _lw.timeScale().subscribeVisibleTimeRangeChange(function() {
     _lwUserScrolled = true;
+    try { _lwDrawVGrid(); } catch(e){}     // kaydırma/yakınlaştırmada ızgarayı tazele
+  });
+  _lw.timeScale().subscribeVisibleLogicalRangeChange(function(){
+    try { _lwDrawVGrid(); } catch(e){}
   });
 
   _lwSeries = _lw.addCandlestickSeries({
@@ -3381,6 +3391,7 @@ function lwRenderCandles(candles, sym) {
       // dolayısıyla DİKEY ızgara çizgileri de sıklaşıyor (ızgara kareye yakınsıyor).
       _lwApplyZoom();
       _lwUserScrolled = false;
+      try { _lwDrawVGrid(); } catch(e){}
     }
   }, 100);
 
@@ -3643,6 +3654,7 @@ function _lwApplyZoom(scrollToEnd){
   } catch(e){}
   var lbl = document.getElementById('lwZoomLbl');
   if(lbl) lbl.textContent = Math.round(_lwBarSpacing);
+  try { _lwDrawVGrid(); } catch(e){}
 }
 
 function lwZoom(dir){
@@ -3659,6 +3671,70 @@ function lwZoomReset(){
   try { localStorage.setItem('tx_bar_spacing', String(_lwBarSpacing)); } catch(e){}
   _lwUserScrolled = false;
   _lwApplyZoom();
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// DİKEY IZGARA (2026-09-22)
+// Kütüphanenin dikey çizgileri zaman etiketlerine bağlı ve seyrek kalıyordu.
+// Burada görünen zaman aralığına bakıp doğal bir adım seçiyoruz (saat, 4 saat,
+// gün, hafta, ay) ve o sınırlara denk gelen mumların x koordinatına 1px çizgi
+// koyuyoruz. Amaç: her yakınlıkta 8-12 çizgi → ızgara kareye yakın durur.
+//
+// NOT: timeToCoordinate zaman eksenine değil MUM İNDEKSİNE çalışıyor (eksen
+// indeks tabanlı). Bu yüzden her sınır için o sınırdan sonraki ilk mumu bulup
+// logicalToCoordinate ile yerini alıyoruz.
+// ══════════════════════════════════════════════════════════════════════
+var _LW_VGRID_STEPS = [
+  3600, 4*3600, 12*3600, 86400, 3*86400, 7*86400, 14*86400, 30*86400, 90*86400
+];
+
+function _lwVGridLayer(){
+  var wrap = document.getElementById('chartWrap');
+  if(!wrap) return null;
+  var el = document.getElementById('lwVGrid');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'lwVGrid';
+    el.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden';
+    wrap.insertBefore(el, wrap.firstChild.nextSibling || null);
+  }
+  return el;
+}
+
+function _lwDrawVGrid(){
+  var layer = _lwVGridLayer();
+  if(!layer || !_lw || !_klineData || _klineData.length < 2) { if(layer) layer.innerHTML=''; return; }
+  var ts = _lw.timeScale();
+  var vr;
+  try { vr = ts.getVisibleLogicalRange(); } catch(e){ return; }
+  if(!vr) { layer.innerHTML=''; return; }
+
+  var i0 = Math.max(0, Math.floor(vr.from)), i1 = Math.min(_klineData.length-1, Math.ceil(vr.to));
+  if(i1 <= i0) { layer.innerHTML=''; return; }
+  var t0 = _klineData[i0].time, t1 = _klineData[i1].time;
+  var span = t1 - t0;
+  if(!(span > 0)) { layer.innerHTML=''; return; }
+
+  // 8-12 çizgi verecek en uygun adımı seç
+  var step = _LW_VGRID_STEPS[_LW_VGRID_STEPS.length-1];
+  for(var k=0;k<_LW_VGRID_STEPS.length;k++){
+    if(span / _LW_VGRID_STEPS[k] <= 12){ step = _LW_VGRID_STEPS[k]; break; }
+  }
+
+  var col = (typeof _lwc!=='undefined' && _lwc.grid) ? _lwc.grid : 'rgba(255,255,255,0.05)';
+  var html = '', drawn = 0, j = i0;
+  for(var t = Math.ceil(t0/step)*step; t <= t1 && drawn < 40; t += step){
+    // sınırdan sonraki ilk mumu bul (ileri doğru tara — aralık sıralı)
+    while(j <= i1 && _klineData[j].time < t) j++;
+    if(j > i1) break;
+    var x;
+    try { x = ts.logicalToCoordinate(j); } catch(e){ x = null; }
+    if(x === null || x === undefined || isNaN(x)) continue;
+    html += '<div style="position:absolute;top:0;bottom:0;left:'+Math.round(x)+'px;width:1px;background:'+col+'"></div>';
+    drawn++;
+  }
+  layer.innerHTML = html;
 }
 
 /* ── Canlı tick güncelleme (her saniye) ────────── */
@@ -10387,7 +10463,7 @@ function symUnpin(sym){
                Güncelle      = BİRİNCİL, dolu sarı (güvenli ve en sık yapılan)
                Parçalı Kapat = ikincil, nötr yüzey
                Pozisyonu Kapat = yıkıcı, kırmızı ve en belirgin çerçeve -->
-        <button onclick="mPosUpdate()" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 10px;background:var(--accent);border:1px solid var(--accent);border-radius:8px;color:#141414;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+        <button onclick="mPosUpdate()" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 10px;background:var(--accent);border:1px solid var(--accent);border-radius:8px;color:#101317;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
           <span class="_ui-check"></span><span data-lang="update">Güncelle</span>
         </button>
       </div>
