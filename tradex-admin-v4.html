@@ -1917,6 +1917,30 @@ console.log('Firebase bağlandı');
     .ad-dense-table thead th:last-child { background: var(--panel2); }
     .ad-dense-table th, .ad-dense-table td { padding-top: 5px; padding-bottom: 5px; }
 
+  
+    /* ── Sayısal sütunlar SAĞA yaslı (2026-09-25) ──────────────────
+       Rakamlar sola yaslıyken basamaklar hizalanmıyor ve tablo dağınık
+       görünüyor. Finansal tablolarda sayı sağa yaslanır; metin solda kalır. */
+    .ad-t-closed td:nth-child(4),  .ad-t-closed th:nth-child(4),
+    .ad-t-closed td:nth-child(7),  .ad-t-closed th:nth-child(7),
+    .ad-t-closed td:nth-child(8),  .ad-t-closed th:nth-child(8),
+    .ad-t-closed td:nth-child(12), .ad-t-closed th:nth-child(12),
+    .ad-t-closed td:nth-child(13), .ad-t-closed th:nth-child(13),
+    .ad-t-closed td:nth-child(14), .ad-t-closed th:nth-child(14),
+    .ad-t-open   td:nth-child(4),  .ad-t-open   th:nth-child(4),
+    .ad-t-open   td:nth-child(7),  .ad-t-open   th:nth-child(7),
+    .ad-t-open   td:nth-child(8),  .ad-t-open   th:nth-child(8),
+    .ad-t-open   td:nth-child(9),  .ad-t-open   th:nth-child(9),
+    .ad-t-open   td:nth-child(10), .ad-t-open   th:nth-child(10),
+    .ad-t-open   td:nth-child(11), .ad-t-open   th:nth-child(11),
+    .ad-t-open   td:nth-child(12), .ad-t-open   th:nth-child(12),
+    .ad-t-open   td:nth-child(13), .ad-t-open   th:nth-child(13) {
+      text-align: right !important; padding-right: 10px;
+    }
+    /* İşlem sütunundaki butonlar ortalı ve sığacak genişlikte */
+    .ad-dense-table td:last-child { text-align: right; white-space: nowrap; }
+    .ad-dense-table td:last-child .ad-icon-btn { width: 28px; height: 28px; min-height: 28px; }
+
   </style>
 
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
@@ -5610,7 +5634,7 @@ function _adRenderTab_inner(tab) {
       // ── AÇIK pozisyonlar ──
       '<div id="adPanelOpen">' +
         '<div class="ad-table-card" style="overflow-x:auto;">' +
-          '<table class="ad-dense-table" style="width:100%;min-width:1082px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
+          '<table class="ad-dense-table ad-t-open" style="width:100%;min-width:1082px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
               '<col style="width:56px"><col style="width:86px"><col style="width:54px">' +
               '<col style="width:46px"><col style="width:86px"><col style="width:124px">' +
@@ -5649,13 +5673,13 @@ function _adRenderTab_inner(tab) {
           // sütunlar sıkışıp içerik kesiliyordu (K/Z "-$83679.8" gibi).
           // Artık min-width var: sığmazsa tablo yatay KAYDIRILIR, ezilmez.
           // Genişlikler yeni yazı boyutuna göre de bir miktar arttırıldı.
-          '<table class="ad-dense-table" style="width:100%;min-width:1100px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
+          '<table class="ad-dense-table ad-t-closed" style="width:100%;min-width:1100px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
-              '<col style="width:52px"><col style="width:80px"><col style="width:48px">' +
-              '<col style="width:42px"><col style="width:112px"><col style="width:58px">' +
-              '<col style="width:76px"><col style="width:76px"><col style="width:112px"><col style="width:86px">' +
-              '<col style="width:58px"><col style="width:62px"><col style="width:72px"><col style="width:86px">' +
-              '<col style="width:80px">' +
+              '<col style="width:52px"><col style="width:78px"><col style="width:46px">' +
+              '<col style="width:40px"><col style="width:108px"><col style="width:52px">' +
+              '<col style="width:74px"><col style="width:74px"><col style="width:108px"><col style="width:84px">' +
+              '<col style="width:52px"><col style="width:60px"><col style="width:68px"><col style="width:92px">' +
+              '<col style="width:112px">' +
             '</colgroup>' +
             '<thead><tr style="background:var(--bg);">' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">#</th>' +
