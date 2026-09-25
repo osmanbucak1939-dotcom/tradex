@@ -365,7 +365,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ACCOUNT SUMMARY */
 .account-box { padding:10px 12px; border-bottom:1px solid var(--border); }
 .acc-title { font-family:var(--sans); font-size:11px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
-.acc-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #282828; }
+.acc-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--panel2); }
 .acc-row:last-child { border-bottom:none; }
 .acc-key { font-family:var(--sans); font-size:12px; color:var(--muted); }
 .acc-val { font-family:var(--mono); font-size:12px; color:var(--text); font-weight:600; }
@@ -2142,7 +2142,7 @@ function _txClearPasswordChangedSession() {
 </div>
 
 <!-- İZLEYİCİ MODU BANDI — MOBİL (masaüstünde .bottom-panel içindeki readOnlyBand kullanılır) -->
-<div id="mReadOnlyBand" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2a1f00;border-bottom:1px solid #f5c518;padding:6px 10px;font-family:var(--mono);font-size:11px;color:#f5c518;letter-spacing:.5px;flex-shrink:0;text-align:center;">
+<div id="mReadOnlyBand" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2a1f00;border-bottom:1px solid var(--accent);padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.5px;flex-shrink:0;text-align:center;">
   <span class="_ui-eye"></span>
   <span>İZLEYİCİ MODU — İşlem açma/kapama devre dışı</span>
 </div>
@@ -2403,7 +2403,7 @@ function _txClearPasswordChangedSession() {
       </div>
 
       <!-- İZLEYİCİ MODU BANDI -->
-      <div id="readOnlyBand" style="display:none;align-items:center;justify-content:center;gap:8px;background:#2a1f00;border-bottom:1px solid #f5c518;padding:5px 14px;font-family:var(--mono);font-size:12px;color:#f5c518;letter-spacing:1px;flex-shrink:0;">
+      <div id="readOnlyBand" style="display:none;align-items:center;justify-content:center;gap:8px;background:#2a1f00;border-bottom:1px solid var(--accent);padding:5px 14px;font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">
         <span class="_ui-eye"></span>
         <span>İZLEYİCİ MODU — Bu hesapta yalnızca görüntüleme yapabilirsiniz. İşlem açma/kapama ve para işlemleri devre dışı.</span>
       </div>
@@ -9051,7 +9051,7 @@ function symUnpin(sym){
     }
     .ad-input::placeholder, .mgr-input::placeholder, .auth-input::placeholder,
     .apikey-input::placeholder, .wallet-amount-input::placeholder,
-    .mw-search-input::placeholder, .tx-modal-input::placeholder { color: var(--faint, #8f97a1); }
+    .mw-search-input::placeholder, .tx-modal-input::placeholder { color: var(--faint, var(--faint)); }
 
     .ad-input:hover, .mgr-input:hover, .mgr-select:hover, .auth-input:hover,
     .apikey-input:hover, .wallet-amount-input:hover, .ind-popup-input:hover,
@@ -10504,7 +10504,7 @@ function symUnpin(sym){
                Güncelle      = BİRİNCİL, dolu sarı (güvenli ve en sık yapılan)
                Parçalı Kapat = ikincil, nötr yüzey
                Pozisyonu Kapat = yıkıcı, kırmızı ve en belirgin çerçeve -->
-        <button onclick="mPosUpdate()" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 10px;background:var(--accent);border:1px solid var(--accent);border-radius:10px;color:#101317;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
+        <button onclick="mPosUpdate()" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 10px;background:var(--accent);border:1px solid var(--accent);border-radius:10px;color:var(--bg);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">
           <span class="_ui-check"></span><span data-lang="update">Güncelle</span>
         </button>
       </div>
@@ -10911,17 +10911,17 @@ function txPrompt(opts){
     bar.id = 'txInstallBar';
     bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));'
       + 'z-index:99998;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;'
-      + 'background:var(--panel,#1e1e1e);border:1px solid var(--border2,#3a3a3a);'
+      + 'background:var(--panel,var(--panel));border:1px solid var(--border2,var(--border));'
       + 'box-shadow:0 8px 28px rgba(0,0,0,.45);font-family:var(--sans),system-ui,sans-serif;';
     bar.innerHTML =
       '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:13px;font-weight:600;color:var(--text,#edf0f4)">Uygulamayı ana ekrana ekle</div>'
-      + '<div style="font-size:12px;color:var(--muted,#aeb6c0);margin-top:2px">'+(text||'Tam ekran, daha hızlı erişim')+'</div>'
+      + '<div style="font-size:13px;font-weight:600;color:var(--text,var(--text))">Uygulamayı ana ekrana ekle</div>'
+      + '<div style="font-size:12px;color:var(--muted,var(--muted));margin-top:2px">'+(text||'Tam ekran, daha hızlı erişim')+'</div>'
       + '</div>'
       + (how ? '' : '<button id="txInstallGo" style="flex-shrink:0;padding:8px 14px;border-radius:10px;border:none;'
-        + 'background:var(--accent,#f0b90b);color:#141414;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Yükle</button>')
+        + 'background:var(--accent,var(--accent));color:var(--bg);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Yükle</button>')
       + '<button id="txInstallNo" aria-label="Kapat" style="flex-shrink:0;width:30px;height:30px;border-radius:10px;'
-      + 'border:none;background:transparent;color:var(--muted,#aeb6c0);font-size:16px;cursor:pointer">×</button>';
+      + 'border:none;background:transparent;color:var(--muted,var(--muted));font-size:16px;cursor:pointer">×</button>';
     document.body.appendChild(bar);
     var go=document.getElementById('txInstallGo');
     if(go) go.onclick=function(){
