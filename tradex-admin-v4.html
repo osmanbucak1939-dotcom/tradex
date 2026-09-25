@@ -26,7 +26,7 @@
   color-scheme: dark;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-select, select option { background:#1a1a1a !important; color:#d4d4d4 !important; }
+select, select option { background:var(--panel) !important; color:#d4d4d4 !important; }
 select:focus { outline:none; border-color:var(--accent,var(--accent)); }
 html { height:100%; overflow:hidden; }
 body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; }
@@ -146,7 +146,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
 /* ── TICKER STRIP ── */
 .ticker-strip {
-  background:#1a1a1a; border-bottom:1px solid var(--border);
+  background:var(--panel); border-bottom:1px solid var(--border);
   height:24px; overflow:hidden; flex-shrink:0;
 }
 .ticker-inner { display:flex; gap:32px; animation:ticker 35s linear infinite; white-space:nowrap; width:max-content; height:100%; align-items:center; padding:0 16px; }
@@ -207,7 +207,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .bp-section.active { display:block; }
 .orders-table { width:100%; border-collapse:collapse; }
 .orders-table th { font-family:var(--sans); font-size:12px; font-weight:600; color:var(--muted); text-align:left; padding:4px 12px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); }
-.orders-table td { font-family:var(--mono); font-size:12px; padding:5px 12px; border-bottom:1px solid #2a2a2a; }
+.orders-table td { font-family:var(--mono); font-size:12px; padding:5px 12px; border-bottom:1px solid var(--border); }
 .orders-table tr:hover td { background:var(--panel2); }
 .orders-table tr:last-child td { border-bottom:none; }
 .badge-buy { background:var(--buy-dim); color:var(--buy); padding:1px 6px; border-radius:6px; font-size:12px; font-weight:600; }
@@ -251,7 +251,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ACCOUNT SUMMARY */
 .account-box { padding:10px 12px; border-bottom:1px solid var(--border); }
 .acc-title { font-family:var(--sans); font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:.5px; }
-.acc-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #282828; }
+.acc-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--panel2); }
 .acc-row:last-child { border-bottom:none; }
 .acc-key { font-family:var(--mono); font-size:12px; color:var(--muted); }
 .acc-val { font-family:var(--mono); font-size:12px; color:var(--text); font-weight:600; }
@@ -308,7 +308,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .mgr-overlay.open { display:flex; }
 
 .mgr-panel {
-  background:#1a1a1a; border:1px solid var(--border2);
+  background:var(--panel); border:1px solid var(--border2);
   width:900px; max-width:96vw; height:80vh; max-height:700px;
   display:flex; flex-direction:column; border-radius:6px;
   box-shadow:0 24px 64px rgba(0,0,0,.8);
@@ -366,7 +366,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ⚠️ Dropdown açılır listesi (option'lar) — arka plan verilmezse bazı tarayıcılarda
    saydam/boş görünüyordu (arkadaki alanlar görünüyordu). Açıkça koyu arka plan ver. */
 .mgr-input option, .mgr-select option, select.mgr-input option, select option {
-  background:#1a1a1a; color:#e0e0e0;
+  background:var(--panel); color:var(--text);
 }
 
 .mgr-row { display:grid; gap:12px; margin-bottom:14px; }
@@ -418,7 +418,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 /* ── İNDİKATÖR TOOLBAR ── */
 .ind-toolbar {
   display:flex; align-items:center; gap:0;
-  background:#1a1a1a; border-bottom:1px solid var(--border);
+  background:var(--panel); border-bottom:1px solid var(--border);
   height:28px; flex-shrink:0; overflow-x:auto;
 }
 .ind-toolbar::-webkit-scrollbar { height:0; }
@@ -485,7 +485,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .wallet-overlay.open { display:flex; }
 .wallet-panel {
-  background:#1a1a1a; border:1px solid var(--border2);
+  background:var(--panel); border:1px solid var(--border2);
   width:480px; max-width:96vw; max-height:90vh;
   border-radius:6px; box-shadow:0 24px 64px rgba(0,0,0,.8);
   display:flex; flex-direction:column; overflow:hidden;
@@ -520,7 +520,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   background:var(--bg); border:1px solid var(--border); border-radius:6px;
   padding:14px; margin:12px 0; font-family:var(--sans); font-size:12px;
 }
-.wallet-info-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #2a2a2a; gap:8px; }
+.wallet-info-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); gap:8px; }
 .wallet-info-row:last-child { border-bottom:none; }
 .wallet-info-key { color:var(--muted); flex-shrink:0; }
 .wallet-info-val { color:var(--text); font-weight:600; word-break:break-all; text-align:right; }
@@ -586,7 +586,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:flex; align-items:center; justify-content:space-between;
   padding:5px 8px 3px; cursor:pointer; user-select:none;
   border-bottom:1px solid var(--border);
-  position:sticky; top:0; z-index:5; background:#1a1a1a;
+  position:sticky; top:0; z-index:5; background:var(--panel);
 }
 .mw-group-title { font-family:var(--sans); font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1.5px; }
 .mw-group-arrow { font-size:11px; color:var(--muted); transition:transform .2s; }
@@ -598,7 +598,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   grid-template-columns:minmax(0,1fr) 80px 80px;
   align-items:center;
   padding:5px 8px;
-  border-bottom:1px solid #1a1a1a;
+  border-bottom:1px solid var(--panel);
   cursor:pointer;
   transition:background .12s;
   gap:0;
@@ -620,8 +620,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   display:grid;
   grid-template-columns:minmax(0,1fr) 80px 80px;
   padding:3px 8px;
-  border-bottom:1px solid #1a1a1a;
-  background:#181818;
+  border-bottom:1px solid var(--panel);
+  background:var(--bg);
   flex-shrink:0;
 }
 .mw-col-hdr { font-family:var(--sans); font-size:11px; color:var(--muted); text-align:right; }
@@ -735,7 +735,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .auth-overlay.open { display:flex; }
 .auth-panel {
   width:420px; max-width:96vw;
-  background:#181818; border:1px solid #333;
+  background:var(--bg); border:1px solid #333;
   border-radius:6px; overflow:hidden;
   box-shadow:0 32px 80px rgba(0,0,0,.9);
 }
@@ -753,7 +753,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .auth-tabs {
   display:grid; grid-template-columns:1fr 1fr;
-  border-bottom:1px solid #2a2a2a;
+  border-bottom:1px solid var(--border);
   margin:0 32px;
 }
 .auth-tab {
@@ -775,7 +775,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   letter-spacing:.8px; margin-bottom:5px; display:block;
 }
 .auth-input {
-  width:100%; background:#181818; border:1px solid #333;
+  width:100%; background:var(--bg); border:1px solid #333;
   border-radius:6px; padding:10px 12px;
   color:var(--text); font-family:var(--sans); font-size:13px;
   outline:none; transition:border-color .15s;
@@ -790,7 +790,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   letter-spacing:1px; cursor:pointer; margin-top:6px;
   transition:all .2s;
 }
-.auth-btn.primary { background:var(--accent); color:#1a1a1a; }
+.auth-btn.primary { background:var(--accent); color:var(--panel); }
 .auth-btn.primary:hover { filter:brightness(1.1); }
 
 .auth-divider {
@@ -829,7 +829,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-user-badge:hover { background:var(--panel2); }
 .tb-user-avatar {
   width:22px; height:22px; border-radius:50%;
-  background:var(--accent); color:#1a1a1a;
+  background:var(--accent); color:var(--panel);
   font-weight:700; font-size:12px;
   display:flex; align-items:center; justify-content:center;
 }
@@ -848,7 +848,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .acc-type-opt {
   border:1px solid #333; border-radius:6px; padding:10px;
   cursor:pointer; transition:all .2s; text-align:center;
-  background:#181818;
+  background:var(--bg);
 }
 .acc-type-opt:hover { border-color:var(--accent); }
 .acc-type-opt.selected { border-color:var(--accent); background:rgba(240,185,11,.07); }
@@ -865,7 +865,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 }
 .apikey-modal.open { display:flex; }
 .apikey-box {
-  background:#181818; border:1px solid #333;
+  background:var(--bg); border:1px solid #333;
   border-radius:6px; padding:28px 32px; width:400px; max-width:94vw;
   box-shadow:0 24px 60px rgba(0,0,0,.8);
 }
@@ -878,7 +878,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   margin-bottom:20px; line-height:1.7;
 }
 .apikey-input {
-  width:100%; background:#181818; border:1px solid #333;
+  width:100%; background:var(--bg); border:1px solid #333;
   border-radius:6px; padding:10px 12px; color:var(--text);
   font-family:var(--mono); font-size:13px; outline:none;
   transition:border-color .15s; margin-bottom:10px;
@@ -891,9 +891,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   font-family:var(--sans); font-size:12px; font-weight:700;
   letter-spacing:.5px; cursor:pointer; transition:all .2s;
 }
-.apikey-btn.primary { background:var(--accent); color:#1a1a1a; }
+.apikey-btn.primary { background:var(--accent); color:var(--panel); }
 .apikey-btn.primary:hover { filter:brightness(1.1); }
-.apikey-btn.secondary { background:#1a1a1a; border:1px solid #333; color:var(--muted); }
+.apikey-btn.secondary { background:var(--panel); border:1px solid #333; color:var(--muted); }
 .apikey-link {
   font-family:var(--sans); font-size:12px; color:var(--muted);
   text-align:center; margin-top:12px; line-height:1.8;
@@ -916,7 +916,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .tb-api-btn:hover { color:var(--accent); }
 .tb-api-dot {
   width:7px; height:7px; border-radius:50%;
-  background:#999999; flex-shrink:0; transition:background .3s;
+  background:var(--muted); flex-shrink:0; transition:background .3s;
 }
 .tb-api-dot.live { background:var(--buy); box-shadow:0 0 6px var(--buy); }
 .tb-api-dot.err  { background:var(--sell); }
@@ -1034,15 +1034,15 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 .ad-tab.ad-active { color:var(--accent) !important; border-bottom-color:var(--accent) !important; }
 .ad-input { background:var(--input); border:1px solid var(--border); color:var(--text); padding:7px 10px; font-family:var(--mono); font-size:13px; width:100%; border-radius:6px; box-sizing:border-box; }
 .ad-input option, .mgr-input option, .mgr-select option,
-select option { background:#181818; color:#e0e0e0; }
+select option { background:var(--bg); color:var(--text); }
 select { color-scheme: dark; }
 .ad-input:focus, .mgr-input:focus { outline:none; border-color:var(--accent); }
-.acc-row-even { background:#141414; border-bottom:1px solid #222; }
-.acc-row-odd  { background:#1c1c1c; border-bottom:1px solid #222; }
+.acc-row-even { background:var(--bg); border-bottom:1px solid #222; }
+.acc-row-odd  { background:var(--panel); border-bottom:1px solid #222; }
 .acc-row-even td, .acc-row-odd td { }
 .acc-row-even:hover, .acc-row-odd:hover { background:var(--panel2); cursor:pointer; }
 .ad-label { font-family:var(--sans); font-size:12px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:.5px; }
-.ad-card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:14px 16px; }
+.ad-card { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:14px 16px; }
 .ad-stat-val { font-size:16px; font-weight:700; font-family:var(--mono); }
 .ad-stat-lbl { font-size:12px; color:var(--muted); margin-bottom:4px; font-family:var(--sans); }
 .ad-section-title { font-family:var(--sans); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px; border-bottom:1px solid #222; padding-bottom:6px; }
@@ -1051,15 +1051,15 @@ select { color-scheme: dark; }
 .ad-btn {
   padding:8px 16px; border-radius:6px; font-family:var(--sans); font-size:12px;
   cursor:pointer; font-weight:700; letter-spacing:.3px;
-  background:#242424; color:var(--text); border:1px solid #3a3a3a;
+  background:var(--panel2); color:var(--text); border:1px solid var(--border2);
   transition:background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
   box-shadow:0 1px 2px rgba(0,0,0,.25);
 }
-.ad-btn:hover { background:#2d2d2d; border-color:#4d4d4d; box-shadow:0 3px 10px rgba(0,0,0,.35); transform:translateY(-1px); }
+.ad-btn:hover { background:var(--border); border-color:#4d4d4d; box-shadow:0 3px 10px rgba(0,0,0,.35); transform:translateY(-1px); }
 .ad-btn:active { transform:translateY(0); box-shadow:0 1px 2px rgba(0,0,0,.25); }
 .ad-btn-primary  { background:var(--accent); color:#000; border:none; box-shadow:0 2px 8px rgba(245,197,24,.25); }
 .ad-btn-primary:hover { filter:brightness(1.08); box-shadow:0 4px 14px rgba(245,197,24,.35); }
-.ad-btn-secondary{ background:#242424; color:var(--text); border:1px solid #444; }
+.ad-btn-secondary{ background:var(--panel2); color:var(--text); border:1px solid #444; }
 .ad-btn-secondary:hover { background:var(--border); border-color:#555; }
 .ad-btn-danger   { background:rgba(239,83,80,.08); color:var(--sell); border:1px solid rgba(239,83,80,.4); }
 .ad-btn-danger:hover { background:rgba(239,83,80,.16); border-color:var(--sell); box-shadow:0 3px 10px rgba(239,83,80,.2); }
@@ -1069,8 +1069,8 @@ select { color-scheme: dark; }
 .ad-pill-tab { padding:6px 16px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-family:var(--sans); transition:background .15s ease, color .15s ease; }
 .ad-pill-tab.on { background:var(--accent); color:#000; font-weight:700; }
 .ad-pill-tab:not(.on) { background:transparent; color:#999; font-weight:normal; }
-.ad-pill-tab:not(.on):hover { background:#232323; color:#ccc; }
-.ad-table-card { border:1px solid #262626; border-radius:10px; overflow:hidden; background:#161616; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+.ad-pill-tab:not(.on):hover { background:var(--panel2); color:#ccc; }
+.ad-table-card { border:1px solid var(--panel2); border-radius:10px; overflow:hidden; background:var(--bg); box-shadow:0 1px 4px rgba(0,0,0,.25); }
 
 </style>
 <script>
@@ -1766,7 +1766,7 @@ console.log('Firebase bağlandı');
             if(onlineCell) {
               onlineCell.innerHTML = isOn2
                 ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
-                : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>';
+                : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid var(--muted);vertical-align:middle;"></span>';
             }
           });
         },function(err){console.warn('users onSnapshot err:',err);});
@@ -1783,7 +1783,7 @@ console.log('Firebase bağlandı');
 </head>
 <body style="margin:0;padding:0;height:100%;overflow:hidden;">
 <style>
-.nav-btn{padding:0 14px;height:40px;border:none;background:none;cursor:pointer;font-size:12px;color:#c0c0c0;border-bottom:2px solid transparent;font-family:var(--sans);letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;}
+.nav-btn{padding:0 14px;height:40px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;font-family:var(--sans);letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;}
 .nav-btn:hover{color:var(--accent);}
 .nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .admin-section{animation:fadeIn 0.15s ease;}
@@ -1820,7 +1820,7 @@ console.log('Firebase bağlandı');
 
     /* Birincil — sayfadaki ANA eylem. Bir ekranda tek tane olmalı. */
     .mgr-btn.primary, .ad-btn-primary {
-      background: var(--accent); border-color: var(--accent); color: #101317; font-weight: 700;
+      background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700;
     }
     .mgr-btn.primary:hover, .ad-btn-primary:hover { background: #ffc61a; border-color: #ffc61a; }
 
@@ -1857,7 +1857,7 @@ console.log('Firebase bağlandı');
     }
     .ad-pill-tab:hover { color: var(--text); border-color: var(--border2); }
     .ad-pill-tab.active {
-      background: var(--accent); border-color: var(--accent); color: #101317; font-weight: 700;
+      background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700;
     }
 
   
@@ -1881,7 +1881,7 @@ console.log('Firebase bağlandı');
     }
     .ad-input::placeholder, .mgr-input::placeholder, .auth-input::placeholder,
     .apikey-input::placeholder, .wallet-amount-input::placeholder,
-    .mw-search-input::placeholder, .tx-modal-input::placeholder { color: var(--faint, #8f97a1); }
+    .mw-search-input::placeholder, .tx-modal-input::placeholder { color: var(--faint, var(--muted)); }
 
     .ad-input:hover, .mgr-input:hover, .mgr-select:hover, .auth-input:hover,
     .apikey-input:hover, .wallet-amount-input:hover, .ind-popup-input:hover,
@@ -1904,20 +1904,20 @@ console.log('Firebase bağlandı');
   </style>
 
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
-  <div style="background:#181818;border:1px solid #2a2a2a;border-radius:10px;padding:40px;width:360px;">
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:40px;width:360px;">
     <div style="font-family:var(--sans);font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">COMMERZ TERMINAL</div>
-    <div style="color:#b0b0b0;font-size:12px;margin-bottom:28px;">ADMIN PANEL</div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:12px;color:#c0c0c0;margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <div style="margin-bottom:20px;"><label style="display:block;font-size:12px;color:#c0c0c0;margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:28px;">ADMIN PANEL</div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:5px;">E-POSTA</label><input type="email" id="al_email" class="mgr-input" style="width:100%;" placeholder="admin@tradex.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div style="margin-bottom:20px;"><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:5px;">ŞİFRE</label><input type="password" id="al_pass" class="mgr-input" style="width:100%;" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <button onclick="adminLogin()" class="mgr-btn success" style="width:100%;padding:10px;font-size:13px;">Giriş Yap</button>
     <div id="al_error" style="color:var(--sell);font-size:12px;margin-top:8px;text-align:center;display:none;">Geçersiz e-posta veya şifre</div>
   </div>
 </div>
 <div id="adminApp" style="display:none;flex-direction:column;height:100vh;min-width:0;background:var(--bg);">
-  <div style="background:#181818;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
+  <div style="background:var(--bg);border-bottom:1px solid #222;display:flex;align-items:center;padding:0 16px;height:40px;flex-shrink:0;">
     <span style="font-family:var(--sans);font-weight:700;font-size:14px;color:var(--accent);letter-spacing:2px;">COMMERZ TERMINAL</span>
     <span style="color:var(--text);margin:0 10px;">|</span>
-    <span style="font-size:12px;color:#b0b0b0;">ADMIN</span>
+    <span style="font-size:12px;color:var(--muted);">ADMIN</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:12px;">
       <!-- Feed sağlık göstergesi: kripto / forex / firebase -->
       <div id="feedHealth" title="Fiyat feed durumu" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;padding:3px 10px;background:#111;border:1px solid #222;border-radius:6px;">
@@ -1926,19 +1926,19 @@ console.log('Firebase bağlandı');
         <span style="display:flex;align-items:center;gap:4px;"><span id="fhFB"     style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;"></span>DB</span>
       </div>
       <span style="color:var(--muted);" id="topbar-user">—</span>
-      <span style="color:#b0b0b0;" id="topbar-role"></span>
+      <span style="color:var(--muted);" id="topbar-role"></span>
       <button onclick="adminLogout()" class="mgr-btn" style="font-size:12px;padding:3px 10px;">Çıkış</button>
     </div>
   </div>
-  <div style="background:#181818;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 12px;height:40px;flex-shrink:0;gap:2px;overflow-x:auto;">
+  <div style="background:var(--bg);border-bottom:1px solid var(--panel);display:flex;align-items:center;padding:0 12px;height:40px;flex-shrink:0;gap:2px;overflow-x:auto;">
     <button class="nav-btn active" onclick="adminNav('accounts',this)" data-perm="accounts.view"><span class="_ai-users"></span> Hesaplar</button>
     <button class="nav-btn" onclick="adminNav('reports',this)" data-perm="reports.view"><span class="_ai-note"></span> Raporlar</button>
-    <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
+    <div style="width:1px;height:20px;background:var(--panel);margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('spreadgroups',this)" data-perm="spreadgroups.view"><span class="_ai-gear"></span> Trading Grupları</button>
     <button class="nav-btn" onclick="adminNav('symbols',this)" data-perm="symbols.view"><span class="_ai-chart"></span> Semboller</button>
     <button class="nav-btn" onclick="adminNav('pricecontrol',this)" data-perm="quotes.edit|feed.edit"><span class="_ai-quotes"></span> Kotasyon</button>
     <button class="nav-btn" onclick="adminNav('feed',this)" data-perm="feed.view"><span class="_ai-feed"></span> Feed</button>
-    <div style="width:1px;height:20px;background:#1a1a1a;margin:0 4px;"></div>
+    <div style="width:1px;height:20px;background:var(--panel);margin:0 4px;"></div>
     <button class="nav-btn" onclick="adminNav('staff',this)" data-perm="staff.view"><span class="_ai-users"></span> Personel</button>
     <button class="nav-btn" onclick="adminNav('brokerinfo',this)" data-perm="settings.edit"><span class="_ai-shield"></span> Broker Bilgileri</button>
     <button class="nav-btn" onclick="adminNav('backup',this)" data-perm="settings.edit"><span class="_ai-shield"></span> Backup</button>
@@ -1949,30 +1949,30 @@ console.log('Firebase bağlandı');
 
   <div style="flex:1;display:flex;overflow:hidden;">
   <!-- MARKET WATCH SIDEBAR -->
-  <div id="mw-sidebar" style="width:300px;min-width:300px;background:#0d0d0d;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;height:100%;">
-    <div style="padding:8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
+  <div id="mw-sidebar" style="width:300px;min-width:300px;background:var(--bg);border-right:1px solid var(--panel);display:flex;flex-direction:column;overflow:hidden;height:100%;">
+    <div style="padding:8px;border-bottom:1px solid var(--panel);flex-shrink:0;">
       <input class="mgr-input" id="mwSearch" placeholder="Sembol ara..." oninput="mwFilter(this.value)"
         style="width:100%;box-sizing:border-box;font-size:12px;padding:5px 8px;">
     </div>
-    <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:0;padding:4px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
-      <div style="font-size:11px;color:#b0b0b0;font-family:var(--sans);padding-left:2px;">SEMBOL</div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:0;padding:4px 8px;border-bottom:1px solid var(--panel);flex-shrink:0;">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--sans);padding-left:2px;">SEMBOL</div>
       <div style="font-size:11px;color:var(--sell);font-family:var(--sans);text-align:right;">SATIŞ</div>
       <div style="font-size:11px;color:var(--buy);font-family:var(--sans);text-align:right;">ALIŞ</div>
     </div>
     <div id="mwBody" style="flex:1;min-height:0;max-height:calc(100vh - 400px);overflow-y:auto;" onclick="var t=event.target;while(t&&t.id!=='mwBody'){if(t.dataset&&t.dataset.sym){mwSelect(t.dataset.sym,t.dataset.gid);return;}t=t.parentElement;}"></div>
 
     <!-- MARGIN CALL PANEL -->
-    <div style="flex-shrink:0;border-top:1px solid #1a1a1a;">
-      <div style="display:flex;align-items:center;padding:7px 10px;background:#150a0a;border-top:1px solid #2a1a1a;">
+    <div style="flex-shrink:0;border-top:1px solid var(--panel);">
+      <div style="display:flex;align-items:center;padding:7px 10px;background:var(--bg);border-top:1px solid var(--panel);">
         <div style="font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--sell);flex:1;">⚠ MARGIN CALL</div>
-        <span id="mcCount" style="font-size:11px;color:#b0b0b0;font-family:var(--mono);">0</span>
+        <span id="mcCount" style="font-size:11px;color:var(--muted);font-family:var(--mono);">0</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:#181818;">
+      <div style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:3px 10px;background:var(--bg);">
         <div style="font-size:11px;color:var(--text);font-family:var(--sans);">HESAP</div>
         <div style="font-size:11px;color:var(--text);font-family:var(--sans);text-align:right;">TEM.SEV.</div>
         <div style="font-size:11px;color:var(--text);font-family:var(--sans);text-align:right;">VARLIK</div>
       </div>
-      <div id="mcBody" style="height:200px;overflow-y:auto;background:#151515;">
+      <div id="mcBody" style="height:200px;overflow-y:auto;background:var(--bg);">
         <div style="padding:12px 10px;text-align:center;font-family:var(--sans);font-size:12px;color:var(--text);">Yükleniyor...</div>
       </div>
     </div>
@@ -1996,7 +1996,7 @@ console.log('Firebase bağlandı');
         <div id="fin_result" style="margin-top:10px;font-size:13px;"></div>
       </div>
     </div>
-    <div id="sec-reports" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px 24px;background:#0d0d0d;">
+    <div id="sec-reports" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px 24px;background:var(--bg);">
 
   <!-- Başlık -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
@@ -2004,40 +2004,40 @@ console.log('Firebase bağlandı');
       <div style="font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:.5px;">RAPORLAR</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--sans);">Genel Bakış & İstatistikler</div>
     </div>
-    <button onclick="updateReports()" style="background:#181818;border:1px solid #2a2a2a;color:var(--muted);font-family:var(--mono);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;"><span class="_ai-refresh"></span> Yenile</button>
+    <button onclick="updateReports()" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;"><span class="_ai-refresh"></span> Yenile</button>
   </div>
 
   <!-- KPI Kartlar - 4+4 grid -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
 
     <!-- Toplam Hesap -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent);padding-left:8px;" id="rep-totalAccs">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-activeAccs-sub">— aktif</div>
     </div>
 
     <!-- Toplam Bakiye -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BAKİYE</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-totalBal">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-totalBonus-sub">— bonus</div>
     </div>
 
     <!-- Toplam Yatırım -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM YATIRIM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-totalDeposit">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
 
     <!-- Toplam Çekim -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--sell);border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM ÇEKİM</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--sell);padding-left:8px;" id="rep-totalWithdraw">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;">onaylanan işlemler</div>
     </div>
@@ -2048,33 +2048,33 @@ console.log('Firebase bağlandı');
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
 
     <!-- Aktif Hesap -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--buy);border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AKTİF HESAP</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--buy);padding-left:8px;" id="rep-activeAccs">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;" id="rep-demoreal-sub">— demo / — gerçek</div>
     </div>
 
     <!-- Toplam Bonus -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#f5c518;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f5c518;padding-left:8px;" id="rep-totalBonus">—</div>
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);border-radius:10px 0 0 10px;"></div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">TOPLAM BONUS</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);padding-left:8px;" id="rep-totalBonus">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Açık Pozisyon -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#9c27b0;border-radius:10px 0 0 10px;"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">AÇIK POZİSYON</div>
       <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#ce93d8;padding-left:8px;" id="rep-openPos">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;">tüm hesaplar</div>
     </div>
 
     <!-- Net K/Z -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#888;border-radius:10px 0 0 10px;" id="rep-netPoz-bar"></div>
-      <div style="font-size:11px;color:#b0b0b0;letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;padding-left:8px;">NET POZİSYON K/Z</div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;padding-left:8px;" id="rep-netPoz">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:8px;">anlık hesaplama</div>
     </div>
@@ -2085,10 +2085,10 @@ console.log('Firebase bağlandı');
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
     <!-- Son Talepler -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
-      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1a1a1a;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--panel);">
         <div style="font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);flex:1;">SON YATIRIM / ÇEKİM TALEPLERİ</div>
-        <span style="font-size:11px;color:#b0b0b0;" id="rep-reqs-count"></span>
+        <span style="font-size:11px;color:var(--muted);" id="rep-reqs-count"></span>
       </div>
       <div id="rep-recentReqs">
         <div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:12px;">Yükleniyor...</div>
@@ -2096,11 +2096,11 @@ console.log('Firebase bağlandı');
     </div>
 
     <!-- Açık / Kapalı Pozisyonlar -->
-    <div style="background:#181818;border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
-      <div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;gap:0;">
+    <div style="background:var(--bg);border:1px solid var(--panel);border-radius:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--panel);gap:0;">
         <button id="rep-tab-open" onclick="repSwitchTab('open')" style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:var(--accent);cursor:pointer;border-bottom:2px solid var(--accent);">AÇIK</button>
-        <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:#b0b0b0;cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
-        <span style="font-size:11px;color:#b0b0b0;margin-left:auto;" id="rep-pos-count"></span>
+        <button id="rep-tab-closed" onclick="repSwitchTab('closed')" style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;padding:6px 14px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;">KAPALI</button>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto;" id="rep-pos-count"></span>
       </div>
       <div id="rep-posTable" style="overflow-y:auto;max-height:380px;">
         <div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:12px;">Yükleniyor...</div>
@@ -2130,7 +2130,7 @@ console.log('Firebase bağlandı');
 
       <!-- Grup sekmeleri + Ekle/Sil -->
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-        <span style="font-family:var(--sans);font-size:12px;color:#c0c0c0;">GRUP:</span>
+        <span style="font-family:var(--sans);font-size:12px;color:var(--muted);">GRUP:</span>
         <div id="sgTabBar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <input class="mgr-input" id="sg_new_name" placeholder="Yeni grup adı..." style="width:150px;padding:5px 10px;">
@@ -2207,7 +2207,7 @@ console.log('Firebase bağlandı');
       <!-- Sembol İzinleri kartı (whitelist) -->
       <div class="ad-sect" style="padding:14px;">
         <div class="ad-sect-title" style="margin-bottom:6px;">SEMBOL İZİNLERİ</div>
-        <p style="font-family:var(--mono);font-size:12px;color:#b0b0b0;margin-bottom:10px;">
+        <p style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px;">
           Hiçbiri işaretli değilse &rarr; <strong>tüm semboller serbest</strong> (varsayılan).
           En az bir tanesi işaretliyse &rarr; yalnızca işaretliler trade edilebilir.
         </p>
@@ -2216,7 +2216,7 @@ console.log('Firebase bağlandı');
           <button class="mgr-btn" onclick="sgWhitelistToggleAll(false)" style="font-size:12px;padding:4px 10px;">Temizle</button>
           <span id="sg_wl_count" style="font-size:12px;color:var(--muted);font-family:var(--mono);align-self:center;margin-left:auto;"></span>
         </div>
-        <div id="sgWhitelistBox" style="max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px;padding:6px;border:1px solid #2a2a2a;border-radius:6px;background:rgba(255,255,255,0.02);">
+        <div id="sgWhitelistBox" style="max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px;padding:6px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,0.02);">
           <div style="color:#888;font-family:var(--sans);font-size:12px;padding:10px;">Grup seçin...</div>
         </div>
         <div style="margin-top:10px;">
@@ -2227,7 +2227,7 @@ console.log('Firebase bağlandı');
       <!-- Sembol spread & swap tablosu -->
       <div class="ad-sect" style="padding:14px;">
         <div class="ad-sect-title" style="margin-bottom:6px;">SEMBOL SPREAD &amp; SWAP AYARLARI</div>
-        <p style="font-family:var(--mono);font-size:12px;color:#b0b0b0;margin-bottom:10px;">Boş = sembol varsayılanı kullanılır &nbsp;|&nbsp; ★ = özelleştirilmiş</p>
+        <p style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px;">Boş = sembol varsayılanı kullanılır &nbsp;|&nbsp; ★ = özelleştirilmiş</p>
         <div style="overflow-x:auto;">
           <table class="mgr-table" style="min-width:650px;">
             <thead><tr>
@@ -2235,7 +2235,7 @@ console.log('Firebase bağlandı');
               <th>Grup Spread</th><th>Swap AL</th><th>Swap SAT</th>
             </tr></thead>
             <tbody id="sgSymBody">
-              <tr><td colspan="6" style="text-align:center;color:#b0b0b0;padding:20px;font-family:var(--sans);">Grup seçin...</td></tr>
+              <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--sans);">Grup seçin...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2264,14 +2264,14 @@ console.log('Firebase bağlandı');
 
 
       <!-- ── SEANSLAR / PİYASA SAATLERİ (2026-08-19) ─────────────────── -->
-      <div class="ad-sect" id="sessPanel" style="margin-bottom:14px;padding:12px;border:1px solid #2a3a2a;border-radius:6px;background:#121a14;">
+      <div class="ad-sect" id="sessPanel" style="margin-bottom:14px;padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
           <span style="font-family:var(--mono);font-size:13px;font-weight:700;"><span class="_ai-clock"></span> SEANSLAR (PİYASA SAATLERİ)</span>
           <span style="font-size:12px;color:#7ec8a9;font-family:var(--mono);">(<span id="sessTplCount">0</span> şablon · <span id="sessHolCount">0</span> tatil)</span>
           <button class="mgr-btn secondary" style="margin-left:auto;font-size:12px;padding:4px 10px;" onclick="sessResetDefaults()"><span class="_ai-refresh"></span> Varsayılan şablonlar</button>
           <button class="mgr-btn success" style="font-size:12px;padding:4px 10px;" onclick="sessSave()"><span class="_ai-save"></span> Kaydet</button>
         </div>
-        <div style="font-size:12px;color:#b0b0b0;margin-bottom:10px;line-height:1.55;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.55;">
           Her sembol bir <b>seans şablonuna</b> bağlanır (sembol düzenleme ekranındaki “SEANS” kutusu).
           Seans kapalıyken: fiyat <b>donar</b>, yeni emir açılamaz, SL/TP tetiklenmez ve <b>stop-out verilmez</b>.
           Saatler şablonun kendi GMT ofsetinde yorumlanır. Bitiş saati başlangıçtan küçükse gece yarısını aşan seans sayılır (örn. 22:00–06:00).
@@ -2281,22 +2281,22 @@ console.log('Firebase bağlandı');
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="mgr-btn" onclick="sessAddTpl()" style="font-size:12px;padding:4px 12px;">+ Şablon Ekle</button>
         </div>
-        <div style="margin-top:14px;border-top:1px solid #263326;padding-top:10px;">
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
           <div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:6px;"><span class="_ai-calendar"></span> TATİL GÜNLERİ</div>
-          <div style="font-size:12px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">Tarihi seçin, sonra o gün <b>kapalı olacak şablonları</b> işaretleyin (örn. sadece ABD Endeks). Hiçbirini işaretlemezseniz o gün <b>tüm</b> piyasalar kapalıdır.</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Tarihi seçin, sonra o gün <b>kapalı olacak şablonları</b> işaretleyin (örn. sadece ABD Endeks). Hiçbirini işaretlemezseniz o gün <b>tüm</b> piyasalar kapalıdır.</div>
           <div id="sessHolWrap"></div>
           <button class="mgr-btn" onclick="sessAddHoliday()" style="font-size:12px;padding:4px 12px;margin-top:8px;">+ Tatil Ekle</button>
         </div>
       </div>
 
       <!-- TD KÖPRÜ SEMBOLLERİ (canlı forex/emtia/endeks beslemesi) -->
-      <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid #2a2a3a;border-radius:6px;background:#12121a;">
+      <div class="ad-sect" style="margin-bottom:14px;padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
           <span style="font-family:var(--mono);font-size:13px;font-weight:700;"><span class="_ai-feed"></span> TD KÖPRÜ SEMBOLLERİ</span>
           <span style="font-size:12px;color:#8888ff;font-family:var(--mono);">(<span id="tdBridgeCount">0</span> canlı · köprü ~20sn'de alır)</span>
           <button class="mgr-btn secondary" style="margin-left:auto;font-size:12px;padding:4px 10px;" onclick="txTdResetDefault()"><span class="_ai-refresh"></span> Varsayılana dön</button>
         </div>
-        <div style="font-size:12px;color:#b0b0b0;margin-bottom:8px;line-height:1.5;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">
           Forex/emtia/endeks <b>canlı fiyat</b> beslemesi. Sol kutuya TradeX sembol kodu (örn. <code>EURGBP</code>), sağ kutuya Twelve Data karşılığı (örn. <code>EUR/GBP</code>) yaz. Eklediğin sembolün <b>TD planında açık</b> olması gerekir; değilse köprü "subscribe fail" verir ve fiyat akmaz.
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
@@ -2308,7 +2308,7 @@ console.log('Firebase bağlandı');
         <div style="overflow-x:auto;">
           <table class="mgr-table" style="min-width:360px;width:100%;">
             <thead><tr><th>TradeX Sembol</th><th>TD Karşılığı</th><th style="text-align:right;">İşlem</th></tr></thead>
-            <tbody id="tdBridgeBody"><tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Yükleniyor...</td></tr></tbody>
+            <tbody id="tdBridgeBody"><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px;">Yükleniyor...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -2334,7 +2334,7 @@ console.log('Firebase bağlandı');
               <th>Düzenle</th>
             </tr></thead>
             <tbody id="symMgrBody">
-              <tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:20px;font-family:var(--sans);">Yükleniyor...</td></tr>
+              <tr><td colspan="14" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--sans);">Yükleniyor...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2342,7 +2342,7 @@ console.log('Firebase bağlandı');
 
       <!-- Sembol ekle/düzenle modal -->
       <div id="addSymModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;">
-        <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:24px;width:480px;max-height:90vh;overflow-y:auto;">
+        <div style="background:var(--bg);border:1px solid #333;border-radius:6px;padding:24px;width:480px;max-height:90vh;overflow-y:auto;">
           <div style="font-family:var(--mono);font-weight:700;font-size:13px;margin-bottom:16px;">
             <span id="symModalTitle">SEMBOL EKLE</span>
             <button onclick="closeAddSymModal()" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
@@ -2390,18 +2390,18 @@ console.log('Firebase bağlandı');
               <select class="mgr-input" id="ns_priceSource" style="width:100%;cursor:pointer;">
                 <option value="">&#8212; Kendi fiyat&#305; &#8212;</option>
               </select>
-              <span style="font-family:var(--mono);font-size:11px;color:#b0b0b0;margin-top:2px;display:block;">Ba&#351;ka sembol&#252;n fiyat&#305;n&#305; kullanmak i&#231;in se&#231;in</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px;display:block;">Ba&#351;ka sembol&#252;n fiyat&#305;n&#305; kullanmak i&#231;in se&#231;in</span>
             </div>
             <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <div>
                 <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">FİYAT OFSETI (+/-)</label>
                 <input class="mgr-input" id="ns_priceOffset" type="number" step="any" value="0" style="width:100%;" placeholder="örn: -57000">
-                <span style="font-family:var(--sans);font-size:11px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına eklenecek sabit değer</span>
+                <span style="font-family:var(--sans);font-size:11px;color:var(--muted);margin-top:2px;display:block;">Kaynak fiyatına eklenecek sabit değer</span>
               </div>
               <div>
                 <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:3px;">FİYAT FAKTÖRÜ (×)</label>
                 <input class="mgr-input" id="ns_priceFactor" type="number" step="any" value="1" style="width:100%;" placeholder="örn: 0.001">
-                <span style="font-family:var(--sans);font-size:11px;color:#b0b0b0;margin-top:2px;display:block;">Kaynak fiyatına uygulanacak çarpan</span>
+                <span style="font-family:var(--sans);font-size:11px;color:var(--muted);margin-top:2px;display:block;">Kaynak fiyatına uygulanacak çarpan</span>
               </div>
             </div>
           </div>
@@ -2459,12 +2459,12 @@ console.log('Firebase bağlandı');
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
         <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">HEDEF FİYAT</label><input class="ad-input" id="pc_target" type="number" step="any" placeholder="85000"></div>
         <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">SÜRE (saniye)</label><input class="ad-input" id="pc_duration" type="number" value="10" min="1" max="300"></div>
-        <div style="padding-top:18px;"><button onclick="pcGradual()" id="pc_grad_btn" style="width:100%;padding:9px;background:#1a3040;color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;">▶ Kademeli Hareket</button></div>
-        <div style="padding-top:18px;"><button onclick="pcStopGradual()" style="width:100%;padding:9px;background:#3d1a1a;color:var(--sell);border:1px solid var(--sell)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;">⏹ Durdur</button></div>
+        <div style="padding-top:18px;"><button onclick="pcGradual()" id="pc_grad_btn" style="width:100%;padding:9px;background:var(--buy-dim);color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;">▶ Kademeli Hareket</button></div>
+        <div style="padding-top:18px;"><button onclick="pcStopGradual()" style="width:100%;padding:9px;background:var(--sell-dim);color:var(--sell);border:1px solid var(--sell)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;">⏹ Durdur</button></div>
       </div>
 
       <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:8px;">AKTİF OVERRİDE'LAR</div>
-      <div id="pc_override_list" style="font-family:var(--sans);font-size:12px;color:#b0b0b0;">Henüz override yok</div>
+      <div id="pc_override_list" style="font-family:var(--sans);font-size:12px;color:var(--muted);">Henüz override yok</div>
     </div>
 
   
@@ -2473,28 +2473,28 @@ console.log('Firebase bağlandı');
     <div id="sec-feed" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:16px;">
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;"><span class="_ai-feed"></span> VERİ FEED YÖNETİMİ</div>
 
-      <div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:16px;margin-bottom:20px;">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:20px;">
         <div style="font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">BAĞLANTI DURUMU</div>
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
           <div id="adFeedDotTD" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;">
-            <span style="color:#f5c518;font-size:16px;">●</span>
+            <span style="color:var(--accent);font-size:16px;">●</span>
             <div>
               <div style="color:#aaa;font-size:12px;margin-bottom:2px;">KÖPRÜ (Bridge)</div>
-              <span id="adFeedLblTD" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
+              <span id="adFeedLblTD" style="color:var(--accent);font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
           <div id="adFeedDotBN" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;">
-            <span style="color:#f5c518;font-size:16px;">●</span>
+            <span style="color:var(--accent);font-size:16px;">●</span>
             <div>
               <div style="color:#aaa;font-size:12px;margin-bottom:2px;">BİNANCE (Kripto)</div>
-              <span id="adFeedLblBN" style="color:#f5c518;font-weight:700;">Bağlanıyor...</span>
+              <span id="adFeedLblBN" style="color:var(--accent);font-weight:700;">Bağlanıyor...</span>
             </div>
           </div>
-          <button onclick="adFeedCheckConnections()" style="margin-left:auto;padding:6px 14px;background:#1a2a1a;color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;font-family:var(--mono);font-size:12px;cursor:pointer;">↺ Yeniden Test Et</button>
+          <button onclick="adFeedCheckConnections()" style="margin-left:auto;padding:6px 14px;background:var(--panel);color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;font-family:var(--mono);font-size:12px;cursor:pointer;">↺ Yeniden Test Et</button>
         </div>
       </div>
 
-      <div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:16px;">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:16px;">
         <div style="font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:14px;">SEMBOL VERİ KAYNAKLARI</div>
         <div id="adFeedSymTable" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
           <div style="color:var(--text);font-size:12px;font-family:var(--sans);">Feed sekmesi açılınca yüklenir...</div>
@@ -2508,19 +2508,19 @@ console.log('Firebase bağlandı');
       <div id="sec-backup" class="admin-section" style="display:none;flex:1;overflow-y:auto;padding:20px;">
         <div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:20px;color:var(--accent);"><span class="_ai-shield"></span> VERİ BACKUP YÖNETİMİ</div>
         <div style="max-width:680px;display:flex;flex-direction:column;gap:14px;">
-          <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
+          <div style="background:var(--bg);border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--sans);font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Manuel Backup</div>
             <button onclick="_txFullBackup();_txLocalBackup();showAdminToast('Backup','Tüm veriler yedeklendi','success');"
               style="background:var(--buy);border:none;border-radius:6px;padding:9px 20px;color:#fff;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">
               <span class="_ai-save"></span> Şimdi Backup Al
             </button>
-            <span style="font-family:var(--mono);font-size:12px;color:#a8a8a8;">Otomatik: 1 saatte bir Firebase, 5 dakikada bir localStorage</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--muted);">Otomatik: 1 saatte bir Firebase, 5 dakikada bir localStorage</span>
           </div>
-          <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
+          <div style="background:var(--bg);border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--sans);font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup'tan Geri Yükle</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <input id="backup_date_input" type="date"
-                style="background:#181818;border:1px solid #444;border-radius:6px;padding:7px 10px;color:#ddd;font-family:var(--mono);font-size:13px;"
+                style="background:var(--bg);border:1px solid #444;border-radius:6px;padding:7px 10px;color:#ddd;font-family:var(--mono);font-size:13px;"
                 onfocus="if(!this.value)this.value=new Date().toISOString().slice(0,10)">
               <button onclick="restoreFromBackup(document.getElementById('backup_date_input').value||null)"
                 style="background:var(--sell);border:none;border-radius:6px;padding:9px 16px;color:#fff;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;">
@@ -2533,7 +2533,7 @@ console.log('Firebase bağlandı');
             </div>
             <div id="backup_list" style="margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);"></div>
           </div>
-          <div style="background:#181818;border:1px solid #333;border-radius:6px;padding:16px;">
+          <div style="background:var(--bg);border:1px solid #333;border-radius:6px;padding:16px;">
             <div style="font-family:var(--sans);font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">Backup Kapsamı</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:12px;color:#aaa;">
               <div>Hesaplar</div><div>Trading Grupları</div>
@@ -2627,15 +2627,15 @@ console.log('Firebase bağlandı');
           <button class="mgr-btn" onclick="alLoad()"><span class="_ai-refresh"></span> Yenile</button>
         </div>
       </div>
-      <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;overflow:hidden;">
+      <div style="background:var(--bg);border:1px solid var(--panel);border-radius:6px;overflow:hidden;">
         <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;">
           <thead>
-            <tr style="background:#161616;">
-              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:12px;letter-spacing:1px;">TARİH</th>
-              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:12px;letter-spacing:1px;">MANAGER</th>
-              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:12px;letter-spacing:1px;">EYLEM</th>
-              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:12px;letter-spacing:1px;">HEDEF</th>
-              <th style="padding:8px 12px;text-align:left;color:#c0c0c0;font-size:12px;letter-spacing:1px;">DEĞİŞİM</th>
+            <tr style="background:var(--bg);">
+              <th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:12px;letter-spacing:1px;">TARİH</th>
+              <th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:12px;letter-spacing:1px;">MANAGER</th>
+              <th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:12px;letter-spacing:1px;">EYLEM</th>
+              <th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:12px;letter-spacing:1px;">HEDEF</th>
+              <th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:12px;letter-spacing:1px;">DEĞİŞİM</th>
             </tr>
           </thead>
           <tbody id="alBody"><tr><td colspan="5" style="padding:24px;text-align:center;color:#777;">Yükleniyor...</td></tr></tbody>
@@ -2752,8 +2752,8 @@ console.log('Firebase bağlandı');
         <input id="reqSearch" class="mgr-input" style="width:180px;" placeholder="ID / Hesap / Yöntem..." oninput="renderWithdrawReqs()">
         <button class="mgr-btn" onclick="fbLoadRequests(function(){renderWithdrawReqs();updatePendingBadge();})"><span class="_ai-refresh"></span> Yenile</button>
         <button class="mgr-btn danger" style="font-size:12px;" onclick="clearReqFilters()">✕ Sıfırla</button>
-        <span style="font-family:var(--mono);font-size:12px;color:#b0b0b0;" id="reqResultCount"></span>
-        <span style="margin-left:auto;font-family:var(--mono);font-size:12px;color:#f5c518;" id="pendingCount"></span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--muted);" id="reqResultCount"></span>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--accent);" id="pendingCount"></span>
       </div>
 
       <!-- Tablo -->
@@ -2761,18 +2761,18 @@ console.log('Firebase bağlandı');
         <div style="overflow-x:auto;">
           <table class="mgr-table" style="min-width:800px;">
             <thead><tr>
-              <th onclick="sortReqs('id')" style="cursor:pointer;user-select:none;white-space:nowrap;">ID <span id="rsort-id" style="color:#b0b0b0;font-size:11px;">⇅</span></th>
-              <th onclick="sortReqs('type')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tür <span id="rsort-type" style="color:#b0b0b0;font-size:11px;">⇅</span></th>
+              <th onclick="sortReqs('id')" style="cursor:pointer;user-select:none;white-space:nowrap;">ID <span id="rsort-id" style="color:var(--muted);font-size:11px;">⇅</span></th>
+              <th onclick="sortReqs('type')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tür <span id="rsort-type" style="color:var(--muted);font-size:11px;">⇅</span></th>
               <th onclick="sortReqs('date')" style="cursor:pointer;user-select:none;white-space:nowrap;">Tarih <span id="rsort-date" style="color:var(--buy);font-size:11px;">↓</span></th>
-              <th onclick="sortReqs('account')" style="cursor:pointer;user-select:none;white-space:nowrap;">Hesap <span id="rsort-account" style="color:#b0b0b0;font-size:11px;">⇅</span></th>
+              <th onclick="sortReqs('account')" style="cursor:pointer;user-select:none;white-space:nowrap;">Hesap <span id="rsort-account" style="color:var(--muted);font-size:11px;">⇅</span></th>
               <th>Yöntem / Kaynak</th>
               <th>Adres / Not</th>
-              <th onclick="sortReqs('amount')" style="cursor:pointer;user-select:none;white-space:nowrap;">Miktar <span id="rsort-amount" style="color:#b0b0b0;font-size:11px;">⇅</span></th>
-              <th onclick="sortReqs('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Durum <span id="rsort-status" style="color:#b0b0b0;font-size:11px;">⇅</span></th>
+              <th onclick="sortReqs('amount')" style="cursor:pointer;user-select:none;white-space:nowrap;">Miktar <span id="rsort-amount" style="color:var(--muted);font-size:11px;">⇅</span></th>
+              <th onclick="sortReqs('status')" style="cursor:pointer;user-select:none;white-space:nowrap;">Durum <span id="rsort-status" style="color:var(--muted);font-size:11px;">⇅</span></th>
               <th>İşlem</th>
             </tr></thead>
             <tbody id="withdrawReqBody">
-              <tr><td colspan="9" style="text-align:center;color:#b0b0b0;padding:20px;font-family:var(--sans);">Yükleniyor...</td></tr>
+              <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--sans);">Yükleniyor...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2784,15 +2784,15 @@ console.log('Firebase bağlandı');
   </div>
 </div>
 <div id="assignModal" style="display:none;position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;">
-  <div style="background:#181818;border:1px solid #333;border-radius:10px;width:500px;max-height:80vh;display:flex;flex-direction:column;">
-    <div style="padding:14px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;"><span style="font-family:var(--sans);font-size:13px;font-weight:700;">MÜŞTERİ ATAMA</span><span onclick="document.getElementById('assignModal').style.display='none'" style="cursor:pointer;color:var(--muted);font-size:18px;">x</span></div>
+  <div style="background:var(--bg);border:1px solid #333;border-radius:10px;width:500px;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-family:var(--sans);font-size:13px;font-weight:700;">MÜŞTERİ ATAMA</span><span onclick="document.getElementById('assignModal').style.display='none'" style="cursor:pointer;color:var(--muted);font-size:18px;">x</span></div>
     <div id="assignBody" style="padding:16px;overflow-y:auto;flex:1;"></div>
-    <div style="padding:12px 16px;border-top:1px solid #2a2a2a;"><button class="mgr-btn success" onclick="document.getElementById('assignModal').style.display='none'">Tamam</button></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);"><button class="mgr-btn success" onclick="document.getElementById('assignModal').style.display='none'">Tamam</button></div>
   </div>
 </div>
 <div id="accDetailOverlay" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
-  <div style="background:#181818;border:1px solid #333;border-radius:10px;width:1200px;max-width:98vw;height:700px;max-height:95vh;min-height:700px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #2a2a2a;flex-shrink:0;">
+  <div style="background:var(--bg);border:1px solid #333;border-radius:10px;width:1200px;max-width:98vw;height:700px;max-height:95vh;min-height:700px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:12px;">
         <span id="adOnlineDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;"></span>
         <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);" id="adAccId">—</span>
@@ -2802,14 +2802,14 @@ console.log('Firebase bağlandı');
       </div>
       <button onclick="closeAccDetail()" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;line-height:1;">✕</button>
     </div>
-    <div style="display:flex;border-bottom:1px solid #2a2a2a;flex-shrink:0;background:#141414;">
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);">
       <button class="ad-tab" data-tab="trades"   onclick="adTab('trades',this)"   style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;">İŞLEMLER</button>
       <button class="ad-tab" data-tab="info"     onclick="adTab('info',this)"     style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;">BİLGİLER</button>
       <button class="ad-tab" data-tab="settings" onclick="adTab('settings',this)" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;">AYARLAR</button>
     </div>
-    <div id="adReadOnlyBanner" style="display:none;flex-shrink:0;background:#f5c518;color:#1a1a1a;text-align:center;padding:6px 14px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;">İZLEYİCİ MODU — Bu hesap salt okunur, müşteri işlem açıp kapatamaz</div>
+    <div id="adReadOnlyBanner" style="display:none;flex-shrink:0;background:var(--accent);color:var(--panel);text-align:center;padding:6px 14px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;">İZLEYİCİ MODU — Bu hesap salt okunur, müşteri işlem açıp kapatamaz</div>
     <div style="flex:1;min-height:0;overflow-y:auto;padding:20px;" id="adContent"></div>
-    <div id="adOpenFooter" style="display:none;flex-shrink:0;padding:10px 20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;border-top:1px solid #2a2a2a;background:#181818;"></div>
+    <div id="adOpenFooter" style="display:none;flex-shrink:0;padding:10px 20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;border-top:1px solid var(--border);background:var(--bg);"></div>
   </div>
 </div>
 <script>
@@ -3671,7 +3671,7 @@ function renderTdBridgeMgr(){
   if(!body) return;
   var keys=Object.keys(AD_TD_MAP).sort();
   var cnt=document.getElementById('tdBridgeCount'); if(cnt) cnt.textContent=keys.length;
-  if(!keys.length){ body.innerHTML='<tr><td colspan="3" style="text-align:center;color:#b0b0b0;padding:14px;">Liste boş</td></tr>'; return; }
+  if(!keys.length){ body.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px;">Liste boş</td></tr>'; return; }
   body.innerHTML=keys.map(function(sym){
     return '<tr>'+
       '<td style="font-family:var(--sans);font-weight:600;">'+sym+'</td>'+
@@ -4064,7 +4064,7 @@ function adDebugAccountBalance(){
   // Uzun metin için modal/alert yerine yeni pencere-stili kutu
   var w = window.open('', '_blank', 'width=700,height=800');
   if(w) {
-    w.document.write('<pre style="font-family:var(--mono);font-size:13px;white-space:pre-wrap;padding:16px;background:#0a0a0a;color:#e0e0e0;">'+msg.replace(/</g,'&lt;')+'</pre>');
+    w.document.write('<pre style="font-family:var(--mono);font-size:13px;white-space:pre-wrap;padding:16px;background:var(--bg);color:var(--text);">'+msg.replace(/</g,'&lt;')+'</pre>');
   } else {
     alert(msg);
   }
@@ -5473,13 +5473,13 @@ function _adRenderTab_inner(tab) {
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">' +
         '<div class="ad-card"><div class="ad-stat-lbl">BAKİYE</div><div class="ad-stat-val" style="color:var(--buy);">$'+getAccDispBal(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">VARLIK</div><div class="ad-stat-val" style="color:var(--buy);">$'+getAccEquity(a.id).toFixed(2)+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:#f5c518;">$'+getAccBonus(a.id).toFixed(2)+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">BONUS / KREDİ</div><div class="ad-stat-val" style="color:var(--accent);">$'+getAccBonus(a.id).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT</div><div class="ad-stat-val">$'+(a.margin||0).toFixed(2)+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">SERBEST TEMİNAT</div><div class="ad-stat-val">$'+(function(){var _st=adCalcStats(a,getAccPos(a.id));return _st.freeMargin.toFixed(2);})() +'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:#f5c518;">'+(a.margin?(((getAccEquity(a.id))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:#f5c518;">%'+_mcPct+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">TEMİNAT SEVİYESİ</div><div class="ad-stat-val" style="color:var(--accent);">'+(a.margin?(((getAccEquity(a.id))/(a.margin))*100).toFixed(2)+'%':'—')+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">MARGIN CALL</div><div class="ad-stat-val" style="color:var(--accent);">%'+_mcPct+'</div></div>' +
         '<div class="ad-card"><div class="ad-stat-lbl">STOP OUT</div><div class="ad-stat-val" style="color:var(--sell);">%'+_soPct+'</div></div>' +
-        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:var(--buy);">Aktif</span>':'<span style="color:#b0b0b0;">Pasif</span>')+'</div></div>' +
+        '<div class="ad-card"><div class="ad-stat-lbl">HEDGE</div><div class="ad-stat-val" style="color:#64b5f6;">'+(a.hedgeEnabled!==false?'<span style="color:var(--buy);">Aktif</span>':'<span style="color:var(--muted);">Pasif</span>')+'</div></div>' +
       '</div>' +
       '<div class="ad-grid2">' +
         '<div>' +
@@ -5535,25 +5535,25 @@ function _adRenderTab_inner(tab) {
     cnt.innerHTML =
       // ── Mini finansal özet — stat kartları ──
       '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 16px;border-bottom:1px solid #222;margin-bottom:14px;">' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bakiye</div>' +
           '<div id="adBadgeBal" style="font-family:var(--mono);color:var(--buy);font-weight:700;font-size:14px;">$'+bal+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid var(--buy);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Varlık</div>' +
           '<div id="adBadgeEq" style="font-family:var(--mono);color:var(--buy);font-weight:700;font-size:14px;">$'+eq+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #f5c518;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid var(--accent);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Bonus</div>' +
-          '<div id="adBadgeBonus" style="font-family:var(--mono);color:#f5c518;font-weight:700;font-size:14px;">$'+bon+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div id="adBadgeBonus" style="font-family:var(--mono);color:var(--accent);font-weight:700;font-size:14px;">$'+bon+'</div></div>' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Teminat</div>' +
           '<div id="adBadgeMar" style="font-family:var(--mono);color:var(--text);font-weight:700;font-size:14px;">$'+mar+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid #555;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">S.Teminat</div>' +
           '<div id="adBadgeFree" style="font-family:var(--mono);color:var(--text);font-weight:700;font-size:14px;">$'+freeM+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid #f5c518;border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid var(--accent);border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">T.Seviyesi</div>' +
-          '<div id="adBadgeMarLv" style="font-family:var(--sans);color:#f5c518;font-weight:700;font-size:14px;">'+marLv+'</div></div>' +
-        '<div style="background:#181818;border:1px solid #262626;border-left:3px solid '+((_opnl>0)?'#26a69a':(_opnl<0)?'#ef5350':'#555')+';border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
+          '<div id="adBadgeMarLv" style="font-family:var(--sans);color:var(--accent);font-weight:700;font-size:14px;">'+marLv+'</div></div>' +
+        '<div style="background:var(--bg);border:1px solid var(--panel2);border-left:3px solid '+((_opnl>0)?'#26a69a':(_opnl<0)?'#ef5350':'#555')+';border-radius:6px;padding:7px 14px;min-width:88px;box-shadow:0 1px 3px rgba(0,0,0,.2);">' +
           '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">Açık K/Z</div>' +
           '<div id="adBadgeOpnl" style="font-family:var(--sans);color:'+_opnlColor+';font-weight:700;font-size:14px;">'+_opnlTxt+'</div></div>' +
         '<button onclick="adDebugAccountBalance()" title="Bakiye/Teminat ham verilerini göster" class="ad-btn ad-btn-secondary" style="align-self:center;font-size:12px;padding:6px 12px;"><span class="_ai-search"></span> Teşhis</button>' +
@@ -5561,7 +5561,7 @@ function _adRenderTab_inner(tab) {
 
       // ── Sekme butonları — pill tasarım ──
       '<div style="display:flex;align-items:center;gap:0;margin-bottom:14px;">' +
-        '<div style="display:inline-flex;gap:2px;background:#141414;border:1px solid #232323;border-radius:10px;padding:3px;">' +
+        '<div style="display:inline-flex;gap:2px;background:var(--bg);border:1px solid var(--panel2);border-radius:10px;padding:3px;">' +
           '<button data-subtab="open" onclick="adSubTab(this)" class="ad-pill-tab on">AÇIK</button>' +
           '<button data-subtab="closed" onclick="adSubTab(this)" class="ad-pill-tab">KAPALI</button>' +
           ((typeof hasPerm!=='function'||hasPerm('finance.view'))?'<button data-subtab="finlog" onclick="adSubTab(this)" class="ad-pill-tab">FİNANS</button>':'') +
@@ -5572,7 +5572,7 @@ function _adRenderTab_inner(tab) {
       '</div>' +
 
       // ── Manuel işlem formu ──
-      '<div id="adMTF" style="display:none;background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:14px;margin-bottom:14px;">' +
+      '<div id="adMTF" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;">' +
         '<div class="ad-section-title" style="margin-top:0;">Manuel İşlem Aç</div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:8px;">' +
           '<div><label class="ad-label">SEMBOL</label><select class="ad-input" id="ad_tsym" onchange="adMTFUpdatePrice()">'+symopts+'</select></div>' +
@@ -5601,7 +5601,7 @@ function _adRenderTab_inner(tab) {
               '<col style="width:66px"><col style="width:66px"><col style="width:66px">' +
               '<col style="width:80px"><col style="width:76px"><col style="width:80px"><col style="width:96px"><col style="width:100px">' +
             '</colgroup>' +
-            '<thead><tr style="background:#181818;" id="adOpenThead">' +
+            '<thead><tr style="background:var(--bg);" id="adOpenThead">' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">#</th>' +
               '<th onclick="adSortOpen(\'sym\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;" title="Sırala">Sembol <span id="adSortO_sym"></span></th>' +
               '<th onclick="adSortOpen(\'side\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;" title="Sırala">Yön <span id="adSortO_side"></span></th>' +
@@ -5617,7 +5617,7 @@ function _adRenderTab_inner(tab) {
               '<th onclick="adSortOpen(\'pnl\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;" title="Sırala">K/Z <span id="adSortO_pnl"></span></th>' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">İşlem</th>' +
             '</tr></thead>' +
-            '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:16px;">Yükleniyor...</td></tr></tbody>' +
+            '<tbody id="adOpenBody"><tr><td colspan="14" style="text-align:center;color:var(--muted);padding:16px;">Yükleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -5641,7 +5641,7 @@ function _adRenderTab_inner(tab) {
               '<col style="width:66px"><col style="width:70px"><col style="width:80px"><col style="width:94px">' +
               '<col style="width:110px">' +
             '</colgroup>' +
-            '<thead><tr style="background:#181818;">' +
+            '<thead><tr style="background:var(--bg);">' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">#</th>' +
               '<th onclick="adSortHist(\'sym\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;">Sembol <span id="adSortH_sym"></span></th>' +
               '<th onclick="adSortHist(\'side\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;">Yon <span id="adSortH_side"></span></th>' +
@@ -5658,7 +5658,7 @@ function _adRenderTab_inner(tab) {
               '<th onclick="adSortHist(\'pnl\')" style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;cursor:pointer;">K/Z <span id="adSortH_pnl"></span></th>' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">Islem</th>' +
             '</tr></thead>' +
-            '<tbody id="adHistBody"><tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:16px;">Yukleniyor...</td></tr></tbody>' +
+            '<tbody id="adHistBody"><tr><td colspan="15" style="text-align:center;color:var(--muted);padding:16px;">Yukleniyor...</td></tr></tbody>' +
           '</table>' +
         '</div>' +
       '</div>' +
@@ -5733,7 +5733,7 @@ function _adRenderTab_inner(tab) {
     var _secViewer = _hp('accounts.edit') ?
           '<div class="ad-section-title" style="margin-top:20px;">İzleyici Şifresi</div>' +
           '<div style="display:flex;flex-direction:column;gap:10px;">' +
-            '<div style="font-family:var(--mono);font-size:12px;color:#c0c0c0;margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
+            '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:4px;">Bu şifreyle giriş yapanlar hesabı sadece görüntüleyebilir, işlem yapamaz.</div>' +
             '<div><label class="ad-label">İzleyici Şifresi</label><input class="ad-input" id="ad_vpw" type="text" placeholder="Örn: izle1234" value="'+(a.viewerPassword||'')+'"></div>' +
             '<button class="ad-btn ad-btn-secondary" onclick="adSaveViewerPassword()"><span class="_ai-lock"></span> İzleyici Şifresini Kaydet</button>' +
           '</div>' : '';
@@ -5836,7 +5836,7 @@ function adAuditBalance(accId){
     + row('Kapanan işlem K/Z ('+n+' işlem)', money(pnl), pnl>=0?'#26a69a':'#ef5350')
     + row('Komisyonlar',           money(-comm),'#ef5350')
     + (otherCnt ? row('Diğer finans kaydı ('+otherCnt+')', money(other), '#f0b90b') : '')
-    + '<tr><td colspan="2" style="border-top:1px solid #2a2a2a;padding-top:4px;"></td></tr>'
+    + '<tr><td colspan="2" style="border-top:1px solid var(--border);padding-top:4px;"></td></tr>'
     + row('<b>Beklenen bakiye</b>', '<b>'+money(expected)+'</b>')
     + row('<b>Kayıtlı bakiye</b>',  '<b>'+money(bal)+'</b>')
     + row('<b>FARK</b>', '<b>'+money(diff)+'</b>', okTol?'#26a69a':'#ef5350')
@@ -5854,7 +5854,7 @@ function adAuditBalance(accId){
     // stop-out'lar test edilir.
     var _yakin = function(x){ return x>0 && Math.abs(diff - x) < Math.max(1, x*0.05); };
     if(diff > 0 && (costCnt>0 || soCnt>0)){
-      html += '<div style="margin-top:8px;padding:8px 10px;background:#1d1a12;'
+      html += '<div style="margin-top:8px;padding:8px 10px;background:var(--bg);'
         + 'border:1px solid #4a3f1a;border-radius:6px;font-size:12px;line-height:1.6;">'
         + '<b style="color:var(--accent);">Teminat iadesi testi</b><br>'
         + 'Tüm kapanışların teminat toplamı ('+costCnt+' işlem): <b>'+money(allCost)+'</b><br>'
@@ -5873,8 +5873,8 @@ function adAuditBalance(accId){
 
     // Geçmiş listesi üst sınırda ise beklenen bakiye eksik hesaplanmış olabilir
     if(n >= 50){
-      html += '<div style="margin-top:8px;padding:8px 10px;background:#12191d;'
-        + 'border:1px solid #1a3a4a;border-radius:6px;font-size:12px;line-height:1.6;color:#7ec8e3;">'
+      html += '<div style="margin-top:8px;padding:8px 10px;background:var(--bg);'
+        + 'border:1px solid var(--buy-dim);border-radius:6px;font-size:12px;line-height:1.6;color:#7ec8e3;">'
         + '<b>Dikkat:</b> Geçmişte tam '+n+' kayıt var — bu, saklanan üst sınır. '
         + 'Daha eski işlemler kırpılmış olabilir; o durumda "beklenen bakiye" '
         + 'olduğundan DÜŞÜK çıkar ve farkın bir kısmı gerçek kârdır.</div>';
@@ -5898,7 +5898,7 @@ function _adAuditModal(inner){
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;'
     + 'display:flex;align-items:center;justify-content:center;';
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
-  ov.innerHTML = '<div style="background:#181818;border:1px solid #2a2a2a;border-radius:10px;'
+  ov.innerHTML = '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;'
     + 'padding:20px 22px;min-width:340px;max-width:460px;color:#ddd;font-family:var(--mono);">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">'
     + '<span style="font-size:13px;letter-spacing:1px;color:var(--accent);">BAKİYE DENETİMİ</span>'
@@ -5950,7 +5950,7 @@ function adRepCellHtml(accId){
     html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
     assigned.forEach(function(s){
       var roleLbl = (typeof ROLES!=='undefined' && ROLES[s.role]) ? ROLES[s.role].label : (s.role||'');
-      html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#1d2b26;'
+      html += '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);'
         + 'border:1px solid var(--buy)55;border-radius:14px;padding:2px 4px 2px 10px;'
         + 'font-family:var(--mono);font-size:12px;color:var(--buy);font-weight:600;">'
         + '<span>'+s.name+'</span>'
@@ -5977,7 +5977,7 @@ function adRepCellHtml(accId){
       });
     }
     html += '<select data-acc="'+accId+'" onchange="adRepAssign(this)" '
-      + 'style="background:#141414;border:1px solid var(--border);border-radius:6px;color:#ddd;'
+      + 'style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#ddd;'
       + 'font-family:var(--mono);font-size:12px;padding:4px 6px;max-width:230px;font-weight:400;">'
       + opts + '</select>';
   }
@@ -6064,7 +6064,7 @@ function adKycSectionHtml(a) {
     } else if(status==='rejected') {
       badge = '<span style="color:var(--sell);font-weight:700;">✕ Reddedildi</span>';
     } else if(status==='review') {
-      badge = '<span style="color:#f5c518;font-weight:700;">⏳ İnceleniyor</span>';
+      badge = '<span style="color:var(--accent);font-weight:700;">⏳ İnceleniyor</span>';
       actions = '<button class="ad-btn" style="color:var(--buy); margin-right:6px" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'approved\')">Onayla</button>'
               + '<button class="ad-btn ad-btn-danger" onclick="adKycDecide(\''+a.id+'\',\''+type+'\',\'rejected\')">Reddet</button>';
     } else {
@@ -6227,7 +6227,7 @@ function adRenderFinlog() {
 
     var rows = '';
     if(!logs.length) {
-      rows = '<tr><td colspan="5" style="text-align:center;color:#b0b0b0;padding:24px;font-size:13px;">Kayıt yok</td></tr>';
+      rows = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;font-size:13px;">Kayıt yok</td></tr>';
     } else {
       // Tarihe göre yeniden eskiye sırala
       var sorted = logs.map(function(l,i){return {l:l,i:i};}).sort(function(a,b){return parseFinlogDate(b.l.date)-parseFinlogDate(a.l.date);});
@@ -6237,15 +6237,15 @@ function adRenderFinlog() {
         var color = TYPE_COLORS[log.type] || '#ccc';
         var label = TYPE_LABELS[log.type] || log.type;
         var sign  = (log.type==='deposit'||log.type==='bonus_in') ? '+' : '-';
-        rows += '<tr style="border-bottom:1px solid #1a1a1a;background:'+(_fri%2===0?'transparent':'rgba(255,255,255,0.02)')+';">' 
+        rows += '<tr style="border-bottom:1px solid var(--panel);background:'+(_fri%2===0?'transparent':'rgba(255,255,255,0.02)')+';">' 
           + '<td style="padding:7px 8px;font-size:12px;color:'+color+';font-weight:600;white-space:nowrap;">'+label+'</td>'
           + '<td style="padding:7px 8px;font-size:12px;font-family:var(--mono);color:'+color+';white-space:nowrap;">'+sign+'$'+parseFloat(log.amount||0).toFixed(2)+'</td>'
           + '<td style="padding:7px 8px;font-size:12px;color:var(--muted);white-space:nowrap;">'+(log.date?fmtDate(log.date):'—')+'</td>'
-          + '<td style="padding:7px 8px;font-size:12px;color:#c0c0c0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
+          + '<td style="padding:7px 8px;font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(log.note||'—')+'</td>'
           + '<td style="padding:7px 8px;white-space:nowrap;">'
             + ((typeof hasPerm!=='function'||hasPerm('finance.deposit')||hasPerm('finance.withdraw')||hasPerm('finance.bonus'))
-              ? '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:#1a1a1a;border:1px solid #333;color:#aaa;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:12px;margin-right:4px;">&#9998;</button>'
-                + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:#2a1515;border:1px solid var(--sell);color:var(--sell);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:12px;">&#10005;</button>'
+              ? '<button data-idx="'+origIdx+'" onclick="adEditFinlog(+this.dataset.idx)" style="background:var(--panel);border:1px solid #333;color:#aaa;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:12px;margin-right:4px;">&#9998;</button>'
+                + '<button data-idx="'+origIdx+'" onclick="adDeleteFinlog(+this.dataset.idx)" style="background:var(--panel);border:1px solid var(--sell);color:var(--sell);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:12px;">&#10005;</button>'
               : '')
           + '</td>'
           + '</tr>';
@@ -6261,15 +6261,15 @@ function adRenderFinlog() {
       + (_hp('finance.bonus')   ? '<button data-ftype="bonus_in"  onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e2800','#f5c518','#f5c518')+'">+ Bonus Ekle</button>' : '')
       + (_hp('finance.bonus')   ? '<button data-ftype="bonus_out" onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#2e1d00','#f5a623','#f5a623')+'">- Bonus Çıkar</button>' : '')
       + '</div>'
-      + '<div id="adFinlogForm" style="display:none;background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:14px;margin-bottom:14px;"></div>'
+      + '<div id="adFinlogForm" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;"></div>'
       + '<div class="ad-table-card" style="overflow-x:auto;">'
       + '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
-      + '<thead><tr style="background:#181818;">'
-      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tip</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Miktar</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Tarih</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Açıklama</th>'
-      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid #2a2a2a;white-space:nowrap;"></th>'
+      + '<thead><tr style="background:var(--bg);">'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;">Tip</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;">Miktar</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;">Tarih</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;">Açıklama</th>'
+      + '<th style="padding:7px 8px;text-align:left;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;"></th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
@@ -6868,7 +6868,7 @@ function _renderAccTable_inner(){
   });
 
   var picker='<div id="accColPicker" style="display:none;position:fixed;z-index:99999;'
-    +'background:#1a1a1a;border:1px solid #444;border-radius:10px;padding:12px;'
+    +'background:var(--panel);border:1px solid #444;border-radius:10px;padding:12px;'
     +'min-width:200px;box-shadow:0 16px 48px rgba(0,0,0,0.95);">'
     +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--sans);'
       +'letter-spacing:1px;padding-bottom:6px;border-bottom:1px solid #333;">KOLONLAR</div>'
@@ -6898,7 +6898,7 @@ function _renderAccTable_inner(){
       +'<option value="">Tümü</option>'
       +'<option value="online"'+(fOnline==='online'?' selected':'')+'>Online</option>'
       +'<option value="offline"'+(fOnline==='offline'?' selected':'')+'>Offline</option></select>'
-    +'<span style="font-size:12px;color:#c0c0c0;white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
+    +'<span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;">'+rows.length+'/'+all.length+'</span>'
     +'<button class="mgr-btn" id="accColBtn" onclick="_accColPickerToggle(event)" '
       +'style="flex-shrink:0; padding:5px 12px; font-size:13px; white-space:nowrap; '
       +'cursor:pointer">'+_adUi('gear',12)+' Kolonlar</button>'
@@ -6909,7 +6909,7 @@ function _renderAccTable_inner(){
   function th(label,sortKey,cd){
     var arrow='';
     if(sortKey) arrow='<span style="color:'+(sc===sortKey?'#f0b90b':'#444')+';margin-left:3px;">'+(sc===sortKey?(sd==='asc'?'▲':'▼'):'⇅')+'</span>';
-    var style='padding:8px 10px;text-align:left;color:#b0b0b0;font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:#181818;';
+    var style='padding:8px 10px;text-align:left;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:var(--bg);';
     if(cd&&cd.w) style+='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
     if(cd&&cd.align==='center') style+='text-align:center;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
@@ -6924,7 +6924,7 @@ function _renderAccTable_inner(){
 
   var tbodyHtml = '';
   if(!rows.length){
-    tbodyHtml='<tr><td colspan="20" style="text-align:center;color:#b0b0b0;padding:40px;font-size:13px;">Hesap bulunamadı</td></tr>';
+    tbodyHtml='<tr><td colspan="20" style="text-align:center;color:var(--muted);padding:40px;font-size:13px;">Hesap bulunamadı</td></tr>';
   } else {
     rows.forEach(function(a,rowIdx){
       var bal=getAccDispBal(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});   // MT5: kilitli marj dahil görünen bakiye
@@ -6955,10 +6955,10 @@ function _renderAccTable_inner(){
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?''+_adUi('lock',12)+'':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
           ?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--buy);box-shadow:0 0 8px var(--buy);vertical-align:middle;"></span>'
-          :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid #999999;vertical-align:middle;"></span>')+'</td>';
+          :'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;border:1px solid var(--muted);vertical-align:middle;"></span>')+'</td>';
         else if(cid==='balance') tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;">$'+bal+'</td>';
         else if(cid==='equity')  tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--sans);text-align:right;color:'+eqColor+';" data-eq="'+a.id+'">'+eq+'</td>';
-        else if(cid==='bonus')   tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:#f5c518;">$'+bon+'</td>';
+        else if(cid==='bonus')   tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;color:var(--accent);">$'+bon+'</td>';
         else if(cid==='open')    tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;color:'+(openCnt?'#f5c518':'#444')+';font-weight:'+(openCnt?'700':'400')+';\" data-open="'+a.id+'">'+openCnt+'</td>';
         else if(cid==='opnl'){
           var _opnl=_accOpenPnl!==undefined?_accOpenPnl:(a._openPnl||0);
@@ -6978,7 +6978,7 @@ function _renderAccTable_inner(){
   }
 
   // Başlık ayrı div (sabit), gövde ayrı div (scroll)
-  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:#181818;border-bottom:2px solid #333;">'
+  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:var(--bg);border-bottom:2px solid #333;">'
     +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:12px;table-layout:fixed;width:100%;">'
     +'<thead><tr>'+theadHtml+'</tr></thead></table></div>';
   var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
@@ -7503,7 +7503,7 @@ function renderWithdrawReqs() {
   var cntEl = document.getElementById('reqResultCount');
   if(cntEl) cntEl.textContent = list.length ? list.length + ' kayıt' : '';
   if(!list.length) {
-    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#b0b0b0;padding:24px;">'
+    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px;">'
       + '<div style="font-size:13px;">Kayıt bulunamadı</div>'
       + (search ? '<div style="font-size:12px;margin-top:6px;color:var(--text);">Arama: <b style=\'color:var(--muted);\'>' + search + '</b></div>' : '')
       + '</td></tr>';
@@ -7529,14 +7529,14 @@ function renderWithdrawReqs() {
            + 'onclick="rejectReq(\'' + rid + '\',\'' + rtype + '\')">'
            + '&#10005; Reddet</button>';
     } else {
-      acts = '<span style="color:#b0b0b0;font-size:12px;">&#8212;</span>';
+      acts = '<span style="color:var(--muted);font-size:12px;">&#8212;</span>';
     }
     var mgrBadge = r.source==='manager'
-      ? '<span style="background:#0d2a1a;color:var(--buy);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">MGR</span>'
-      : '<span style="background:#1a1a2e;color:var(--muted);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">TRADER</span>';
-    var mgrName = r.manager ? '<div style="color:#c0c0c0;font-size:11px;margin-top:1px;">' + r.manager + '</div>' : '';
+      ? '<span style="background:var(--panel);color:var(--buy);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">MGR</span>'
+      : '<span style="background:var(--panel);color:var(--muted);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">TRADER</span>';
+    var mgrName = r.manager ? '<div style="color:var(--muted);font-size:11px;margin-top:1px;">' + r.manager + '</div>' : '';
     rows += '<tr>'
-      + '<td style="font-family:var(--mono);font-size:12px;color:#c0c0c0;">' + (r.id||'&#8212;') + '</td>'
+      + '<td style="font-family:var(--mono);font-size:12px;color:var(--muted);">' + (r.id||'&#8212;') + '</td>'
       + '<td>' + typeLabel + '</td>'
       + '<td style="font-family:var(--mono);font-size:12px;color:var(--muted);">' + ((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'&#8212;') + '</td>'
       + '<td style="font-size:12px;">' + (r.accountName||r.account||('#'+(r.accountId||'?'))) + '</td>'
@@ -7711,7 +7711,7 @@ function renderMarketWatch(filter) {
         if(spd.endsWith('.0')) spd = spd.slice(0,-2);
         var rowCls = (it2.sym===curSym) ? 'mw-row active-sym' : 'mw-row';
         html += '<div id="mwr-' + it2.sym + '" class="' + rowCls + '" data-sym="' + it2.sym + '" data-gid="' + g.id + '" onclick="mwSelect(this.dataset.sym,this.dataset.gid)">';
-        html += '<div style="min-width:0;padding-right:4px;"><div style="font-size:12px;font-weight:700;font-family:var(--mono);color:#e0e0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + it2.name + '</div></div>';
+        html += '<div style="min-width:0;padding-right:4px;"><div style="font-size:12px;font-weight:700;font-family:var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + it2.name + '</div></div>';
         html += '<div class="mw-bid" style="font-family:var(--sans);font-size:12px;text-align:right;color:var(--sell);white-space:nowrap;">' + bid + '</div>';
         html += '<div class="mw-ask" style="font-family:var(--sans);font-size:12px;text-align:right;color:var(--buy);white-space:nowrap;">' + ask + '</div>';
         html += '</div>'; // row kapat
@@ -8897,7 +8897,7 @@ function adFeedRenderSymTable() {
       items.forEach(function(it){
         var price = adGetPrice(it.sym)||0;
         var dec = it.decimals||2;
-        html += '<div style="display:flex;align-items:center;gap:6px;background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;">'+
+        html += '<div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;">'+
                 '<span style="color:'+col+';font-size:12px;">●</span>'+
                 '<span style="font-family:var(--sans);font-size:12px;color:#ddd;">'+it.name+'</span>'+
                 '<span style="font-family:var(--sans);font-size:12px;color:var(--accent);margin-left:auto;">'+(price?price.toFixed(dec):'—')+'</span>'+
@@ -8925,7 +8925,7 @@ function adFeedRenderSymTable() {
       var dec = it.decimals||2;
       var sgData = _getFeedSymSpread(it.sym);
       html2 +=
-        '<div style="background:#181818;border:1px solid #2a2a2a;border-radius:6px;padding:12px;">'+
+        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;">'+
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
             '<span style="color:'+col+';font-size:13px;">●</span>'+
             '<span style="font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;">'+it.name+'</span>'+
@@ -8936,21 +8936,21 @@ function adFeedRenderSymTable() {
           '<div style="font-family:var(--sans);font-size:12px;color:var(--accent);margin-bottom:10px;">'+(price?price.toFixed(dec):'—')+'</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
             '<div>'+
-              '<div style="font-size:11px;color:#c0c0c0;margin-bottom:3px;">SPREAD</div>'+
+              '<div style="font-size:11px;color:var(--muted);margin-bottom:3px;">SPREAD</div>'+
               '<input id="fse_sp_'+it.sym+'" type="number" step="any" value="'+(sgData.spread||it.spread||0)+'" '+
-                'style="width:100%;background:#181818;border:1px solid #333;border-radius:6px;padding:5px 8px;color:#e0e0e0;font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
+                'style="width:100%;background:var(--bg);border:1px solid #333;border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
             '</div>'+
             '<div>'+
-              '<div style="font-size:11px;color:#c0c0c0;margin-bottom:3px;">SWAP AL / SAT</div>'+
+              '<div style="font-size:11px;color:var(--muted);margin-bottom:3px;">SWAP AL / SAT</div>'+
               '<div style="display:flex;gap:4px;">'+
                 '<input id="fse_sb_'+it.sym+'" type="number" step="any" placeholder="AL" value="'+(sgData.swapBuy||0)+'" '+
-                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:6px;padding:5px 6px;color:#e0e0e0;font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
+                  'style="width:50%;background:var(--bg);border:1px solid #333;border-radius:6px;padding:5px 6px;color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
                 '<input id="fse_ss_'+it.sym+'" type="number" step="any" placeholder="SAT" value="'+(sgData.swapSell||0)+'" '+
-                  'style="width:50%;background:#181818;border:1px solid #333;border-radius:6px;padding:5px 6px;color:#e0e0e0;font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
+                  'style="width:50%;background:var(--bg);border:1px solid #333;border-radius:6px;padding:5px 6px;color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">'+
               '</div>'+
             '</div>'+
           '</div>'+
-          '<button onclick="adFeedSaveSym(&quot;'+it.sym+'&quot;)" style="width:100%;margin-top:8px;padding:6px;background:#1a2a1a;color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;">Kaydet</button>'+
+          '<button onclick="adFeedSaveSym(&quot;'+it.sym+'&quot;)" style="width:100%;margin-top:8px;padding:6px;background:var(--panel);color:var(--buy);border:1px solid var(--buy)44;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:12px;">Kaydet</button>'+
         '</div>';
     });
   });
@@ -9212,7 +9212,7 @@ function pcRenderOverrides() {
   }
   var allKeys = keys.concat(offKeys);
   if(!allKeys.length) {
-    el.innerHTML = '<span style="color:#b0b0b0;font-size:12px;">Henüz override yok</span>';
+    el.innerHTML = '<span style="color:var(--muted);font-size:12px;">Henüz override yok</span>';
     return;
   }
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
@@ -9221,7 +9221,7 @@ function pcRenderOverrides() {
     var p = isOffset
       ? ((_adPrices[sym]||0).toFixed(2)+' <span style="opacity:.6;font-size:11px;">(offset)</span>')
       : _pcOverrides[sym];
-    html += '<div style="background:#181818;border:1px solid '+(isOffset?'#26a69a55':'#f0b90b55')+';border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;">'
+    html += '<div style="background:var(--bg);border:1px solid '+(isOffset?'#26a69a55':'#f0b90b55')+';border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;">'
       +'<span style="color:'+(isOffset?'#26a69a':'#f0b90b')+';font-weight:700;">'+sym+'</span>'
       +'<span style="color:var(--text);">'+p+'</span>'
       +'<button onclick="pcClearOverride(this.dataset.sym)" data-sym="'+sym+'" style="background:none;border:none;color:var(--sell);cursor:pointer;font-size:14px;line-height:1;padding:0;" title="Sıfırla">×</button>'
@@ -9897,12 +9897,12 @@ function alRender() {
     var ts = e.ts ? (typeof fmtDate==='function' ? fmtDate(e.ts) : new Date(e.ts).toLocaleString('tr-TR')) : '—';
     var ac = ACTION_COLORS[e.action] || '#c0c0c0';
     var changeStr = _alDiffStr(e.before, e.after);
-    return '<tr style="border-bottom:1px solid #1a1a1a;">'
+    return '<tr style="border-bottom:1px solid var(--panel);">'
       + '<td style="padding:6px 12px;color:var(--muted);white-space:nowrap;">' + ts + '</td>'
       + '<td style="padding:6px 12px;color:#ddd;">' + (e.managerName||'—') + '<div style="font-size:11px;color:#666;">' + (e.managerId||'') + '</div></td>'
       + '<td style="padding:6px 12px;"><span style="color:'+ac+';font-weight:700;">' + (e.action||'') + '</span>' + (e.reason?'<div style="font-size:11px;color:#888;">'+e.reason+'</div>':'') + '</td>'
-      + '<td style="padding:6px 12px;color:#b0b0b0;font-size:12px;">' + (e.target||'—') + '</td>'
-      + '<td style="padding:6px 12px;color:#b0b0b0;font-size:12px;">' + changeStr + '</td>'
+      + '<td style="padding:6px 12px;color:var(--muted);font-size:12px;">' + (e.target||'—') + '</td>'
+      + '<td style="padding:6px 12px;color:var(--muted);font-size:12px;">' + changeStr + '</td>'
       + '</tr>';
   }).join('');
 }
@@ -10001,10 +10001,10 @@ function updateMarginCallPanel() {
     var mcLvl = m.mcLevel || 80;
     var color = m.isCritical ? '#ef5350' : lvl < mcLvl*1.5 ? '#f5c518' : '#ff8c00';
     var bg = m.isCritical ? 'rgba(239,83,80,.08)' : 'rgba(245,197,24,.05)';
-    html += '<div data-id="'+m.id+'" onclick="openAccDetail(this.dataset.id)" style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:5px 10px;border-bottom:1px solid #141414;cursor:pointer;">'
+    html += '<div data-id="'+m.id+'" onclick="openAccDetail(this.dataset.id)" style="display:grid;grid-template-columns:1fr 70px 60px;gap:0;padding:5px 10px;border-bottom:1px solid var(--bg);cursor:pointer;">'
       +'<div style="min-width:0;">'
         +'<div style="font-family:var(--sans);font-size:12px;font-weight:700;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">#'+m.login+'</div>'
-        +'<div style="font-family:var(--sans);font-size:11px;color:#b0b0b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.name+'</div>'
+        +'<div style="font-family:var(--sans);font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.name+'</div>'
       +'</div>'
       +'<div style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:'+color+';align-self:center;">'+lvl.toFixed(2)+'%</div>'
       +'<div style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted);align-self:center;">$'+m.equity.toFixed(0)+'</div>'
@@ -10232,7 +10232,7 @@ function updateReports(){
     allReqs=allReqs.slice(0,8);
     var rIdx=0;
     if(!allReqs.length){
-      rrEl.innerHTML='<span style="color:#b0b0b0;font-size:12px;">Talep yok</span>';
+      rrEl.innerHTML='<span style="color:var(--muted);font-size:12px;">Talep yok</span>';
     } else {
       var html='';
       allReqs.forEach(function(r){
@@ -10241,10 +10241,10 @@ function updateReports(){
         var arrowColor=isW?'#ef5350':'#26a69a';
         var sc=r.status==='approved'?'#26a69a':r.status==='rejected'?'#ef5350':'#f5c518';
         var sl=r.status==='pending'?'Bekliyor':r.status==='approved'?'Onaylandı':'Reddedildi';
-        var mgrLabel = r.manager ? '<span style="color:#c0c0c0;font-size:12px;margin-left:4px;">['+r.manager+']</span>' : '';
-        var srcBadge = r.source==='manager' ? '<span style="background:#1a3a2a;color:var(--buy);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">MGR</span>' : '';
-        var rowBg = rIdx%2===0 ? '' : 'background:#0d0d0d;'; rIdx++;
-        html+='<div style="display:flex;gap:10px;padding:8px 16px;border-bottom:1px solid #161616;align-items:center;'+rowBg+'">'
+        var mgrLabel = r.manager ? '<span style="color:var(--muted);font-size:12px;margin-left:4px;">['+r.manager+']</span>' : '';
+        var srcBadge = r.source==='manager' ? '<span style="background:var(--buy-dim);color:var(--buy);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">MGR</span>' : '';
+        var rowBg = rIdx%2===0 ? '' : 'background:var(--bg);'; rIdx++;
+        html+='<div style="display:flex;gap:10px;padding:8px 16px;border-bottom:1px solid var(--bg);align-items:center;'+rowBg+'">'
           +'<div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:'+(isW?'rgba(239,83,80,.1)':'rgba(38,166,154,.1)')+';flex-shrink:0;">'
           +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
           +'<div style="flex:1;min-width:0;">'
@@ -10302,33 +10302,33 @@ function updateReports(){
       var pcEl2=document.getElementById('rep-pos-count');
       if(pcEl2) pcEl2.textContent=allClosed.length+' işlem';
       if(!allClosed.length){
-        ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#b0b0b0;font-family:var(--sans);font-size:12px;">Kapalı işlem yok</div>';
+        ptEl.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:12px;">Kapalı işlem yok</div>';
       } else {
         var fp2c=function(n){return '$'+Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
-        var chHtml='<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#181818;">'
-          +'<th style="padding:8px 12px;text-align:left;color:#b0b0b0;font-family:var(--sans);font-size:11px;">HESAP</th>'
-          +'<th style="padding:8px 12px;text-align:left;color:#b0b0b0;font-family:var(--sans);font-size:11px;">SEMBOL</th>'
-          +'<th style="padding:8px 12px;text-align:center;color:#b0b0b0;font-family:var(--sans);font-size:11px;">YÖN</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;">LOT</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;">AÇILIŞ</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;">KAPANIS</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;">K/Z</th>'
-          +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;">TARIH</th>'
+        var chHtml='<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:var(--bg);">'
+          +'<th style="padding:8px 12px;text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;">HESAP</th>'
+          +'<th style="padding:8px 12px;text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;">SEMBOL</th>'
+          +'<th style="padding:8px 12px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:11px;">YÖN</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;">LOT</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;">AÇILIŞ</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;">KAPANIS</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;">K/Z</th>'
+          +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;">TARIH</th>'
           +'</tr></thead><tbody>';
         allClosed.slice(0,TX_HIST_MAX).forEach(function(h,idx){
           var pnl=parseFloat(h.pnl)||0;
           var pc=pnl>=0?'#26a69a':'#ef5350';
-          var bg=idx%2===0?'':'background:#0d0d0d;';
+          var bg=idx%2===0?'':'background:var(--bg);';
           var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-          chHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
-            +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;color:#c0c0c0;">'+h._accName+'</td>'
+          chHtml+='<tr style="'+bg+'border-bottom:1px solid var(--bg);">'
+            +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;color:var(--muted);">'+h._accName+'</td>'
             +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;font-weight:700;color:#ddd;">'+h.sym+'</td>'
             +'<td style="padding:6px 12px;text-align:center;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:700;background:'+(h.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(h.side==="buy"?"#26a69a":"#ef5350")+';">'+(h.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#ddd;">'+parseFloat(h.qty||0).toFixed(2)+'</td>'
-            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#c0c0c0;">'+parseFloat(h.openPrice||0).toFixed(4)+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted);">'+parseFloat(h.openPrice||0).toFixed(4)+'</td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#aaa;">'+parseFloat(h.closePrice||0).toFixed(4)+'</td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:13px;font-weight:700;color:'+pc+';">'+(pnl>=0?'+':'')+fp2c(pnl)+'</td>'
-            +'<td style="padding:6px 12px;text-align:right;font-family:var(--sans);font-size:12px;color:#b0b0b0;">'+dt+'</td>'
+            +'<td style="padding:6px 12px;text-align:right;font-family:var(--sans);font-size:12px;color:var(--muted);">'+dt+'</td>'
             +'</tr>';
         });
         chHtml+='</tbody></table>';
@@ -10338,17 +10338,17 @@ function updateReports(){
     }
 
     if(!allPos.length){
-      ptEl.innerHTML='<div style="padding:24px;text-align:center;color:#b0b0b0;font-family:var(--sans);font-size:12px;">Açık pozisyon yok</div>';
+      ptEl.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:12px;">Açık pozisyon yok</div>';
     } else {
       var ptHtml='<table style="width:100%;border-collapse:collapse;">'
-        +'<thead><tr style="background:#181818;">'
-        +'<th style="padding:8px 12px;text-align:left;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">HESAP</th>'
-        +'<th style="padding:8px 12px;text-align:left;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">SEMBOL</th>'
-        +'<th style="padding:8px 12px;text-align:center;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">YÖN</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">LOT</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">AÇILIŞ</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">GÜNCEL</th>'
-        +'<th style="padding:8px 12px;text-align:right;color:#b0b0b0;font-family:var(--sans);font-size:11px;letter-spacing:.5px;">K/Z</th>'
+        +'<thead><tr style="background:var(--bg);">'
+        +'<th style="padding:8px 12px;text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">HESAP</th>'
+        +'<th style="padding:8px 12px;text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">SEMBOL</th>'
+        +'<th style="padding:8px 12px;text-align:center;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">YÖN</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">LOT</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">AÇILIŞ</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">GÜNCEL</th>'
+        +'<th style="padding:8px 12px;text-align:right;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.5px;">K/Z</th>'
         +'</tr></thead><tbody>';
       // En son açılan üstte - id büyükten küçüğe (id artan sırada açılıyor)
       // Yeniden eskiye sırala - _parseDate her iki formatı handle eder (ISO ve DD.MM.YYYY)
@@ -10371,13 +10371,13 @@ function updateReports(){
         var _cs9052 = parseFloat(p.contractSize)||1;
         var pnl=cur?_adQuoteToUsd(p.sym, (p.side==='buy'?cur-p.openPrice:p.openPrice-cur)*(parseFloat(p.qty)||0)*_cs9052):0;
         var pc=pnl>=0?'#26a69a':'#ef5350';
-        var bg=idx%2===0?'':'background:#0d0d0d;';
-        ptHtml+='<tr style="'+bg+'border-bottom:1px solid #161616;">'
-          +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;color:#c0c0c0;">'+p._accName+'</td>'
+        var bg=idx%2===0?'':'background:var(--bg);';
+        ptHtml+='<tr style="'+bg+'border-bottom:1px solid var(--bg);">'
+          +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;color:var(--muted);">'+p._accName+'</td>'
           +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;font-weight:700;color:#ddd;">'+p.sym+'</td>'
           +'<td style="padding:7px 12px;text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:700;background:'+(p.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(p.side==="buy"?"#26a69a":"#ef5350")+';">'+  (p.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#ddd;">'+parseFloat(p.qty||0).toFixed(2)+'</td>'
-          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#c0c0c0;">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
+          +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted);">'+parseFloat(p.openPrice||0).toFixed(4)+'</td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--accent);">'+cur.toFixed(4)+'</td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:13px;font-weight:700;color:'+pc+';">'+( pnl>=0?"+":"")+fp2(pnl)+'</td>'
           +'</tr>';
@@ -10464,14 +10464,14 @@ function renderSymSection(){
   // symConfig'den direkt al - tek kaynak gerçeği
   var allSyms = (typeof symConfig !== 'undefined' && Array.isArray(symConfig)) ? symConfig : [];
   if(!allSyms.length) {
-    cnt.innerHTML = '<div class="ad-sect" style="padding:14px;color:#c0c0c0;">Sembol bulunamadı</div>';
+    cnt.innerHTML = '<div class="ad-sect" style="padding:14px;color:var(--muted);">Sembol bulunamadı</div>';
     return;
   }
 
   var catLabels = {crypto:'Kripto', forex:'Forex', commodity:'Emtia', index:'Endeks', stock:'Hisse', bist:'BİST'};
   var html = '<div class="ad-sect"><div class="ad-sect-title">SEMBOL LİSTESİ ('+allSyms.length+')</div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">'+
-    '<thead><tr style="background:#181818;color:var(--muted);">'+
+    '<thead><tr style="background:var(--bg);color:var(--muted);">'+
     '<th style="padding:7px 10px;text-align:left;">SEMBOL</th>'+
     '<th style="padding:7px 10px;text-align:left;">ETiKET</th>'+
     '<th style="padding:7px 10px;text-align:left;">KATEGORi</th>'+
@@ -10486,12 +10486,12 @@ function renderSymSection(){
     var cat = catLabels[s.category] || s.category || '-';
     var activeColor = s.active !== false ? '#26a69a' : '#ef5350';
     var activeText  = s.active !== false ? '✔' : '✖';
-    html += '<tr style="border-bottom:1px solid #1a1a1a;'+(_fri%2===0?'background:rgba(255,255,255,0.025)':'')+'">'+
+    html += '<tr style="border-bottom:1px solid var(--panel);'+(_fri%2===0?'background:rgba(255,255,255,0.025)':'')+'">'+
       '<td style="padding:6px 10px;font-family:var(--sans);font-weight:700;color:var(--accent);">'+s.sym+'</td>'+
       '<td style="padding:6px 10px;color:#ddd;">'+( s.label||'-')+'</td>'+
       '<td style="padding:6px 10px;color:var(--muted);font-size:12px;">'+cat+'</td>'+
       '<td style="padding:6px 10px;font-family:var(--sans);color:var(--accent);text-align:right;">'+(price ? price.toFixed(dec) : '—')+'</td>'+
-      '<td style="padding:6px 10px;font-family:var(--sans);text-align:right;color:#c0c0c0;">'+s.spread+'</td>'+
+      '<td style="padding:6px 10px;font-family:var(--sans);text-align:right;color:var(--muted);">'+s.spread+'</td>'+
       '<td style="padding:6px 10px;text-align:center;color:'+activeColor+';font-weight:700;">'+activeText+'</td>'+
       '</tr>';
   });
@@ -10548,9 +10548,9 @@ function fbSaveStaff(list){
 function loadStaffTab(){fbLoadStaff(function(list){_staffList=list||[];renderStaffTable();});}
 function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
-  if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:#b0b0b0;text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
+  if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:var(--muted);text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
   var rl={superadmin:'Süper Admin',admin:'Admin',manager:'Manager',employee:'Çalışan'};
-  var html='<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#181818;"><th style="padding:8px 10px;text-align:left;color:var(--muted);">Ad</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">E-posta</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Rol</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Durum</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Atanan</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">İşlem</th></tr></thead><tbody>';
+  var html='<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg);"><th style="padding:8px 10px;text-align:left;color:var(--muted);">Ad</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">E-posta</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Rol</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Durum</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">Atanan</th><th style="padding:8px 10px;text-align:left;color:var(--muted);">İşlem</th></tr></thead><tbody>';
   _staffList.forEach(function(s){
     var cnt=(s.assignedAccounts||[]).length;
     var customCnt = (s.customPerms||[]).length;
@@ -10560,7 +10560,7 @@ function renderStaffTable(){
       ? '<span style="color:var(--buy);font-size:12px;font-weight:600;"><span class="_ai-globe"></span> Tümü</span><span style="color:#555;font-size:11px;margin-left:4px;">(Otomatik)</span>'
       : cnt;
     var ataLabel = isAdminRole ? 'Ata <span style="color:#555;font-size:11px;">(opsiyonel)</span>' : 'Ata';
-    html+='<tr style="border-bottom:1px solid #1a1a1a;">'
+    html+='<tr style="border-bottom:1px solid var(--panel);">'
       +'<td style="padding:7px 10px;font-weight:600;">'+s.name+'</td>'
       +'<td style="padding:7px 10px;color:var(--muted);font-size:12px;">'+s.email+'</td>'
       +'<td style="padding:7px 10px;font-size:12px;color:var(--accent);">'+(rl[s.role]||s.role)+permBadge+'</td>'
@@ -10589,7 +10589,7 @@ function renderStaffTable(){
 function addStaff(){
   var m=document.getElementById('addStaffModal');
   if(!m){m=document.createElement('div');m.id='addStaffModal';m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;';document.body.appendChild(m);}
-  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:10px;padding:24px;width:380px;">'
+  m.innerHTML='<div style="background:var(--bg);border:1px solid #333;border-radius:10px;padding:24px;width:380px;">'
     +'<div style="font-family:var(--sans);font-size:13px;font-weight:700;margin-bottom:16px;">+ PERSONEL EKLE</div>'
     +'<div style="display:flex;flex-direction:column;gap:10px;">'
     +'<div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Ad Soyad</label><input class="mgr-input" id="ns_name" style="width:100%;" placeholder="Ad Soyad"></div>'
@@ -10651,12 +10651,12 @@ function openPermModal(id) {
   var m = document.getElementById('permModal');
   if(!m){m=document.createElement('div');m.id='permModal';m.style.cssText='position:fixed;inset:0;z-index:50001;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px;';document.body.appendChild(m);}
   
-  var html = '<div style="background:#181818;border:1px solid #333;border-radius:10px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
+  var html = '<div style="background:var(--bg);border:1px solid #333;border-radius:10px;padding:24px;width:620px;max-height:80vh;overflow-y:auto;">'
     +'<div style="display:flex;align-items:center;margin-bottom:16px;">'
       +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;flex:1;">'+_adUi('gear',12)+' YETKİ DÜZENLEMESİ — '+s.name+'</div>'
       +'<button onclick="closePermModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>'
     +'</div>'
-    +'<div style="font-family:var(--mono);font-size:12px;color:#b0b0b0;margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
+    +'<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:12px;">Rol: '+(ROLES[s.role]||{label:s.role}).label+' · Özel izinler rolün varsayılanını geçersiz kılar</div>';
   
   // Tüm seç / Hiçbiri butonu
   html += '<div style="display:flex;gap:8px;margin-bottom:16px;">'
@@ -10667,7 +10667,7 @@ function openPermModal(id) {
   
   PERM_DEFS.forEach(function(group){
     html += '<div style="margin-bottom:14px;">'
-      +'<div style="font-family:var(--sans);font-size:12px;color:var(--accent);letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #2a2a2a;">'+group.group.toUpperCase()+'</div>'
+      +'<div style="font-family:var(--sans);font-size:12px;color:var(--accent);letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">'+group.group.toUpperCase()+'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
     group.perms.forEach(function(p){
       var checked = currentPerms.indexOf('all')>=0 || currentPerms.indexOf(p.key)>=0;
@@ -10747,7 +10747,7 @@ function openChangePassModal(id) {
   if(!s) return;
   var m = document.getElementById('changePassModal');
   if(!m){ m=document.createElement('div'); m.id='changePassModal'; m.style.cssText='position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;'; document.body.appendChild(m); }
-  m.innerHTML='<div style="background:#181818;border:1px solid #333;border-radius:10px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">'+_adUi('key',12)+' ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:12px;color:#b0b0b0;margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:12px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
+  m.innerHTML='<div style="background:var(--bg);border:1px solid #333;border-radius:10px;padding:24px;width:360px;">'    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:6px;">'+_adUi('key',12)+' ŞİFRE DEĞİŞTİR</div>'    +'<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">'+s.name+' — '+s.email+'</div>'    +'<div style="display:flex;flex-direction:column;gap:10px;">'    +'<div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Yeni Şifre</label>'    +'<input class="mgr-input" id="cp_pass" type="password" style="width:100%;" placeholder="Yeni şifre"></div>'    +'<div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Şifre Tekrar</label>'    +'<input class="mgr-input" id="cp_pass2" type="password" style="width:100%;" placeholder="Şifreyi tekrar girin"></div>'    +'<div id="cp_err" style="color:var(--sell);font-size:12px;display:none;"></div>'    +'</div>'    +'<div style="display:flex;gap:8px;margin-top:16px;">'    +'<button class="mgr-btn success" onclick="saveStaffPass(\''+id+'\')" style="flex:1;">Kaydet</button>'    +'<button class="mgr-btn" onclick="document.getElementById(\'changePassModal\').style.display=\'none\'" style="flex:1;">İptal</button>'    +'</div></div>';
   m.style.display='flex';
   setTimeout(function(){ var el=document.getElementById('cp_pass'); if(el) el.focus(); }, 100);
 }
@@ -10792,10 +10792,10 @@ function renderAssignList(){
   var assigned=staff.assignedAccounts||[];
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var adminBanner = (staff.role==='admin'||staff.role==='superadmin')
-    ? '<div style="background:#0d2b1a;border:1px solid var(--buy)44;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">'
+    ? '<div style="background:var(--panel);border:1px solid var(--buy)44;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">'
       +'<span style="display:inline-flex">'+_adUi('globe',16)+'</span>'
       +'<div><div style="font-size:12px;color:var(--buy);font-weight:600;margin-bottom:2px;">Admin rolü — tüm hesaplara otomatik erişim</div>'
-      +'<div style="font-size:12px;color:var(--muted);">Bu personel <strong style="color:#e0e0e0;">Admin</strong> rolünde olduğu için atama yapmadan tüm hesapları görebilir ve yönetebilir. Aşağıdan ek özel atama yapabilirsiniz (isteğe bağlı).</div></div></div>'
+      +'<div style="font-size:12px;color:var(--muted);">Bu personel <strong style="color:var(--text);">Admin</strong> rolünde olduğu için atama yapmadan tüm hesapları görebilir ve yönetebilir. Aşağıdan ek özel atama yapabilirsiniz (isteğe bağlı).</div></div></div>'
     : '';
   body.innerHTML=adminBanner+'<div style="font-size:12px;color:var(--muted);margin-bottom:10px;"><strong>'+staff.name+'</strong> için hesap atama:</div>'
     +list.map(function(a){var checked=assigned.indexOf(a.id)>=0;return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;"><input type="checkbox" '+(checked?'checked':'')+' data-id="'+a.id+'" onchange="toggleAssign(this)"><span style="color:var(--accent);font-family:var(--sans);">#'+(a.login||a.id)+'</span> — '+a.name+(a.surname?' '+a.surname:'')+'</label>';}).join('');
@@ -11375,7 +11375,7 @@ function sessRender(){
           + 'value="'+val+'" placeholder="kapalı" '+dis+' style="flex:1;font-size:12px;padding:3px 6px;">'
           + '</div>';
       }).join('');
-      return '<div style="border:1px solid #263326;border-radius:6px;padding:10px;margin-bottom:8px;background:#0f150f;">'
+      return '<div style="border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;background:var(--bg);">'
         + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
           + '<input class="mgr-input" value="'+(t.id||'')+'" onchange="sessSetField('+ti+',\'id\',this.value)" placeholder="kod" style="width:90px;font-size:12px;padding:3px 6px;font-family:var(--mono);">'
           + '<input class="mgr-input" value="'+(t.name||'')+'" onchange="sessSetField('+ti+',\'name\',this.value)" placeholder="ad" style="flex:1;min-width:120px;font-size:12px;padding:3px 6px;">'
@@ -11405,7 +11405,7 @@ function sessRender(){
     var note = sel.length
       ? '<span style="font-size:12px;color:#7ec8a9;">Yalnız seçili şablonlar kapalı</span>'
       : '<span style="font-size:12px;color:var(--accent);">Hiçbiri seçili değil → <b>TÜM piyasalar kapalı</b></span>';
-    return '<div style="border:1px solid #263326;border-radius:6px;padding:8px;margin-bottom:6px;background:#0f150f;">'
+    return '<div style="border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px;background:var(--bg);">'
       + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
         + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:12px;padding:3px 6px;">'
         + '<input class="mgr-input" value="'+(h.name||'')+'" onchange="sessSetHol('+hi+',\'name\',this.value)" placeholder="açıklama (örn. Ramazan Bayramı)" style="flex:1;font-size:12px;padding:3px 6px;">'
@@ -11700,7 +11700,7 @@ function adRenderOpenTable(){
   if(!tb) { if(_footEl && _mine()) _footEl.style.display='none'; return; }
 
   if(!_adPositions.length){
-    tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:#b0b0b0;padding:20px;font-size:13px;">Açık pozisyon yok</td></tr>';
+    tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">Açık pozisyon yok</td></tr>';
     if(_footEl && _mine()) _footEl.style.display='none';
     return;
   }
@@ -11729,8 +11729,8 @@ function adRenderOpenTable(){
     var tid  = String(pos.id).slice(-6);
     var oTime= pos.openDate||pos.time ? fmtDate(pos.openDate||pos.time) : '—';
     var row  = (idx%2===1) ? 'background:rgba(255,255,255,0.025)' : '';
-    return '<tr style="border-bottom:1px solid #1a1a1a;'+row+'">'
-      +'<td style="padding:5px 8px;color:#b0b0b0;font-size:12px;">'+tid+'</td>'
+    return '<tr style="border-bottom:1px solid var(--panel);'+row+'">'
+      +'<td style="padding:5px 8px;color:var(--muted);font-size:12px;">'+tid+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--sans);font-weight:700;">'+pos.sym+'</td>'
       +'<td style="padding:5px 8px;color:'+sc+';font-weight:700;">'+(pos.side==='buy'?'▲ AL':'▼ SAT')+'</td>'
       +'<td style="padding:5px 8px;font-family:var(--sans);">'+qty+'</td>'
@@ -11782,7 +11782,7 @@ function adRenderHistoryTable(){
   var _footEl = document.getElementById('adOpenFooter');
 
   if(!_adHistory.length){
-    tb.innerHTML='<tr><td colspan="15" style="text-align:center;color:#b0b0b0;padding:20px;font-size:13px;">Kapatılmış pozisyon yok</td></tr>';
+    tb.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">Kapatılmış pozisyon yok</td></tr>';
     // Paylaşılan footer — yalnız "kapalı" sekmesi aktifken gizle (bkz. adRenderOpenTable notu)
     if(_footEl && _adActiveSubTab()==='closed') _footEl.style.display='none';
     return;
@@ -11803,8 +11803,8 @@ function adRenderHistoryTable(){
     var sc   = h.side==='buy' ? '#26a69a' : '#ef5350';
     var tid  = String(h.id).slice(-6);
     var row  = (idx%2===1) ? 'background:rgba(255,255,255,0.025)' : '';
-    return '<tr style="border-bottom:1px solid #1a1a1a;'+row+'">'
-      +'<td style="padding:5px 6px;color:#b0b0b0;font-size:12px;">'+tid+'</td>'
+    return '<tr style="border-bottom:1px solid var(--panel);'+row+'">'
+      +'<td style="padding:5px 6px;color:var(--muted);font-size:12px;">'+tid+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--sans);font-weight:700;">'+h.sym+'</td>'
       +'<td style="padding:5px 6px;color:'+sc+';font-weight:700;">'+(h.side==='buy'?'▲ AL':'▼ SAT')+'</td>'
       +'<td style="padding:5px 6px;font-family:var(--sans);">'+h.qty+'</td>'
@@ -12074,7 +12074,7 @@ function adEditPos(btn){
   // çevriliyordu — yani sadece paneli AÇIP KAYDETMEK bile, hiçbir alanı
   // değiştirmeden, açılış saatini saat dilimi farkı kadar kaydırıyordu.
   var openVal = _adToLocalDT(pos.openDate||pos.time);
-  modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:10px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
+  modal.innerHTML = '<div style="background:var(--bg);border:1px solid #333;border-radius:10px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;color:var(--accent);">POZİSYON DÜZENLE #'+String(id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
     +'<div><label class="ad-label">SEMBOL</label><input class="ad-input" value="'+pos.sym+'" disabled></div>'
@@ -12310,7 +12310,7 @@ function adEditHistory(btn){
   }
   var openVal  = _adToLocalDT(h.openDate||h.time);
   var closeVal = _adToLocalDT(h.closeDate||h.closeTime);
-  modal.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:10px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
+  modal.innerHTML = '<div style="background:var(--bg);border:1px solid #333;border-radius:10px;padding:24px;width:420px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:16px;color:var(--accent);">GEÇMİŞ DÜZENLE #'+String(h.id).slice(-6)+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
     +'<div><label class="ad-label">SEMBOL</label><input class="ad-input" value="'+h.sym+'" disabled></div>'
@@ -12505,7 +12505,7 @@ function adShowToast(title, msg, type){
   var colors = {success:'#26a69a',error:'#ef5350',danger:'#ef5350',warning:'#f5c518',info:'#888'};
   var color  = colors[type]||colors.info;
   var d = document.createElement('div');
-  d.style.cssText = 'background:#1a1a1a;border-left:3px solid '+color+';border-radius:6px;padding:10px 14px;'
+  d.style.cssText = 'background:var(--panel);border-left:3px solid '+color+';border-radius:6px;padding:10px 14px;'
     +'min-width:200px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,0.5);animation:fadeIn .2s;';
   d.innerHTML = '<div style="color:'+color+';font-size:12px;font-weight:700;margin-bottom:2px;">'+title+'</div>'
     +'<div style="color:#aaa;font-size:12px;">'+msg+'</div>';
