@@ -1901,6 +1901,22 @@ console.log('Firebase bağlandı');
       outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px;
     }
 
+  
+    /* ══════════════════════════════════════════════════════════════
+       YOĞUN VERİ TABLOLARI (2026-09-25)
+       15 sütunlu kapalı-pozisyon tablosu modale sığmıyordu. Yazıyı 12'den
+       11'e çekmek tek başına yetmiyor; asıl çözüm İŞLEM sütununu sağa
+       sabitlemek — tablo yatay kaydırılsa bile butonlar hep erişilebilir.
+       ══════════════════════════════════════════════════════════════ */
+    .ad-dense-table th:last-child,
+    .ad-dense-table td:last-child {
+      position: sticky; right: 0; z-index: 2;
+      background: var(--panel);
+      box-shadow: -8px 0 10px -8px rgba(0,0,0,.65);   /* kaydırma ipucu */
+    }
+    .ad-dense-table thead th:last-child { background: var(--panel2); }
+    .ad-dense-table th, .ad-dense-table td { padding-top: 5px; padding-bottom: 5px; }
+
   </style>
 
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
@@ -5594,7 +5610,7 @@ function _adRenderTab_inner(tab) {
       // ── AÇIK pozisyonlar ──
       '<div id="adPanelOpen">' +
         '<div class="ad-table-card" style="overflow-x:auto;">' +
-          '<table style="width:100%;min-width:1140px;border-collapse:collapse;font-size:12px;table-layout:fixed;">' +
+          '<table class="ad-dense-table" style="width:100%;min-width:1082px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
               '<col style="width:56px"><col style="width:86px"><col style="width:54px">' +
               '<col style="width:46px"><col style="width:86px"><col style="width:124px">' +
@@ -5633,13 +5649,13 @@ function _adRenderTab_inner(tab) {
           // sütunlar sıkışıp içerik kesiliyordu (K/Z "-$83679.8" gibi).
           // Artık min-width var: sığmazsa tablo yatay KAYDIRILIR, ezilmez.
           // Genişlikler yeni yazı boyutuna göre de bir miktar arttırıldı.
-          '<table style="width:100%;min-width:1240px;border-collapse:collapse;font-size:12px;table-layout:fixed;">' +
+          '<table class="ad-dense-table" style="width:100%;min-width:1100px;border-collapse:collapse;font-size:11px;table-layout:fixed;">' +
             '<colgroup>' +
-              '<col style="width:56px"><col style="width:86px"><col style="width:54px">' +
-              '<col style="width:46px"><col style="width:124px"><col style="width:66px">' +
-              '<col style="width:86px"><col style="width:86px"><col style="width:124px"><col style="width:92px">' +
-              '<col style="width:66px"><col style="width:70px"><col style="width:80px"><col style="width:94px">' +
-              '<col style="width:110px">' +
+              '<col style="width:52px"><col style="width:80px"><col style="width:48px">' +
+              '<col style="width:42px"><col style="width:112px"><col style="width:58px">' +
+              '<col style="width:76px"><col style="width:76px"><col style="width:112px"><col style="width:86px">' +
+              '<col style="width:58px"><col style="width:62px"><col style="width:72px"><col style="width:86px">' +
+              '<col style="width:80px">' +
             '</colgroup>' +
             '<thead><tr style="background:var(--bg);">' +
               '<th style="padding:6px 6px;text-align:left;color:var(--muted);font-size:12px;">#</th>' +
