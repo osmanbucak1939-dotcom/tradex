@@ -10954,5 +10954,70 @@ function txPrompt(opts){
   });
 })();
 </script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   YÖN KİLİDİ (2026-09-26)
+   ──────────────────────────────────────────────────────────────────────
+   Amaç: uygulama hissi — telefon yan çevrilince arayüz savrulmasın.
+   AMA yatay mod GRAFİK için gerçekten faydalı. Bu yüzden kilit seçici:
+     • Grafik sekmesi açıkken (body.chart-active) yatay SERBEST.
+     • Diğer ekranlarda yatay çevrilirse "dik tutun" perdesi çıkar.
+   Teknik sınır: tarayıcı sekmesinde yön KİLİTLENEMEZ; screen.orientation.lock
+   yalnız kurulu/tam ekran modda ve çoğunlukla Android'de çalışır. iOS hiç
+   desteklemez. Bu yüzden perde bir YEDEK, tek başına da yeterli çalışır.
+   ══════════════════════════════════════════════════════════════════════ */
+(function(){
+  function standalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  // Kurulu uygulamada gerçek kilidi dene (destekleyen cihazlarda perde hiç çıkmaz)
+  function tryLock(){
+    if(!standalone() || !screen.orientation || !screen.orientation.lock) return;
+    screen.orientation.lock('portrait').catch(function(){ /* desteklemiyorsa perdeye düşeriz */ });
+  }
+  document.addEventListener('DOMContentLoaded', tryLock);
+
+  function isPhone(){
+    try { return window.matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 520; }
+    catch(e){ return false; }
+  }
+
+  function bar(){
+    var el = document.getElementById('txRotate');
+    if(el) return el;
+    el = document.createElement('div');
+    el.id = 'txRotate';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;'
+      + 'align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;'
+      + 'background:var(--bg,#101317);color:var(--text,#edf0f4);font-family:var(--sans),system-ui,sans-serif;';
+    el.innerHTML =
+      '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#f0b90b)" '
+      + 'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'
+      + '<path d="M3 9a9 9 0 0 1 2.6-4M3 9l3 .6M3 9l.7-3"/></svg>'
+      + '<div style="font-size:15px;font-weight:600">Telefonunuzu dik tutun</div>'
+      + '<div style="font-size:12px;color:var(--muted,#aeb6c0);max-width:260px;line-height:1.5">'
+      + 'Yatay görünüm yalnızca grafik ekranında kullanılır.</div>';
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function check(){
+    if(!isPhone()) return;
+    var landscape = window.innerWidth > window.innerHeight;
+    var chart = document.body.classList.contains('chart-active');
+    bar().style.display = (landscape && !chart) ? 'flex' : 'none';
+  }
+  window.addEventListener('resize', check);
+  window.addEventListener('orientationchange', function(){ setTimeout(check, 120); });
+  document.addEventListener('DOMContentLoaded', check);
+  // Sekme değişince de bak (grafiğe geçince perde kalkmalı)
+  var _mo = new MutationObserver(check);
+  document.addEventListener('DOMContentLoaded', function(){
+    _mo.observe(document.body, {attributes:true, attributeFilter:['class']});
+  });
+})();
+</script>
 </body>
 </html>
