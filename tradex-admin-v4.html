@@ -1941,6 +1941,18 @@ console.log('Firebase bağlandı');
     .ad-dense-table td:last-child { text-align: right; white-space: nowrap; }
     .ad-dense-table td:last-child .ad-icon-btn { width: 28px; height: 28px; min-height: 28px; }
 
+  
+    /* Rol sayfa izinleri anahtarı */
+    .ad-switch { position:relative; display:inline-block; width:36px; height:20px; cursor:pointer; }
+    .ad-switch input { opacity:0; width:0; height:0; }
+    .ad-switch span { position:absolute; inset:0; border-radius:999px; background:var(--border2); transition:background .15s; }
+    .ad-switch span::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px;
+      border-radius:50%; background:#fff; transition:transform .15s; }
+    .ad-switch input:checked + span { background:var(--buy); }
+    .ad-switch input:checked + span::after { transform:translateX(16px); }
+    .ad-switch input:disabled + span { opacity:.45; cursor:not-allowed; }
+    .ad-switch input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
+
   </style>
 
 <div id="adminLoginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;">
@@ -2454,6 +2466,7 @@ console.log('Firebase bağlandı');
     </div>
     <div id="sec-staff" class="admin-section" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;"><span style="font-family:var(--sans);font-size:13px;font-weight:700;">PERSONEL</span><button class="mgr-btn success" onclick="addStaff()" style="font-size:12px;">+ Personel Ekle</button></div>
+      <div id="rolePagesWrap"></div>
       <div id="staffTableWrap"></div>
     </div>
 
@@ -9481,6 +9494,87 @@ function hasPerm(p) {
   if(r.perms.indexOf('all') >= 0) return true;
   return r.perms.indexOf(p) >= 0 || r.perms.indexOf(p.split('.')[0]) >= 0;
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// SAYFA ERİŞİMİ — ROL BAZLI (2026-09-29)
+// ──────────────────────────────────────────────────────────────────────
+// İki kural katmanı:
+//  1) SÜPER ADMİN'E ÖZEL sayfalar (Semboller, Feed, Backup): Süper Admin
+//     dışında HİÇBİR rol görmez — admin dahil. Ayarlanamaz, bilinçli sabit.
+//  2) Manager ve Çalışan için AÇ/KAPA sayfalar (Raporlar, Trading Grupları,
+//     Kotasyon): Personel sekmesindeki "Rol Sayfa İzinleri" kartından rol
+//     bazında yönetilir. Firestore: broker/rolePages. Bir değer kaydedilmemişse
+//     eski davranış (kişinin izinleri) geçerli olur.
+// Hem menü görünürlüğü (applyRoleUI) hem sayfa açma (adminNav) bu tek
+// fonksiyona bakar — menüden gizleyip doğrudan çağrıyla açılabilen bir
+// açık bırakılmaz.
+// ══════════════════════════════════════════════════════════════════════
+var AD_SUPERADMIN_ONLY = ['symbols','feed','backup'];
+var AD_ROLE_TOGGLE_PAGES = [
+  {sec:'reports',      label:'Raporlar'},
+  {sec:'spreadgroups', label:'Trading Grupları'},
+  {sec:'pricecontrol', label:'Kotasyon'}
+];
+var AD_TOGGLE_ROLES = [{role:'manager',label:'Manager'},{role:'employee',label:'Çalışan'}];
+var _adRolePages = {};   // { manager:{reports:true,...}, employee:{...} }
+
+function _adLoadRolePages(cb){
+  if(!window.db){ if(cb) cb(); return; }
+  db.collection('broker').doc('rolePages').get().then(function(d){
+    _adRolePages = (d.exists && d.data()) ? (d.data().roles || {}) : {};
+    if(cb) cb();
+  }).catch(function(){ if(cb) cb(); });
+}
+
+// Sayfaya erişim var mı? permFallback: sayfanın eski izin kontrolünün sonucu
+function _adPageAllowed(sec, permFallback){
+  var role = _currentStaff ? _currentStaff.role : '';
+  if(role === 'superadmin') return true;
+  if(AD_SUPERADMIN_ONLY.indexOf(sec) >= 0) return false;
+  var rp = _adRolePages[role];
+  if(rp && Object.prototype.hasOwnProperty.call(rp, sec)) return !!rp[sec];
+  return !!permFallback;
+}
+
+function _adRolePagesCardHtml(){
+  var me = _currentStaff ? _currentStaff.role : '';
+  var canEdit = (me === 'superadmin' || me === 'admin');
+  var head = AD_TOGGLE_ROLES.map(function(r){
+    return '<th style="padding:8px 12px;text-align:center;color:var(--muted);font-weight:600">'+r.label+'</th>';
+  }).join('');
+  var rows = AD_ROLE_TOGGLE_PAGES.map(function(pg){
+    var cells = AD_TOGGLE_ROLES.map(function(r){
+      var on = (_adRolePages[r.role] && Object.prototype.hasOwnProperty.call(_adRolePages[r.role], pg.sec))
+        ? !!_adRolePages[r.role][pg.sec] : true;
+      return '<td style="padding:8px 12px;text-align:center">'
+        + '<label class="ad-switch"><input type="checkbox" '+(on?'checked':'')+(canEdit?'':' disabled')
+        + ' onchange="_adSetRolePage(\''+r.role+'\',\''+pg.sec+'\',this.checked)"><span></span></label></td>';
+    }).join('');
+    return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:600">'+pg.label+'</td>'+cells+'</tr>';
+  }).join('');
+  return '<div class="ad-sect" style="margin-bottom:14px">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+    +   '<span style="font-size:13px;font-weight:700">Rol Sayfa İzinleri</span></div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">'
+    +   'Manager ve Çalışan rollerinin hangi sayfaları görebileceğini belirler. '
+    +   'Semboller, Feed ve Backup yalnızca Süper Admin\'e açıktır.'
+    +   (canEdit ? '' : ' <b>Değiştirmek için Admin veya Süper Admin olmalısınız.</b>') + '</div>'
+    + '<table style="border-collapse:collapse;font-size:12px"><thead><tr>'
+    +   '<th style="padding:8px 12px;text-align:left;color:var(--muted);font-weight:600">Sayfa</th>'+head
+    + '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function _adSetRolePage(role, sec, on){
+  var me = _currentStaff ? _currentStaff.role : '';
+  if(me !== 'superadmin' && me !== 'admin'){ showAdminToast('Yetersiz Yetki','Bu ayarı değiştiremezsiniz','error'); return; }
+  if(!_adRolePages[role]) _adRolePages[role] = {};
+  _adRolePages[role][sec] = !!on;
+  if(!window.db) return;
+  db.collection('broker').doc('rolePages').set({ roles:_adRolePages, updatedAt:new Date().toISOString() })
+    .then(function(){ showAdminToast('Kaydedildi','Rol sayfa izni güncellendi','success'); })
+    .catch(function(e){ showAdminToast('Hata', e.message, 'error'); });
+}
+
 function applyRoleUI(){
   document.querySelectorAll('[data-perm]').forEach(function(el){
     // ⚠️ 2026-08-20: '|' ile ayrılmış BİRDEN FAZLA izin desteklenir; herhangi
@@ -9488,6 +9582,10 @@ function applyRoleUI(){
     // 'feed.edit' iznini kabul etsin diye eklendi (geriye dönük uyumluluk).
     var _need = (el.getAttribute('data-perm')||'').split('|');
     var _ok = _need.some(function(p){ return p && hasPerm(p.trim()); });
+    // Menü düğmesiyse sayfa kuralını da uygula (süper admin'e özel + rol anahtarı)
+    var _oc = el.getAttribute('onclick')||'';
+    var _mm = _oc.match(/adminNav\('(\w+)'/);
+    if(_mm) _ok = _adPageAllowed(_mm[1], _ok);
     el.style.display = _ok ? '' : 'none';
   });
   // Hesap detayı butonları
@@ -9691,6 +9789,8 @@ function listBackups() {
 function loginSuccess(staff){
   _currentStaff=staff;
   try{localStorage.setItem('tx_admin_user',JSON.stringify(staff));}catch(e){}
+  // Rol bazlı sayfa izinlerini yükle, gelince menüyü yeniden uygula
+  try{ _adLoadRolePages(function(){ if(typeof applyRoleUI==='function') applyRoleUI(); }); }catch(e){}
   // Seans ayarını izlemeye başla (panel + sembol formundaki SEANS listesi)
   try{ if(typeof sessLoad==='function' && !window._sessWatching){ window._sessWatching=true; sessLoad(); } }catch(e){}
   // Atama/yetki güncel kalsın: Firebase'deki personel kaydını çekip _currentStaff'ı tazele
@@ -9792,6 +9892,13 @@ function adminNav(sec,btn){
     'brokerinfo':'settings.edit','walletsettings':'settings.edit','withdrawreqs':'finance.view',
     'auditlog':'settings.edit'
   };
+  // Sayfa kuralı (süper admin'e özel + rol anahtarı) — menüden gizli olan
+  // bir sayfa doğrudan çağrıyla da açılamasın.
+  var _permOk = !(_secPerms[sec] && typeof hasPerm==='function' && !hasPerm(_secPerms[sec]));
+  if(typeof _adPageAllowed==='function' && !_adPageAllowed(sec, _permOk)){
+    showAdminToast('Yetkisiz','Bu bölüme erişim yetkiniz yok','danger');
+    return;
+  }
   if(_secPerms[sec] && typeof hasPerm==='function' && !hasPerm(_secPerms[sec])) {
     showAdminToast('Yetkisiz','Bu bölüme erişim yetkiniz yok','danger');
     return;
@@ -10585,7 +10692,12 @@ function fbSaveStaff(list){
   list.forEach(function(s){batch.set(db.collection('staff').doc(String(s.id)),s);});
   batch.commit().catch(function(e){console.warn('[fbSaveStaff]',e.message);});
 }
-function loadStaffTab(){fbLoadStaff(function(list){_staffList=list||[];renderStaffTable();});}
+function loadStaffTab(){
+  fbLoadStaff(function(list){ _staffList=list||[]; renderStaffTable(); });
+  _adLoadRolePages(function(){
+    var w=document.getElementById('rolePagesWrap'); if(w) w.innerHTML=_adRolePagesCardHtml();
+  });
+}
 function renderStaffTable(){
   var wrap=document.getElementById('staffTableWrap');if(!wrap)return;
   if(!_staffList.length){wrap.innerHTML='<div class="ad-sect" style="color:var(--muted);text-align:center;padding:24px;">Henüz personel eklenmedi.</div>';return;}
@@ -10597,7 +10709,7 @@ function renderStaffTable(){
     var permBadge = customCnt ? '<span style="font-size:11px;color:var(--accent);margin-left:4px;">'+_adUi('gear',12)+' Özel ('+customCnt+')</span>' : '';
     var isAdminRole = (s.role === 'admin' || s.role === 'superadmin');
     var assignedCell = isAdminRole
-      ? '<span style="color:var(--buy);font-size:12px;font-weight:600;"><span class="_ai-globe"></span> Tümü</span><span style="color:#555;font-size:11px;margin-left:4px;">(Otomatik)</span>'
+      ? '<span style="color:var(--buy);font-size:12px;font-weight:600;">'+_adUi('globe',12)+' Tümü</span><span style="color:#555;font-size:11px;margin-left:4px;">(Otomatik)</span>'
       : cnt;
     var ataLabel = isAdminRole ? 'Ata <span style="color:#555;font-size:11px;">(opsiyonel)</span>' : 'Ata';
     html+='<tr style="border-bottom:1px solid var(--panel);">'
@@ -10805,7 +10917,30 @@ function saveStaffPass(id) {
   document.getElementById('changePassModal').style.display='none';
   showAdminToast('Şifre Güncellendi', s.name+' şifresi değiştirildi', 'success');
 }
-function deleteStaff(id){if(!confirm('Bu personeli silmek istediğinizden emin misiniz?'))return;_staffList=_staffList.filter(function(s){return s.id!==id;});fbSaveStaff(_staffList);renderStaffTable();showAdminToast('Silindi','Personel kaldırıldı','info');}
+// ⚠️ 2026-09-29: Silinen personel sayfa yenilenince GERİ GELİYORDU.
+// Eskiden sadece yerel listeden çıkarılıp kalanlar kaydediliyordu; fbSaveStaff
+// yalnız var olanları YAZAR, silineni Firestore'dan kaldırmaz. Sonraki yüklemede
+// koleksiyonun tamamı okunduğu için silinen kayıt geri dönüyordu.
+function deleteStaff(id){
+  if(!confirm('Bu personeli silmek istediğinizden emin misiniz?')) return;
+  var target=_staffList.find(function(s){ return String(s.id)===String(id); });
+  if(target && target.role==='superadmin' && (!_currentStaff || _currentStaff.role!=='superadmin')){
+    showAdminToast('Yetersiz Yetki','Süper Admin yalnızca Süper Admin tarafından silinebilir','error'); return;
+  }
+  if(_currentStaff && String(_currentStaff.id)===String(id)){
+    showAdminToast('İşlem Engellendi','Kendi hesabınızı silemezsiniz','error'); return;
+  }
+  _staffList=_staffList.filter(function(s){ return String(s.id)!==String(id); });
+  try{ localStorage.setItem('tx_staff', JSON.stringify(_staffList)); }catch(e){}
+  renderStaffTable();
+  if(window.db){
+    db.collection('staff').doc(String(id)).delete()
+      .then(function(){ showAdminToast('Silindi','Personel kalıcı olarak kaldırıldı','info'); })
+      .catch(function(e){ showAdminToast('Hata','Silinemedi: '+e.message,'error'); loadStaffTab(); });
+  } else {
+    showAdminToast('Silindi','Personel kaldırıldı','info');
+  }
+}
 function openAssignModal(staffId){_assignStaffId=staffId;var modal=document.getElementById('assignModal');if(modal){modal.style.display='flex';renderAssignList();}}
 // Checkbox değişince hesabı personele ata / atamayı kaldır (EKSİKTİ — atama bu yüzden kaydedilmiyordu)
 function toggleAssign(el){
