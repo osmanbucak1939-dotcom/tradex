@@ -6167,6 +6167,19 @@ function fbLoadRequests(callback) {
     .catch(function(e){ console.warn('fbLoadRequests:', e); callback && callback(); });
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// MOBİL Mİ? — GLOBAL (2026-09-26)
+// ⚠️ Bu fonksiyon önce mobil panel kodunun KAPALI bloğu (IIFE) içine
+// konmuştu. openWallet gibi o bloğun dışındaki fonksiyonlar onu göremedi,
+// "_txIsMobile is not defined" hatası verdi ve PARA YATIR / ÇEK pencereleri
+// hiç açılmadı. Birden çok yerden çağrıldığı için global tanımlı olmalı.
+// ══════════════════════════════════════════════════════════════
+function _txIsMobile(){
+  try { return window.matchMedia('(max-width:768px), (pointer:coarse) and (max-height:520px)').matches; }
+  catch(e){ return window.innerWidth <= 768; }
+}
+
 function openWallet(tab) {
   if(window._readOnly){ var _ro3=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_ro3?_ro3.readOnlyTitle:'İzleyici Modu', _ro3?_ro3.readOnlyNoFinance:'Bu modda para işlemi yapamazsınız.'); return; }
   tab = tab || 'deposit';
@@ -9437,12 +9450,6 @@ function symUnpin(sym){
 (function(){
   var _ct='market', _lot=0.01, _ptab='open';
   
-// Mobil mi? Genişlik TEK BAŞINA yetmiyor — yatay telefon 844-932px geliyor.
-// Dokunmatik + kısa yükseklik kombinasyonu yatayı da yakalar.
-function _txIsMobile(){
-  try { return window.matchMedia('(max-width:768px), (pointer:coarse) and (max-height:520px)').matches; }
-  catch(e){ return window.innerWidth <= 768; }
-}
 function mob(){ return _txIsMobile(); }
 
   // ── TEMA (Açık/Koyu Mod) ──
