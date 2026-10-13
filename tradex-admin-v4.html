@@ -11766,6 +11766,19 @@ function sessSave(){
 }
 
 function adFp(n){ return parseFloat(n||0).toFixed(2); }
+// 2026-10-13: Pozisyon, AÇILDIĞI ANDAKİ kontrat büyüklüğünü saklar (MT4/5 gibi).
+// Sembol ayarı sonradan değişirse eski pozisyonlar eski değerle hesaplanır.
+// Düzenleme pencerelerinde güncel sembol ayarını göstermek için:
+function _adSymCs(sym){
+  var sc = (typeof symConfig!=='undefined' && symConfig) ? symConfig.find(function(x){ return x.sym===sym; }) : null;
+  return sc ? (parseFloat(sc.contractSize)||1) : null;
+}
+function _adCsHint(sym, posCs){
+  var cur = _adSymCs(sym);
+  if(cur===null) return '';
+  if(Math.abs(cur-(parseFloat(posCs)||1))<1e-9) return '<span style="color:#666;font-weight:400;">(sembol ayarı: '+cur+')</span>';
+  return '<span style="color:#f5a623;font-weight:600;">⚠ sembol ayarı: '+cur+'</span>';
+}
 function adFpSym(n, sym){ return parseFloat(n||0).toFixed(adFpDec(sym)); }
 function adFp2(n){ return parseFloat(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
@@ -12340,6 +12353,7 @@ function adEditPos(btn){
     +'<div><label class="ad-label">TAKE PROFIT</label><input class="ad-input" id="em_tp" type="number" step="any" value="'+(pos.tp||'')+'"></div>'
     +'<div><label class="ad-label">SWAP</label><input class="ad-input" id="em_swap" type="number" step="any" value="'+(pos.swapTotal||0)+'"></div>'
     +'<div><label class="ad-label">KOMİSYON</label><input class="ad-input" id="em_commission" type="number" step="any" value="'+(pos.commission||0)+'"></div>'
+    +'<div><label class="ad-label">KONTRAT BÜYÜKLÜĞÜ '+_adCsHint(pos.sym,pos.contractSize)+'</label><input class="ad-input" id="em_cs" type="number" step="any" value="'+(parseFloat(pos.contractSize)||1)+'"></div>'
     +'<div style="grid-column:1/-1"><label class="ad-label">AÇILIŞ ZAMANI</label><input class="ad-input" id="em_opentime" type="datetime-local" value="'+openVal+'"></div>'
     +'<div><label class="ad-label">CİHAZ</label><select class="ad-input" id="em_device"><option value="web"'+((!pos.openDevice||pos.openDevice==='web')?' selected':'')+'>Web</option><option value="mobile"'+(pos.openDevice==='mobile'?' selected':'')+'>Mobil</option><option value="Manager"'+(pos.openDevice==='Manager'?' selected':'')+'>Manager</option></select></div>'
     +'<div style="display:flex;align-items:flex-end;gap:6px;">'
@@ -12410,6 +12424,8 @@ function adSaveEdit(){
   pos.tp         = parseFloat((document.getElementById('em_tp')||{}).value) || null;
   pos.swapTotal  = parseFloat((document.getElementById('em_swap')||{}).value) || 0;
   pos.commission = parseFloat((document.getElementById('em_commission')||{}).value) || 0;
+  var _emCs = parseFloat((document.getElementById('em_cs')||{}).value);
+  if(_emCs > 0) pos.contractSize = _emCs;
   var odt = document.getElementById('em_opentime');
   if(odt && odt.value){ pos.openDate = new Date(odt.value).toISOString(); pos.time = pos.openDate; }
   var dev = (document.getElementById('em_device')||{}).value;
@@ -12426,7 +12442,7 @@ function adSaveEdit(){
   if(a) _adSurgicalUpdatePosition(a.id, pos.id, {
     side: pos.side, qty: pos.qty, openPrice: pos.openPrice, sl: pos.sl, tp: pos.tp,
     swapTotal: pos.swapTotal, commission: pos.commission, openDate: pos.openDate,
-    time: pos.time, openDevice: pos.openDevice, cost: pos.cost
+    time: pos.time, openDevice: pos.openDevice, cost: pos.cost, contractSize: pos.contractSize
   });
   adRenderOpenTable();
   adRefreshBadges();
@@ -12574,6 +12590,7 @@ function adEditHistory(btn){
     +'<div><label class="ad-label">AÇILIŞ FİYATI</label><input class="ad-input" id="he_open" type="number" step="any" value="'+h.openPrice+'" oninput="_adHistRecalcPnl()"></div>'
     +'<div><label class="ad-label">KAPANIS FİYATI</label><input class="ad-input" id="he_close" type="number" step="any" value="'+h.closePrice+'" oninput="_adHistRecalcPnl()"></div>'
     +'<div><label class="ad-label">K/Z <span style="color:#666;font-weight:400;">(otomatik, gerekirse düzelt)</span></label><input class="ad-input" id="he_pnl" type="number" step="any" value="'+adFp(h.pnl||0)+'"></div>'
+    +'<div><label class="ad-label">KONTRAT BÜYÜKLÜĞÜ '+_adCsHint(h.sym,h.contractSize)+'</label><input class="ad-input" id="he_cs" type="number" step="any" value="'+(parseFloat(h.contractSize)||1)+'" oninput="_adHistRecalcPnl()"></div>'
     +'<div><label class="ad-label">SWAP</label><input class="ad-input" id="he_swap" type="number" step="any" value="'+(h.swapTotal||0)+'" oninput="_adHistRecalcPnl()"></div>'
     +'<div><label class="ad-label">KOMİSYON</label><input class="ad-input" id="he_com" type="number" step="any" value="'+(h.commission||0)+'"></div>'
     +'<div style="grid-column:1/-1"><label class="ad-label">AÇILIŞ</label><input class="ad-input" id="he_otime" type="datetime-local" value="'+openVal+'"></div>'
@@ -12601,7 +12618,8 @@ function _adHistRecalcPnl(){
   if(isNaN(cp))   cp   = parseFloat(h.closePrice)||0;
   if(isNaN(qty))  qty  = parseFloat(h.qty)||0;
   if(isNaN(swap)) swap = 0;
-  var cs  = parseFloat(h.contractSize)||1;
+  var cs  = parseFloat((document.getElementById('he_cs')||{}).value);
+  if(!(cs>0)) cs = parseFloat(h.contractSize)||1;
   var raw = (typeof _adQuoteToUsd==='function')
     ? _adQuoteToUsd(h.sym, (h.side==='buy' ? cp-op : op-cp) * qty * cs)
     : (h.side==='buy' ? cp-op : op-cp) * qty * cs;
@@ -12619,6 +12637,8 @@ function adSaveHistEdit(){
   h.closePrice = parseFloat((document.getElementById('he_close')||{}).value) || h.closePrice;
   h.swapTotal  = parseFloat((document.getElementById('he_swap')||{}).value)  || 0;
   h.commission = parseFloat((document.getElementById('he_com')||{}).value)   || 0;
+  var _heCs = parseFloat((document.getElementById('he_cs')||{}).value);
+  if(_heCs > 0) h.contractSize = _heCs;
   var newPnl = parseFloat((document.getElementById('he_pnl')||{}).value);
   if(isNaN(newPnl)) newPnl = oldPnl;
   h.pnl = newPnl;
