@@ -10901,7 +10901,10 @@ function txPrompt(opts){
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
     set('txModalTitle', opts.title||'Düzenle');
     set('txModalLabel', opts.label||'Değer');
-    document.getElementById('txModalIcon').textContent = opts.icon||'';
+    var _mi=document.getElementById('txModalIcon'), _ic=String(opts.icon||'');
+    // SVG ikon gelirse HTML olarak bas (textContent ile kod metni görünüyordu); emoji/metin ise düz yaz
+    if(/^\s*<svg/i.test(_ic)) _mi.innerHTML=_ic; else _mi.textContent=_ic;
+    if(!_ic && typeof _txUi==='function') _mi.innerHTML=_txUi('pencil',15);
     var sub=document.getElementById('txModalSub');
     if(opts.sub){ sub.innerHTML=opts.sub; sub.style.display=''; } else { sub.style.display='none'; }
     var hint=document.getElementById('txModalHint');
