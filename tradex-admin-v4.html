@@ -6720,6 +6720,7 @@ function _adUi(name, size, color) {
   var d = {
     save:      '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
     check:     '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    doc:       '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
     gear:      '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
     chart:     '<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/>',
     search:    '<circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5L16 16"/>',
@@ -7512,7 +7513,76 @@ function clearReqFilters() {
   _reqSortCol='date'; _reqSortDir=-1;
   sortReqs('date');
 }
+// ══════════════════════════════════════════════════════════════
+// DEKONT GÖRÜNTÜLEME (2026-10-13)
+// Müşteri dekontu trader'da yükler → broker/receipts.{talepId} kaydı.
+// Burada canlı dinlenir; Talepler tablosunda yatırım satırına "Dekont" butonu çıkar.
+// ══════════════════════════════════════════════════════════════
+window._adReceipts = window._adReceipts || {};
+function _adStartReceiptsSnap(){
+  if(window._adRcptUnsub || typeof db==='undefined' || !db) return;
+  window._adRcptUnsub = db.collection('broker').doc('receipts').onSnapshot(function(doc){
+    window._adReceipts = (doc.exists && doc.data()) ? doc.data() : {};
+    var sec = document.getElementById('sec-withdrawreqs');
+    if(sec && sec.style.display !== 'none' && !window._adRcptRendering){
+      window._adRcptRendering = true;
+      try{ renderWithdrawReqs(); }catch(e){}
+      window._adRcptRendering = false;
+    }
+  }, function(e){ console.warn('[dekont] receipts dinlenemedi:', e.message); });
+}
+function _adEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function adCloseReceipt(){ var o=document.getElementById('adRcptOv'); if(o) o.remove(); }
+function _adShowReceipt(meta, src){
+  adCloseReceipt();
+  var isPdf = meta.type==='pdf' || /^data:application\/pdf/.test(src||'');
+  var ov = document.createElement('div');
+  ov.id = 'adRcptOv';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = function(e){ if(e.target===ov) adCloseReceipt(); };
+  var amt = (meta.amount!=null ? parseFloat(meta.amount).toLocaleString('tr-TR')+' '+_adEsc(meta.currency||'') : '');
+  var when = meta.at ? new Date(meta.at).toLocaleString('tr-TR') : '';
+  var body = !src
+    ? '<div style="padding:40px;text-align:center;color:var(--muted)">Yükleniyor…</div>'
+    : (isPdf
+        ? '<iframe src="'+_adEsc(src)+'" style="width:100%;height:70vh;border:0;border-radius:8px;background:#fff"></iframe>'
+        : '<img src="'+_adEsc(src)+'" alt="Dekont" style="display:block;max-width:100%;max-height:70vh;margin:0 auto;border-radius:8px;background:#fff">');
+  ov.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border2);border-radius:14px;width:min(860px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">'
+    + '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border2)">'
+    +   '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:var(--text)">Dekont — #'+_adEsc(meta.reqId||'')+'</div>'
+    +   '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+_adEsc(meta.accountName||('#'+(meta.accountId||'')))+(amt?' · '+amt:'')+(when?' · '+_adEsc(when):'')+'</div></div>'
+    +   (src ? '<a class="mgr-btn secondary" href="'+_adEsc(src)+'" target="_blank" rel="noopener" download="'+_adEsc(meta.name||'dekont')+'" style="text-decoration:none">Yeni sekmede aç</a>' : '')
+    +   '<button class="mgr-btn" onclick="adCloseReceipt()">Kapat</button>'
+    + '</div>'
+    + '<div style="padding:14px;overflow:auto">'+body+'</div></div>';
+  document.body.appendChild(ov);
+}
+function adViewReceipt(rid, accId){
+  var meta = window._adReceipts[rid];
+  var open = function(m){
+    if(m.url){ _adShowReceipt(m, m.url); return; }
+    if(m.docId){
+      _adShowReceipt(m, null);
+      db.collection('broker').doc(m.docId).get().then(function(d){
+        if(d.exists && d.data().data) _adShowReceipt(m, d.data().data);
+        else { adCloseReceipt(); showAdminToast('Dekont bulunamadı','Dosya kaydı yok','error'); }
+      }).catch(function(e){ adCloseReceipt(); showAdminToast('Hata', e.message||'','error'); });
+      return;
+    }
+    showAdminToast('Dekont bulunamadı','Bu talep için dosya yok','info');
+  };
+  if(meta){ open(meta); return; }
+  // Yedek: admin listesine düşmediyse müşterinin kendi kaydına bak
+  if(!accId){ showAdminToast('Dekont yok','Müşteri henüz dekont yüklemedi','info'); return; }
+  db.collection('users').doc(String(accId)).get().then(function(d){
+    var m = d.exists && d.data().receipts && d.data().receipts[rid];
+    if(m){ window._adReceipts[rid] = m; open(m); }
+    else showAdminToast('Dekont yok','Müşteri henüz dekont yüklemedi','info');
+  }).catch(function(e){ showAdminToast('Hata', e.message||'','error'); });
+}
+
 function renderWithdrawReqs() {
+  _adStartReceiptsSnap();
   var statusFilter = (document.getElementById('reqFilter')||{value:'all'}).value || 'all';
   var typeFilter   = (document.getElementById('reqTypeFilter')||{value:'all'}).value || 'all';
   var sourceFilter = (document.getElementById('reqSourceFilter')||{value:'all'}).value || 'all';
@@ -7583,6 +7653,15 @@ function renderWithdrawReqs() {
            + '&#10005; Reddet</button>';
     } else {
       acts = '<span style="color:var(--muted);font-size:12px;">&#8212;</span>';
+    }
+    // Dekont butonu (yalnız yatırım talepleri)
+    if(!isW && r.source!=='manager'){
+      var _hasR = !!(window._adReceipts && window._adReceipts[r.id]);
+      var _acc = String(r.accountId||'').replace(/[^A-Za-z0-9_-]/g,'');
+      acts = '<button class="mgr-btn '+(_hasR?'primary':'secondary')+'" style="font-size:12px;padding:2px 8px;margin-right:3px;'+(_hasR?'':'opacity:.55;')+'" '
+           + 'title="'+(_hasR?'Dekontu görüntüle':'Dekont yüklenmemiş (kontrol et)')+'" '
+           + 'onclick="adViewReceipt(\'' + rid + '\',\'' + _acc + '\')">'
+           + (typeof _adUi==='function'?_adUi('doc',13):'') + (_hasR?' Dekont':' Dekont yok') + '</button>' + acts;
     }
     var mgrBadge = r.source==='manager'
       ? '<span style="background:var(--panel);color:var(--buy);font-size:11px;padding:1px 4px;border-radius:6px;margin-left:4px;">MGR</span>'
