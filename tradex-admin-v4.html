@@ -6827,7 +6827,7 @@ function _renderAccTable_inner(){
 
   var rows=all.filter(function(a){
     if(search&&!(String(a.login||a.id)+' '+(a.name||'')+' '+(a.surname||'')+' '+(a.email||'')).toLowerCase().includes(search))return false;
-    if(fType&&(a.type||'real')!==fType)return false;
+    if(fType&&((a.type==='demo')?'demo':'real')!==fType)return false;   // 2026-10-20: trader kayıtları 'live' yazıyor → real say
     if(fStatus==='active'&&!a.active)return false;
     if(fStatus==='passive'&&a.active)return false;
     if(fSg&&(a.spreadGroup||'standard')!==fSg)return false;
@@ -10263,8 +10263,10 @@ function loadAllPositionsAndUpdate() {
 
   if(typeof db === 'undefined' || !db) { updateReports(); return; }
 
-  // Her rapor acilisinda Firebase'den ZORLA cek
-  var pending = c2.length;
+  // Her rapor acilisinda Firebase'den ZORLA cek (talepler dahil — eskiden yalnız açılışta yükleniyordu)
+  var pending = c2.length + 1;
+  if(typeof fbLoadRequests==='function') fbLoadRequests(function(){ pending--; if(pending <= 0) updateReports(); });
+  else pending--;
   c2.forEach(function(acc) {
     db.collection('users').doc(String(acc.id)).get()
       .then(function(doc) {
@@ -10278,9 +10280,16 @@ function loadAllPositionsAndUpdate() {
             var _td = doc.data().tradeHistory;
             acc.tradeHistory = Array.isArray(_td) ? _td : JSON.parse(_td || '[]');
           } catch(e){ acc.tradeHistory = []; }
+          try {
+            var _fd = doc.data().finlog;
+            acc._finlog = Array.isArray(_fd) ? _fd : JSON.parse(_fd || '[]');
+          } catch(e){ acc._finlog = []; }
+          acc._repLoaded = true;
         } else {
           acc.positions = [];
           acc.tradeHistory = [];
+          acc._finlog = [];
+          acc._repLoaded = true;
         }
         pending--;
         if(pending <= 0) updateReports();
@@ -10371,6 +10380,26 @@ function _loadAllEquities(cb){
   });
 }
 
+// 2026-10-20: Raporlar artık her hesabın Firebase'den TAZE okunan verisini kullanır.
+// Eskiden canlı önbellek (_accCanon) yalnız açılmış hesaplar için dolu olduğundan
+// bazı hesapların pozisyonları/finans hareketleri raporda görünmüyordu.
+function _repPos(a){
+  var arr = (a && a._repLoaded && Array.isArray(a.positions)) ? a.positions
+          : (getAccPos(a.id).length ? getAccPos(a.id)
+          : ((typeof _allAccountPositions!=='undefined' && _allAccountPositions[a.id]) || []));
+  return arr.filter(function(p){ return typeof _adIsOpenPos==='function' ? _adIsOpenPos(p) : true; });
+}
+function _repFin(a){
+  var c = getAccFinlog(a.id);
+  if(a && a._repLoaded && Array.isArray(a._finlog) && a._finlog.length >= c.length) return a._finlog;
+  return c;
+}
+function _repShortDt(t){
+  var d = (typeof _parseDate==='function') ? _parseDate(t) : (t ? new Date(t) : null);
+  if(!d || isNaN(d.getTime())) return '';
+  var z=function(n){return String(n).padStart(2,'0');};
+  return z(d.getDate())+'.'+z(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(2)+' '+z(d.getHours())+':'+z(d.getMinutes());
+}
 function updateReports(){
   var ptEl = document.getElementById('rep-posTable');
   var c2=accounts.filter(function(a){return !a.role||a.role==='customer';});
@@ -10402,7 +10431,7 @@ function updateReports(){
   // yani finlog zaten eksiksiz, taleplerden gelecek ek bir bilgi yok.
   var totalDep=0, totalWdr=0;
   c2.forEach(function(a){
-    getAccFinlog(a.id).forEach(function(fl){
+    _repFin(a).forEach(function(fl){
       var _amt = Math.abs(parseFloat(fl.amount)||0);
       if(fl.type==='deposit') totalDep+=_amt;
       else if(fl.type==='withdraw') totalWdr+=_amt;
@@ -10415,7 +10444,7 @@ function updateReports(){
   // Açık pozisyon sayısı ve net K/Z
   var openPosCount=0, netPnl=0;
   c2.forEach(function(a){
-    var _pos = getAccPos(a.id);
+    var _pos = _repPos(a);
     if(_pos.length){
       openPosCount+=_pos.length;
       _pos.forEach(function(p){
@@ -10448,15 +10477,25 @@ function updateReports(){
   // Son talepler (bekleyen önce, max 8)
   var rrEl=document.getElementById('rep-recentReqs');
   if(rrEl){
+    // 2026-10-20: Eskiden yalnız talepler listesinden ve METİN olarak (gg.aa.yyyy)
+    // sıralanıyordu → son hareketler alta kayıyor, admin'in elle yaptığı yatırımlar
+    // hiç görünmüyordu. Artık: gerçekleşen hareketler hesapların finans geçmişinden,
+    // bekleyen/reddedilen talepler talep listesinden; hepsi gerçek tarihe göre.
     var allReqs=[];
-    withdrawRequests.forEach(function(r){ allReqs.push(Object.assign({},r,{_t:'withdraw'})); });
-    depositRequests.forEach(function(r){  allReqs.push(Object.assign({},r,{_t:'deposit'}));  });
-    allReqs.sort(function(a,b){
-      if(a.status==='pending'&&b.status!=='pending') return -1;
-      if(b.status==='pending'&&a.status!=='pending') return 1;
-      return (b.date||'').localeCompare(a.date||'');
+    var _pendCnt=0;
+    withdrawRequests.forEach(function(r){ if(r.status!=='approved'){ allReqs.push(Object.assign({},r,{_t:'withdraw'})); if(r.status==='pending')_pendCnt++; } });
+    depositRequests.forEach(function(r){  if(r.status!=='approved'){ allReqs.push(Object.assign({},r,{_t:'deposit'}));  if(r.status==='pending')_pendCnt++; } });
+    c2.forEach(function(a){
+      _repFin(a).forEach(function(fl){
+        if(fl.type!=='deposit' && fl.type!=='withdraw') return;
+        allReqs.push({ _t:fl.type, status:'approved', amount:Math.abs(parseFloat(fl.amount)||0), currency:'USD',
+          dateIso:fl.date, accountId:a.id, accountName:(a.name||'')+(a.surname?' '+a.surname:''),
+          manager:fl.manager||'', source:fl.source||'' });
+      });
     });
-    allReqs=allReqs.slice(0,8);
+    allReqs.forEach(function(r){ r._ts = parseFinlogDate(r.dateIso||r.date).getTime(); });
+    allReqs.sort(function(a,b){ return b._ts - a._ts; });
+    allReqs=allReqs.slice(0,12);
     var rIdx=0;
     if(!allReqs.length){
       rrEl.innerHTML='<span style="color:var(--muted);font-size:12px;">Talep yok</span>';
@@ -10475,7 +10514,7 @@ function updateReports(){
           +'<div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:'+(isW?'rgba(239,83,80,.1)':'rgba(38,166,154,.1)')+';flex-shrink:0;">'
           +'<span style="color:'+arrowColor+';font-size:13px;font-weight:700;">'+arrow+'</span></div>'
           +'<div style="flex:1;min-width:0;">'
-          +'<div style="font-family:var(--mono);font-size:12px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+mgrLabel+srcBadge+'</div>'
+          +'<div style="font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.accountName||('#'+(r.accountId||'?')))+(r.accountId?' <span style="color:var(--muted);font-size:11px;">#'+r.accountId+'</span>':'')+mgrLabel+srcBadge+'</div>'
           +'<div style="font-size:11px;color:var(--text);margin-top:2px;">'+((r.dateIso||r.date)?fmtDate(r.dateIso||r.date):'')+'</div></div>'
           +'<div style="text-align:right;flex-shrink:0;">';
         var _rAmt=parseFloat(r.amount||0), _rCur=r.currency||'USD';
@@ -10494,14 +10533,13 @@ function updateReports(){
       rrEl.innerHTML=html;
     }
     var rc=document.getElementById('rep-reqs-count');
-    if(rc) rc.textContent=allReqs.length+' talep';
+    if(rc) rc.textContent=_pendCnt ? _pendCnt+' bekleyen' : 'son '+allReqs.length+' hareket';
   }
   if(ptEl) {
     var allPos = [];
     c2.forEach(function(a){
       // positions: Firebase'den yüklenen (loadAllPositionsAndUpdate sonrası a.positions dolu olmalı)
-      var _pos = getAccPos(a.id).length ? getAccPos(a.id) :
-                 (typeof _allAccountPositions!=='undefined' && _allAccountPositions && _allAccountPositions[a.id]) ? _allAccountPositions[a.id] : [];
+      var _pos = _repPos(a);
       _pos.forEach(function(p){
         allPos.push(Object.assign({},p,{_accName:(a.name||'')+(a.surname?' '+a.surname:''), _accId:a.id}));
       });
@@ -10548,7 +10586,9 @@ function updateReports(){
           var bg=idx%2===0?'':'background:var(--bg);';
           var dt=h.closeTime?new Date(h.closeTime).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
           chHtml+='<tr style="'+bg+'border-bottom:1px solid var(--bg);">'
-            +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;color:var(--muted);">'+h._accName+'</td>'
+            +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.35;">'+h._accName
+              +' <span style="color:var(--muted);font-size:11px;">#'+h._accId+'</span>'
+              +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">Açılış: '+(_repShortDt(h.openDate||h.time)||'—')+'</div></td>'
             +'<td style="padding:6px 12px;font-family:var(--sans);font-size:12px;font-weight:700;color:#ddd;">'+h.sym+'</td>'
             +'<td style="padding:6px 12px;text-align:center;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:700;background:'+(h.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(h.side==="buy"?"#26a69a":"#ef5350")+';">'+(h.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
             +'<td style="padding:6px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#ddd;">'+parseFloat(h.qty||0).toFixed(2)+'</td>'
@@ -10581,11 +10621,13 @@ function updateReports(){
       // Yeniden eskiye sırala - _parseDate her iki formatı handle eder (ISO ve DD.MM.YYYY)
       allPos.sort(function(a,b){
         var _pt = function(pos){
-          if(!pos.time) return 0;
+          var _t0 = pos.openDate || pos.time;
+          if(!_t0) return 0;
+          _t0 = String(_t0);
           // ISO format: 2026-03-24T...
-          if(pos.time.indexOf('T')!==-1 || pos.time.indexOf('-')===4) return new Date(pos.time).getTime();
+          if(_t0.indexOf('T')!==-1 || _t0.indexOf('-')===4) return new Date(_t0).getTime();
           // DD.MM.YYYY HH:MM formatı
-          if(typeof _parseDate==='function'){ var d=_parseDate(pos.time); return d?d.getTime():0; }
+          if(typeof _parseDate==='function'){ var d=_parseDate(_t0); return d?d.getTime():0; }
           return 0;
         };
         var ta=_pt(a), tb2=_pt(b);
@@ -10600,7 +10642,9 @@ function updateReports(){
         var pc=pnl>=0?'#26a69a':'#ef5350';
         var bg=idx%2===0?'':'background:var(--bg);';
         ptHtml+='<tr style="'+bg+'border-bottom:1px solid var(--bg);">'
-          +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;color:var(--muted);">'+p._accName+'</td>'
+          +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.35;">'+p._accName
+            +' <span style="color:var(--muted);font-size:11px;">#'+p._accId+'</span>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">Açılış: '+(_repShortDt(p.openDate||p.time)||'—')+'</div></td>'
           +'<td style="padding:7px 12px;font-family:var(--sans);font-size:12px;font-weight:700;color:#ddd;">'+p.sym+'</td>'
           +'<td style="padding:7px 12px;text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:700;background:'+(p.side==="buy"?"rgba(38,166,154,.15)":"rgba(239,83,80,.15)")+';color:'+(p.side==="buy"?"#26a69a":"#ef5350")+';">'+  (p.side==="buy"?"▲ AL":"▼ SAT")+'</span></td>'
           +'<td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:#ddd;">'+parseFloat(p.qty||0).toFixed(2)+'</td>'
@@ -10674,7 +10718,7 @@ function finWithdraw(){
 function exportAccounts(){
   var list=accounts.filter(function(a){return !a.role||a.role==='customer';});
   var rows=[['Login','Ad Soyad','Email','Tip','Bakiye','Durum','Trading Grubu','Kayıt']];
-  list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),(a.type||'real'),getAccBal(a.id),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
+  list.forEach(function(a){rows.push([(a.login||a.id),a.name+(a.surname?' '+a.surname:''),(a.email||''),((a.type==='demo')?'demo':'real'),getAccBal(a.id),(a.active?'Aktif':'Pasif'),(a.spreadGroup||'standard'),(a.created||'')]);});
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join(String.fromCharCode(10));
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var a2=document.createElement('a');a2.href=URL.createObjectURL(blob);a2.download='hesaplar.csv';a2.click();
