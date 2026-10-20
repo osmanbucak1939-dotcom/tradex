@@ -4300,6 +4300,7 @@ function _adApplyBridge(sym, price, chg){
   if(!sym || !(price>0)) return;
   if(!window._adLive) window._adLive = {};
   window._adLive[sym] = true;
+  (window._adBrAt = window._adBrAt || {})[sym] = Date.now();
   adReceiveRawPrice(sym, price);
   window._adTdLastOk = Date.now(); // Bridge tick → sağlık dot'unu güncelle
   if(chg!==undefined && chg!==null && !isNaN(parseFloat(chg)) && prices[sym]) prices[sym].chg = parseFloat(chg);
@@ -4373,6 +4374,10 @@ function _adStartTwelveData() {
   function _wsFlush() {
     var _applied = 0;
     Object.keys(_wsBuf).forEach(function(sym) {
+      // 2026-10-20: Köprü bu sembolü zaten besliyorsa (Capital.com anlık akış) doğrudan
+      // Twelve Data fiyatını UYGULAMA — iki kaynak arasında fiyat gidip gelmesin.
+      // Köprü susarsa (5sn) TD yine devreye girer.
+      if(window._adBrAt && (Date.now() - (window._adBrAt[sym]||0)) < 5000) return;
       adReceiveRawPrice(sym, _wsBuf[sym]);
       _applied++;
     });
