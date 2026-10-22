@@ -6312,6 +6312,15 @@ function adRenderFinlog() {
 
     var btnStyle = function(bg,bc,col){ return 'background:'+bg+';border:1px solid '+bc+';color:'+col+';padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--mono);'; };
     var _hp=function(p){return typeof hasPerm!=='function'||hasPerm(p);};
+    // 2026-10-22: Bu panel arka planda (canlı veri gelince) yeniden çiziliyor ve açık
+    // "Para Yatır / Çek / Bonus" formunu kapatıyordu — admin yazarken form kayboluyordu.
+    // Açık formu, içine yazılanlar ve imleç dahil, çizimden sonra geri koyuyoruz.
+    var _ofEl=document.getElementById('adFinlogForm'), _ofState=null;
+    if(_ofEl && _ofEl.style.display!=='none' && _ofEl.innerHTML){
+      _ofState={html:_ofEl.innerHTML, vals:{}, focus:null};
+      Array.prototype.forEach.call(_ofEl.querySelectorAll('input,select,textarea'), function(i){ if(i.id) _ofState.vals[i.id]=i.value; });
+      var _ae=document.activeElement; if(_ae && _ofEl.contains(_ae) && _ae.id){ _ofState.focus=_ae.id; try{ _ofState.s=_ae.selectionStart; _ofState.e=_ae.selectionEnd; }catch(e){} }
+    }
     panel.innerHTML =
       '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">'
       + (_hp('finance.deposit') ? '<button data-ftype="deposit"   onclick="adOpenFinlogForm(this.dataset.ftype)" style="'+btnStyle('#0d2e2b','#26a69a','#26a69a')+'">+ Para Yatır</button>' : '')
@@ -6331,6 +6340,14 @@ function adRenderFinlog() {
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '</table></div>';
+    if(_ofState){
+      var _nf=document.getElementById('adFinlogForm');
+      if(_nf){
+        _nf.innerHTML=_ofState.html; _nf.style.display='block';
+        Object.keys(_ofState.vals).forEach(function(id){ var e=document.getElementById(id); if(e) e.value=_ofState.vals[id]; });
+        if(_ofState.focus){ var fe=document.getElementById(_ofState.focus); if(fe){ try{ fe.focus({preventScroll:true}); if(_ofState.s!=null&&fe.setSelectionRange) fe.setSelectionRange(_ofState.s,_ofState.e); }catch(e){} } }
+      }
+    }
 
     var _footEl = document.getElementById('adOpenFooter');
     if(_footEl && _adActiveSubTab()==='finlog') {
