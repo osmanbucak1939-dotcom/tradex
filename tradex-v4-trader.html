@@ -3097,7 +3097,7 @@ function _txCatLabel(g) {
 // bu listede olmayan semboller TwelveData'ya sorulur, NGAS orada tanımlı
 // olmadığı için fiyat akmasına rağmen GRAFİK BOŞ geliyordu. Köprüde NG=F
 // karşılığı var (INDEX_MAP), dolayısıyla /klines proxy'si geçmişi verebiliyor.
-var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY',
+var TX_INDEX_SYMS = ['SPX500X','NAS100X','DJ30X','DAX40X','DXY','SUGAR','COTTON','HOIL','COFFEE',
   'BRTUSD','XPDUSD','XPTUSD','NGAS','AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
 // BIST hisseleri — fiyat + grafik köprüden (Yahoo .IS)
 var TX_BIST_SYMS = ['AEFES','AKBNK','ASELS','BIMAS','EKGYO','ENKAI','EREGL','FROTO','GARAN','GUBRF',
@@ -4639,7 +4639,7 @@ function _quoteToUsd(sym, amount) {
   // Kripto (USDT bazlı) → direkt USD
   if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
   // USD-sözleşmeli kontratlar — dönüşüm gerekmez
-  var _USD_CONTRACTS = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
+  var _USD_CONTRACTS = ['SUGAR','COTTON','HOIL','COFFEE','SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
     'AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
   if(_USD_CONTRACTS.indexOf(sym) >= 0) return amount;
