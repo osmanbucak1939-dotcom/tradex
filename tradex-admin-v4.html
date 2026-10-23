@@ -12198,7 +12198,7 @@ function _adQuoteToUsd(sym, amount) {
   // ve TL tutarın ın USD gibi gösterilmesine yol açıyordu.
   sym = String(sym).toUpperCase().trim().split('.')[0].split('#')[0].split(':')[0];
   if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
-  var _USD_C = ['SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
+  var _USD_C = ['SUGAR','COTTON','HOIL','COFFEE','SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
     // ⚠️ 2026-08-06: XPDUSD + ABD hisseleri eksikti — symConfig'te category:'stock'
     // oldukları için admin bunları TL bazlı sanıp K/Z'yi ~USDTRY katı KÜÇÜK gösteriyordu.
