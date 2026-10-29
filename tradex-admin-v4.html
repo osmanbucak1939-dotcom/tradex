@@ -2333,6 +2333,25 @@ console.log('Firebase bağlandı');
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="mgr-btn" onclick="sessAddTpl()" style="font-size:12px;padding:4px 12px;">+ Şablon Ekle</button>
         </div>
+        <!-- 2026-10-29: sembolleri şablona TOPLU bağlama — tatil/saat ayarı yalnız bağlı sembollerde işler -->
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:6px;">SEMBOLLERİ ŞABLONA BAĞLA</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Bir şablonun saatleri ve tatilleri yalnız <b>ona bağlı</b> sembollerde geçerlidir. Bağlı olmayan semboller varsayılan (Forex) şablonunu kullanır.</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="mgr-input" id="sessBulkCat" onchange="sessBulkInfo()" style="width:auto;font-size:12px;padding:4px 8px;">
+              <option value="bist">BIST hisseleri</option>
+              <option value="stock">ABD hisseleri</option>
+              <option value="index">Endeksler</option>
+              <option value="commodity">Emtialar</option>
+              <option value="forex">Forex</option>
+              <option value="crypto">Kripto</option>
+            </select>
+            <span style="font-size:12px;color:var(--muted);">→</span>
+            <select class="mgr-input" id="sessBulkTpl" onchange="sessBulkInfo()" style="width:auto;font-size:12px;padding:4px 8px;"></select>
+            <button class="mgr-btn success" onclick="sessBulkLink()" style="font-size:12px;padding:4px 12px;">Bağla</button>
+          </div>
+          <div id="sessBulkInfo" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+        </div>
         <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
           <div style="font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:6px;"><span class="_ai-calendar"></span> TATİL GÜNLERİ</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Tarihi seçin, sonra o gün <b>kapalı olacak şablonları</b> işaretleyin (örn. sadece ABD Endeks). Hiçbirini işaretlemezseniz o gün <b>tüm</b> piyasalar kapalıdır.</div>
@@ -11676,7 +11695,46 @@ function sessLoad(){
   }, function(e){ console.warn('[seans] okunamadi:', e && e.message); });
 }
 
+function _sessCatOf(s){
+  var sym = String(s.sym||'').toUpperCase();
+  if(s.category==='bist' || (typeof TX_ALL_BIST_SYMS!=='undefined' && TX_ALL_BIST_SYMS.indexOf(sym)>=0)) return 'bist';
+  if(s.category==='crypto' || /USDT$|USDC$/.test(sym)) return 'crypto';
+  return s.category || 'forex';
+}
+function sessBulkFill(){
+  var sel=document.getElementById('sessBulkTpl'); if(!sel) return;
+  var c=_txSessNorm(_sessCfg), prev=sel.value;
+  sel.innerHTML = c.templates.map(function(t){ return '<option value="'+t.id+'">'+(t.name||t.id)+'</option>'; }).join('');
+  // BIST seçiliyse adı/kodu BIST olan şablonu öner
+  var cat=(document.getElementById('sessBulkCat')||{}).value;
+  var guess=null;
+  if(!prev && cat==='bist') c.templates.forEach(function(t){ if(/b[iİı]st/i.test((t.id||'')+' '+(t.name||''))) guess=t.id; });
+  if(prev && c.templates.some(function(t){return t.id===prev;})) sel.value=prev; else if(guess) sel.value=guess;
+  sessBulkInfo();
+}
+function sessBulkInfo(){
+  var el=document.getElementById('sessBulkInfo'); if(!el) return;
+  var cat=(document.getElementById('sessBulkCat')||{}).value, tpl=(document.getElementById('sessBulkTpl')||{}).value;
+  var list=(symConfig||[]).filter(function(s){ return _sessCatOf(s)===cat; });
+  var linked=list.filter(function(s){ return s.sessionId===tpl; }).length;
+  el.innerHTML = list.length
+    ? list.length+' sembolden <b style="color:'+(linked===list.length?'#7ec8a9':'var(--accent)')+'">'+linked+'</b> tanesi bu şablona bağlı.'
+      + (linked<list.length ? ' “Bağla”ya basınca hepsi bağlanır.' : '')
+    : 'Bu grupta sembol yok.';
+}
+function sessBulkLink(){
+  var cat=(document.getElementById('sessBulkCat')||{}).value, tpl=(document.getElementById('sessBulkTpl')||{}).value;
+  if(!tpl){ showAdminToast('Şablon yok','Önce bir şablon tanımlayın','error'); return; }
+  var n=0;
+  (symConfig||[]).forEach(function(s){ if(_sessCatOf(s)===cat && s.sessionId!==tpl){ s.sessionId=tpl; n++; } });
+  if(!n){ showAdminToast('Değişiklik yok','Hepsi zaten bu şablona bağlı','info'); return; }
+  saveSymConfig();
+  showAdminToast('Bağlandı', n+' sembol "'+tpl+'" şablonuna bağlandı','success');
+  if(typeof adAudit==='function') adAudit('sessions.bulkLink','broker/symbols',null,{category:cat, template:tpl, count:n},'Toplu seans bağlama');
+  sessBulkInfo();
+}
 function sessRender(){
+  setTimeout(sessBulkFill, 0);
   var w = document.getElementById('sessTplWrap'); if(!w) return;
   var c = _txSessNorm(_sessCfg);
   document.getElementById('sessTplCount').textContent = c.templates.length;
@@ -11728,8 +11786,8 @@ function sessRender(){
       : '<span style="font-size:12px;color:var(--accent);">Hiçbiri seçili değil → <b>TÜM piyasalar kapalı</b></span>';
     return '<div style="border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px;background:var(--bg);">'
       + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
-        + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:12px;padding:3px 6px;">'
-        + '<input class="mgr-input" value="'+(h.name||'')+'" onchange="sessSetHol('+hi+',\'name\',this.value)" placeholder="açıklama (örn. Ramazan Bayramı)" style="flex:1;font-size:12px;padding:3px 6px;">'
+        + '<input class="mgr-input" type="date" value="'+(h.date||'')+'" onchange="sessSetHol('+hi+',\'date\',this.value)" style="font-size:12px;padding:3px 6px;width:170px;flex:0 0 170px;">'
+        + '<input class="mgr-input" value="'+(h.name||'')+'" onchange="sessSetHol('+hi+',\'name\',this.value)" placeholder="açıklama (örn. Cumhuriyet Bayramı)" style="flex:1 1 auto;min-width:140px;width:auto;font-size:12px;padding:3px 6px;">'
         + '<button class="mgr-btn danger" onclick="sessDelHol('+hi+')" style="font-size:12px;padding:2px 8px;">Sil</button>'
       + '</div>'
       + '<div style="margin-bottom:4px;">' + (boxes || '<span style="font-size:12px;color:#888;">Önce şablon tanımlayın</span>') + '</div>'
