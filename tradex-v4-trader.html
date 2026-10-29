@@ -4382,7 +4382,7 @@ function placeOrder(side) {
 
   // Piyasa saatleri kontrolü
   if(typeof _marketHours !== 'undefined' && !_marketHours.isOpen(curSym)) {
-    { var _mcL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_mcL?_mcL.marketClosedTitle:'Piyasa Kapalı', _mcL?_mcL.marketClosedMsg:'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.', 'warning'); }
+    { var _mcL=(typeof _LANGS!=='undefined'&&typeof _curLang!=='undefined'?(_LANGS[_curLang]||_LANGS.tr):null); showToast(_mcL?_mcL.marketClosedTitle:'Piyasa Kapalı', _txClosedMsg(curSym) || (_mcL?_mcL.marketClosedMsg:'Hafta sonu forex/emtia işlemi yapılamaz. Kripto işlemleri devam ediyor.'), 'warning'); }
     return;
   }
   var _qtyEl = document.getElementById('ordQty');
@@ -10993,6 +10993,31 @@ function _txWatchSessions(){
 function _txSymOpen(sym){
   var sc = (typeof _txGetSymConf==='function') ? _txGetSymConf(sym) : null;
   return txSessionIsOpen(sym, sc, _txSessCfg);
+}
+// 2026-10-29: Kapalı piyasa uyarısı artık NEDENİ söylüyor (tatil adı / seans saatleri).
+// Eskiden her durumda "Hafta sonu forex işlemi yapılamaz" yazıyordu.
+function _txClosedMsg(sym){
+  try{
+    if(!_txSessCfg || !_txSessCfg.templates || !_txSessCfg.templates.length) return '';
+    var st = _txSymState(sym); if(!st || st.open) return '';
+    var en = (typeof _curLang!=='undefined' && _curLang==='en');
+    var tpl = _txSessFind(_txSessCfg, st.tpl) || {};
+    var tn = tpl.name || st.tpl || '';
+    var now = _txSessNow(tpl.tz);
+    if(st.reason==='holiday'){
+      var hn = '';
+      (_txSessCfg.holidays||[]).forEach(function(h){
+        if(h && h.date===now.ymd && (!h.templates||!h.templates.length||h.templates.indexOf(st.tpl)>=0) && h.name) hn = h.name;
+      });
+      return en ? ('Today is a holiday'+(hn?' ('+hn+')':'')+' — '+tn+' is closed.')
+                : ('Bugün tatil'+(hn?' ('+hn+')':'')+' — '+tn+' işlemleri kapalı.');
+    }
+    var days = tpl.days || {};
+    var today = (days[now.day] || days[String(now.day)] || []).map(function(r){ return r[0]+'–'+r[1]; }).join(', ');
+    if(now.day===0 || now.day===6) return en ? (tn+' is closed at the weekend.') : ('Hafta sonu '+tn+' işlemleri kapalı.');
+    return en ? (tn+' is closed now.'+(today?' Trading hours today: '+today:''))
+              : (tn+' şu an kapalı.'+(today?' Bugünkü işlem saatleri: '+today:' Bugün işlem yok.'));
+  }catch(e){ return ''; }
 }
 function _txSymState(sym){
   var sc = (typeof _txGetSymConf==='function') ? _txGetSymConf(sym) : null;
