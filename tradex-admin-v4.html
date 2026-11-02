@@ -11976,9 +11976,13 @@ function sessSave(){
   });
   _sessCfg.holidays.forEach(function(h){ if(!h.date) bad='Tatil tarihi boş olamaz'; });
   if(bad){ showAdminToast('Kaydedilmedi', bad, 'error'); return; }
+  // ⚠️ 2026-11-02 KRİTİK DÜZELTME: Firestore "dizi içinde dizi" kabul etmiyor ve seans saatleri
+  // tam olarak böyle tutuluyor (Pzt: [['10:00','18:00']]). Kaydet her seferinde sessizce hata
+  // veriyordu → saatler HİÇ kaydedilmiyordu, tüm platformlarda piyasalar hep açık kalıyordu.
+  // Artık ayar JSON metni olarak "data" alanına yazılıyor; trader, köprü ve Functions bu biçimi
+  // zaten okuyabiliyor.
   db.collection('broker').doc('sessions').set({
-    templates:_sessCfg.templates, holidays:_sessCfg.holidays,
-    defaultTemplate:_sessCfg.defaultTemplate||'forex',
+    data: JSON.stringify({ templates:_sessCfg.templates, holidays:_sessCfg.holidays, defaultTemplate:_sessCfg.defaultTemplate||'forex' }),
     updatedAt:new Date().toISOString()
   }).then(function(){
     window._sessDirty = false;
