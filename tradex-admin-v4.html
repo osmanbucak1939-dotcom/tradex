@@ -1037,6 +1037,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 select option { background:var(--bg); color:var(--text); }
 select { color-scheme: dark; }
 .ad-input:focus, .mgr-input:focus { outline:none; border-color:var(--accent); }
+/* 2026-11-02: hesap tablosundaki satırlar .acc-row sınıfını taşıyor ve eski bir kural onları display:flex yapıyordu → hücreler
+   kolon genişliklerini izlemiyor, başlıkla hizasız kalıyordu. Tablo satırı olarak kalsınlar. */
+#accBodyTable tr.acc-row { display:table-row; padding:0; }
 .acc-row-even { background:var(--bg); border-bottom:1px solid #222; }
 .acc-row-odd  { background:var(--panel); border-bottom:1px solid #222; }
 .acc-row-even td, .acc-row-odd td { }
@@ -1675,6 +1678,7 @@ console.log('Firebase bağlandı');
               // online field'ı false ise kesinlikle offline, true ise lastSeen 2dk kontrolü
               acc.online = !!(ud.online) && (Date.now()-ms < 120000);
             }
+            if(ud.tradeHistory !== undefined) acc._closedPnl = _adSumClosedPnl(ud.tradeHistory);
             // Pozisyon değişimlerini güncelle
             if(ud.positions !== undefined) {
               try {
@@ -2320,7 +2324,7 @@ console.log('Firebase bağlandı');
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
           <span style="font-family:var(--mono);font-size:13px;font-weight:700;"><span class="_ai-clock"></span> SEANSLAR (PİYASA SAATLERİ)</span>
           <span style="font-size:12px;color:#7ec8a9;font-family:var(--mono);">(<span id="sessTplCount">0</span> şablon · <span id="sessHolCount">0</span> tatil)</span>
-          <button class="mgr-btn secondary" style="margin-left:auto;font-size:12px;padding:4px 10px;" onclick="sessResetDefaults()"><span class="_ai-refresh"></span> Varsayılan şablonlar</button>
+          <button class="mgr-btn secondary" style="margin-left:auto;font-size:12px;padding:4px 10px;" onclick="sessResetDefaults()"><span class="_ai-refresh"></span> Standart piyasa saatlerini yükle</button>
           <button class="mgr-btn success" style="font-size:12px;padding:4px 10px;" onclick="sessSave()"><span class="_ai-save"></span> Kaydet</button>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.55;">
@@ -4690,6 +4694,19 @@ var MARKET_GROUPS = [
       {sym:'USDNOK',  name:'USD/NOK',   full:'Dolar / Norveç Kronası',icon:'N', spread:0.005, decimals:4},
       {sym:'GBPCHF',  name:'GBP/CHF',   full:'Sterlin / Frank',       icon:'£', spread:0.0004,decimals:5},
       {sym:'AUDNZD',  name:'AUD/NZD',   full:'Avustralya / Yeni Zelanda',icon:'A',spread:0.0004,decimals:5},
+      {sym:'AUDCHF', name:'AUD/CHF', full:'Avustralya / İsviçre', icon:'A', spread:0.0003, decimals:5},   // 2026-11-02
+      {sym:'AUDJPY', name:'AUD/JPY', full:'Avustralya / Yen', icon:'A', spread:0.03, decimals:3},   // 2026-11-02
+      {sym:'CADJPY', name:'CAD/JPY', full:'Kanada / Yen', icon:'C', spread:0.03, decimals:3},   // 2026-11-02
+      {sym:'CHFJPY', name:'CHF/JPY', full:'İsviçre / Yen', icon:'₣', spread:0.03, decimals:3},   // 2026-11-02
+      {sym:'EURAUD', name:'EUR/AUD', full:'Euro / Avustralya', icon:'€', spread:0.0003, decimals:5},   // 2026-11-02
+      {sym:'EURCHF', name:'EUR/CHF', full:'Euro / İsviçre', icon:'€', spread:0.0003, decimals:5},   // 2026-11-02
+      {sym:'EURNZD', name:'EUR/NZD', full:'Euro / Yeni Zelanda', icon:'€', spread:0.0005, decimals:5},   // 2026-11-02
+      {sym:'EURDKK', name:'EUR/DKK', full:'Euro / Danimarka', icon:'€', spread:0.001, decimals:5},   // 2026-11-02
+      {sym:'GBPCAD', name:'GBP/CAD', full:'Sterlin / Kanada', icon:'£', spread:0.0005, decimals:5},   // 2026-11-02
+      {sym:'GBPNZD', name:'GBP/NZD', full:'Sterlin / Yeni Zelanda', icon:'£', spread:0.0006, decimals:5},   // 2026-11-02
+      {sym:'NZDCAD', name:'NZD/CAD', full:'Yeni Zelanda / Kanada', icon:'N', spread:0.0004, decimals:5},   // 2026-11-02
+      {sym:'NZDCHF', name:'NZD/CHF', full:'Yeni Zelanda / İsviçre', icon:'N', spread:0.0004, decimals:5},   // 2026-11-02
+      {sym:'NZDJPY', name:'NZD/JPY', full:'Yeni Zelanda / Yen', icon:'N', spread:0.03, decimals:3},   // 2026-11-02
       {sym:'CADCHF',  name:'CAD/CHF',   full:'Kanada / Frank',        icon:'C', spread:0.0004,decimals:5},
     ]
   },
@@ -4718,6 +4735,7 @@ var MARKET_GROUPS = [
       {sym:'DJ30X',    name:'DOW 30',   full:'Dow Jones 30',    icon:'🏛', spread:1.00,   decimals:2},
       {sym:'FTSE100X', name:'FTSE 100', full:'FTSE 100 UK',     icon:'🇬🇧',spread:0.50,   decimals:2},
       {sym:'DAX40X',   name:'DAX 40',   full:'DAX Almanya',     icon:'🇩🇪',spread:0.80,   decimals:2},
+      {sym:'FRA40X',   name:'CAC 40',   full:'CAC 40 Fransa',   icon:'🇫🇷',spread:0.80,   decimals:2},   // 2026-11-02
       {sym:'DXY',      name:'DXY',      full:'Dolar Endeksi',   icon:'💵', spread:0.030,  decimals:3},
       {sym:'XU100X',   name:'BIST 100', full:'Borsa İstanbul',  icon:'🇹🇷',spread:2.00,   decimals:2},
     ]
@@ -4992,7 +5010,7 @@ function mgrTab(id, el) {
 //    listesinde çıkmamasının sebebi buydu. Listeden çıkarıldılar.
 //  • FTSE100X ve XU100X'in hâlâ fiyat kaynağı YOK, gizli bırakıldı.
 var AD_HIDDEN = ['NASUSD','DJUSD','SPXUSD','DAXUSD','WTIUSD',
-  'FTSE100X','XU100X'];
+  'XU100X'];   // FTSE100X 2026-11-02'de yeniden açıldı
 
 // Kullanıcının SİLDİĞİ semboller (tombstone). Tohumlama (_defaults) bunları geri
 // EKLEMEZ → silinen sembol bir süre sonra geri gelmez. localStorage + Firebase'de tutulur.
@@ -6899,6 +6917,7 @@ function _renderAccTable_inner(){
       else if(sc==='eq'){va=a._liveEquity!==undefined?a._liveEquity:getAccBal(a.id);vb=b._liveEquity!==undefined?b._liveEquity:getAccBal(b.id);}
       else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
       else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
+      else if(sc==='pnl'){va=(a._closedPnl||0)+(a._openPnl||0);vb=(b._closedPnl||0)+(b._openPnl||0);}
       else return 0;
       return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
     });
@@ -6934,23 +6953,30 @@ function _renderAccTable_inner(){
   }
   var cols=_accCols;
   var COL_DEFS=[
-    {id:'reg',    label:'Kayıt Tarihi', sort:'reg',  w:'90px',  maxw:'90px'},
+    {id:'reg',    label:'Kayıt',        sort:'reg',  w:'76px',  maxw:'76px'},
     {id:'name',   label:'Ad Soyad',     sort:'name', w:'120px', maxw:'160px', ellipsis:true},
     {id:'email',  label:'E-posta',      sort:null,   w:'140px', maxw:'180px', ellipsis:true},
-    {id:'online', label:'Online',       sort:null,   w:'52px',  maxw:'52px',  align:'center'},
-    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'90px',  maxw:'90px'},
-    {id:'status', label:'Durum',        sort:null,   w:'72px',  maxw:'72px'},
-    {id:'type',   label:'Tip',          sort:null,   w:'48px',  maxw:'48px'},
-    {id:'group',  label:'Grup',         sort:null,   w:'75px',  maxw:'75px'},
-    {id:'balance',label:'Bakiye',       sort:'bal',  w:'105px', maxw:'120px'},
-    {id:'bonus',  label:'Bonus',        sort:null,   w:'85px',  maxw:'100px'},
-    {id:'equity', label:'Varlık',       sort:'eq',   w:'105px', maxw:'120px'}
+    {id:'online', label:'Online',       sort:null,   w:'56px',  maxw:'56px',  align:'center'},
+    {id:'seen',   label:'Son Giriş',    sort:'seen', w:'92px',  maxw:'92px'},
+    {id:'status', label:'Durum',        sort:null,   w:'62px',  maxw:'62px'},
+    {id:'type',   label:'Tip',          sort:null,   w:'46px',  maxw:'46px'},
+    {id:'group',  label:'Grup',         sort:null,   w:'66px',  maxw:'66px'},
+    {id:'balance',label:'Bakiye',       sort:'bal',  w:'92px',  maxw:'110px', align:'right'},
+    {id:'bonus',  label:'Bonus',        sort:null,   w:'66px',  maxw:'90px', align:'right'},
+    {id:'equity', label:'Varlık',       sort:'eq',   w:'92px',  maxw:'110px', align:'right'},
+    {id:'pnl',    label:'K/Z',   sort:'pnl',  w:'122px', maxw:'130px', align:'right'}
   ];
+  // 2026-11-02: kolonlar kullanıcının seçtiği SIRAYLA çizilir (Kolonlar menüsü / başlığı sürükle)
+  var _CD = {}; COL_DEFS.forEach(function(cd){ _CD[cd.id]=cd; });
+  var ORDERED = cols.map(function(id){ return _CD[id]; }).filter(Boolean);
 
   // ── Kolon picker (sabit panel, her zaman DOM'da) ──
-  var pickerItems='';
-  COL_DEFS.forEach(function(cd){
+  var pickerItems='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.4;">Sırayı ▲▼ ile ya da tablo başlığını sürükleyerek değiştir.</div>';
+  ORDERED.concat(COL_DEFS.filter(function(cd){ return cols.indexOf(cd.id)<0; })).forEach(function(cd){
     var on=cols.indexOf(cd.id)>=0;
+    var mv = on ? '<span style="margin-left:auto;display:flex;gap:2px;">'
+      + '<span onclick="event.stopPropagation();_accMoveCol(\''+cd.id+'\',-1)" title="Sola al" style="padding:0 6px;color:var(--muted);">▲</span>'
+      + '<span onclick="event.stopPropagation();_accMoveCol(\''+cd.id+'\',1)" title="Sağa al" style="padding:0 6px;color:var(--muted);">▼</span></span>' : '';
     pickerItems+='<div onclick="_accToggleCol(\''+cd.id+'\','+(!on)+')" style="'
       +'display:flex;align-items:center;gap:10px;padding:7px 10px;cursor:pointer;'
       +'border-radius:6px;background:'+(on?'#2a3a2a':'#2a2a2a')+';margin-bottom:4px;">'
@@ -6959,7 +6985,7 @@ function _renderAccTable_inner(){
         +(on?'<span style="color:#000;font-size:12px;font-weight:900;">✓</span>':'')
       +'</div>'
       +'<span style="color:'+(on?'#eee':'#999')+';font-size:13px;">'+cd.label+'</span>'
-      +'</div>';
+      +mv+'</div>';
   });
 
   var picker='<div id="accColPicker" style="display:none;position:fixed;z-index:99999;'
@@ -7005,17 +7031,23 @@ function _renderAccTable_inner(){
     var arrow='';
     if(sortKey) arrow='<span style="color:'+(sc===sortKey?'#f0b90b':'#444')+';margin-left:3px;">'+(sc===sortKey?(sd==='asc'?'▲':'▼'):'⇅')+'</span>';
     var style='padding:8px 10px;text-align:left;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;background:var(--bg);';
-    if(cd&&cd.w) style+='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
+    if(cd&&cd.w&&!cd.ellipsis) style+='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
+    if(cd&&cd.ellipsis) style+='overflow:hidden;text-overflow:ellipsis;';
     if(cd&&cd.align==='center') style+='text-align:center;';
+    if(cd&&cd.align==='right') style+='text-align:right;';
     if(sortKey) style+='cursor:pointer;user-select:none;';
     var onclick=sortKey?' onclick="_accSortBy(\''+sortKey+'\')"':'';
-    return '<th style="'+style+'"'+onclick+'>'+label+arrow+'</th>';
+    var drag = (cd && cd.id) ? ' draggable="true" data-col="'+cd.id+'" ondragstart="_accDragStart(event)" ondragover="event.preventDefault()" ondrop="_accDrop(event)" title="Sürükleyerek yerini değiştir"' : '';
+    // Sağa hizalı (rakam) sütunlarda sıralama oku başa gelir → başlığın sağ kenarı rakamlarla aynı hizada
+    var _inner = (cd && cd.align==='right') ? (arrow ? arrow.replace('margin-left:3px','margin-right:3px') : '')+label : label+arrow;
+    return '<th style="'+style+'"'+onclick+drag+'>'+_inner+'</th>';
   }
 
   // Başlık satırını ayrı tabloya al
-  var theadHtml = '<tr>'+th('Login','login',null,{w:'75px',maxw:'75px'});
-  COL_DEFS.forEach(function(cd){if(cols.indexOf(cd.id)>=0)theadHtml+=th(cd.label,cd.sort||null,cd);});
-  theadHtml += '</tr>';
+  var theadHtml = th('Login','login',{w:'75px',maxw:'75px'}).replace('<th style="','<th style="border-left:3px solid transparent;');   // satırlardaki online şeridiyle aynı girinti   // 2026-11-02: genişlik 4. parametreye gidiyordu (yok sayılıyordu) → başlık ile satırlar kayıktı
+  ORDERED.forEach(function(cd){ theadHtml+=th(cd.label,cd.sort||null,cd); });
+  // 2026-11-02: theadHtml dışarıda zaten <tr> içine konuyor — burada da <tr> açılıyordu → boş ilk satır,
+  // sabit tablo düzeninde tüm başlıklar eşit genişliğe düşüyor ve satırlarla hizasız kalıyordu.
 
   var tbodyHtml = '';
   if(!rows.length){
@@ -7036,16 +7068,18 @@ function _renderAccTable_inner(){
       var lsMs=a.lastSeen?new Date(a.lastSeen).getTime():0;
       // 2 dakika içinde lastSeen varsa online say
       var isOnline=(a.online===true) && lsMs > 0 && (now-lsMs)<120000;
-      var regDate=a.regDate||a.created?fmtDateShort(a.regDate||a.created):'—';
+      var _dd=function(v,mode){ var d=(typeof _parseDate==='function')?_parseDate(v):new Date(v); if(!d||isNaN(d)) return '—'; var z=function(n){return String(n).padStart(2,'0');};
+        return mode==='d' ? z(d.getDate())+'.'+z(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(2) : z(d.getDate())+'.'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes()); };
+      var regDate=a.regDate||a.created?_dd(a.regDate||a.created,'d'):'—';
       // Son giriş: lastLogin önce, yoksa lastSeen
-      var lastSeen = a.lastLogin ? fmtDateShort(a.lastLogin)
-                   : a.lastSeen  ? fmtDateShort(a.lastSeen) : '—';
+      var lastSeen = a.lastLogin ? _dd(a.lastLogin)
+                   : a.lastSeen  ? _dd(a.lastSeen) : '—';
       var rowCls=rowIdx%2===0?'acc-row-even':'acc-row-odd';
       var TDC='padding:7px 10px;white-space:nowrap;';
       tbodyHtml+='<tr class="acc-row '+rowCls+'" style="cursor:pointer;" data-id="'+a.id+'" onclick="openAccDetail(this.dataset.id)">'
         +'<td style="'+TDC+'color:var(--accent);font-family:var(--sans);font-weight:700;border-left:3px solid '+(isOnline?'#26a69a':'#2a2a2a')+';width:75px;min-width:75px;max-width:75px;overflow:hidden;text-overflow:ellipsis;">#'+(a.login||a.id)+'</td>';
-      COL_DEFS.forEach(function(cd){ var cid=cd.id; if(cols.indexOf(cid)<0) return;
-        var tdW='width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
+      ORDERED.forEach(function(cd){ var cid=cd.id;
+        var tdW=cd.ellipsis ? '' : 'width:'+cd.w+';min-width:'+cd.w+';max-width:'+(cd.maxw||cd.w)+';';
         var ellipsis=cd.ellipsis?'overflow:hidden;text-overflow:ellipsis;':'';
         if(cid==='name'){ tbodyHtml+='<td style="'+TDC+tdW+'font-weight:500;'+ellipsis+'">'+(a._readOnly?''+_adUi('lock',12)+'':'')+a.name+(a.surname?' '+a.surname:'')+'</td>'; return; }
         if(cid==='online') tbodyHtml+='<td style="'+TDC+tdW+'text-align:center;" data-online-id="'+a.id+'">'+(isOnline
@@ -7061,6 +7095,13 @@ function _renderAccTable_inner(){
           var _opnlTxt=(_opnl===0&&!openCnt)?'—':((_opnl>=0?'+':'-')+($=function(v){return '$'+Math.abs(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});})(_opnl));
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--sans);text-align:right;font-weight:700;color:'+_opnlColor+';" data-opnl="'+a.id+'">'+_opnlTxt+'</td>';
         }
+        else if(cid==='pnl'){
+          var _tp=(a._closedPnl||0)+(_accSt?_accSt.openPnl:(a._openPnl||0));
+          var _tpKnown=(a._closedPnl!==undefined);
+          var _tpc=_tp>0?'#26a69a':_tp<0?'#ef5350':'#999999';
+          tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:600;color:'+_tpc+';" title="Toplam K/Z: kapanmış işlemler + açık pozisyonlar">'
+            +(_tpKnown||_tp ? (_tp>=0?'+$':'-$')+Math.abs(_tp).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—')+'</td>';
+        }
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:var(--buy);">● Aktif</span>':'<span style="color:var(--sell);">○ Pasif</span>')+'</td>';
         else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:var(--muted);">'+(a.type==='demo'?'Demo':'Real')+'</td>';
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</td>';
@@ -7073,11 +7114,14 @@ function _renderAccTable_inner(){
   }
 
   // Başlık ayrı div (sabit), gövde ayrı div (scroll)
-  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:var(--bg);border-bottom:2px solid #333;">'
-    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:12px;table-layout:fixed;width:100%;">'
+  // 2026-11-02: başlık ve satır tabloları AYNI kolon genişliklerini kullansın (colgroup) → hizalı.
+  // Ad/E-posta genişliksiz: kalan boşluğu onlar alır, tablo ekrana sığar (yatay kaydırma yok).
+  var _colg = '<colgroup><col style="width:78px">' + ORDERED.map(function(cd){ return cd.ellipsis ? '<col>' : '<col style="width:'+cd.w+'">'; }).join('') + '</colgroup>';
+  var headerDiv = '<div id="accHeaderScroll" style="overflow:hidden;flex-shrink:0;background:var(--bg);border-bottom:2px solid #333;scrollbar-gutter:stable;">'
+    +'<table id="accHeaderTable" style="border-collapse:collapse;font-size:12px;table-layout:fixed;width:100%;">'+_colg
     +'<thead><tr>'+theadHtml+'</tr></thead></table></div>';
-  var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow:auto;">'
-    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:12px;table-layout:fixed;width:100%;">'
+  var bodyDiv = '<div id="accBodyScroll" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;">'
+    +'<table id="accBodyTable" style="border-collapse:collapse;font-size:12px;table-layout:fixed;width:100%;">'+_colg
     +'<tbody>'+tbodyHtml+'</tbody></table></div>';
 
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
@@ -7132,8 +7176,13 @@ function _renderAccTable_inner(){
     window.addEventListener('resize', syncCols);
   }, 30);
 }
+// 2026-11-02: hesabın toplam K/Z'si = kapanmış işlemlerin K/Z toplamı (+ açık K/Z, tabloda eklenir)
+function _adSumClosedPnl(th){
+  var arr = Array.isArray(th) ? th : (typeof th==='string' ? (function(){ try{return JSON.parse(th||'[]');}catch(e){return [];} })() : []);
+  var t=0; arr.forEach(function(h){ t += parseFloat(h && h.pnl)||0; }); return t;
+}
 var _accSort={col:'eq',dir:'desc'};
-var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity',];
+var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','pnl'];
 
 function _accSortBy(col){
   _accSort.dir=_accSort.col===col?(_accSort.dir==='asc'?'desc':'asc'):'desc';
@@ -7146,6 +7195,23 @@ function _accToggleCol(id,show){
   if(show)_accCols.push(id);
   try{localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){}
   renderAccTable();
+}
+function _accSaveCols(){ try{localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){} }
+function _accMoveCol(id,dir){
+  var i=_accCols.indexOf(id), j=i+dir; if(i<0||j<0||j>=_accCols.length) return;
+  var t=_accCols[i]; _accCols[i]=_accCols[j]; _accCols[j]=t;
+  _accSaveCols(); renderAccTable();
+  setTimeout(function(){ var b=document.getElementById('accColBtn'); if(b) _accColPickerToggle({stopPropagation:function(){}}); },0);
+}
+function _accDragStart(e){ try{ e.dataTransfer.setData('text/plain', e.target.closest('th').dataset.col); e.dataTransfer.effectAllowed='move'; }catch(x){} }
+function _accDrop(e){
+  e.preventDefault();
+  var from=''; try{ from=e.dataTransfer.getData('text/plain'); }catch(x){}
+  var thEl=e.target.closest('th'); var to=thEl && thEl.dataset.col;
+  if(!from||!to||from===to) return;
+  var fi=_accCols.indexOf(from), ti=_accCols.indexOf(to); if(fi<0||ti<0) return;
+  _accCols.splice(fi,1); _accCols.splice(ti,0,from);
+  _accSaveCols(); renderAccTable();
 }
 function _accColPickerToggle(e){
   e.stopPropagation();
@@ -10415,6 +10481,7 @@ function _loadAllEquities(cb){
       a._liveEquity=_st2.equity;
       a._openCount=_st2.openCount;
       a._openPnl=_st2.openPnl;
+      if(data && data.tradeHistory!==undefined) a._closedPnl=_adSumClosedPnl(data.tradeHistory);
       done++;
       if(done >= customers.length){ if(cb) cb(); }
     });
@@ -11164,7 +11231,7 @@ function openAccDetail(id){
 
 // Auto-login check
 window.addEventListener('DOMContentLoaded',function(){
-  try{var sc=JSON.parse(localStorage.getItem('tx_acc_cols')||'null');var _validCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open'];if(sc&&Array.isArray(sc))_accCols=sc.filter(function(x){return _validCols.indexOf(x)>=0;});}catch(e){}
+  try{var sc=JSON.parse(localStorage.getItem('tx_acc_cols')||'null');var _validCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','pnl'];if(sc&&Array.isArray(sc)){_accCols=sc.filter(function(x){return _validCols.indexOf(x)>=0;}); if(!localStorage.getItem('tx_acc_cols_v2')){ if(_accCols.indexOf('pnl')<0) _accCols.push('pnl'); try{localStorage.setItem('tx_acc_cols_v2','1');localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){} }}}catch(e){}
   try{
     var saved=JSON.parse(localStorage.getItem('tx_admin_user')||'null');
     if(saved&&saved.role){loginSuccess(saved);return;}
@@ -11645,22 +11712,43 @@ function txSessionIsOpen(sym, symCfg, cfg, nowMs) {
 }
 
 // Varsayılan şablonlar — ayar hiç yoksa admin ilk açılışta bunları yazar
+// ⚠️ 2026-11-02: Piyasa saatleri (TR saati, GMT+3) — Kerme'nin verdiği kapanışlara göre:
+//   DAX (ve diğer Avrupa endeksleri) 00:00–03:00 kapalı · Brent/WTI 01:00–04:00 kapalı
+//   Diğer emtialar + ABD endeksleri 01:00–02:00 kapalı · BIST 18:00–10:00 kapalı
+//   ABD hisseleri 00:00–17:30 kapalı · Forex hafta içi açık · Kripto 7/24
+// Gece yarısını aşan seanslar iki parça yazıldı (ör. Sal: 00:00–01:00 ve 04:00–23:59; Cmt: 00:00–01:00 = Cuma gecesinin devamı).
+// Hafta sonu (Cmt/Paz) tüm şablonlar kapalı (kripto hariç).
 var TX_SESSION_DEFAULTS = {
   defaultTemplate: 'forex',
   holidays: [],
   templates: [
-    { id: 'crypto', name: 'Kripto (7/24)', tz: 3, always: true },
-    { id: 'forex', name: 'Forex / Emtia', tz: 3, days: {
-        1: [['00:00', '23:59']], 2: [['00:00', '23:59']], 3: [['00:00', '23:59']],
-        4: [['00:00', '23:59']], 5: [['00:00', '23:59']] } },
-    { id: 'usidx', name: 'ABD Endeks / Hisse', tz: 3, days: {
-        1: [['16:30', '23:00']], 2: [['16:30', '23:00']], 3: [['16:30', '23:00']],
-        4: [['16:30', '23:00']], 5: [['16:30', '23:00']] } },
-    { id: 'bist', name: 'BIST', tz: 3, days: {
-        1: [['10:00', '18:10']], 2: [['10:00', '18:10']], 3: [['10:00', '18:10']],
-        4: [['10:00', '18:10']], 5: [['10:00', '18:10']] } }
+    { id: 'crypto',  name: 'Kripto (7/24)',              tz: 3, always: true },
+    { id: 'forex',   name: 'Forex',                       tz: 3, days: { 1:[['00:00','23:59']], 2:[['00:00','23:59']], 3:[['00:00','23:59']], 4:[['00:00','23:59']], 5:[['00:00','23:59']] } },
+    { id: 'euidx',   name: 'Avrupa Endeks (DAX/FTSE/CAC)', tz: 3, days: { 1:[['03:00','23:59']], 2:[['03:00','23:59']], 3:[['03:00','23:59']], 4:[['03:00','23:59']], 5:[['03:00','23:59']] } },
+    { id: 'oil',     name: 'Petrol (Brent/WTI)',          tz: 3, days: { 1:[['04:00','23:59']], 2:[['00:00','01:00'],['04:00','23:59']], 3:[['00:00','01:00'],['04:00','23:59']], 4:[['00:00','01:00'],['04:00','23:59']], 5:[['00:00','01:00'],['04:00','23:59']], 6:[['00:00','01:00']] } },
+    { id: 'usidx',   name: 'Emtia + ABD Endeks',          tz: 3, days: { 1:[['02:00','23:59']], 2:[['00:00','01:00'],['02:00','23:59']], 3:[['00:00','01:00'],['02:00','23:59']], 4:[['00:00','01:00'],['02:00','23:59']], 5:[['00:00','01:00'],['02:00','23:59']], 6:[['00:00','01:00']] } },
+    { id: 'bist',    name: 'BIST',                        tz: 3, days: { 1:[['10:00','18:00']], 2:[['10:00','18:00']], 3:[['10:00','18:00']], 4:[['10:00','18:00']], 5:[['10:00','18:00']] } },
+    { id: 'usstock', name: 'ABD Hisse',                   tz: 3, days: { 1:[['17:30','23:59']], 2:[['17:30','23:59']], 3:[['17:30','23:59']], 4:[['17:30','23:59']], 5:[['17:30','23:59']] } }
   ]
 };
+// Hangi sembol hangi şablona (varsayılan yüklenirken otomatik bağlanır)
+var TX_SESSION_SYMMAP = {
+  euidx: ['DAX40X','FTSE100X','FRA40X'],
+  oil:   ['USOIL','BRTUSD','WTIUSD'],
+  usidx: ['NAS100X','SPX500X','DJ30X','DXY','XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','HOIL','SUGAR','COTTON','COFFEE','GAUTRY'],
+  usstock: ['AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA']
+};
+function _sessTplForSym(sc){
+  var sym=String(sc.sym||'').toUpperCase();
+  var ks=Object.keys(TX_SESSION_SYMMAP);
+  for(var i=0;i<ks.length;i++){ if(TX_SESSION_SYMMAP[ks[i]].indexOf(sym)>=0) return ks[i]; }
+  if(sym==='XU100X' || (typeof _sessCatOf==='function' && _sessCatOf(sc)==='bist')) return 'bist';
+  if(/USDT$|USDC$/.test(sym) || sc.category==='crypto') return 'crypto';
+  if(sc.category==='stock') return 'usstock';
+  if(sc.category==='commodity') return 'usidx';
+  if(sc.category==='index') return 'euidx';
+  return 'forex';
+}
 
 // ══════════════════════════════════════════════════════════════
 // SEANS YÖNETİMİ (admin) — 2026-08-19
@@ -11862,10 +11950,22 @@ function sessSetHol(hi,key,val){
   sessTouch();
 }
 function sessResetDefaults(){
-  if(!confirm('Varsayılan şablonlar (Kripto / Forex / ABD Endeks / BIST) yüklensin mi? Mevcut şablonların üzerine yazılır.')) return;
+  if(!confirm('Standart piyasa saatleri yüklensin mi?\n\n• Forex: hafta içi açık\n• DAX/FTSE/CAC: 00:00–03:00 kapalı\n• Brent/WTI: 01:00–04:00 kapalı\n• Diğer emtia + ABD endeks: 01:00–02:00 kapalı\n• BIST: 18:00–10:00 kapalı\n• ABD hisse: 00:00–17:30 kapalı\n• Kripto: 7/24\n\nMevcut şablonların yerine geçer, TÜM semboller otomatik bağlanır ve kaydedilir. Tatil günleri korunur.')) return;
+  var oldHol = (_sessCfg && Array.isArray(_sessCfg.holidays)) ? _sessCfg.holidays : [];
   _sessCfg = JSON.parse(JSON.stringify(TX_SESSION_DEFAULTS));
-  sessTouch(); sessRender();
-  showAdminToast('Yüklendi','Kaydet\'e basmayı unutma','info');
+  // Tatilleri koru; eski şablon kodları (örn. "BİST") yenisine eşlensin
+  _sessCfg.holidays = oldHol.map(function(h){
+    var t = (h.templates||[]).map(function(id){ return /b[iİı]st/i.test(id) ? 'bist' : id; })
+      .filter(function(id){ return TX_SESSION_DEFAULTS.templates.some(function(x){ return x.id===id; }); });
+    return Object.assign({}, h, {templates: t.length ? t : ((h.templates||[]).length ? ['bist'] : [])});
+  });
+  // Tüm sembolleri şablonlarına bağla
+  var n=0;
+  (symConfig||[]).forEach(function(sc){ var t=_sessTplForSym(sc); if(sc.sessionId!==t){ sc.sessionId=t; n++; } });
+  if(n) saveSymConfig();
+  sessRender();
+  sessSave();
+  showAdminToast('Yüklendi', 'Piyasa saatleri kaydedildi, '+n+' sembol şablonuna bağlandı', 'success');
 }
 function sessSave(){
   var ids={}, bad=null;
@@ -12256,7 +12356,7 @@ function _adQuoteToUsd(sym, amount) {
   // ve TL tutarın ın USD gibi gösterilmesine yol açıyordu.
   sym = String(sym).toUpperCase().trim().split('.')[0].split('#')[0].split(':')[0];
   if(sym.endsWith('USDT') || sym.endsWith('USDC')) return amount;
-  var _USD_C = ['SUGAR','COTTON','HOIL','COFFEE','SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
+  var _USD_C = ['FRA40X','SUGAR','COTTON','HOIL','COFFEE','SPX500X','NAS100X','DJ30X','USOIL','BRTUSD',
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
     // ⚠️ 2026-08-06: XPDUSD + ABD hisseleri eksikti — symConfig'te category:'stock'
     // oldukları için admin bunları TL bazlı sanıp K/Z'yi ~USDTRY katı KÜÇÜK gösteriyordu.
@@ -12303,6 +12403,7 @@ function _adQuoteToUsd(sym, amount) {
   else if(quoteCur==='PLN') conv = _g('USDPLN') > 0 ? 1/_g('USDPLN') : 1/3.83;
   else if(quoteCur==='SEK') conv = _g('USDSEK') > 0 ? 1/_g('USDSEK') : 1/9.85;
   else if(quoteCur==='NOK') conv = _g('USDNOK') > 0 ? 1/_g('USDNOK') : 1/10.48;
+  else if(quoteCur==='DKK') conv = _g('USDDKK') > 0 ? 1/_g('USDDKK') : 1/6.45;   // 2026-11-02 EURDKK
   else if(quoteCur==='GBP') conv = _g('GBPUSD') > 0 ? _g('GBPUSD') : 1.34;
   else if(quoteCur==='EUR') conv = _g('EURUSD') > 0 ? _g('EURUSD') : 1.16;
   else if(quoteCur==='AUD') conv = _g('AUDUSD') > 0 ? _g('AUDUSD') : 0.71;
