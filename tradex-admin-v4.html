@@ -4723,6 +4723,7 @@ var MARKET_GROUPS = [
       {sym:'USOIL',   name:'WTI/USD',   full:'Ham Petrol (WTI)', icon:'🛢', spread:0.03,   decimals:2},
       {sym:'BRTUSD',  name:'BRENT',     full:'Brent Petrol',     icon:'⛽', spread:0.03,   decimals:2},
       {sym:'NGAS',    name:'NAT GAS',   full:'Doğal Gaz',        icon:'🔥', spread:0.005,  decimals:3},
+      {sym:'RBOB',    name:'RBOB',     full:'RBOB Benzin',             icon:'', spread:0.005,  decimals:4},   // 2026-11-03 Capital.com
     ]
   },
   {
@@ -11798,9 +11799,10 @@ var TX_SESSION_DEFAULTS = {
 // Hangi sembol hangi şablona (varsayılan yüklenirken otomatik bağlanır)
 var TX_SESSION_SYMMAP = {
   euidx: ['DAX40X','FTSE100X','FRA40X'],
-  oil:   ['USOIL','BRTUSD','WTIUSD'],
-  usidx: ['NAS100X','SPX500X','DJ30X','DXY','XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','HOIL','SUGAR','COTTON','COFFEE','GAUTRY'],
-  usstock: ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN']
+  oil:   ['USOIL','BRTUSD','WTIUSD','RBOB','BRENT','UKOIL','XBRUSD','BRENTOIL','WTI','USOUSD','CRUDE','CRUDEOIL','XTIUSD','GASOLINE','RBOBUSD'],
+  usidx: ['NAS100X','SPX500X','DJ30X','DXY','XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','HOIL','SUGAR','COTTON','COFFEE','GAUTRY','PALLADIUM','PLATINUM','GOLD','SILVER','NATGAS','NATURALGAS'],
+  usstock: ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN',
+    'APPLE','TESLA','AMAZON','GOOGLE','GOOG','ALPHABET','NVIDIA','NETFLIX','MICROSOFT','FACEBOOK','BOEING','WALMART','INTEL','ORACLE','DISNEY','NIKE','COCACOLA','PEPSI','PEPSICO','MCDONALDS','VISA','MASTERCARD','JPMORGAN','EXXON','COINBASE','PALANTIR','SALESFORCE','ADOBE','BROADCOM','COSTCO','BOFA']
 };
 function _sessTplForSym(sc){
   var sym=String(sc.sym||'').toUpperCase();
@@ -12428,7 +12430,9 @@ function _adQuoteToUsd(sym, amount) {
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
     // ⚠️ 2026-08-06: XPDUSD + ABD hisseleri eksikti — symConfig'te category:'stock'
     // oldukları için admin bunları TL bazlı sanıp K/Z'yi ~USDTRY katı KÜÇÜK gösteriyordu.
-    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN'];
+    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN',
+    // 2026-11-03: takma ad kodları + RBOB (dolar bazlı)
+    'BRENT','UKOIL','XBRUSD','BRENTOIL','WTI','WTIUSD','USOUSD','CRUDE','CRUDEOIL','XTIUSD','PALLADIUM','PLATINUM','GOLD','SILVER','NATGAS','NATURALGAS','GASOLINE','RBOBUSD','APPLE','TESLA','AMAZON','GOOGLE','GOOG','ALPHABET','NVIDIA','NETFLIX','MICROSOFT','FACEBOOK','BOEING','WALMART','INTEL','ORACLE','DISNEY','NIKE','COCACOLA','PEPSI','PEPSICO','MCDONALDS','VISA','MASTERCARD','JPMORGAN','EXXON','COINBASE','PALANTIR','SALESFORCE','ADOBE','BROADCOM','COSTCO','BOFA','RBOB'];
   if(_USD_C.indexOf(sym) >= 0) return amount;
   var quoteCur = '';
   if(sym === 'XU100X') quoteCur = 'TRY';
