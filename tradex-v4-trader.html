@@ -14,13 +14,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Trade Academy">
-  <meta name="application-name" content="Trade Academy">
+  <meta name="apple-mobile-web-app-title" content="XTech Terminal">
+  <meta name="application-name" content="XTech Terminal">
   <meta name="theme-color" content="#101317">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<title>Trade Academy</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>XTech Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1837,13 +1837,13 @@ function _txClearPasswordChangedSession() {
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyAfBaM-Oqa4L9dYNCsl6KBhzA-yVPPjmyA",
-      authDomain: "tradex-4571e.firebaseapp.com",
-      projectId: "tradex-4571e",
-      storageBucket: "tradex-4571e.firebasestorage.app",
-      messagingSenderId: "66853453105",
-      appId: "1:66853453105:web:df85eda2cad5d4ce204410",
-      databaseURL: "https://tradex-4571e-default-rtdb.europe-west1.firebasedatabase.app"
+      apiKey: "AIzaSyDgHNK6_EJitJnicy38K3ey6LPNJgE_59U",
+      authDomain: "xtechterminaldemo.firebaseapp.com",
+      projectId: "xtechterminaldemo",
+      storageBucket: "xtechterminaldemo.firebasestorage.app",
+      messagingSenderId: "164476321956",
+      appId: "1:164476321956:web:91564eabd1f2fe46eae631",
+      databaseURL: "https://xtechterminaldemo-default-rtdb.europe-west1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
@@ -2161,10 +2161,11 @@ function _txClearPasswordChangedSession() {
 </head>
 <body>
 
+<div id="txDemoBar" role="status" aria-live="polite"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.5"/></svg><span><b>TEST ORTAMI</b> · Gerçek hesap değildir</span></div>
 <div id="appWrap">
 <!-- TOP BAR -->
 <div class="topbar">
-  <div class="tb-logo" style="padding:0 14px;display:flex;align-items:center"><svg class="ta-logo" style="height:26px;width:auto;display:block" viewBox="0 0 316 64" preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trade Academy"><image href="data:image/png;base64,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" x="0" y="9" width="61" height="46"/><text x="74" y="41" textLength="84" lengthAdjust="spacingAndGlyphs" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="27" font-weight="700" fill="currentColor">TRADE</text><text x="170" y="41" textLength="140" lengthAdjust="spacingAndGlyphs" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="27" font-weight="400" fill="currentColor" opacity="0.92">ACADEMY</text></svg></div>
+  <div class="tb-logo" style="padding:0 14px"><svg style="height:28px;width:auto;display:inline-block;vertical-align:middle" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64"> <g transform="translate(4,12)"> <line x1="20" y1="3" x2="20" y2="37" stroke="#D4A64C" stroke-width="1.6" stroke-linecap="round" transform="rotate(45 20 20)"/> <rect x="17" y="6" width="6" height="28" rx="2" fill="#D4A64C" transform="rotate(45 20 20)"/> <line x1="20" y1="3" x2="20" y2="37" stroke="#3FA372" stroke-width="1.6" stroke-linecap="round" transform="rotate(-45 20 20)"/> <rect x="17" y="6" width="6" height="28" rx="2" fill="#3FA372" transform="rotate(-45 20 20)"/> </g> <text x="60" y="42" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="30" letter-spacing="-0.5" fill="#E9ECF2">XTechTerminal</text> </svg></div>
   <div class="tb-sym-list" id="symList" style="display:none"></div>
   
   <div class="tb-right">
@@ -2593,7 +2594,7 @@ function _txClearPasswordChangedSession() {
   
   <!-- Tabs -->
   <div style="padding:24px 28px 0">
-    <div style="text-align:center;margin-bottom:10px"><svg class="ta-logo" style="width:100%;max-width:240px;height:auto;display:inline-block" viewBox="0 0 316 64" preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trade Academy"><image href="data:image/png;base64,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" x="0" y="9" width="61" height="46"/><text x="74" y="41" textLength="84" lengthAdjust="spacingAndGlyphs" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="27" font-weight="700" fill="currentColor">TRADE</text><text x="170" y="41" textLength="140" lengthAdjust="spacingAndGlyphs" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="27" font-weight="400" fill="currentColor" opacity="0.92">ACADEMY</text></svg></div>
+    <div style="text-align:center;margin-bottom:4px"><svg style="width:100%;max-width:260px;height:auto;display:inline-block;vertical-align:middle" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64"> <g transform="translate(4,12)"> <line x1="20" y1="3" x2="20" y2="37" stroke="#D4A64C" stroke-width="1.6" stroke-linecap="round" transform="rotate(45 20 20)"/> <rect x="17" y="6" width="6" height="28" rx="2" fill="#D4A64C" transform="rotate(45 20 20)"/> <line x1="20" y1="3" x2="20" y2="37" stroke="#3FA372" stroke-width="1.6" stroke-linecap="round" transform="rotate(-45 20 20)"/> <rect x="17" y="6" width="6" height="28" rx="2" fill="#3FA372" transform="rotate(-45 20 20)"/> </g> <text x="60" y="42" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="30" letter-spacing="-0.5" fill="#E9ECF2">XTechTerminal</text> </svg></div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--text);text-align:center;letter-spacing:2px;margin-bottom:20px">PROFESSIONAL TRADING TERMINAL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
       <div id="tab-login" onclick="_authShow('login')" style="padding:10px;text-align:center;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer" data-lang="loginTab">GİRİŞ YAP</div>
@@ -4440,8 +4441,10 @@ function _txSlTpTick(){
     var pend = (typeof ordType!=='undefined' && ordType && ordType!=='market');
     [['ordSLInfo','ordSL','sl','ordQty','limitPrice'],['ordTPInfo','ordTP','tp','ordQty','limitPrice'],
      ['mSLInfo','mSL','sl','mLI','mLimitPrice'],['mTPInfo','mTP','tp','mLI','mLimitPrice']].forEach(function(r){
-      var box = document.getElementById(r[0]); if(!box || !box.offsetParent) return;
-      var lvl = parseFloat((document.getElementById(r[1])||{}).value);
+      // Not: kutu boşken CSS ile gizli — görünürlüğü kutuya değil GİRİŞ alanına göre kontrol et
+      var box = document.getElementById(r[0]); var inpEl = document.getElementById(r[1]);
+      if(!box || !inpEl || !inpEl.offsetParent) return;
+      var lvl = parseFloat(inpEl.value);
       var lot = parseFloat((document.getElementById(r[3])||{}).value) || 0.01;
       var lp  = pend ? parseFloat((document.getElementById(r[4])||{}).value) : 0;
       var c = _txSlTpCalc(r[2], lvl, lot, lp);
@@ -5646,7 +5649,7 @@ function checkAlarms(sym, price) {
     if (hit) {
       triggered.add(a.id); a.active=false; saveAlarms(); renderAlarms();
       showToast(`${s} ALARM!`, `$${fp(price)} → hedef $${a.target}`);
-      if (Notification.permission==='granted') new Notification(`Trade Academy: ${s}`,{body:`$${fp(price)}`});
+      if (Notification.permission==='granted') new Notification(`XTech Terminal: ${s}`,{body:`$${fp(price)}`});
     }
   });
 }
@@ -9363,7 +9366,7 @@ function symUnpin(sym){
   /* ── Ortak panel stili ── */
   .m-pan {
     position: fixed;
-    top: 44px; left: 0; right: 0; bottom: 62px;
+    top: calc(44px + var(--demo-h, 0px)); left: 0; right: 0; bottom: 62px;
     background: var(--bg);
     z-index: 7000;
     flex-direction: column;
@@ -9719,6 +9722,32 @@ function symUnpin(sym){
     a:focus-visible, button:focus-visible, select:focus-visible,
     input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
       outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px;
+    }
+
+  
+    /* ══════════════════════════════════════════════════════════════
+       TEST ORTAMI ŞERİDİ — YALNIZ XTECH (2026-09-29)
+       Demo platformu olduğu için her ekranda görünür bir uyarı.
+       Sabit konumda; uygulama gövdesi (#appWrap) ve mobil paneller
+       (.m-pan) --demo-h kadar aşağı kaydırılıyor ki hiçbir şeyin
+       üstüne binmesin. Modal/perde katmanlarının ALTINDA kalır.
+       ══════════════════════════════════════════════════════════════ */
+    :root { --demo-h: 26px; }
+    #appWrap { padding-top: var(--demo-h); box-sizing: border-box; }
+    #txDemoBar {
+      position: fixed; left: 0; right: 0; top: var(--safe-top, 0px);
+      height: var(--demo-h); z-index: 7500;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: repeating-linear-gradient(135deg, #3a2e00 0 12px, #332800 12px 24px);
+      border-bottom: 1px solid rgba(240,185,11,.45);
+      color: #f5c518; font-family: var(--sans); font-size: 12px; font-weight: 600;
+      letter-spacing: .02em; white-space: nowrap; overflow: hidden;
+      user-select: none; pointer-events: none;
+    }
+    #txDemoBar b { font-weight: 800; letter-spacing: .06em; }
+    html[data-theme="light"] #txDemoBar {
+      background: repeating-linear-gradient(135deg, #fff4cc 0 12px, #ffefb8 12px 24px);
+      color: #7a5a00; border-bottom-color: rgba(154,107,16,.4);
     }
 
   </style>
@@ -11603,7 +11632,7 @@ function txPrompt(opts){
 (function(){
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('/sw.js').catch(function(e){
+      navigator.serviceWorker.register('sw.js').catch(function(e){
         console.warn('[pwa] servis çalışanı kaydedilemedi:', e && e.message);
       });
     });
