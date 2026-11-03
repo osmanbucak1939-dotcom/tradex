@@ -4745,14 +4745,36 @@ var MARKET_GROUPS = [
     // ⚠️ 2026-08-19: Boştu — köprü bu 8 hisseyi besliyor ama katalogda
     // tanımlı olmadıkları için içe aktarılamıyorlardı.
     items:[
-      {sym:'AAPL',  name:'AAPL',  full:'Apple Inc.',        icon:'', spread:0.05, decimals:2},
-      {sym:'TSLA',  name:'TSLA',  full:'Tesla Inc.',        icon:'', spread:0.08, decimals:2},
-      {sym:'AMZN',  name:'AMZN',  full:'Amazon.com Inc.',   icon:'', spread:0.06, decimals:2},
+      {sym:'AAPL', name:'AAPL', full:'Apple Inc.', icon:'', spread:0.05, decimals:2},
+      {sym:'MSFT', name:'MSFT', full:'Microsoft Corp.', icon:'', spread:0.08, decimals:2},
+      {sym:'NVDA', name:'NVDA', full:'NVIDIA Corp.', icon:'', spread:0.06, decimals:2},
+      {sym:'AMZN', name:'AMZN', full:'Amazon.com Inc.', icon:'', spread:0.06, decimals:2},
       {sym:'GOOGL', name:'GOOGL', full:'Alphabet Inc. (A)', icon:'', spread:0.06, decimals:2},
-      {sym:'NVDA',  name:'NVDA',  full:'NVIDIA Corp.',      icon:'', spread:0.06, decimals:2},
-      {sym:'NFLX',  name:'NFLX',  full:'Netflix Inc.',      icon:'', spread:0.12, decimals:2},
-      {sym:'WMT',   name:'WMT',   full:'Walmart Inc.',      icon:'', spread:0.05, decimals:2},
-      {sym:'BA',    name:'BA',    full:'Boeing Co.',        icon:'', spread:0.08, decimals:2},
+      {sym:'META', name:'META', full:'Meta Platforms Inc.', icon:'', spread:0.12, decimals:2},
+      {sym:'TSLA', name:'TSLA', full:'Tesla Inc.', icon:'', spread:0.08, decimals:2},
+      {sym:'AVGO', name:'AVGO', full:'Broadcom Inc.', icon:'', spread:0.12, decimals:2},
+      {sym:'NFLX', name:'NFLX', full:'Netflix Inc.', icon:'', spread:0.12, decimals:2},
+      {sym:'AMD', name:'AMD', full:'Advanced Micro Devices', icon:'', spread:0.06, decimals:2},
+      {sym:'INTC', name:'INTC', full:'Intel Corp.', icon:'', spread:0.03, decimals:2},
+      {sym:'ORCL', name:'ORCL', full:'Oracle Corp.', icon:'', spread:0.08, decimals:2},
+      {sym:'CRM', name:'CRM', full:'Salesforce Inc.', icon:'', spread:0.1, decimals:2},
+      {sym:'ADBE', name:'ADBE', full:'Adobe Inc.', icon:'', spread:0.12, decimals:2},
+      {sym:'PLTR', name:'PLTR', full:'Palantir Technologies', icon:'', spread:0.05, decimals:2},
+      {sym:'JPM', name:'JPM', full:'JPMorgan Chase & Co.', icon:'', spread:0.08, decimals:2},
+      {sym:'V', name:'V', full:'Visa Inc.', icon:'', spread:0.08, decimals:2},
+      {sym:'MA', name:'MA', full:'Mastercard Inc.', icon:'', spread:0.12, decimals:2},
+      {sym:'BAC', name:'BAC', full:'Bank of America Corp.', icon:'', spread:0.03, decimals:2},
+      {sym:'WMT', name:'WMT', full:'Walmart Inc.', icon:'', spread:0.05, decimals:2},
+      {sym:'COST', name:'COST', full:'Costco Wholesale Corp.', icon:'', spread:0.2, decimals:2},
+      {sym:'KO', name:'KO', full:'Coca-Cola Co.', icon:'', spread:0.03, decimals:2},
+      {sym:'PEP', name:'PEP', full:'PepsiCo Inc.', icon:'', spread:0.05, decimals:2},
+      {sym:'MCD', name:'MCD', full:'McDonald\'s Corp.', icon:'', spread:0.08, decimals:2},
+      {sym:'DIS', name:'DIS', full:'Walt Disney Co.', icon:'', spread:0.05, decimals:2},
+      {sym:'NKE', name:'NKE', full:'Nike Inc.', icon:'', spread:0.04, decimals:2},
+      {sym:'BA', name:'BA', full:'Boeing Co.', icon:'', spread:0.08, decimals:2},
+      {sym:'XOM', name:'XOM', full:'Exxon Mobil Corp.', icon:'', spread:0.05, decimals:2},
+      {sym:'UBER', name:'UBER', full:'Uber Technologies Inc.', icon:'', spread:0.04, decimals:2},
+      {sym:'COIN', name:'COIN', full:'Coinbase Global Inc.', icon:'', spread:0.1, decimals:2},
     ]   // Hisseler "Sembol Ekle" ile category:'stock' seçilince buraya eklenir
   },
   {
@@ -4933,8 +4955,20 @@ function saveSymConfig(){
   try{ localStorage.setItem('tx_deleted', JSON.stringify(_txDeleted)); }catch(e){}
   // Firebase'e yaz
   if(typeof db!=='undefined'&&db){
-    db.collection('broker').doc('symbols').set({data:JSON.stringify(symConfig),deleted:JSON.stringify(_txDeleted),_ts:Date.now()},{merge:true})
-      .catch(function(e){console.warn('saveSymConfig FB err:',e);});
+    // ⚠️ 2026-11-03: Eski bir sekme/cihazdaki sembol listesi kaydedilince piyasa saati bağları
+    // (sessionId) siliniyordu → o platformda piyasalar hiç kapanmıyordu. Kaydetmeden önce
+    // sunucudaki listeye bakılır; yerelde bağı olmayan sembolün sunucudaki bağı korunur.
+    var _symRef = db.collection('broker').doc('symbols');
+    _symRef.get().then(function(doc){
+      try{
+        var srv = JSON.parse(((doc.exists && doc.data()) || {}).data || '[]');
+        var m = {}; (Array.isArray(srv)?srv:[]).forEach(function(x){ if(x && x.sym && x.sessionId) m[x.sym]=x.sessionId; });
+        symConfig.forEach(function(x){ if(x && !x.sessionId && m[x.sym]) x.sessionId = m[x.sym]; });
+        localStorage.setItem('tx_syms', JSON.stringify(symConfig));
+      }catch(e){}
+    }).catch(function(){}).then(function(){
+      return _symRef.set({data:JSON.stringify(symConfig),deleted:JSON.stringify(_txDeleted),_ts:Date.now()},{merge:true});
+    }).catch(function(e){console.warn('saveSymConfig FB err:',e);});
   }
 }
 
@@ -5079,6 +5113,7 @@ function _adLoadSymbolsFromFb(){
 // (Sistemin sabit listesindeki semboller admin'de görünmüyordu çünkü symConfig'e
 //  hiç girmemişlerdi. Bu, onları symConfig'e ekleyip Firebase'e kaydeder → admin'de
 //  düzenlenebilir/silinebilir olur. AD_HIDDEN'dakiler hariç tutulur.)
+function _txUsStock(sym){ return ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN'].indexOf(sym) >= 0; }
 function txImportMarketGroups(){
   if(typeof MARKET_GROUPS==='undefined' || !Array.isArray(MARKET_GROUPS)){
     _txTdToast('Hata','MARKET_GROUPS bulunamadı','danger'); return;
@@ -5105,8 +5140,11 @@ function txImportMarketGroups(){
         // genel varsayılana (1) düşüyordu — bu, K/Z hesabını 1000 kat küçük
         // gösteriyordu (gerçek: 13 TL fark, 0.1 lot'ta $27 olması gerekirken
         // $2.70 görünüyordu — 1000 yerine contractSize=1 kullanılmasından).
-        contractSize: (cat==='forex') ? 100000 : ((cat==='bist'||cat==='stock') ? 1000 : 1),
-        margin: (cat==='forex') ? 2 : 1,
+        // 2026-11-03: ABD hisseleri 1 lot = 1 hisse (K/Z USD) — BIST'teki 1000 çarpanı uygulanmaz
+        contractSize: (cat==='forex') ? 100000 : ((cat==='bist'||cat==='stock') ? (_txUsStock(it.sym) ? 1 : 1000) : 1),
+        // ⚠️ 2026-11-03: forex 2 alıyordu → Marj % 2 = kaldıraç 1:50 ile sınırlanıyordu (1:200 hesapta 4 kat teminat).
+        // Elle eklemedeki varsayılanla aynı: 1 (sınır yok, hesabın kaldıracı geçerli).
+        margin: 1,
         decimals: parseInt(it.decimals)||2,
         category: cat,
         priceSource:'', priceOffset:0, priceFactor:1
@@ -6918,6 +6956,7 @@ function _renderAccTable_inner(){
       else if(sc==='reg'){va=new Date(a.regDate||a.created||0).getTime();vb=new Date(b.regDate||b.created||0).getTime();}
       else if(sc==='seen'){va=new Date(a.lastSeen||0).getTime();vb=new Date(b.lastSeen||0).getTime();}
       else if(sc==='pnl'){va=(a._closedPnl||0)+(a._openPnl||0);vb=(b._closedPnl||0)+(b._openPnl||0);}
+      else if(sc==='ml'){va=(a._ml!=null?a._ml:1e12);vb=(b._ml!=null?b._ml:1e12);}
       else return 0;
       return sd==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
     });
@@ -6964,7 +7003,10 @@ function _renderAccTable_inner(){
     {id:'balance',label:'Bakiye',       sort:'bal',  w:'92px',  maxw:'110px', align:'right'},
     {id:'bonus',  label:'Bonus',        sort:null,   w:'66px',  maxw:'90px', align:'right'},
     {id:'equity', label:'Varlık',       sort:'eq',   w:'92px',  maxw:'110px', align:'right'},
-    {id:'pnl',    label:'K/Z',   sort:'pnl',  w:'122px', maxw:'130px', align:'right'}
+    {id:'pnl',    label:'K/Z',   sort:'pnl',  w:'122px', maxw:'130px', align:'right'},
+    // 2026-11-03: teminat seviyesi (varlık ÷ kullanılan teminat). Grubun stop-out seviyesine
+    // yaklaştıkça renk: kırmızı ≤ stop-out, turuncu ≤ margin call, yeşil üstü. Açık pozisyon yoksa —
+    {id:'ml',     label:'Teminat %',    sort:'ml',   w:'90px',  maxw:'100px', align:'right'}
   ];
   // 2026-11-02: kolonlar kullanıcının seçtiği SIRAYLA çizilir (Kolonlar menüsü / başlığı sürükle)
   var _CD = {}; COL_DEFS.forEach(function(cd){ _CD[cd.id]=cd; });
@@ -6988,7 +7030,7 @@ function _renderAccTable_inner(){
       +mv+'</div>';
   });
 
-  var picker='<div id="accColPicker" style="display:none;position:fixed;z-index:99999;'
+  var picker='<div id="accColPicker" onclick="event.stopPropagation()" style="display:none;position:fixed;z-index:99999;'
     +'background:var(--panel);border:1px solid #444;border-radius:10px;padding:12px;'
     +'min-width:200px;box-shadow:0 16px 48px rgba(0,0,0,0.95);">'
     +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--sans);'
@@ -7061,7 +7103,7 @@ function _renderAccTable_inner(){
       // adCalcStats ile her zaman hesapla - fiyat varsa doğru, yoksa balance+bonus
       var _accSt = (typeof adCalcStats==='function') ? adCalcStats(a, _accPoses) : null;
       var liveEq = _accSt ? _accSt.equity : (getAccBal(a.id)+getAccBonus(a.id));
-      if(_accSt){ a._liveEquity=_accSt.equity; a._openPnl=_accSt.openPnl; a._openCount=_accSt.openCount; }
+      if(_accSt){ a._liveEquity=_accSt.equity; a._openPnl=_accSt.openPnl; a._openCount=_accSt.openCount; a._ml=_accSt.marginLvl; }
       var eqColor = liveEq>=getAccBal(a.id)?'#26a69a':'#ef5350';
       var eq=(liveEq<0?'-$':'$')+Math.abs(liveEq).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
       var bon=getAccBonus(a.id).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -7102,6 +7144,14 @@ function _renderAccTable_inner(){
           tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:600;color:'+_tpc+';" title="Toplam K/Z: kapanmış işlemler + açık pozisyonlar">'
             +(_tpKnown||_tp ? (_tp>=0?'+$':'-$')+Math.abs(_tp).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—')+'</td>';
         }
+        else if(cid==='ml'){
+          var _ml = _accSt ? _accSt.marginLvl : null;
+          var _g = (typeof tradingGroups!=='undefined' && Array.isArray(tradingGroups)) ? tradingGroups.find(function(g){ return g && g.id===(a.spreadGroup||'standard'); }) : null;
+          var _so = _g ? (parseFloat(_g.stopOut)||20) : 20, _mc = _g ? (parseFloat(_g.marginCall)||(_so*2)) : 50;
+          var _mlc = _ml==null ? '#666' : (_ml<=_so ? '#ef5350' : (_ml<=_mc ? '#f0a020' : '#26a69a'));
+          var _mlt = _ml==null ? '—' : (_ml>=100000 ? '>99.999%' : _ml.toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:_ml<1000?1:0})+'%');
+          tbodyHtml+='<td style="'+TDC+tdW+'font-family:var(--mono);text-align:right;font-weight:600;color:'+_mlc+';" title="Teminat seviyesi — stop-out: %'+_so+', margin call: %'+_mc+'">'+_mlt+'</td>';
+        }
         else if(cid==='status')  tbodyHtml+='<td style="'+TDC+tdW+'">'+(a.active?'<span style="color:var(--buy);">● Aktif</span>':'<span style="color:var(--sell);">○ Pasif</span>')+'</td>';
         else if(cid==='type')    tbodyHtml+='<td style="'+TDC+tdW+'color:var(--muted);">'+(a.type==='demo'?'Demo':'Real')+'</td>';
         else if(cid==='group')   tbodyHtml+='<td style="'+TDC+tdW+'">'+(SG[a.spreadGroup||'standard']||a.spreadGroup||'Standard')+'</td>';
@@ -7126,6 +7176,9 @@ function _renderAccTable_inner(){
 
   container.style.cssText='flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;';
   container.innerHTML='<div style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">'+bar+headerDiv+bodyDiv+'</div>';
+  // 2026-11-03: tablo birkaç saniyede bir yeniden çiziliyor (canlı fiyat) → Kolonlar penceresi
+  // kendiliğinden kapanıyordu. Açıksa yeniden çizimden sonra aynı yerde tekrar gösterilir.
+  if(window._accPickerOpen) _accPickerShow();
 
   // Odağı (ve mümkünse imleç konumunu) geri yükle — yeniden çizimden hemen sonra,
   // aynı id'li yeni element üzerinde. requestAnimationFrame, DOM'un yerleşmesini garanti eder.
@@ -7182,7 +7235,7 @@ function _adSumClosedPnl(th){
   var t=0; arr.forEach(function(h){ t += parseFloat(h && h.pnl)||0; }); return t;
 }
 var _accSort={col:'eq',dir:'desc'};
-var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','pnl'];
+var _accCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','ml','pnl'];
 
 function _accSortBy(col){
   _accSort.dir=_accSort.col===col?(_accSort.dir==='asc'?'desc':'asc'):'desc';
@@ -7200,8 +7253,7 @@ function _accSaveCols(){ try{localStorage.setItem('tx_acc_cols',JSON.stringify(_
 function _accMoveCol(id,dir){
   var i=_accCols.indexOf(id), j=i+dir; if(i<0||j<0||j>=_accCols.length) return;
   var t=_accCols[i]; _accCols[i]=_accCols[j]; _accCols[j]=t;
-  _accSaveCols(); renderAccTable();
-  setTimeout(function(){ var b=document.getElementById('accColBtn'); if(b) _accColPickerToggle({stopPropagation:function(){}}); },0);
+  _accSaveCols(); renderAccTable();   // pencere açık kalır (_accPickerOpen)
 }
 function _accDragStart(e){ try{ e.dataTransfer.setData('text/plain', e.target.closest('th').dataset.col); e.dataTransfer.effectAllowed='move'; }catch(x){} }
 function _accDrop(e){
@@ -7217,7 +7269,13 @@ function _accColPickerToggle(e){
   e.stopPropagation();
   var p=document.getElementById('accColPicker');
   if(!p)return;
-  if(p.style.display==='block'){p.style.display='none';return;}
+  if(p.style.display==='block'){p.style.display='none';window._accPickerOpen=false;return;}
+  window._accPickerOpen=true;
+  _accPickerShow();
+}
+function _accPickerShow(){
+  var p=document.getElementById('accColPicker');
+  if(!p)return;
   var btn=document.getElementById('accColBtn');
   var rect=btn?btn.getBoundingClientRect():{right:window.innerWidth-20,bottom:60};
   p.style.top=(rect.bottom+6)+'px';
@@ -7228,6 +7286,7 @@ function _accColPickerToggle(e){
 document.addEventListener('click',function(){
   var p=document.getElementById('accColPicker');
   if(p&&p.style.display==='block')p.style.display='none';
+  window._accPickerOpen=false;
 });
 
 
@@ -11231,7 +11290,10 @@ function openAccDetail(id){
 
 // Auto-login check
 window.addEventListener('DOMContentLoaded',function(){
-  try{var sc=JSON.parse(localStorage.getItem('tx_acc_cols')||'null');var _validCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','pnl'];if(sc&&Array.isArray(sc)){_accCols=sc.filter(function(x){return _validCols.indexOf(x)>=0;}); if(!localStorage.getItem('tx_acc_cols_v2')){ if(_accCols.indexOf('pnl')<0) _accCols.push('pnl'); try{localStorage.setItem('tx_acc_cols_v2','1');localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){} }}}catch(e){}
+  try{var sc=JSON.parse(localStorage.getItem('tx_acc_cols')||'null');var _validCols=['reg','name','email','online','seen','status','type','group','balance','bonus','equity','open','pnl','ml'];if(sc&&Array.isArray(sc)){_accCols=sc.filter(function(x){return _validCols.indexOf(x)>=0;}); if(!localStorage.getItem('tx_acc_cols_v2')){ if(_accCols.indexOf('pnl')<0) _accCols.push('pnl'); try{localStorage.setItem('tx_acc_cols_v2','1');localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){} }
+    // 2026-11-03: Teminat % sütunu bir kez otomatik eklenir (Varlık'ın yanına); sonra kullanıcı kapatabilir
+    if(!localStorage.getItem('tx_acc_cols_v3')){ if(_accCols.indexOf('ml')<0){ var _ei=_accCols.indexOf('equity'); if(_ei>=0) _accCols.splice(_ei+1,0,'ml'); else _accCols.push('ml'); } try{localStorage.setItem('tx_acc_cols_v3','1');localStorage.setItem('tx_acc_cols',JSON.stringify(_accCols));}catch(e){} }
+  }}catch(e){}
   try{
     var saved=JSON.parse(localStorage.getItem('tx_admin_user')||'null');
     if(saved&&saved.role){loginSuccess(saved);return;}
@@ -11623,6 +11685,8 @@ function _txSessNorm(cfg) {
 
 function _txSessPickId(sym, symCfg, cfg) {
   if (symCfg && symCfg.sessionId) return symCfg.sessionId;
+  // 2026-11-03: bağ yoksa sembol türüne göre (trader/köprü/Functions ile aynı kural)
+  if (typeof _sessTplForSym==='function') { var _a=_sessTplForSym(symCfg||{sym:sym}); if (_a && _a!=='forex' && _txSessFind(cfg, _a)) return _a; }
   var s = String(sym || '').toUpperCase();
   if (s.endsWith('USDT') || s.endsWith('USDC')) return 'crypto';
   return _txSessNorm(cfg).defaultTemplate;
@@ -11736,7 +11800,7 @@ var TX_SESSION_SYMMAP = {
   euidx: ['DAX40X','FTSE100X','FRA40X'],
   oil:   ['USOIL','BRTUSD','WTIUSD'],
   usidx: ['NAS100X','SPX500X','DJ30X','DXY','XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','HOIL','SUGAR','COTTON','COFFEE','GAUTRY'],
-  usstock: ['AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA']
+  usstock: ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN']
 };
 function _sessTplForSym(sc){
   var sym=String(sc.sym||'').toUpperCase();
@@ -12364,7 +12428,7 @@ function _adQuoteToUsd(sym, amount) {
     'XAUUSD','XAGUSD','XPTUSD','XPDUSD','NGAS','DXY','FTSE100X','DAX40X',
     // ⚠️ 2026-08-06: XPDUSD + ABD hisseleri eksikti — symConfig'te category:'stock'
     // oldukları için admin bunları TL bazlı sanıp K/Z'yi ~USDTRY katı KÜÇÜK gösteriyordu.
-    'AAPL','TSLA','AMZN','GOOGL','NVDA','NFLX','WMT','BA'];
+    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','NFLX','AMD','INTC','ORCL','CRM','ADBE','PLTR','JPM','V','MA','BAC','WMT','COST','KO','PEP','MCD','DIS','NKE','BA','XOM','UBER','COIN'];
   if(_USD_C.indexOf(sym) >= 0) return amount;
   var quoteCur = '';
   if(sym === 'XU100X') quoteCur = 'TRY';
@@ -12407,7 +12471,7 @@ function _adQuoteToUsd(sym, amount) {
   else if(quoteCur==='PLN') conv = _g('USDPLN') > 0 ? 1/_g('USDPLN') : 1/3.83;
   else if(quoteCur==='SEK') conv = _g('USDSEK') > 0 ? 1/_g('USDSEK') : 1/9.85;
   else if(quoteCur==='NOK') conv = _g('USDNOK') > 0 ? 1/_g('USDNOK') : 1/10.48;
-  else if(quoteCur==='DKK') conv = _g('USDDKK') > 0 ? 1/_g('USDDKK') : 1/6.45;   // 2026-11-02 EURDKK
+  else if(quoteCur==='DKK') conv = _g('USDDKK') > 0 ? 1/_g('USDDKK') : ((_g('EURDKK') > 0 && _g('EURUSD') > 0) ? _g('EURUSD')/_g('EURDKK') : 1/6.45);   // USDDKK yoksa EUR üzerinden   // 2026-11-02 EURDKK
   else if(quoteCur==='GBP') conv = _g('GBPUSD') > 0 ? _g('GBPUSD') : 1.34;
   else if(quoteCur==='EUR') conv = _g('EURUSD') > 0 ? _g('EURUSD') : 1.16;
   else if(quoteCur==='AUD') conv = _g('AUDUSD') > 0 ? _g('AUDUSD') : 0.71;
