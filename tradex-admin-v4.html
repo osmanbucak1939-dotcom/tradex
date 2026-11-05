@@ -9650,7 +9650,8 @@ function adChangePassword() {
 // ADMIN PANEL FUNCTIONS
 // ════════════════════════════════════════════════
 
-var SUPER_ADMINS = [{email:'admin@tradex.com',password:'admin123',name:'Super Admin',role:'superadmin'}];
+// ⚠️ 2026-11-05: Süper yönetici şifresi sayfa kaynağından KALDIRILDI (herkes görebiliyordu). Giriş sunucuda doğrulanır.
+var SUPER_ADMINS = [];
 var _currentStaff = null;
 var _staffList = [];
 var _assignStaffId = null;
@@ -9845,11 +9846,45 @@ function applyRoleUI(){
   });
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// 2026-11-05 (2. aşama): YÖNETİCİ GİRİŞİ SUNUCUDA
+// Personel şifresi artık tarayıcıda karşılaştırılmaz; sunucu doğrular ve Firebase'e
+// staff_<id> kimliğiyle girilir (veritabanı kuralları yöneticiyi bu kimlikten tanır).
+// ══════════════════════════════════════════════════════════════════════
+var AD_SERVER_LOGIN = true;
+function _adApiBase(){ return String(typeof AD_BRIDGE_URL!=='undefined'?AD_BRIDGE_URL:'').replace(/^wss:/i,'https:').replace(/^ws:/i,'http:').replace(/\/+$/,''); }
+function _adPid(){ try{ return (firebase.app().options||{}).projectId || ''; }catch(e){ return ''; } }
 function adminLogin(){
   var email=(document.getElementById('al_email')||{}).value||'';
   var pass=(document.getElementById('al_pass')||{}).value||'';
   var errEl=document.getElementById('al_error');
   if(!email||!pass){if(errEl)errEl.style.display='block';return;}
+  if(AD_SERVER_LOGIN && _adApiBase() && !window._adLegacyTry){
+    if(errEl) errEl.style.display='none';
+    fetch(_adApiBase()+'/api/staff/login', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ projectId:_adPid(), email:email.trim(), pass:pass.trim() }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j || !j.ok){ if(errEl){ errEl.textContent = (j && j.msg) || 'E-posta veya şifre hatalı'; errEl.style.display='block'; } return; }
+        var staff = j.staff || {};
+        var go = function(){
+          // personel kaydının tamamı (yetkiler) Firestore'dan — kimlik doğrulandıktan sonra okunabilir
+          if(staff.role === 'superadmin' && !staff.id){ loginSuccess(staff); return; }
+          fbLoadStaff(function(list){
+            var full = (list||[]).find(function(x){ return String(x.id)===String(staff.id) || (x.email && x.email.toLowerCase()===String(staff.email||'').toLowerCase()); });
+            loginSuccess(full ? Object.assign({}, full, { password: undefined }) : staff);
+          });
+        };
+        if(j.fbToken && typeof firebase!=='undefined' && firebase.auth){
+          firebase.auth().signInWithCustomToken(j.fbToken).then(go).catch(function(e){ console.warn('[admin] Firebase özel giriş:', e.message); go(); });
+        } else go();
+      })
+      .catch(function(e){
+        console.warn('[admin] sunucuya ulaşılamadı, eski yol:', e.message);
+        window._adLegacyTry = true; try{ adminLogin(); } finally { window._adLegacyTry = false; }
+      });
+    return;
+  }
 
   // 1) Super admin kontrolü
   var sa=SUPER_ADMINS.find(function(a){return a.email===email.trim()&&a.password===pass.trim();});
@@ -10107,6 +10142,9 @@ function loginSuccess(staff){
     var _auth = firebase.auth();
     if(_auth.currentUser) {
       _afterAuth();
+    } else if(AD_SERVER_LOGIN) {
+      // 2026-11-05: yönetici kimliği sunucu girişiyle gelir; anonim girişe düşülmez
+      var _u2 = _auth.onAuthStateChanged(function(u){ try{ _u2(); }catch(e){} _afterAuth(); });
     } else {
       _auth.signInAnonymously()
         .then(function(){ _afterAuth(); })
@@ -10120,6 +10158,7 @@ function loginSuccess(staff){
 function adminLogout(){
   _currentStaff=null;
   try{localStorage.removeItem('tx_admin_user');}catch(e){}
+  try{ if(typeof firebase!=='undefined' && firebase.auth) firebase.auth().signOut(); }catch(e){}
   var ov=document.getElementById('adminLoginOverlay');
   var app=document.getElementById('adminApp');
   if(app)app.style.display='none';
@@ -11293,7 +11332,21 @@ window.addEventListener('DOMContentLoaded',function(){
   }}catch(e){}
   try{
     var saved=JSON.parse(localStorage.getItem('tx_admin_user')||'null');
-    if(saved&&saved.role){loginSuccess(saved);return;}
+    if(saved&&saved.role){
+      // 2026-11-05: kayıtlı oturum yalnız Firebase'de yönetici kimliği (staff_…) hâlâ açıksa sürer;
+      // eski (anonim) oturumlar bir kez yeniden giriş yapar.
+      if(AD_SERVER_LOGIN && typeof firebase!=='undefined' && firebase.auth){
+        var _unsub = firebase.auth().onAuthStateChanged(function(u){
+          try{ _unsub(); }catch(e){}
+          if(u && !u.isAnonymous && /^staff_/.test(u.uid||'')){ loginSuccess(saved); return; }
+          try{ localStorage.removeItem('tx_admin_user'); }catch(e){}
+          var ov0=document.getElementById('adminLoginOverlay'); if(ov0) ov0.style.display='flex';
+          var er0=document.getElementById('al_error'); if(er0){ er0.textContent='Güvenlik güncellemesi: lütfen bir kez tekrar giriş yapın.'; er0.style.display='block'; }
+        });
+        return;
+      }
+      loginSuccess(saved);return;
+    }
   }catch(e){}
   var ov=document.getElementById('adminLoginOverlay');
   if(ov)ov.style.display='flex';
