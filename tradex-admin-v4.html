@@ -12031,7 +12031,10 @@ function sessSetDay(el){
     el.value = ((t.days && (t.days[di]||t.days[String(di)]))||[]).map(function(p){return p[0]+'-'+p[1];}).join(', ');
     return;
   }
-  t.days[di]=arr; delete t.days[String(di)];
+  // ⚠️ 2026-11-17: Eskiden burada "delete t.days[String(di)]" vardı. Nesne anahtarları zaten metin
+  // olduğu için (4 ile "4" aynı anahtar) az önce yazılan saat HEMEN siliniyordu → kaydedince
+  // son değişiklikler kayboluyordu.
+  t.days[di]=arr;
   // Girdiyi normalize edilmiş haliyle geri yaz (yeniden çizmeden)
   el.value = arr.map(function(p){ return p[0]+'-'+p[1]; }).join(', ');
   sessTouch();
